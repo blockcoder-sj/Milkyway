@@ -14,7 +14,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr, ValidationError
-from sqlalchemy import func, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -32,6 +32,8 @@ from .database import (
     BacktestJob,
     AiConnection,
     EquityPoint,
+    MarketDataConnection,
+    MemberQuote,
     PaperAccount,
     PaperFill,
     RuntimeHeartbeat,
@@ -43,6 +45,16 @@ from .database import (
 )
 from .dashboard_views import completed_session_freshness, market_overview, news_feed, sector_heatmap
 from .paper import account_snapshot
+from .market_data_credentials import (
+    MarketDataProviderError,
+    credential_hint as market_credential_hint,
+    decrypt_market_credential,
+    encrypt_market_credential,
+    provider_catalog as market_data_provider_catalog,
+    validate_market_credential,
+    validate_provider_environment,
+    verify_connection as verify_market_data_connection,
+)
 from .security import (
     create_session,
     hash_password,
@@ -56,6 +68,7 @@ from .strategies import StrategySpec, get_dataset_bundle, strategy_code_preview
 
 settings = get_settings()
 _local_ai_slots = threading.BoundedSemaphore(settings.local_ai_max_concurrent_requests)
+_market_data_verification_slots = threading.BoundedSemaphore(2)
 STATIC = Path(__file__).resolve().parent / "static"
 app = FastAPI(title=settings.app_name, docs_url=None if settings.production else "/docs")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
@@ -82,6 +95,14 @@ class AiConnectionBody(BaseModel):
     provider: str = Field(min_length=2, max_length=30)
     model: str = Field(min_length=2, max_length=100)
     api_key: SecretStr | None = None
+
+
+class MarketDataConnectionBody(BaseModel):
+    provider: str = Field(min_length=2, max_length=30)
+    environment: str = Field(min_length=2, max_length=20)
+    api_key: SecretStr | None = None
+    api_secret: SecretStr | None = None
+    personal_use_only: bool = False
 
 
 class StrategyBody(BaseModel):
@@ -382,6 +403,129 @@ def delete_ai_connection(user: User = Depends(csrf_guard), session: Session = De
         session.commit()
 
 
+def _market_data_connection_payload(row: MarketDataConnection | None) -> dict:
+    return {
+        "connected": row is not None,
+        "configured": row is not None,
+        "provider": row.provider if row else None,
+        "environment": row.environment if row else None,
+        "key_hint": row.key_hint if row else None,
+        "secret_hint": row.secret_hint if row else None,
+        "verified_at": row.verified_at if row else None,
+        "verification_status": "last_success" if row else "not_configured",
+        "updated_at": row.updated_at if row else None,
+        "providers": market_data_provider_catalog(),
+        "usage_scope": "personal_paper_only",
+    }
+
+
+@app.get("/api/me/market-data-connection")
+def get_market_data_connection(
+    user: User = Depends(current_user), session: Session = Depends(get_db)
+):
+    return _market_data_connection_payload(session.get(MarketDataConnection, user.id))
+
+
+@app.put("/api/me/market-data-connection")
+def put_market_data_connection(
+    body: MarketDataConnectionBody,
+    user: User = Depends(csrf_guard),
+    session: Session = Depends(get_db),
+):
+    _rate_limit("market-data-connection:" + user.id, 10, 3600)
+    if not body.personal_use_only:
+        raise HTTPException(
+            status_code=422,
+            detail="개인 페이퍼 트레이딩 용도 확인이 필요합니다",
+        )
+    try:
+        provider, environment = validate_provider_environment(body.provider, body.environment)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    row = session.get(MarketDataConnection, user.id)
+    supplied_key = body.api_key.get_secret_value() if body.api_key else ""
+    supplied_secret = body.api_secret.get_secret_value() if body.api_secret else ""
+    same_provider = row is not None and row.provider == provider
+    try:
+        if supplied_key:
+            api_key = validate_market_credential(supplied_key, "App Key")
+        elif same_provider:
+            api_key = decrypt_market_credential(row.encrypted_api_key, settings)
+        else:
+            raise ValueError("새 시세 공급자를 연결하려면 App Key를 입력해 주세요")
+        if supplied_secret:
+            api_secret = validate_market_credential(supplied_secret, "App Secret")
+        elif same_provider:
+            api_secret = decrypt_market_credential(row.encrypted_api_secret, settings)
+        else:
+            raise ValueError("새 시세 공급자를 연결하려면 App Secret을 입력해 주세요")
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    verification_slot = _market_data_verification_slots.acquire(blocking=False)
+    if not verification_slot:
+        raise HTTPException(
+            status_code=429,
+            detail="시세 API 인증 요청이 많습니다. 잠시 후 다시 시도해 주세요",
+        )
+    try:
+        verify_market_data_connection(provider, environment, api_key, api_secret)
+    except MarketDataProviderError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+    finally:
+        _market_data_verification_slots.release()
+
+    encrypted_key = (
+        encrypt_market_credential(api_key, "App Key", settings)
+        if supplied_key or row is None
+        else row.encrypted_api_key
+    )
+    encrypted_secret = (
+        encrypt_market_credential(api_secret, "App Secret", settings)
+        if supplied_secret or row is None
+        else row.encrypted_api_secret
+    )
+    verified_at = utcnow()
+    if row is None:
+        row = MarketDataConnection(
+            user_id=user.id,
+            provider=provider,
+            environment=environment,
+            encrypted_api_key=encrypted_key,
+            encrypted_api_secret=encrypted_secret,
+            key_hint=market_credential_hint(api_key),
+            secret_hint=market_credential_hint(api_secret),
+            verified_at=verified_at,
+        )
+    else:
+        row.provider = provider
+        row.environment = environment
+        row.encrypted_api_key = encrypted_key
+        row.encrypted_api_secret = encrypted_secret
+        row.key_hint = market_credential_hint(api_key)
+        row.secret_hint = market_credential_hint(api_secret)
+        row.verified_at = verified_at
+        row.updated_at = verified_at
+    # A reverified or replaced connection must never inherit a quote collected
+    # under the previous credential/environment.
+    session.execute(delete(MemberQuote).where(MemberQuote.user_id == user.id))
+    session.add(row)
+    session.commit()
+    return _market_data_connection_payload(row)
+
+
+@app.delete("/api/me/market-data-connection", status_code=204)
+def delete_market_data_connection(
+    user: User = Depends(csrf_guard), session: Session = Depends(get_db)
+):
+    row = session.get(MarketDataConnection, user.id)
+    if row is not None:
+        session.execute(delete(MemberQuote).where(MemberQuote.user_id == user.id))
+        session.delete(row)
+        session.commit()
+
+
 def _strategy_payload(row: Strategy) -> dict:
     spec = StrategySpec.model_validate_json(row.spec_json)
     return {
@@ -646,6 +790,7 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
     last_completed_session = bundle.index.max().date()
     freshness = completed_session_freshness(last_completed_session)
     ai_connection = session.get(AiConnection, user.id)
+    market_data_connection = session.get(MarketDataConnection, user.id)
     return {
         "market": [row for rows in market_groups.values() for row in rows],
         "market_groups": market_groups,
@@ -674,6 +819,7 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
         },
         "ai_enabled": _ai_connection_payload(ai_connection)["connected"],
         "ai_connection": _ai_connection_payload(ai_connection),
+        "market_data_connection": _market_data_connection_payload(market_data_connection),
         "quote_provider": settings.quote_provider,
     }
 

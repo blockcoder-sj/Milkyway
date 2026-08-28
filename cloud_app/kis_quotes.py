@@ -13,11 +13,23 @@ from requests.adapters import HTTPAdapter
 logger = logging.getLogger("cloud_app.kis_quotes")
 
 
+class KisQuoteError(RuntimeError):
+    """Base error for quote failures that must be visible to the worker."""
+
+
+class KisAuthenticationError(KisQuoteError):
+    """The access token or member-owned credentials were rejected."""
+
+
+class KisRateLimitError(KisQuoteError):
+    """KIS rejected the request because a request limit was reached."""
+
+
 @dataclass(frozen=True)
 class KisCredentials:
     api_key: str
     api_secret: str
-    account_id: str
+    account_id: str = ""
     paper: bool = True
 
 
@@ -27,7 +39,7 @@ class KisQuoteClient:
     _exchange_codes = ("NAS", "NYS", "AMS")
 
     def __init__(self, credentials: KisCredentials):
-        if not credentials.api_key or not credentials.api_secret or not credentials.account_id:
+        if not credentials.api_key or not credentials.api_secret:
             raise RuntimeError("KIS quote credentials are incomplete")
         self.credentials = credentials
         self.base_url = (
@@ -42,29 +54,60 @@ class KisQuoteClient:
         self.token_expires_at = dt.datetime.min
         self.exchange_cache: dict[str, str] = {}
 
+    @staticmethod
+    def _raise_for_rejection(response, payload: dict | None = None) -> None:
+        if response.status_code in {401, 403}:
+            raise KisAuthenticationError("KIS authentication was rejected")
+        if response.status_code == 429:
+            raise KisRateLimitError("KIS request limit was reached")
+        response.raise_for_status()
+        if payload is None or str(payload.get("rt_cd", "0")) == "0":
+            return
+        code = str(payload.get("msg_cd", ""))
+        message = str(payload.get("msg1", ""))
+        detail = "{} {}".format(code, message).upper()
+        if any(
+            marker in detail
+            for marker in ("EGW00201", "RATE LIMIT", "TOO MANY", "초당", "호출 제한")
+        ):
+            raise KisRateLimitError("KIS request limit was reached")
+        if any(
+            marker in detail
+            for marker in ("EGW00121", "EGW00123", "TOKEN", "AUTH", "인증")
+        ):
+            raise KisAuthenticationError("KIS authentication was rejected")
+        raise KisQuoteError("KIS quote request was rejected ({})".format(code or "unknown"))
+
+    def _refresh_token(self) -> None:
+        response = self.session.post(
+            self.base_url + "/oauth2/tokenP",
+            json={
+                "grant_type": "client_credentials",
+                "appkey": self.credentials.api_key,
+                "appsecret": self.credentials.api_secret,
+            },
+            timeout=10,
+        )
+        self._raise_for_rejection(response)
+        payload = response.json() if response.content else {}
+        self._raise_for_rejection(response, payload)
+        try:
+            self.token = payload["access_token"]
+        except (KeyError, TypeError) as exc:
+            raise KisAuthenticationError("KIS access token was not returned") from exc
+        self.token_expires_at = dt.datetime.now() + dt.timedelta(hours=23)
+
     def connect(self) -> bool:
         try:
-            response = self.session.post(
-                self.base_url + "/oauth2/tokenP",
-                json={
-                    "grant_type": "client_credentials",
-                    "appkey": self.credentials.api_key,
-                    "appsecret": self.credentials.api_secret,
-                },
-                timeout=10,
-            )
-            response.raise_for_status()
-            self.token = response.json()["access_token"]
-            self.token_expires_at = dt.datetime.now() + dt.timedelta(hours=23)
+            self._refresh_token()
             return True
-        except (requests.RequestException, KeyError, TypeError, ValueError) as exc:
+        except (KisQuoteError, requests.RequestException, TypeError, ValueError) as exc:
             logger.error("KIS token request failed: %s", type(exc).__name__)
             return False
 
     def _headers(self) -> dict[str, str]:
         if not self.token or dt.datetime.now() >= self.token_expires_at:
-            if not self.connect():
-                raise RuntimeError("KIS token refresh failed")
+            self._refresh_token()
         return {
             "authorization": "Bearer " + self.token,
             "appkey": self.credentials.api_key,
@@ -80,8 +123,10 @@ class KisQuoteClient:
             params={"AUTH": "", "EXCD": exchange_code, "SYMB": ticker},
             timeout=10,
         )
-        response.raise_for_status()
-        output = response.json().get("output", {})
+        self._raise_for_rejection(response)
+        payload = response.json() if response.content else {}
+        self._raise_for_rejection(response, payload)
+        output = payload.get("output", {})
         price = float(output.get("last", 0) or 0)
         if price <= 0:
             return None
@@ -99,13 +144,35 @@ class KisQuoteClient:
         if cached:
             candidates.append(cached)
         candidates.extend(code for code in self._exchange_codes if code != cached)
+        last_error: Exception | None = None
+        authentication_retried = False
         for exchange_code in candidates:
-            try:
-                quote = self._request_quote(ticker, exchange_code)
-            except requests.RequestException as exc:
-                logger.warning("KIS quote failed ticker=%s error=%s", ticker, type(exc).__name__)
-                continue
+            while True:
+                try:
+                    quote = self._request_quote(ticker, exchange_code)
+                    break
+                except KisAuthenticationError:
+                    if authentication_retried:
+                        raise
+                    authentication_retried = True
+                    self.token = ""
+                    self.token_expires_at = dt.datetime.min
+                    self._refresh_token()
+                except KisRateLimitError:
+                    raise
+                except (KisQuoteError, requests.RequestException) as exc:
+                    last_error = exc
+                    logger.warning(
+                        "KIS quote failed ticker=%s exchange=%s error=%s",
+                        ticker,
+                        exchange_code,
+                        type(exc).__name__,
+                    )
+                    quote = None
+                    break
             if quote:
                 self.exchange_cache[ticker] = exchange_code
                 return quote
+        if last_error is not None:
+            raise KisQuoteError("KIS quote lookup failed for {}".format(ticker)) from last_error
         return {"price": 0, "bid": 0, "ask": 0, "volume": 0}

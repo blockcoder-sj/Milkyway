@@ -68,6 +68,27 @@ class AiConnection(Base):
     user: Mapped[User] = relationship()
 
 
+class MarketDataConnection(Base):
+    """One verified, member-owned quote connection; secrets stay encrypted."""
+
+    __tablename__ = "market_data_connections"
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    provider: Mapped[str] = mapped_column(String(30))
+    environment: Mapped[str] = mapped_column(String(20))
+    encrypted_api_key: Mapped[str] = mapped_column(Text)
+    encrypted_api_secret: Mapped[str] = mapped_column(Text)
+    key_hint: Mapped[str] = mapped_column(String(12))
+    secret_hint: Mapped[str] = mapped_column(String(12))
+    verified_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    user: Mapped[User] = relationship()
+
+
 class Strategy(Base):
     __tablename__ = "strategies"
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
@@ -159,6 +180,23 @@ class Quote(Base):
     volume: Mapped[float] = mapped_column(Float, default=0.0)
     source: Mapped[str] = mapped_column(String(40))
     observed_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class MemberQuote(Base):
+    """A quote visible only to one member and that member's paper accounts."""
+
+    __tablename__ = "member_quotes"
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    ticker: Mapped[str] = mapped_column(String(20), primary_key=True)
+    price: Mapped[float] = mapped_column(Float)
+    bid: Mapped[float] = mapped_column(Float, default=0.0)
+    ask: Mapped[float] = mapped_column(Float, default=0.0)
+    volume: Mapped[float] = mapped_column(Float, default=0.0)
+    source: Mapped[str] = mapped_column(String(40))
+    observed_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), index=True)
+    user: Mapped[User] = relationship()
 
 
 class RuntimeHeartbeat(Base):

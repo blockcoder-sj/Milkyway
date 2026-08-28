@@ -1,4 +1,4 @@
-const state = {csrf: "", me: null, dashboard: null, aiConnection: null, strategies: [], backtests: [], marketCountry: "us", sectorCountry: "us", workspace: "market", stream: null, preferences: window.MilkywayProfile.loadPreferences()};
+const state = {csrf: "", me: null, dashboard: null, aiConnection: null, marketDataConnection: null, strategies: [], backtests: [], marketCountry: "us", sectorCountry: "us", workspace: "market", stream: null, preferences: window.MilkywayProfile.loadPreferences()};
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const money = (value) => new Intl.NumberFormat("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0}).format(value || 0);
@@ -346,6 +346,7 @@ async function refresh() {
   const [dashboard, strategies, backtests] = await Promise.all([api("/api/dashboard"), api("/api/strategies"), api("/api/backtests")]);
   state.dashboard = dashboard;
   state.aiConnection = dashboard.ai_connection;
+  state.marketDataConnection = dashboard.market_data_connection;
   state.strategies = strategies;
   state.backtests = backtests;
   marketCards(dashboard.market_groups);
@@ -534,6 +535,7 @@ const profileController = window.MilkywayProfile.create({
   getUser: () => state.me,
   getPreferences: () => state.preferences,
   getAiConnection: () => state.aiConnection,
+  getMarketDataConnection: () => state.marketDataConnection,
   onAiLoad: async () => {
     state.aiConnection = await api("/api/me/ai-connection");
     return state.aiConnection;
@@ -557,6 +559,22 @@ const profileController = window.MilkywayProfile.create({
     }
     $("#aiConnectBtn").classList.remove("connected");
     toast("AI 연결을 해제했습니다");
+  },
+  onMarketDataLoad: async () => {
+    state.marketDataConnection = await api("/api/me/market-data-connection");
+    return state.marketDataConnection;
+  },
+  onMarketDataSave: async (connection) => {
+    state.marketDataConnection = await api("/api/me/market-data-connection", {method: "PUT", body: JSON.stringify(connection)});
+    if (state.dashboard) state.dashboard.market_data_connection = state.marketDataConnection;
+    const provider = state.marketDataConnection.providers?.find((item) => item.id === state.marketDataConnection.provider);
+    toast(`${provider?.label || "증권사 시세 API"} 인증을 확인하고 저장했습니다`);
+  },
+  onMarketDataDisconnect: async () => {
+    await api("/api/me/market-data-connection", {method: "DELETE"});
+    state.marketDataConnection = await api("/api/me/market-data-connection");
+    if (state.dashboard) state.dashboard.market_data_connection = state.marketDataConnection;
+    toast("증권사 시세 API 연결을 해제했습니다");
   },
   onSave: (preferences) => {
     state.preferences = preferences;

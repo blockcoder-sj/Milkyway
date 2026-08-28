@@ -17,7 +17,16 @@ from market_calendar import get_market_hours, is_trading_day, prev_trading_day
 from terminal_events import effective_verified_events, load_events, unresolved_events
 
 from .config import Settings, get_settings
-from .database import EquityPoint, PaperAccount, PaperFill, PaperPosition, Quote, utcnow
+from .database import (
+    EquityPoint,
+    MarketDataConnection,
+    MemberQuote,
+    PaperAccount,
+    PaperFill,
+    PaperPosition,
+    Quote,
+    utcnow,
+)
 from .strategies import StrategySpec, get_dataset_bundle, latest_candidates
 
 
@@ -60,15 +69,17 @@ class DatasetQuoteProvider(QuoteProvider):
 
 
 class KisQuoteProvider(QuoteProvider):
-    def __init__(self):
+    def __init__(self, credentials=None, *, source: str = "kis"):
         from .kis_quotes import KisCredentials, KisQuoteClient
 
-        self.broker = KisQuoteClient(KisCredentials(
-            api_key=os.getenv("BROKER_API_KEY"),
-            api_secret=os.getenv("BROKER_API_SECRET"),
-            account_id=os.getenv("BROKER_ACCOUNT_ID"),
+        credentials = credentials or KisCredentials(
+            api_key=os.getenv("BROKER_API_KEY", ""),
+            api_secret=os.getenv("BROKER_API_SECRET", ""),
+            account_id=os.getenv("BROKER_ACCOUNT_ID", ""),
             paper=True,
-        ))
+        )
+        self.broker = KisQuoteClient(credentials)
+        self.source = source
         if not self.broker.connect():
             raise RuntimeError("KIS quote provider connection failed")
 
@@ -86,7 +97,7 @@ class KisQuoteProvider(QuoteProvider):
                         bid=float(raw.get("bid", 0) or 0),
                         ask=float(raw.get("ask", 0) or 0),
                         volume=float(raw.get("volume", 0) or 0),
-                        source="kis",
+                        source=self.source,
                         observed_at=now,
                     )
                 )
@@ -108,18 +119,37 @@ def _spec(account: PaperAccount) -> StrategySpec:
     return StrategySpec.model_validate_json(account.strategy.spec_json)
 
 
-def collect_watchlist(session: Session) -> set[str]:
-    accounts = session.scalars(
-        select(PaperAccount).where(PaperAccount.status == "active")
-    ).all()
-    tickers = {"SPY", "QQQ", "IWM", "VIXY"}
-    position_rows = session.scalars(
+def collect_watchlist(session: Session, user_id: str | None = None) -> set[str]:
+    account_statement = select(PaperAccount).where(PaperAccount.status == "active")
+    if user_id is not None:
+        account_statement = account_statement.where(PaperAccount.user_id == user_id)
+    accounts = session.scalars(account_statement).all()
+    tickers = {"SPY", "QQQ", "IWM", "VIXY"} if user_id is None else set()
+    position_statement = (
         select(PaperPosition).join(PaperAccount).where(PaperAccount.status == "active")
-    ).all()
+    )
+    if user_id is not None:
+        position_statement = position_statement.where(PaperAccount.user_id == user_id)
+    position_rows = session.scalars(position_statement).all()
     tickers.update(position.ticker for position in position_rows)
+    if not accounts:
+        return tickers
+    et_now, _market_open, rebalance_window = _market_context()
+    due_accounts = [
+        account
+        for account in accounts
+        if rebalance_window
+        and (
+            account.last_rebalanced_on is None
+            or (et_now.date() - account.last_rebalanced_on).days
+            >= _spec(account).portfolio.rebalance_days
+        )
+    ]
+    if not due_accounts:
+        return tickers
     bundle = get_dataset_bundle()
     strategy_candidates: dict[str, list[str]] = {}
-    for account in accounts:
+    for account in due_accounts:
         if account.strategy_id not in strategy_candidates:
             strategy_candidates[account.strategy_id] = latest_candidates(_spec(account), bundle)
         tickers.update(strategy_candidates[account.strategy_id])
@@ -218,14 +248,46 @@ def store_quotes(session: Session, values: Iterable[QuoteValue]) -> int:
     return count
 
 
-def quote_map(session: Session, tickers: Iterable[str], max_age_seconds: int = 180) -> dict[str, float]:
+def store_member_quotes(session: Session, user_id: str, values: Iterable[QuoteValue]) -> int:
+    count = 0
+    for value in values:
+        row = session.get(MemberQuote, (user_id, value.ticker))
+        if row is None:
+            row = MemberQuote(user_id=user_id, ticker=value.ticker)
+            session.add(row)
+        row.price = value.price
+        row.bid = value.bid
+        row.ask = value.ask
+        row.volume = value.volume
+        row.source = value.source
+        row.observed_at = value.observed_at
+        count += 1
+    return count
+
+
+def quote_map(
+    session: Session,
+    tickers: Iterable[str],
+    max_age_seconds: int = 180,
+    *,
+    user_id: str | None = None,
+) -> dict[str, float]:
     wanted = sorted(set(tickers))
     if not wanted:
         return {}
     cutoff = utcnow() - dt.timedelta(seconds=max_age_seconds)
-    rows = session.scalars(
-        select(Quote).where(Quote.ticker.in_(wanted), Quote.observed_at >= cutoff)
-    ).all()
+    if user_id is not None and session.get(MarketDataConnection, user_id) is not None:
+        rows = session.scalars(
+            select(MemberQuote).where(
+                MemberQuote.user_id == user_id,
+                MemberQuote.ticker.in_(wanted),
+                MemberQuote.observed_at >= cutoff,
+            )
+        ).all()
+    else:
+        rows = session.scalars(
+            select(Quote).where(Quote.ticker.in_(wanted), Quote.observed_at >= cutoff)
+        ).all()
     return {row.ticker: float(row.price) for row in rows if row.price > 0}
 
 
@@ -314,7 +376,7 @@ def mark_and_stop_accounts(session: Session) -> int:
     for account in accounts:
         spec = _spec(account)
         positions = _account_positions(session, account.id)
-        prices = quote_map(session, positions)
+        prices = quote_map(session, positions, user_id=account.user_id)
         for ticker, position in positions.items():
             price = prices.get(ticker)
             if price is None:
@@ -372,6 +434,11 @@ def _market_context(now: dt.datetime | None = None) -> tuple[dt.datetime, bool, 
     return et_now, market_open, rebalance_window
 
 
+def regular_market_open(now: dt.datetime | None = None) -> bool:
+    """Return whether NYSE regular trading is open for quote collection."""
+    return _market_context(now)[1]
+
+
 def rebalance_due_accounts(session: Session, force: bool = False) -> int:
     et_now, _market_open, rebalance_window = _market_context()
     if not force and not rebalance_window:
@@ -402,7 +469,9 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
             logger.warning("no strict-PIT candidates for account %s", account.id)
             continue
         positions = _account_positions(session, account.id)
-        prices = quote_map(session, set(targets) | set(positions))
+        prices = quote_map(
+            session, set(targets) | set(positions), user_id=account.user_id
+        )
         required_quotes = set(targets) | set(positions)
         if any(ticker not in prices for ticker in required_quotes):
             logger.warning(

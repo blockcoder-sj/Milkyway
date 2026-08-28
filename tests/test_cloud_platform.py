@@ -39,15 +39,44 @@ from cloud_app.dashboard_views import (
     news_feed,
     sector_heatmap,
 )
-from cloud_app.database import AiConnection, Base, PaperAccount, PaperFill, PaperPosition, Quote, Strategy, User
+from cloud_app.database import (
+    AiConnection,
+    Base,
+    MarketDataConnection,
+    MemberQuote,
+    PaperAccount,
+    PaperFill,
+    PaperPosition,
+    Quote,
+    Strategy,
+    User,
+)
 from cloud_app.main import (
     AiConnectionBody,
+    MarketDataConnectionBody,
     PromptBody,
     ai_strategy,
     delete_ai_connection,
+    delete_market_data_connection,
     put_ai_connection,
+    put_market_data_connection,
 )
-from cloud_app.paper import _fill, apply_terminal_events, rebalance_due_accounts
+from cloud_app.kis_quotes import (
+    KisAuthenticationError,
+    KisCredentials,
+    KisQuoteClient,
+    KisRateLimitError,
+)
+from cloud_app.market_data_credentials import decrypt_market_credential
+from cloud_app.paper import (
+    QuoteValue,
+    _fill,
+    apply_terminal_events,
+    collect_watchlist,
+    quote_map,
+    rebalance_due_accounts,
+    store_member_quotes,
+)
 from cloud_app.security import create_session, hash_password, parse_session, verify_password
 from cloud_app.strategies import (
     StrategySpec,
@@ -56,6 +85,7 @@ from cloud_app.strategies import (
     strategy_code_preview,
 )
 from terminal_events import append_event
+from cloud_app.worker import run_paper_tick
 
 
 def sample_spec(**portfolio_overrides):
@@ -190,6 +220,156 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(stored.model, "Qwen2.5-Coder-7B-Instruct-GGUF")
         session.close()
 
+    def test_member_market_data_credentials_are_verified_encrypted_and_owned(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(id="6" * 32, email="quotes@example.com", display_name="Quotes", password_hash="x")
+        session.add(user)
+        session.commit()
+        api_key = "KIS-APP-KEY-THIS-IS-PRIVATE-1234"
+        api_secret = "KIS-APP-SECRET-THIS-IS-PRIVATE-5678"
+        with patch("cloud_app.main.verify_market_data_connection") as verify:
+            payload = put_market_data_connection(
+                MarketDataConnectionBody(
+                    provider="kis",
+                    environment="real",
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    personal_use_only=True,
+                ),
+                user,
+                session,
+            )
+        verify.assert_called_once_with("kis", "real", api_key, api_secret)
+        self.assertTrue(payload["connected"])
+        self.assertNotIn("api_key", payload)
+        self.assertNotIn("api_secret", payload)
+        stored = session.get(MarketDataConnection, user.id)
+        self.assertNotIn(api_key, stored.encrypted_api_key)
+        self.assertNotIn(api_secret, stored.encrypted_api_secret)
+        self.assertEqual(decrypt_market_credential(stored.encrypted_api_key), api_key)
+        session.add(
+            MemberQuote(
+                user_id=user.id,
+                ticker="AAPL",
+                price=200,
+                bid=0,
+                ask=0,
+                volume=0,
+                source="old_connection",
+                observed_at=dt.datetime.now(dt.timezone.utc),
+            )
+        )
+        session.commit()
+        with patch("cloud_app.main.verify_market_data_connection") as verify_again:
+            kept = put_market_data_connection(
+                MarketDataConnectionBody(
+                    provider="kis",
+                    environment="paper",
+                    personal_use_only=True,
+                ),
+                user,
+                session,
+            )
+        verify_again.assert_called_once_with("kis", "paper", api_key, api_secret)
+        self.assertEqual(kept["environment"], "paper")
+        self.assertEqual(session.query(MemberQuote).filter_by(user_id=user.id).count(), 0)
+        session.add(
+            MemberQuote(
+                user_id=user.id,
+                ticker="MSFT",
+                price=300,
+                bid=0,
+                ask=0,
+                volume=0,
+                source="current_connection",
+                observed_at=dt.datetime.now(dt.timezone.utc),
+            )
+        )
+        session.commit()
+        delete_market_data_connection(user, session)
+        self.assertIsNone(session.get(MarketDataConnection, user.id))
+        self.assertEqual(session.query(MemberQuote).filter_by(user_id=user.id).count(), 0)
+        session.close()
+
+    def test_market_data_connection_requires_personal_use_acknowledgement(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(id="7" * 32, email="license@example.com", display_name="License", password_hash="x")
+        session.add(user)
+        session.commit()
+        with self.assertRaises(HTTPException) as raised:
+            put_market_data_connection(
+                MarketDataConnectionBody(
+                    provider="kis",
+                    environment="real",
+                    api_key="KIS-APP-KEY-THIS-IS-PRIVATE-1234",
+                    api_secret="KIS-APP-SECRET-THIS-IS-PRIVATE-5678",
+                ),
+                user,
+                session,
+            )
+        self.assertEqual(raised.exception.status_code, 422)
+        session.close()
+
+    def test_market_data_verification_backpressure_returns_429(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(id="8" * 32, email="busy-quotes@example.com", display_name="Busy", password_hash="x")
+        session.add(user)
+        session.commit()
+        slots = MagicMock()
+        slots.acquire.return_value = False
+        with patch("cloud_app.main._market_data_verification_slots", slots), patch(
+            "cloud_app.main.verify_market_data_connection"
+        ) as verify:
+            with self.assertRaises(HTTPException) as raised:
+                put_market_data_connection(
+                    MarketDataConnectionBody(
+                        provider="kis",
+                        environment="real",
+                        api_key="KIS-APP-KEY-THIS-IS-PRIVATE-1234",
+                        api_secret="KIS-APP-SECRET-THIS-IS-PRIVATE-5678",
+                        personal_use_only=True,
+                    ),
+                    user,
+                    session,
+                )
+        self.assertEqual(raised.exception.status_code, 429)
+        verify.assert_not_called()
+        slots.release.assert_not_called()
+        session.close()
+
+    def test_member_quote_isolated_from_shared_quote_for_personal_paper_use(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        owner = User(id="9" * 32, email="owner@example.com", display_name="Owner", password_hash="x")
+        other = User(id="a" * 32, email="other@example.com", display_name="Other", password_hash="x")
+        now = dt.datetime.now(dt.timezone.utc)
+        session.add_all([owner, other])
+        session.add(
+            MarketDataConnection(
+                user_id=owner.id,
+                provider="kis",
+                environment="real",
+                encrypted_api_key="encrypted-key",
+                encrypted_api_secret="encrypted-secret",
+                key_hint="•••1234",
+                secret_hint="•••5678",
+                verified_at=now,
+            )
+        )
+        session.add(Quote(ticker="AAPL", price=100, bid=0, ask=0, volume=0, source="shared", observed_at=now))
+        session.add(MemberQuote(user_id=owner.id, ticker="AAPL", price=200, bid=0, ask=0, volume=0, source="kis_member", observed_at=now))
+        session.commit()
+        self.assertEqual(quote_map(session, ["AAPL"], user_id=owner.id), {"AAPL": 200.0})
+        self.assertEqual(quote_map(session, ["AAPL"], user_id=other.id), {"AAPL": 100.0})
+        session.close()
+
     def test_local_ai_backpressure_returns_429_without_calling_model(self):
         engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(engine)
@@ -224,6 +404,77 @@ class SecurityTests(unittest.TestCase):
         generate.assert_not_called()
         slots.release.assert_not_called()
         session.close()
+
+
+class KisQuoteClientTests(unittest.TestCase):
+    def setUp(self):
+        self.client = KisQuoteClient(
+            KisCredentials(api_key="k" * 24, api_secret="s" * 32, paper=True)
+        )
+        self.client.session = MagicMock()
+        self.client.token = "current-token"
+        self.client.token_expires_at = dt.datetime.now() + dt.timedelta(hours=1)
+
+    @staticmethod
+    def response(status_code: int, payload: dict):
+        response = MagicMock()
+        response.status_code = status_code
+        response.content = b"payload"
+        response.json.return_value = payload
+        if status_code >= 400:
+            response.raise_for_status.side_effect = RuntimeError("unexpected status handling")
+        return response
+
+    def test_rate_limit_http_status_is_not_silently_returned_as_zero(self):
+        self.client.session.get.return_value = self.response(429, {})
+        with self.assertRaises(KisRateLimitError):
+            self.client.get_quote("AAPL")
+        self.client.session.get.assert_called_once()
+
+    def test_kis_success_status_with_rate_limit_code_is_an_error(self):
+        self.client.session.get.return_value = self.response(
+            200,
+            {"rt_cd": "1", "msg_cd": "EGW00201", "msg1": "초당 거래건수 초과"},
+        )
+        with self.assertRaises(KisRateLimitError):
+            self.client.get_quote("AAPL")
+        self.client.session.get.assert_called_once()
+
+    def test_authentication_failure_refreshes_once_then_retries_quote(self):
+        unauthorized = self.response(401, {})
+        success = self.response(
+            200,
+            {
+                "rt_cd": "0",
+                "output": {"last": "123.45", "bidp": "123", "askp": "124", "tvol": "9"},
+            },
+        )
+        self.client.session.get.side_effect = [unauthorized, success]
+
+        def refresh_token():
+            self.client.token = "refreshed-token"
+            self.client.token_expires_at = dt.datetime.now() + dt.timedelta(hours=1)
+
+        with patch.object(self.client, "_refresh_token", side_effect=refresh_token) as refresh:
+            quote = self.client.get_quote("AAPL")
+        self.assertEqual(quote["price"], 123.45)
+        self.assertEqual(self.client.session.get.call_count, 2)
+        refresh.assert_called_once()
+
+    def test_second_authentication_failure_is_raised(self):
+        self.client.session.get.side_effect = [
+            self.response(401, {}),
+            self.response(403, {}),
+        ]
+
+        def refresh_token():
+            self.client.token = "refreshed-token"
+            self.client.token_expires_at = dt.datetime.now() + dt.timedelta(hours=1)
+
+        with patch.object(self.client, "_refresh_token", side_effect=refresh_token):
+            with self.assertRaises(KisAuthenticationError):
+                self.client.get_quote("AAPL")
+        self.assertEqual(self.client.session.get.call_count, 2)
 
 
 class StrategyDslTests(unittest.TestCase):
@@ -464,6 +715,74 @@ class PaperLedgerTests(unittest.TestCase):
 
     def tearDown(self):
         self.session.close()
+
+    def test_personal_watchlist_is_empty_without_an_active_account(self):
+        user = User(
+            id="v" * 32,
+            email="no-account@example.com",
+            display_name="No Account",
+            password_hash="unused",
+        )
+        self.session.add(user)
+        self.session.commit()
+        with patch("cloud_app.paper.get_dataset_bundle") as dataset:
+            self.assertEqual(collect_watchlist(self.session, user_id=user.id), set())
+        dataset.assert_not_called()
+
+    def test_same_tick_member_quote_is_visible_before_fill_evaluation(self):
+        self.session.autoflush = False
+        self.session.add(
+            MarketDataConnection(
+                user_id=self.account.user_id,
+                provider="kis",
+                environment="paper",
+                encrypted_api_key="encrypted-key",
+                encrypted_api_secret="encrypted-secret",
+                key_hint="••••1234",
+                secret_hint="••••5678",
+                verified_at=dt.datetime.now(dt.timezone.utc),
+            )
+        )
+        self.session.commit()
+        observed = {}
+
+        def collect_personal_quotes(session, _settings):
+            count = store_member_quotes(
+                session,
+                self.account.user_id,
+                [
+                    QuoteValue(
+                        ticker="AAPL",
+                        price=222.0,
+                        bid=221.0,
+                        ask=223.0,
+                        volume=10.0,
+                        source="kis_member",
+                        observed_at=dt.datetime.now(dt.timezone.utc),
+                    )
+                ],
+            )
+            return count, 0
+
+        def inspect_engine_quotes(session):
+            observed.update(quote_map(session, ["AAPL"], user_id=self.account.user_id))
+            return 0
+
+        provider = MagicMock()
+        provider.fetch.return_value = []
+        with (
+            patch("cloud_app.worker.SessionLocal", return_value=self.session),
+            patch("cloud_app.worker.acquire_lease", return_value=True),
+            patch("cloud_app.worker.regular_market_open", return_value=True),
+            patch("cloud_app.worker.apply_terminal_events", return_value={"settled": 0, "review_accounts": 0}),
+            patch("cloud_app.worker.collect_watchlist", return_value=set()),
+            patch("cloud_app.worker.collect_member_quotes", side_effect=collect_personal_quotes),
+            patch("cloud_app.worker.rebalance_due_accounts", side_effect=inspect_engine_quotes),
+            patch("cloud_app.worker.mark_and_stop_accounts", return_value=0),
+            patch("cloud_app.worker.heartbeat"),
+        ):
+            run_paper_tick(provider, SimpleNamespace())
+        self.assertEqual(observed, {"AAPL": 222.0})
 
     def test_fill_dedupe_prevents_duplicate_paper_execution(self):
         first = _fill(

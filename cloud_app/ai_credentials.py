@@ -2,15 +2,8 @@
 
 from __future__ import annotations
 
-import base64
-import hashlib
-import os
-import secrets
-from pathlib import Path
-
-from cryptography.fernet import Fernet, InvalidToken
-
-from .config import AI_MODEL_PATTERN, ROOT, Settings, get_settings
+from .config import AI_MODEL_PATTERN, Settings, get_settings
+from .credential_store import decrypt_credential, encrypt_credential
 
 
 PROVIDERS = {
@@ -90,48 +83,16 @@ def validate_api_key(api_key: str) -> str:
     return value
 
 
-def _master_secret(settings: Settings) -> str:
-    if settings.ai_credential_secret:
-        return settings.ai_credential_secret
-    if settings.production:
-        raise RuntimeError("AI_CREDENTIAL_SECRET is required in production")
-    path = Path(ROOT) / "runtime/.ai_credential_secret"
-    try:
-        value = path.read_text(encoding="utf-8").strip()
-        if len(value) >= 32:
-            return value
-    except FileNotFoundError:
-        pass
-    path.parent.mkdir(parents=True, exist_ok=True)
-    value = secrets.token_urlsafe(48)
-    try:
-        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            handle.write(value)
-        return value
-    except FileExistsError:
-        existing = path.read_text(encoding="utf-8").strip()
-        if len(existing) < 32:
-            raise RuntimeError("Local AI credential secret is invalid")
-        return existing
-
-
-def _fernet(settings: Settings | None = None) -> Fernet:
-    settings = settings or get_settings()
-    secret = _master_secret(settings)
-    material = hashlib.sha256(("milkyway-ai-credential:" + secret).encode("utf-8")).digest()
-    return Fernet(base64.urlsafe_b64encode(material))
-
-
 def encrypt_api_key(api_key: str, settings: Settings | None = None) -> str:
-    return _fernet(settings).encrypt(validate_api_key(api_key).encode("utf-8")).decode("ascii")
+    return encrypt_credential(validate_api_key(api_key), settings)
 
 
 def decrypt_api_key(ciphertext: str, settings: Settings | None = None) -> str:
-    try:
-        return _fernet(settings).decrypt(ciphertext.encode("ascii")).decode("utf-8")
-    except (InvalidToken, ValueError, UnicodeError) as exc:
-        raise RuntimeError("AI API 키를 읽을 수 없습니다. 설정에서 다시 연결해 주세요") from exc
+    return decrypt_credential(
+        ciphertext,
+        settings,
+        error_message="AI API 키를 읽을 수 없습니다. 설정에서 다시 연결해 주세요",
+    )
 
 
 def key_hint(api_key: str) -> str:

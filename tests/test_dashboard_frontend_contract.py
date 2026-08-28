@@ -37,6 +37,7 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertGreaterEqual(len(self._elements_with("data-show-landing")), 2)
 
     def test_authenticated_profile_contract_is_present(self):
+        by_id = {attrs["id"]: (tag, attrs) for tag, attrs in self._elements_with("id")}
         self.assertEqual(len(self._elements_with("data-authenticated-only")), 2)
         self.assertEqual(len(self._elements_with("data-open-profile")), 2)
         self.assertEqual(len(self._elements_with("data-profile-menu-action")), 3)
@@ -51,6 +52,16 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertIn("aiApiKey", ids)
         self.assertIn("aiDisconnectBtn", ids)
         self.assertIn("aiConnectBtn", ids)
+        self.assertIn("marketDataConnectionSettings", ids)
+        self.assertIn("marketDataConnectionForm", ids)
+        self.assertIn("marketDataProvider", ids)
+        self.assertIn("marketDataEnvironment", ids)
+        self.assertIn("marketDataApiKey", ids)
+        self.assertIn("marketDataApiSecret", ids)
+        self.assertIn("marketDataPersonalUse", ids)
+        self.assertIn("marketDataDisconnectBtn", ids)
+        self.assertEqual(by_id["aiConnectionForm"][1].get("method"), "post")
+        self.assertEqual(by_id["marketDataConnectionForm"][1].get("method"), "post")
         self.assertNotIn("aiStatus", ids)
 
     def test_strategy_builder_uses_connection_action(self):
@@ -60,6 +71,7 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertNotIn("AI 웹 구독 계정", self.html)
         self.assertNotIn("대시보드 시작 화면", self.html)
         self.assertIn("requires_api_key", PROFILE.read_text(encoding="utf-8"))
+        self.assertIn("onMarketDataSave", PROFILE.read_text(encoding="utf-8"))
         self.assertIn('data-profile-menu-action="settings"', self.html)
         self.assertIn('data-profile-menu-action="logout"', self.html)
 

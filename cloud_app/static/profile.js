@@ -14,7 +14,7 @@
     }
   }
 
-  function create({getUser, getPreferences, getAiConnection, onAiLoad, onAiSave, onAiDisconnect, onSave, onLogout, onError}) {
+  function create({getUser, getPreferences, getAiConnection, getMarketDataConnection, onAiLoad, onAiSave, onAiDisconnect, onMarketDataLoad, onMarketDataSave, onMarketDataDisconnect, onSave, onLogout, onError}) {
     let activeTrigger = null;
 
     function selectedProvider(connection, providerId) {
@@ -78,6 +78,42 @@
       $("#aiDisconnectBtn").classList.toggle("hidden", !connection.configured);
     }
 
+    function updateMarketDataEnvironments(connection, providerId, preferredEnvironment = "") {
+      const provider = connection.providers?.find((item) => item.id === providerId) || connection.providers?.[0];
+      const select = $("#marketDataEnvironment");
+      select.innerHTML = (provider?.environments || []).map((environment) => `<option value="${environment.id}">${environment.label}</option>`).join("");
+      select.value = preferredEnvironment || provider?.environments?.[0]?.id || "";
+    }
+
+    function updateMarketDataKeyHelp(connection, providerId) {
+      const sameProvider = connection.configured && connection.provider === providerId;
+      $("#marketDataApiKey").required = !sameProvider;
+      $("#marketDataApiSecret").required = !sameProvider;
+      $("#marketDataApiKey").placeholder = sameProvider ? `${connection.key_hint} · 비워 두면 기존 키 유지` : "App Key 입력";
+      $("#marketDataApiSecret").placeholder = sameProvider ? `${connection.secret_hint} · 비워 두면 기존 시크릿 유지` : "App Secret 입력";
+      const verified = connection.verified_at ? new Date(connection.verified_at).toLocaleString("ko-KR") : "";
+      $("#marketDataKeyHelp").textContent = sameProvider
+        ? `현재 ${connection.key_hint} / ${connection.secret_hint}가 암호화되어 있습니다. 마지막 인증 성공: ${verified || "확인 불가"}.`
+        : "저장 시 증권사 토큰 발급으로 키를 검증합니다.";
+    }
+
+    function renderMarketDataConnection() {
+      const connection = getMarketDataConnection?.() || {connected: false, providers: []};
+      const providerSelect = $("#marketDataProvider");
+      providerSelect.innerHTML = (connection.providers || []).map((provider) => `<option value="${provider.id}">${provider.label}</option>`).join("");
+      const providerId = connection.provider || connection.providers?.[0]?.id || "";
+      providerSelect.value = providerId;
+      updateMarketDataEnvironments(connection, providerId, connection.environment || "");
+      $("#marketDataApiKey").value = "";
+      $("#marketDataApiSecret").value = "";
+      updateMarketDataKeyHelp(connection, providerId);
+      $("#marketDataPersonalUse").checked = connection.configured;
+      const status = $("#marketDataConnectionStatus");
+      status.textContent = connection.connected ? "마지막 인증 성공" : "연결 필요";
+      status.className = `status-pill ${connection.connected ? "ok" : "warn"}`;
+      $("#marketDataDisconnectBtn").classList.toggle("hidden", !connection.configured);
+    }
+
     function render() {
       const user = getUser();
       if (!user) return;
@@ -89,6 +125,7 @@
       const preferences = getPreferences();
       form.default_market.value = preferences.default_market;
       renderAiConnection();
+      renderMarketDataConnection();
     }
 
     function showTab(name) {
@@ -129,8 +166,11 @@
       const dialog = $("#profileDialog");
       if (!dialog.open) dialog.showModal();
       if (targetId) requestAnimationFrame(() => $("#" + targetId)?.focus({preventScroll: true}));
-      if (tab === "settings" && !(getAiConnection?.()?.providers || []).length) {
-        Promise.resolve(onAiLoad()).then(render).catch(onError);
+      if (tab === "settings") {
+        const loads = [];
+        if (!(getAiConnection?.()?.providers || []).length) loads.push(onAiLoad());
+        if (!(getMarketDataConnection?.()?.providers || []).length) loads.push(onMarketDataLoad());
+        if (loads.length) Promise.all(loads).then(render).catch(onError);
       }
     }
 
@@ -155,6 +195,11 @@
         updateModelOptions(connection, event.target.value);
         updateKeyHelp(connection, event.target.value);
       });
+      $("#marketDataProvider").addEventListener("change", (event) => {
+        const connection = getMarketDataConnection?.() || {connected: false, providers: []};
+        updateMarketDataEnvironments(connection, event.target.value);
+        updateMarketDataKeyHelp(connection, event.target.value);
+      });
       $("#aiConnectionForm").addEventListener("submit", async (event) => {
         event.preventDefault();
         const button = $("#aiConnectionSaveBtn");
@@ -178,6 +223,35 @@
         try {
           await onAiDisconnect();
           renderAiConnection();
+        } catch (error) {
+          onError(error);
+        }
+      });
+      $("#marketDataConnectionForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = $("#marketDataConnectionSaveBtn");
+        const original = button.textContent;
+        button.disabled = true;
+        button.textContent = "증권사 인증 확인 중…";
+        try {
+          const values = Object.fromEntries(new FormData(event.target).entries());
+          values.personal_use_only = values.personal_use_only === "on";
+          if (!values.api_key) delete values.api_key;
+          if (!values.api_secret) delete values.api_secret;
+          await onMarketDataSave(values);
+          renderMarketDataConnection();
+        } catch (error) {
+          onError(error);
+        } finally {
+          button.disabled = false;
+          button.textContent = original;
+        }
+      });
+      $("#marketDataDisconnectBtn").addEventListener("click", async () => {
+        if (!window.confirm("저장된 증권사 시세 API 연결을 해제할까요?")) return;
+        try {
+          await onMarketDataDisconnect();
+          renderMarketDataConnection();
         } catch (error) {
           onError(error);
         }

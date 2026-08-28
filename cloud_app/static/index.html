@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070512">
   <title>Milkyway | Quant Trading Lab</title>
   <link rel="icon" type="image/png" href="/static/assets/milkyway-symbol-white-v2.png">
-  <link rel="stylesheet" href="/static/styles.css?v=20260828-9">
+  <link rel="stylesheet" href="/static/styles.css?v=20260828-10">
 </head>
 <body>
   <canvas id="marketBackdrop" aria-hidden="true"></canvas>
@@ -189,7 +189,7 @@
       <div id="aiConnectionSettings" class="settings-block" tabindex="-1">
         <div class="settings-heading"><div><p class="eyebrow">AI CONNECTION</p><h4>AI</h4></div><span id="aiConnectionStatus" class="status-pill">연결 필요</span></div>
         <p class="settings-copy">본인의 클라우드 API 또는 Milkyway 서버의 로컬 AI를 선택할 수 있습니다. 입력한 키 원문은 다시 표시하지 않고 서버에 암호화해 저장합니다.</p>
-        <form id="aiConnectionForm" class="stack ai-connection-form">
+        <form id="aiConnectionForm" class="stack ai-connection-form" method="post">
           <label>AI 공급자<select name="provider" id="aiProvider" required></select></label>
           <label>모델 ID<input name="model" id="aiModel" list="aiModelOptions" maxlength="100" autocomplete="off" required></label>
           <datalist id="aiModelOptions"></datalist>
@@ -198,6 +198,20 @@
           <div class="settings-actions"><button id="aiConnectionSaveBtn" class="primary" type="submit">연결 저장</button><button id="aiDisconnectBtn" class="ghost hidden" type="button">연결 해제</button></div>
         </form>
         <p id="aiBillingNote" class="settings-billing-note">API 사용료와 한도는 선택한 공급자의 본인 계정에 적용됩니다.</p>
+      </div>
+      <div id="marketDataConnectionSettings" class="settings-block connection-block" tabindex="-1">
+        <div class="settings-heading"><div><p class="eyebrow">MARKET DATA CONNECTION</p><h4>증권사 시세 API</h4></div><span id="marketDataConnectionStatus" class="status-pill">연결 필요</span></div>
+        <p class="settings-copy">본인 증권사의 App Key와 App Secret을 연결합니다. 키 원문은 다시 표시하지 않고 서버에 암호화해 저장합니다.</p>
+        <form id="marketDataConnectionForm" class="stack market-data-connection-form" method="post">
+          <label>시세 공급자<select name="provider" id="marketDataProvider" required></select></label>
+          <label>연결 환경<select name="environment" id="marketDataEnvironment" required></select></label>
+          <label>App Key<input name="api_key" id="marketDataApiKey" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
+          <label>App Secret<input name="api_secret" id="marketDataApiSecret" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
+          <label class="consent-row"><input name="personal_use_only" id="marketDataPersonalUse" type="checkbox" required><span>본인의 개인 페이퍼 트레이딩 체결가에만 사용합니다.</span></label>
+          <p id="marketDataKeyHelp" class="fineprint">저장 시 증권사 토큰 발급으로 키를 검증합니다.</p>
+          <div class="settings-actions"><button id="marketDataConnectionSaveBtn" class="primary" type="submit">연결 확인 및 저장</button><button id="marketDataDisconnectBtn" class="ghost hidden" type="button">연결 해제</button></div>
+        </form>
+        <p class="settings-billing-note">개인 증권사 키로 받은 시세를 다른 회원에게 재배포하지 않습니다. 공용 실시간 피드는 별도 라이선스가 확인된 공급자를 사용해야 합니다.</p>
       </div>
       <div class="settings-block preferences-block">
         <div class="settings-heading"><div><p class="eyebrow">PREFERENCES</p><h4>화면 설정</h4></div></div>
@@ -209,7 +223,7 @@
     </section>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/profile.js?v=20260828-10" defer></script>
-  <script src="/static/app.js?v=20260828-10" defer></script>
+  <script src="/static/profile.js?v=20260828-11" defer></script>
+  <script src="/static/app.js?v=20260828-11" defer></script>
 </body>
 </html>
