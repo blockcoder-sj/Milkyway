@@ -86,15 +86,23 @@
     }
 
     function updateMarketDataKeyHelp(connection, providerId) {
+      const provider = connection.providers?.find((item) => item.id === providerId) || connection.providers?.[0] || {};
       const sameProvider = connection.configured && connection.provider === providerId;
+      const labels = provider.credential_labels || {key: "App Key", secret: "App Secret"};
+      const placeholders = provider.credential_placeholders || {key: "App Key 입력", secret: "App Secret 입력"};
+      const setupLink = $("#marketDataSetupLink");
+      $("#marketDataApiKeyLabel").textContent = labels.key;
+      $("#marketDataApiSecretLabel").textContent = labels.secret;
+      setupLink.href = provider.setup_url || "#";
+      setupLink.textContent = `${provider.label || "증권사"} API 키 발급 페이지 열기`;
       $("#marketDataApiKey").required = !sameProvider;
       $("#marketDataApiSecret").required = !sameProvider;
-      $("#marketDataApiKey").placeholder = sameProvider ? `${connection.key_hint} · 비워 두면 기존 키 유지` : "App Key 입력";
-      $("#marketDataApiSecret").placeholder = sameProvider ? `${connection.secret_hint} · 비워 두면 기존 시크릿 유지` : "App Secret 입력";
+      $("#marketDataApiKey").placeholder = sameProvider ? `${connection.key_hint} · 비워 두면 기존 값 유지` : placeholders.key;
+      $("#marketDataApiSecret").placeholder = sameProvider ? `${connection.secret_hint} · 비워 두면 기존 값 유지` : placeholders.secret;
       const verified = connection.verified_at ? new Date(connection.verified_at).toLocaleString("ko-KR") : "";
       $("#marketDataKeyHelp").textContent = sameProvider
         ? `현재 ${connection.key_hint} / ${connection.secret_hint}가 암호화되어 있습니다. 마지막 인증 성공: ${verified || "확인 불가"}.`
-        : "저장 시 증권사 토큰 발급으로 키를 검증합니다.";
+        : provider.setup_help || "저장 시 증권사 토큰 발급으로 키를 검증합니다.";
     }
 
     function renderMarketDataConnection() {

@@ -106,6 +106,31 @@ class KisQuoteProvider(QuoteProvider):
         return result
 
 
+class TossQuoteProvider(QuoteProvider):
+    """Member-owned Toss feed using its 200-symbol batch current-price API."""
+
+    def __init__(self, credentials, *, source: str = "toss_member"):
+        from .toss_quotes import TossQuoteClient
+
+        self.broker = TossQuoteClient(credentials)
+        self.source = source
+        self.broker.authenticate()
+
+    def fetch(self, tickers: Iterable[str]) -> list[QuoteValue]:
+        return [
+            QuoteValue(
+                ticker=raw["ticker"],
+                price=float(raw["price"]),
+                bid=float(raw.get("bid", 0) or 0),
+                ask=float(raw.get("ask", 0) or 0),
+                volume=float(raw.get("volume", 0) or 0),
+                source=self.source,
+                observed_at=raw["observed_at"],
+            )
+            for raw in self.broker.get_prices(tickers)
+        ]
+
+
 def make_quote_provider(settings: Settings | None = None) -> QuoteProvider:
     settings = settings or get_settings()
     if settings.quote_provider == "kis":

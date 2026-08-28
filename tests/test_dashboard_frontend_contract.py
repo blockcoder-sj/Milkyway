@@ -58,6 +58,9 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertIn("marketDataEnvironment", ids)
         self.assertIn("marketDataApiKey", ids)
         self.assertIn("marketDataApiSecret", ids)
+        self.assertIn("marketDataApiKeyLabel", ids)
+        self.assertIn("marketDataApiSecretLabel", ids)
+        self.assertIn("marketDataSetupLink", ids)
         self.assertIn("marketDataPersonalUse", ids)
         self.assertIn("marketDataDisconnectBtn", ids)
         self.assertEqual(by_id["aiConnectionForm"][1].get("method"), "post")
@@ -72,6 +75,8 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertNotIn("대시보드 시작 화면", self.html)
         self.assertIn("requires_api_key", PROFILE.read_text(encoding="utf-8"))
         self.assertIn("onMarketDataSave", PROFILE.read_text(encoding="utf-8"))
+        self.assertIn("credential_labels", PROFILE.read_text(encoding="utf-8"))
+        self.assertIn("setup_url", PROFILE.read_text(encoding="utf-8"))
         self.assertIn('data-profile-menu-action="settings"', self.html)
         self.assertIn('data-profile-menu-action="logout"', self.html)
 

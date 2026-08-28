@@ -419,6 +419,12 @@ def _market_data_connection_payload(row: MarketDataConnection | None) -> dict:
     }
 
 
+def _market_data_connection_version(row: MarketDataConnection | None) -> str | None:
+    if row is None:
+        return None
+    return "{}:{}:{}".format(row.provider, row.environment, row.updated_at.isoformat())
+
+
 @app.get("/api/me/market-data-connection")
 def get_market_data_connection(
     user: User = Depends(current_user), session: Session = Depends(get_db)
@@ -444,6 +450,7 @@ def put_market_data_connection(
         raise HTTPException(status_code=422, detail=str(exc))
 
     row = session.get(MarketDataConnection, user.id)
+    expected_version = _market_data_connection_version(row)
     supplied_key = body.api_key.get_secret_value() if body.api_key else ""
     supplied_secret = body.api_secret.get_secret_value() if body.api_secret else ""
     same_provider = row is not None and row.provider == provider
@@ -475,6 +482,23 @@ def put_market_data_connection(
         raise HTTPException(status_code=502, detail=str(exc))
     finally:
         _market_data_verification_slots.release()
+
+    # Authentication is network I/O and stays outside the row lock. Re-read
+    # and lock immediately before mutation so worker and settings operations
+    # always lock connection -> member quotes in the same order.
+    locked_row = session.scalar(
+        select(MarketDataConnection)
+        .where(MarketDataConnection.user_id == user.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if _market_data_connection_version(locked_row) != expected_version:
+        session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="시세 API 설정이 다른 요청에서 변경됐습니다. 다시 시도해 주세요",
+        )
+    row = locked_row
 
     encrypted_key = (
         encrypt_market_credential(api_key, "App Key", settings)
@@ -511,7 +535,14 @@ def put_market_data_connection(
     # under the previous credential/environment.
     session.execute(delete(MemberQuote).where(MemberQuote.user_id == user.id))
     session.add(row)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="시세 API 설정이 동시에 생성됐습니다. 다시 시도해 주세요",
+        ) from exc
     return _market_data_connection_payload(row)
 
 
@@ -519,7 +550,12 @@ def put_market_data_connection(
 def delete_market_data_connection(
     user: User = Depends(csrf_guard), session: Session = Depends(get_db)
 ):
-    row = session.get(MarketDataConnection, user.id)
+    row = session.scalar(
+        select(MarketDataConnection)
+        .where(MarketDataConnection.user_id == user.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if row is not None:
         session.execute(delete(MemberQuote).where(MemberQuote.user_id == user.id))
         session.delete(row)

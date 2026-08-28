@@ -67,9 +67,16 @@ from cloud_app.kis_quotes import (
     KisQuoteClient,
     KisRateLimitError,
 )
-from cloud_app.market_data_credentials import decrypt_market_credential
+from cloud_app.market_data_credentials import (
+    MarketDataProviderError,
+    decrypt_market_credential,
+    encrypt_market_credential,
+    provider_catalog as market_data_provider_catalog,
+    verify_connection as verify_market_data_connection,
+)
 from cloud_app.paper import (
     QuoteValue,
+    TossQuoteProvider,
     _fill,
     apply_terminal_events,
     collect_watchlist,
@@ -84,8 +91,20 @@ from cloud_app.strategies import (
     eligibility_mask,
     strategy_code_preview,
 )
+from cloud_app.toss_quotes import (
+    TossAuthenticationError,
+    TossCredentials,
+    TossIpNotAllowedError,
+    TossQuoteClient,
+    TossRateLimitError,
+)
 from terminal_events import append_event
-from cloud_app.worker import run_paper_tick
+from cloud_app.worker import (
+    MemberFeedConfig,
+    _member_provider,
+    collect_member_quotes as collect_worker_member_quotes,
+    run_paper_tick,
+)
 
 
 def sample_spec(**portfolio_overrides):
@@ -293,6 +312,79 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(session.query(MemberQuote).filter_by(user_id=user.id).count(), 0)
         session.close()
 
+    def test_member_can_store_a_verified_toss_market_data_connection(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(id="t" * 32, email="toss@example.com", display_name="Toss", password_hash="x")
+        session.add(user)
+        session.commit()
+        client_id = "c_01HXYZABCDEFG123456789"
+        client_secret = "s_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        with patch("cloud_app.main.verify_market_data_connection") as verify:
+            payload = put_market_data_connection(
+                MarketDataConnectionBody(
+                    provider="toss",
+                    environment="live",
+                    api_key=client_id,
+                    api_secret=client_secret,
+                    personal_use_only=True,
+                ),
+                user,
+                session,
+            )
+        verify.assert_called_once_with("toss", "live", client_id, client_secret)
+        self.assertEqual(payload["provider"], "toss")
+        self.assertEqual(payload["environment"], "live")
+        self.assertNotIn("api_key", payload)
+        stored = session.get(MarketDataConnection, user.id)
+        self.assertNotIn(client_id, stored.encrypted_api_key)
+        self.assertEqual(decrypt_market_credential(stored.encrypted_api_key), client_id)
+        session.close()
+
+    def test_market_data_save_rejects_a_concurrent_connection_change(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(id="c" * 32, email="conflict@example.com", display_name="Conflict", password_hash="x")
+        session.add(user)
+        session.commit()
+        client_id = "c_01HXYZABCDEFG123456789"
+        client_secret = "s_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        with patch("cloud_app.main.verify_market_data_connection"):
+            put_market_data_connection(
+                MarketDataConnectionBody(
+                    provider="toss",
+                    environment="live",
+                    api_key=client_id,
+                    api_secret=client_secret,
+                    personal_use_only=True,
+                ),
+                user,
+                session,
+            )
+        stored = session.get(MarketDataConnection, user.id)
+        changed = SimpleNamespace(
+            provider="toss",
+            environment="live",
+            updated_at=stored.updated_at + dt.timedelta(seconds=1),
+        )
+        with patch("cloud_app.main.verify_market_data_connection"), patch.object(
+            session, "scalar", return_value=changed
+        ):
+            with self.assertRaises(HTTPException) as raised:
+                put_market_data_connection(
+                    MarketDataConnectionBody(
+                        provider="toss",
+                        environment="live",
+                        personal_use_only=True,
+                    ),
+                    user,
+                    session,
+                )
+        self.assertEqual(raised.exception.status_code, 409)
+        session.close()
+
     def test_market_data_connection_requires_personal_use_acknowledgement(self):
         engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(engine)
@@ -475,6 +567,281 @@ class KisQuoteClientTests(unittest.TestCase):
             with self.assertRaises(KisAuthenticationError):
                 self.client.get_quote("AAPL")
         self.assertEqual(self.client.session.get.call_count, 2)
+
+
+class TossQuoteClientTests(unittest.TestCase):
+    def setUp(self):
+        self.client = TossQuoteClient(
+            TossCredentials(
+                client_id="c_01HXYZABCDEFG123456789",
+                client_secret="s_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            )
+        )
+        self.client.session = MagicMock()
+        self.client.token = "current-token"
+        self.client.token_expires_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=1)
+
+    @staticmethod
+    def response(status_code: int, payload: dict, headers: dict | None = None):
+        response = MagicMock()
+        response.status_code = status_code
+        response.content = b"payload"
+        response.headers = headers or {}
+        response.json.return_value = payload
+        return response
+
+    def test_authenticate_uses_form_encoded_client_credentials(self):
+        self.client.token = ""
+        self.client.session.post.return_value = self.response(
+            200,
+            {"access_token": "issued-token", "token_type": "Bearer", "expires_in": 86400},
+        )
+        self.client.authenticate()
+        self.assertEqual(self.client.token, "issued-token")
+        call = self.client.session.post.call_args
+        self.assertEqual(call.args[0], "https://openapi.tossinvest.com/oauth2/token")
+        self.assertEqual(call.kwargs["data"]["grant_type"], "client_credentials")
+        self.assertNotIn("json", call.kwargs)
+
+    def test_prices_batch_maps_kr_and_us_quotes_with_provider_timestamps(self):
+        self.client.session.get.return_value = self.response(
+            200,
+            {
+                "result": [
+                    {
+                        "symbol": "AAPL",
+                        "timestamp": "2026-08-28T10:30:00-04:00",
+                        "lastPrice": "185.70",
+                        "currency": "USD",
+                    },
+                    {
+                        "symbol": "005930",
+                        "timestamp": "2026-08-28T23:30:00+09:00",
+                        "lastPrice": "72000",
+                        "currency": "KRW",
+                    },
+                ]
+            },
+        )
+        quotes = self.client.get_prices(["AAPL", "005930", "AAPL"])
+        self.assertEqual([quote["ticker"] for quote in quotes], ["AAPL", "005930"])
+        self.assertEqual(quotes[0]["price"], 185.7)
+        self.assertEqual(quotes[0]["observed_at"].tzinfo, dt.timezone.utc)
+        self.assertEqual(
+            self.client.session.get.call_args.kwargs["params"]["symbols"],
+            "005930,AAPL",
+        )
+
+    def test_null_timestamp_skips_only_that_symbol_and_preserves_batch(self):
+        self.client.session.get.return_value = self.response(
+            200,
+            {
+                "result": [
+                    {
+                        "symbol": "AAPL",
+                        "timestamp": "2026-08-28T10:30:00-04:00",
+                        "lastPrice": "185.70",
+                        "currency": "USD",
+                    },
+                    {
+                        "symbol": "NEW",
+                        "timestamp": None,
+                        "lastPrice": "10.00",
+                        "currency": "USD",
+                    },
+                ]
+            },
+        )
+        quotes = self.client.get_prices(["AAPL", "NEW"])
+        self.assertEqual([quote["ticker"] for quote in quotes], ["AAPL"])
+
+    def test_prices_are_split_into_official_200_symbol_batches(self):
+        self.client.session.get.side_effect = [
+            self.response(200, {"result": []}),
+            self.response(200, {"result": []}),
+        ]
+        symbols = ["T{:03d}".format(index) for index in range(201)]
+        self.assertEqual(self.client.get_prices(symbols), [])
+        self.assertEqual(self.client.session.get.call_count, 2)
+        first_symbols = self.client.session.get.call_args_list[0].kwargs["params"]["symbols"]
+        second_symbols = self.client.session.get.call_args_list[1].kwargs["params"]["symbols"]
+        self.assertEqual(len(first_symbols.split(",")), 200)
+        self.assertEqual(len(second_symbols.split(",")), 1)
+
+    def test_invalid_symbol_is_skipped_without_blocking_valid_holdings(self):
+        self.client.session.get.return_value = self.response(200, {"result": []})
+        self.assertEqual(self.client.get_prices(["AAPL", "BAD/SYMBOL"]), [])
+        requested = self.client.session.get.call_args.kwargs["params"]["symbols"]
+        self.assertEqual(requested, "AAPL")
+
+    def test_expired_token_is_refreshed_once_then_prices_are_retried(self):
+        self.client.session.get.side_effect = [
+            self.response(401, {"error": {"code": "expired-token"}}),
+            self.response(200, {"result": []}),
+        ]
+
+        def authenticate():
+            self.client.token = "refreshed-token"
+            self.client.token_expires_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=1)
+
+        with patch.object(self.client, "authenticate", side_effect=authenticate) as refresh:
+            self.assertEqual(self.client.get_prices(["AAPL"]), [])
+        refresh.assert_called_once()
+        self.assertEqual(self.client.session.get.call_count, 2)
+
+    def test_second_authentication_rejection_is_not_retried_forever(self):
+        self.client.session.get.side_effect = [
+            self.response(401, {"error": {"code": "expired-token"}}),
+            self.response(401, {"error": {"code": "invalid-token"}}),
+        ]
+
+        def authenticate():
+            self.client.token = "refreshed-token"
+            self.client.token_expires_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=1)
+
+        with patch.object(self.client, "authenticate", side_effect=authenticate) as refresh:
+            with self.assertRaises(TossAuthenticationError):
+                self.client.get_prices(["AAPL"])
+        refresh.assert_called_once()
+        self.assertEqual(self.client.session.get.call_count, 2)
+
+    def test_unregistered_server_ip_is_a_distinct_error(self):
+        self.client.session.get.return_value = self.response(
+            403,
+            {"error": {"code": "edge-blocked"}},
+        )
+        with self.assertRaises(TossIpNotAllowedError):
+            self.client.get_prices(["AAPL"])
+
+    def test_rate_limit_preserves_retry_after(self):
+        self.client.session.get.return_value = self.response(
+            429,
+            {"error": {"code": "rate-limit-exceeded"}},
+            {"Retry-After": "2.5"},
+        )
+        with self.assertRaises(TossRateLimitError) as raised:
+            self.client.get_prices(["AAPL"])
+        self.assertEqual(raised.exception.retry_after, 2.5)
+
+
+class MarketDataProviderTests(unittest.TestCase):
+    def test_catalog_exposes_toss_labels_environment_and_allowed_ip_requirement(self):
+        providers = {provider["id"]: provider for provider in market_data_provider_catalog()}
+        self.assertEqual(set(providers), {"kis", "toss"})
+        toss = providers["toss"]
+        self.assertEqual(toss["environments"], [
+            {"id": "live", "label": "실시간 시세 · 내부 페이퍼 체결 전용"}
+        ])
+        self.assertEqual(toss["credential_labels"]["key"], "Client ID")
+        self.assertTrue(toss["requires_allowed_ip"])
+        self.assertTrue(toss["setup_url"].startswith("https://"))
+
+    def test_toss_verification_explains_unregistered_server_ip(self):
+        with patch(
+            "cloud_app.market_data_credentials.TossQuoteClient.authenticate",
+            side_effect=TossIpNotAllowedError("blocked"),
+        ):
+            with self.assertRaises(MarketDataProviderError) as raised:
+                verify_market_data_connection(
+                    "toss",
+                    "live",
+                    "c_01HXYZABCDEFG123456789",
+                    "s_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                )
+        self.assertIn("허용 IP", str(raised.exception))
+
+    def test_worker_builds_toss_provider_from_decrypted_member_credentials(self):
+        import cloud_app.worker as worker_module
+
+        settings = SimpleNamespace(ai_credential_secret="m" * 40, session_secret="s" * 40)
+        client_id = "c_01HXYZABCDEFG123456789"
+        client_secret = "s_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        config = MemberFeedConfig(
+            user_id="w" * 32,
+            provider="toss",
+            environment="live",
+            encrypted_api_key=encrypt_market_credential(client_id, "Client ID", settings),
+            encrypted_api_secret=encrypt_market_credential(
+                client_secret, "Client Secret", settings
+            ),
+            updated_at=dt.datetime.now(dt.timezone.utc),
+        )
+        worker_module._member_provider_cache.clear()
+        provider = MagicMock()
+        with patch("cloud_app.worker.TossQuoteProvider", return_value=provider) as build:
+            self.assertIs(_member_provider(config, settings), provider)
+        credentials = build.call_args.args[0]
+        self.assertEqual(credentials.client_id, client_id)
+        self.assertEqual(credentials.client_secret, client_secret)
+        self.assertEqual(build.call_args.kwargs["source"], "toss_member")
+        worker_module._member_provider_cache.clear()
+
+    def test_toss_provider_preserves_exchange_timestamp_for_freshness_gate(self):
+        provider = object.__new__(TossQuoteProvider)
+        provider.broker = MagicMock()
+        provider.source = "toss_member"
+        observed_at = dt.datetime(2026, 8, 28, 14, 30, tzinfo=dt.timezone.utc)
+        provider.broker.get_prices.return_value = [
+            {
+                "ticker": "AAPL",
+                "price": 185.7,
+                "bid": 0,
+                "ask": 0,
+                "volume": 0,
+                "observed_at": observed_at,
+            }
+        ]
+        values = provider.fetch(["AAPL"])
+        self.assertEqual(values[0].observed_at, observed_at)
+        self.assertEqual(values[0].source, "toss_member")
+
+    def test_worker_discards_quotes_if_connection_changes_during_network_fetch(self):
+        import cloud_app.worker as worker_module
+
+        observed_at = dt.datetime.now(dt.timezone.utc)
+        original = SimpleNamespace(
+            user_id="r" * 32,
+            provider="toss",
+            environment="live",
+            encrypted_api_key="encrypted-id",
+            encrypted_api_secret="encrypted-secret",
+            updated_at=observed_at,
+        )
+        replaced = SimpleNamespace(
+            **{
+                **vars(original),
+                "provider": "kis",
+                "environment": "paper",
+                "updated_at": observed_at + dt.timedelta(seconds=1),
+            }
+        )
+        session = MagicMock()
+        session.scalars.return_value.all.return_value = [original]
+        session.scalar.return_value = replaced
+        quote = QuoteValue(
+            ticker="AAPL",
+            price=185.7,
+            bid=0,
+            ask=0,
+            volume=0,
+            source="toss_member",
+            observed_at=observed_at,
+        )
+        worker_module._member_provider_cache.clear()
+        worker_module._member_retry_after.clear()
+        with patch("cloud_app.worker.store_member_quotes") as store:
+            with (
+                patch("cloud_app.worker.regular_market_open", return_value=True),
+                patch("cloud_app.worker.collect_watchlist", return_value={"AAPL"}),
+                patch(
+                    "cloud_app.worker._fetch_member_quotes",
+                    return_value=(original.user_id, [quote]),
+                ),
+            ):
+                result = collect_worker_member_quotes(session, SimpleNamespace())
+        self.assertEqual(result, (0, 0))
+        store.assert_not_called()
+        session.flush.assert_not_called()
 
 
 class StrategyDslTests(unittest.TestCase):

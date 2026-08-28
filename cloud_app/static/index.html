@@ -201,14 +201,15 @@
       </div>
       <div id="marketDataConnectionSettings" class="settings-block connection-block" tabindex="-1">
         <div class="settings-heading"><div><p class="eyebrow">MARKET DATA CONNECTION</p><h4>증권사 시세 API</h4></div><span id="marketDataConnectionStatus" class="status-pill">연결 필요</span></div>
-        <p class="settings-copy">본인 증권사의 App Key와 App Secret을 연결합니다. 키 원문은 다시 표시하지 않고 서버에 암호화해 저장합니다.</p>
+        <p class="settings-copy">본인 증권사의 API 자격증명을 연결합니다. 키 원문은 다시 표시하지 않고 서버에 암호화해 저장합니다.</p>
         <form id="marketDataConnectionForm" class="stack market-data-connection-form" method="post">
           <label>시세 공급자<select name="provider" id="marketDataProvider" required></select></label>
           <label>연결 환경<select name="environment" id="marketDataEnvironment" required></select></label>
-          <label>App Key<input name="api_key" id="marketDataApiKey" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
-          <label>App Secret<input name="api_secret" id="marketDataApiSecret" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
+          <label><span id="marketDataApiKeyLabel">App Key</span><input name="api_key" id="marketDataApiKey" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
+          <label><span id="marketDataApiSecretLabel">App Secret</span><input name="api_secret" id="marketDataApiSecret" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
           <label class="consent-row"><input name="personal_use_only" id="marketDataPersonalUse" type="checkbox" required><span>본인의 개인 페이퍼 트레이딩 체결가에만 사용합니다.</span></label>
           <p id="marketDataKeyHelp" class="fineprint">저장 시 증권사 토큰 발급으로 키를 검증합니다.</p>
+          <p class="fineprint"><a id="marketDataSetupLink" href="https://apiportal.koreainvestment.com/" target="_blank" rel="noopener noreferrer">API 키 발급 페이지 열기</a></p>
           <div class="settings-actions"><button id="marketDataConnectionSaveBtn" class="primary" type="submit">연결 확인 및 저장</button><button id="marketDataDisconnectBtn" class="ghost hidden" type="button">연결 해제</button></div>
         </form>
         <p class="settings-billing-note">개인 증권사 키로 받은 시세를 다른 회원에게 재배포하지 않습니다. 공용 실시간 피드는 별도 라이선스가 확인된 공급자를 사용해야 합니다.</p>
@@ -223,7 +224,7 @@
     </section>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/profile.js?v=20260828-11" defer></script>
-  <script src="/static/app.js?v=20260828-11" defer></script>
+  <script src="/static/profile.js?v=20260828-12" defer></script>
+  <script src="/static/app.js?v=20260828-12" defer></script>
 </body>
 </html>

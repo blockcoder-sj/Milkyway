@@ -2,9 +2,19 @@
 
 from __future__ import annotations
 
+import requests
+
 from .config import Settings
 from .credential_store import decrypt_credential, encrypt_credential
 from .kis_quotes import KisCredentials, KisQuoteClient
+from .toss_quotes import (
+    TossAuthenticationError,
+    TossCredentials,
+    TossIpNotAllowedError,
+    TossOpenApiError,
+    TossQuoteClient,
+    TossRateLimitError,
+)
 
 
 PROVIDERS = {
@@ -14,7 +24,26 @@ PROVIDERS = {
             {"id": "real", "label": "실전투자 시세"},
             {"id": "paper", "label": "모의투자 환경"},
         ],
-    }
+        "credential_labels": {"key": "App Key", "secret": "App Secret"},
+        "credential_placeholders": {"key": "App Key 입력", "secret": "App Secret 입력"},
+        "setup_help": "한국투자증권 개발자센터에서 발급한 키를 입력합니다.",
+        "setup_url": "https://apiportal.koreainvestment.com/",
+        "requires_allowed_ip": False,
+    },
+    "toss": {
+        "label": "토스증권 Open API",
+        "environments": [
+            {"id": "live", "label": "실시간 시세 · 내부 페이퍼 체결 전용"},
+        ],
+        "credential_labels": {"key": "Client ID", "secret": "Client Secret"},
+        "credential_placeholders": {
+            "key": "Client ID 입력",
+            "secret": "Client Secret 입력",
+        },
+        "setup_help": "토스증권 WTS에서 키를 발급하고 이 서버의 고정 공인 IP를 허용 IP로 등록합니다.",
+        "setup_url": "https://corp.tossinvest.com/ko/open-api",
+        "requires_allowed_ip": True,
+    },
 }
 
 
@@ -28,6 +57,11 @@ def provider_catalog() -> list[dict]:
             "id": provider,
             "label": details["label"],
             "environments": details["environments"],
+            "credential_labels": details["credential_labels"],
+            "credential_placeholders": details["credential_placeholders"],
+            "setup_help": details["setup_help"],
+            "setup_url": details["setup_url"],
+            "requires_allowed_ip": details["requires_allowed_ip"],
         }
         for provider, details in PROVIDERS.items()
     ]
@@ -70,16 +104,36 @@ def credential_hint(value: str) -> str:
 
 
 def verify_connection(provider: str, environment: str, api_key: str, api_secret: str) -> None:
-    if provider != "kis":
-        raise MarketDataProviderError("지원하지 않는 시세 공급자입니다")
-    client = KisQuoteClient(
-        KisCredentials(
-            api_key=api_key,
-            api_secret=api_secret,
-            paper=environment == "paper",
+    if provider == "kis":
+        client = KisQuoteClient(
+            KisCredentials(
+                api_key=api_key,
+                api_secret=api_secret,
+                paper=environment == "paper",
+            )
         )
-    )
-    if not client.connect():
-        raise MarketDataProviderError(
-            "KIS 인증에 실패했습니다. App Key·App Secret과 실전/모의 환경을 확인해 주세요"
-        )
+        if not client.connect():
+            raise MarketDataProviderError(
+                "KIS 인증에 실패했습니다. App Key·App Secret과 실전/모의 환경을 확인해 주세요"
+            )
+        return
+    if provider == "toss":
+        client = TossQuoteClient(TossCredentials(client_id=api_key, client_secret=api_secret))
+        try:
+            client.authenticate()
+        except TossIpNotAllowedError as exc:
+            raise MarketDataProviderError(
+                "토스증권이 서버 IP를 차단했습니다. WTS의 Open API 허용 IP에 이 서버의 고정 공인 IP를 등록해 주세요"
+            ) from exc
+        except TossAuthenticationError as exc:
+            raise MarketDataProviderError(
+                "토스증권 인증에 실패했습니다. Client ID와 Client Secret을 확인해 주세요"
+            ) from exc
+        except TossRateLimitError as exc:
+            raise MarketDataProviderError(
+                "토스증권 인증 요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요"
+            ) from exc
+        except (TossOpenApiError, requests.RequestException) as exc:
+            raise MarketDataProviderError("토스증권 Open API 연결 확인에 실패했습니다") from exc
+        return
+    raise MarketDataProviderError("지원하지 않는 시세 공급자입니다")
