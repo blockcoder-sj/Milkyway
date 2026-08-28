@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import os
 import re
+import secrets
+from pathlib import Path
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from .config import Settings, get_settings
+from .config import ROOT, Settings, get_settings
 
 
 PROVIDERS = {
@@ -55,9 +58,35 @@ def validate_api_key(api_key: str) -> str:
     return value
 
 
+def _master_secret(settings: Settings) -> str:
+    if settings.ai_credential_secret:
+        return settings.ai_credential_secret
+    if settings.production:
+        raise RuntimeError("AI_CREDENTIAL_SECRET is required in production")
+    path = Path(ROOT) / "runtime/.ai_credential_secret"
+    try:
+        value = path.read_text(encoding="utf-8").strip()
+        if len(value) >= 32:
+            return value
+    except FileNotFoundError:
+        pass
+    path.parent.mkdir(parents=True, exist_ok=True)
+    value = secrets.token_urlsafe(48)
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(value)
+        return value
+    except FileExistsError:
+        existing = path.read_text(encoding="utf-8").strip()
+        if len(existing) < 32:
+            raise RuntimeError("Local AI credential secret is invalid")
+        return existing
+
+
 def _fernet(settings: Settings | None = None) -> Fernet:
     settings = settings or get_settings()
-    secret = settings.ai_credential_secret or settings.session_secret
+    secret = _master_secret(settings)
     material = hashlib.sha256(("milkyway-ai-credential:" + secret).encode("utf-8")).digest()
     return Fernet(base64.urlsafe_b64encode(material))
 
