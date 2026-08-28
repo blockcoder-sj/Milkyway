@@ -1,0 +1,79 @@
+name: 🐛 버그 리포트
+description: 재현 가능한 버그를 알려주세요.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **보안·실자금 관련 이슈**라면 [Security Advisory](https://github.com/blockcoder-sj/us_trading_bot/security/advisories/new) 를 사용해 주세요.
+        제보 전에 [KNOWN_ISSUES.md](../../blob/main/KNOWN_ISSUES.md) 를 확인해 주세요.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 요약
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 재현 절차
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 동작 / 로그
+      description: "**API 키·계좌번호·Telegram 토큰은 마스킹**. 스택 트레이스 포함"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: strategy
+    attributes:
+      label: 관련 전략
+      options:
+        - mom20d
+        - rev20d
+        - 공용 (bot_shared)
+        - 백테스트 / 검증
+        - 모니터 / 대시보드
+        - 운영 (watchdog / launchd / health_check)
+        - 기타
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: 실행 모드
+      options:
+        - paper
+        - paper_realtime
+        - paper_api
+        - live
+        - backtest
+        - 기타
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 커밋 해시
+      placeholder: "main @ abc1234"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 체크
+      options:
+        - label: 로그에서 API 키·토큰·개인정보를 마스킹했습니다
+          required: true
+        - label: KNOWN_ISSUES.md 에서 중복을 확인했습니다
+          required: true

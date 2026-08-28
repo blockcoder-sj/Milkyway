@@ -1,0 +1,52 @@
+name: ✨ 기능 제안
+description: 새 전략·지표·방어·브로커·개선 제안
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 해결하려는 문제
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 제안 (What / How)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 영역
+      multiple: true
+      options:
+        - 전략 (mom20d / rev20d / 신규)
+        - PIT 검증 프레임워크
+        - FULL_MVC 방어 매트릭스
+        - 데이터 수집 (yfinance · Finnhub · market_calendar)
+        - 브로커 (KIS · 신규 브로커)
+        - 모니터 / 대시보드 (enhanced_monitor)
+        - 텔레그램 명령
+        - 운영 (watchdog · health_check · cron)
+        - 문서 · CI
+    validations:
+      required: true
+
+  - type: textarea
+    id: backtest
+    attributes:
+      label: 백테스트·검증 근거 (전략·지표 제안 시)
+      description: PIT CAGR · Sharpe · MDD · 7단계 검증 결과
+    validations:
+      required: false
+
+  - type: textarea
+    id: risk
+    attributes:
+      label: 예상 위험·부작용
+      description: 실거래 임팩트 · 런타임 임팩트 · 롤백 플랜
+    validations:
+      required: false

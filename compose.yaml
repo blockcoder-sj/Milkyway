@@ -1,0 +1,116 @@
+name: milkyway
+
+x-app: &app
+  build: .
+  env_file: deploy/.env
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+  volumes:
+    - ./data_cache:/app/data_cache
+  networks: [backend]
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  stop_grace_period: 45s
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quantclub}
+      POSTGRES_USER: ${POSTGRES_USER:-quantclub}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    security_opt: [no-new-privileges:true]
+
+  app:
+    <<: *app
+    read_only: true
+    tmpfs: [/tmp]
+    healthcheck:
+      test: [CMD, curl, -fsS, http://localhost:8000/health/live]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    cpus: "1.5"
+    mem_limit: 4g
+
+  paper-worker:
+    <<: *app
+    command: [python, -m, cloud_app.worker]
+    environment:
+      WORKER_ROLE: paper
+    cpus: "1.0"
+    mem_limit: 4g
+
+  backtest-worker:
+    <<: *app
+    command: [python, -m, cloud_app.worker]
+    environment:
+      WORKER_ROLE: backtest
+    cpus: "2.0"
+    mem_limit: 6g
+
+  scheduler:
+    <<: *app
+    command: [python, -m, cloud_app.scheduler]
+    cpus: "2.0"
+    mem_limit: 5g
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [frontend, backend]
+    security_opt: [no-new-privileges:true]
+
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGDATABASE: ${POSTGRES_DB:-quantclub}
+      PGUSER: ${POSTGRES_USER:-quantclub}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./deploy/backup.sh:/backup/backup.sh:ro
+      - ./deploy/restore.sh:/restore.sh:ro
+    networks: [backend]
+    entrypoint: [/bin/sh, /backup/backup.sh]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  frontend:
+  backend:
+    internal: true
