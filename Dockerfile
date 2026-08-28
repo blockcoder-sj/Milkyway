@@ -20,4 +20,4 @@ RUN mkdir -p /app/runtime /app/backups /app/data_cache \
 
 USER app
 EXPOSE 8000
-CMD ["uvicorn", "cloud_app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers", "--forwarded-allow-ips", "*"]
+CMD ["uvicorn", "cloud_app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]

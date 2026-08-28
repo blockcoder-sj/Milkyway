@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "cloud_app" / "static" / "index.html"
+PROFILE = ROOT / "cloud_app" / "static" / "profile.js"
 
 
 class _Document(HTMLParser):
@@ -57,6 +58,8 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertNotIn("AI 연결 대기", self.html)
         self.assertNotIn("동아리 로컬 AI", self.html)
         self.assertNotIn("AI 웹 구독 계정", self.html)
+        self.assertNotIn("대시보드 시작 화면", self.html)
+        self.assertIn("requires_api_key", PROFILE.read_text(encoding="utf-8"))
         self.assertIn('data-profile-menu-action="settings"', self.html)
         self.assertIn('data-profile-menu-action="logout"', self.html)
 

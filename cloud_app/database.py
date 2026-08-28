@@ -51,7 +51,7 @@ class User(Base):
 
 
 class AiConnection(Base):
-    """One encrypted, user-owned provider credential."""
+    """One user-selected AI connection; cloud credentials stay encrypted."""
 
     __tablename__ = "ai_connections"
     user_id: Mapped[str] = mapped_column(

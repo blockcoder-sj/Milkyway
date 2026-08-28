@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[1]
+AI_MODEL_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{1,99}$")
 
 
 def _bool(name: str, default: bool = False) -> bool:
@@ -39,6 +42,11 @@ class Settings:
     news_feed_path: Path
     ai_credential_secret: str
     ai_timeout_seconds: int
+    local_ai_enabled: bool
+    local_ai_base_url: str
+    local_ai_model: str
+    local_ai_api_key: str
+    local_ai_max_concurrent_requests: int
     quote_provider: str
     market_data_sharing_allowed: bool
     quote_interval_seconds: int
@@ -76,6 +84,16 @@ class Settings:
                 "KIS quote sharing is disabled until MARKET_DATA_SHARING_ALLOWED=true "
                 "is set after checking the broker/data licence"
             )
+        if self.local_ai_enabled:
+            parsed = urlsplit(self.local_ai_base_url)
+            if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+                errors.append("LOCAL_AI_BASE_URL must be an http(s) URL")
+            if parsed.username or parsed.password or parsed.query or parsed.fragment:
+                errors.append("LOCAL_AI_BASE_URL must not contain credentials, a query, or a fragment")
+            if not AI_MODEL_PATTERN.fullmatch(self.local_ai_model):
+                errors.append("LOCAL_AI_MODEL has an invalid model ID")
+            if self.production and len(self.local_ai_api_key) < 20:
+                errors.append("LOCAL_AI_API_KEY must contain at least 20 characters in production")
         return errors
 
 
@@ -109,6 +127,15 @@ def get_settings() -> Settings:
         ).expanduser(),
         ai_credential_secret=os.getenv("AI_CREDENTIAL_SECRET", ""),
         ai_timeout_seconds=_int("AI_TIMEOUT_SECONDS", 120),
+        local_ai_enabled=_bool("LOCAL_AI_ENABLED", False),
+        local_ai_base_url=os.getenv("LOCAL_AI_BASE_URL", "http://ai:8080/v1").rstrip("/"),
+        local_ai_model=os.getenv(
+            "LOCAL_AI_MODEL", "Qwen2.5-Coder-7B-Instruct-GGUF"
+        ).strip(),
+        local_ai_api_key=os.getenv("LOCAL_AI_API_KEY", ""),
+        local_ai_max_concurrent_requests=max(
+            1, _int("LOCAL_AI_MAX_CONCURRENT_REQUESTS", 4)
+        ),
         quote_provider=os.getenv("QUOTE_PROVIDER", "mock").strip().lower(),
         market_data_sharing_allowed=_bool("MARKET_DATA_SHARING_ALLOWED", False),
         quote_interval_seconds=max(5, _int("QUOTE_INTERVAL_SECONDS", 30)),

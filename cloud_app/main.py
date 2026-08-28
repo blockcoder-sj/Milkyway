@@ -19,7 +19,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from .ai import AiProviderError, generate_strategy
+from .ai import AiProviderError, generate_strategy, local_ai_ready
 from .ai_credentials import (
     decrypt_api_key,
     encrypt_api_key,
@@ -55,6 +55,7 @@ from .strategies import StrategySpec, get_dataset_bundle, strategy_code_preview
 
 
 settings = get_settings()
+_local_ai_slots = threading.BoundedSemaphore(settings.local_ai_max_concurrent_requests)
 STATIC = Path(__file__).resolve().parent / "static"
 app = FastAPI(title=settings.app_name, docs_url=None if settings.production else "/docs")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
@@ -292,13 +293,30 @@ def me(request: Request, user: User = Depends(current_user)):
 
 
 def _ai_connection_payload(row: AiConnection | None) -> dict:
+    local_ready = settings.local_ai_enabled and local_ai_ready(
+        base_url=settings.local_ai_base_url,
+        model=settings.local_ai_model,
+        api_key=settings.local_ai_api_key,
+    )
+    catalog = provider_catalog(settings, local_ready=local_ready)
+    availability = {
+        item["id"]: item["available"] and item["ready"] for item in catalog
+    }
+    configured = row is not None
+    available = configured and availability.get(row.provider, False)
     return {
-        "connected": row is not None,
+        "connected": bool(available),
+        "configured": configured,
+        "available": bool(available),
         "provider": row.provider if row else None,
-        "model": row.model if row else None,
+        "model": (
+            settings.local_ai_model
+            if row is not None and row.provider == "local"
+            else row.model if row else None
+        ),
         "key_hint": row.key_hint if row else None,
         "updated_at": row.updated_at if row else None,
-        "providers": provider_catalog(),
+        "providers": catalog,
     }
 
 
@@ -320,9 +338,15 @@ def put_ai_connection(
         raise HTTPException(status_code=422, detail=str(exc))
     row = session.get(AiConnection, user.id)
     supplied_key = body.api_key.get_secret_value() if body.api_key else ""
-    if not supplied_key and (row is None or row.provider != provider):
+    if provider == "local":
+        if not settings.local_ai_enabled:
+            raise HTTPException(status_code=503, detail="서버 관리자가 로컬 AI를 먼저 활성화해야 합니다")
+        model = settings.local_ai_model
+        encrypted_key = ""
+        hint = "서버 관리"
+    elif not supplied_key and (row is None or row.provider != provider):
         raise HTTPException(status_code=422, detail="새 AI 공급자를 연결하려면 API 키를 입력해 주세요")
-    if supplied_key:
+    elif supplied_key:
         try:
             encrypted_key = encrypt_api_key(supplied_key, settings)
             hint = key_hint(supplied_key)
@@ -396,18 +420,35 @@ def _save_strategy(session: Session, user: User, spec: StrategySpec, prompt: str
 
 @app.post("/api/strategies/generate", status_code=201)
 def ai_strategy(body: PromptBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
-    _rate_limit("ai:" + user.id, 10, 3600)
     connection = session.get(AiConnection, user.id)
     if connection is None:
-        raise HTTPException(status_code=409, detail="설정에서 AI API를 먼저 연결해 주세요")
+        raise HTTPException(status_code=409, detail="설정에서 AI를 먼저 연결해 주세요")
+    local_slot_acquired = False
     try:
-        api_key = decrypt_api_key(connection.encrypted_api_key, settings)
+        if connection.provider == "local":
+            if not settings.local_ai_enabled:
+                raise RuntimeError("로컬 AI 서버가 비활성화되어 있습니다")
+            local_slot_acquired = _local_ai_slots.acquire(blocking=False)
+            if not local_slot_acquired:
+                raise HTTPException(
+                    status_code=429,
+                    detail="로컬 AI 요청이 많습니다. 잠시 후 다시 시도해 주세요",
+                )
+            api_key = settings.local_ai_api_key
+            model = settings.local_ai_model
+            local_base_url = settings.local_ai_base_url
+        else:
+            api_key = decrypt_api_key(connection.encrypted_api_key, settings)
+            model = connection.model
+            local_base_url = None
+        _rate_limit("ai:" + user.id, 10, 3600)
         spec, _preview = generate_strategy(
             body.prompt,
             provider=connection.provider,
-            model=connection.model,
+            model=model,
             api_key=api_key,
             timeout_seconds=settings.ai_timeout_seconds,
+            local_base_url=local_base_url,
         )
     except AiProviderError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
@@ -415,6 +456,9 @@ def ai_strategy(body: PromptBody, user: User = Depends(csrf_guard), session: Ses
         raise HTTPException(status_code=503, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+    finally:
+        if local_slot_acquired:
+            _local_ai_slots.release()
     return _strategy_payload(_save_strategy(session, user, spec, body.prompt))
 
 
@@ -628,7 +672,7 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
             "observed_at": worker.observed_at if worker else None,
             "detail": worker.detail if worker else "not started",
         },
-        "ai_enabled": ai_connection is not None,
+        "ai_enabled": _ai_connection_payload(ai_connection)["connected"],
         "ai_connection": _ai_connection_payload(ai_connection),
         "quote_provider": settings.quote_provider,
     }

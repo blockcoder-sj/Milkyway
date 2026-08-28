@@ -153,7 +153,7 @@
 
   <div id="profileMenu" class="profile-menu hidden" role="menu" aria-label="프로필 메뉴">
     <button type="button" role="menuitem" data-profile-menu-action="profile"><span>내 프로필</span><small>계정 정보 보기</small></button>
-    <button type="button" role="menuitem" data-profile-menu-action="settings"><span>설정</span><small>AI 연결 및 기본 화면</small></button>
+    <button type="button" role="menuitem" data-profile-menu-action="settings"><span>설정</span><small>AI 연결 및 기본 시장</small></button>
     <button class="profile-menu-logout" type="button" role="menuitem" data-profile-menu-action="logout"><span>로그아웃</span></button>
   </div>
 
@@ -188,29 +188,28 @@
     <section class="hidden" data-profile-panel="settings">
       <div id="aiConnectionSettings" class="settings-block" tabindex="-1">
         <div class="settings-heading"><div><p class="eyebrow">AI CONNECTION</p><h4>AI</h4></div><span id="aiConnectionStatus" class="status-pill">연결 필요</span></div>
-        <p class="settings-copy">본인의 API 키로 AI를 연결하면 전략 코드 생성에 해당 계정과 모델을 사용합니다. 키 원문은 다시 표시하지 않고 서버에 암호화해 저장합니다.</p>
+        <p class="settings-copy">본인의 클라우드 API 또는 Milkyway 서버의 로컬 AI를 선택할 수 있습니다. 입력한 키 원문은 다시 표시하지 않고 서버에 암호화해 저장합니다.</p>
         <form id="aiConnectionForm" class="stack ai-connection-form">
           <label>AI 공급자<select name="provider" id="aiProvider" required></select></label>
           <label>모델 ID<input name="model" id="aiModel" list="aiModelOptions" maxlength="100" autocomplete="off" required></label>
           <datalist id="aiModelOptions"></datalist>
-          <label>API 키<input name="api_key" id="aiApiKey" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
+          <label id="aiApiKeyField">API 키<input name="api_key" id="aiApiKey" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
           <p id="aiKeyHelp" class="fineprint">처음 연결하거나 공급자를 바꿀 때 API 키를 입력해야 합니다.</p>
           <div class="settings-actions"><button id="aiConnectionSaveBtn" class="primary" type="submit">연결 저장</button><button id="aiDisconnectBtn" class="ghost hidden" type="button">연결 해제</button></div>
         </form>
-        <p class="settings-billing-note">API 사용료와 한도는 선택한 공급자의 본인 계정에 적용됩니다.</p>
+        <p id="aiBillingNote" class="settings-billing-note">API 사용료와 한도는 선택한 공급자의 본인 계정에 적용됩니다.</p>
       </div>
       <div class="settings-block preferences-block">
         <div class="settings-heading"><div><p class="eyebrow">PREFERENCES</p><h4>화면 설정</h4></div></div>
       <form id="profileSettingsForm" class="stack">
         <label>기본 시장<select name="default_market"><option value="us">미국</option><option value="kr">한국</option></select></label>
-        <label>대시보드 시작 화면<select name="default_workspace"><option value="market">시장</option><option value="strategy">전략</option></select></label>
         <button class="primary auth-submit" type="submit">설정 저장</button>
       </form>
       </div>
     </section>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/profile.js?v=20260828-9" defer></script>
-  <script src="/static/app.js?v=20260828-9" defer></script>
+  <script src="/static/profile.js?v=20260828-10" defer></script>
+  <script src="/static/app.js?v=20260828-10" defer></script>
 </body>
 </html>

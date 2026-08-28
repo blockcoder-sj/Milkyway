@@ -169,7 +169,7 @@ function applyMarketPreference(country) {
   }
 }
 
-async function showDashboard(workspace = state.preferences.default_workspace) {
+async function showDashboard(workspace = "market") {
   if (!state.me) { showAuth(); return; }
   applyMarketPreference(state.preferences.default_market);
   $("#landingView").classList.add("hidden");
@@ -545,7 +545,8 @@ const profileController = window.MilkywayProfile.create({
       state.dashboard.ai_enabled = state.aiConnection.connected;
     }
     $("#aiConnectBtn").classList.toggle("connected", state.aiConnection.connected);
-    toast(`${state.aiConnection.provider} API 연결을 저장했습니다`);
+    const provider = state.aiConnection.providers?.find((item) => item.id === state.aiConnection.provider);
+    toast(`${provider?.label || state.aiConnection.provider} 연결을 저장했습니다`);
   },
   onAiDisconnect: async () => {
     await api("/api/me/ai-connection", {method: "DELETE"});
@@ -571,7 +572,7 @@ $("#aiConnectBtn").addEventListener("click", () => profileController.openSetting
 
 $("#aiForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (state.dashboard && !state.dashboard.ai_enabled) { toast("설정에서 본인의 AI API를 먼저 연결해 주세요", true); profileController.openSettings("aiConnectionSettings"); return; }
+  if (state.dashboard && !state.dashboard.ai_enabled) { toast("설정에서 사용할 AI를 먼저 연결해 주세요", true); profileController.openSettings("aiConnectionSettings"); return; }
   const button = event.target.querySelector("button[type=submit]");
   button.disabled = true;
   button.querySelector("span").textContent = "AI 생성 중…";

@@ -5,13 +5,12 @@ from __future__ import annotations
 import base64
 import hashlib
 import os
-import re
 import secrets
 from pathlib import Path
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from .config import ROOT, Settings, get_settings
+from .config import AI_MODEL_PATTERN, ROOT, Settings, get_settings
 
 
 PROVIDERS = {
@@ -19,26 +18,59 @@ PROVIDERS = {
         "label": "OpenAI",
         "default_model": "gpt-5.6-luna",
         "model_examples": ["gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol"],
+        "requires_api_key": True,
     },
     "anthropic": {
         "label": "Anthropic",
         "default_model": "claude-sonnet-4-20250514",
         "model_examples": ["claude-sonnet-4-20250514", "claude-3-5-haiku-20241022"],
+        "requires_api_key": True,
+    },
+    "local": {
+        "label": "로컬 AI",
+        "default_model": "Qwen2.5-Coder-7B-Instruct-GGUF",
+        "model_examples": ["Qwen2.5-Coder-7B-Instruct-GGUF"],
+        "requires_api_key": False,
     },
 }
-_MODEL_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{1,99}$")
 
 
-def provider_catalog() -> list[dict]:
+def provider_catalog(
+    settings: Settings | None = None, *, local_ready: bool | None = None
+) -> list[dict]:
+    settings = settings or get_settings()
     return [
         {
             "id": provider,
             "label": details["label"],
-            "default_model": details["default_model"],
-            "model_examples": details["model_examples"],
+            "default_model": (
+                settings.local_ai_model if provider == "local" else details["default_model"]
+            ),
+            "model_examples": (
+                [settings.local_ai_model] if provider == "local" else details["model_examples"]
+            ),
+            "requires_api_key": details["requires_api_key"],
+            "available": provider != "local" or settings.local_ai_enabled,
+            "ready": (
+                True
+                if provider != "local"
+                else settings.local_ai_enabled and bool(local_ready)
+            ),
+            "disabled_reason": (
+                "서버 관리자가 로컬 AI를 활성화해야 합니다"
+                if provider == "local" and not settings.local_ai_enabled
+                else None
+            ),
         }
         for provider, details in PROVIDERS.items()
     ]
+
+
+def provider_requires_api_key(provider: str) -> bool:
+    details = PROVIDERS.get(provider.strip().lower())
+    if details is None:
+        raise ValueError("지원하지 않는 AI 공급자입니다")
+    return bool(details["requires_api_key"])
 
 
 def validate_provider_model(provider: str, model: str) -> tuple[str, str]:
@@ -46,7 +78,7 @@ def validate_provider_model(provider: str, model: str) -> tuple[str, str]:
     model = model.strip()
     if provider not in PROVIDERS:
         raise ValueError("지원하지 않는 AI 공급자입니다")
-    if not _MODEL_PATTERN.fullmatch(model):
+    if not AI_MODEL_PATTERN.fullmatch(model):
         raise ValueError("모델 ID 형식이 올바르지 않습니다")
     return provider, model
 

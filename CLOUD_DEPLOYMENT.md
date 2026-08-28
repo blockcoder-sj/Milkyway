@@ -7,7 +7,7 @@
 
 - 초대 코드 기반 회원가입, scrypt 비밀번호 해시, HttpOnly 서명 세션, CSRF 방어
 - 사용자별 전략·백테스트·페이퍼 계좌 분리
-- 사용자별 암호화 AI API 키, AI 출력 JSON 검증 및 임의 코드 실행 차단
+- 사용자별 암호화 AI API 키 또는 서버 공용 로컬 AI, AI 출력 JSON 검증 및 임의 코드 실행 차단
 - 모든 전략의 `backtest_core.run_backtest()` 공통 원장 강제
 - PostgreSQL 작업 큐, 중복 체결 방지 키, 단일 leader lease
 - 보유/후보 종목을 합친 1회 시세 수집 후 사용자 계좌에 공유
@@ -17,7 +17,7 @@
 - HTTPS 자동 인증서, 보안 헤더, readiness/liveness, worker heartbeat
 
 외부에서 채워야 하는 값은 도메인/DNS, OCI 인스턴스, 브로커 키, 시세 재사용 허용
-확인과 서버 비밀값뿐이다. 회원의 AI API 키는 설정 화면에서 입력하고 암호화 저장한다.
+확인과 서버 비밀값뿐이다. 회원의 클라우드 AI API 키는 설정 화면에서 입력하고 암호화 저장한다.
 
 ## 권장 OCI 인스턴스
 
@@ -62,6 +62,7 @@ sudo chown -R 10001:10001 data_cache
 - `POSTGRES_PASSWORD`와 그 값을 URL 인코딩한 `DATABASE_URL`
 - `SESSION_SECRET`: `openssl rand -hex 32` 결과
 - `CLUB_INVITE_CODE`: 동아리 전용 임의 문자열
+- `AI_CREDENTIAL_SECRET`: 세션 비밀값과 다른 `openssl rand -hex 32` 결과
 
 AI 없이 먼저 기동한다.
 
@@ -93,12 +94,34 @@ sudo systemctl enable milkyway.service
 sudo systemctl restart milkyway.service
 ```
 
-## 사용자별 AI API 연결
+## AI 연결
 
 `AI_CREDENTIAL_SECRET`에는 세션 비밀값과 다른 32자 이상의 무작위 값을 설정한다.
 회원은 설정 화면에서 OpenAI 또는 Anthropic 공급자, 모델 ID와 자신의 API 키를 입력한다.
 키는 서버 데이터베이스에 암호화되어 저장되고 전략 생성 요청에만 복호화해 사용한다.
 키 원문은 API 응답이나 화면에 다시 표시하지 않는다.
+
+공용 로컬 AI를 사용할 때는 `COMPOSE_PROFILES=local-ai`, `LOCAL_AI_ENABLED=true`,
+`LOCAL_AI_BASE_URL=http://ai:8080/v1`, `LOCAL_AI_MODEL=Qwen2.5-Coder-7B-Instruct-GGUF`와
+20자 이상의 무작위 `LOCAL_AI_API_KEY`를 설정한다. `COMPOSE_PROFILES`를 `.env`에 두어야
+systemd가 서버 재부팅 후에도 모델 컨테이너를 다시 실행한다. 그 다음 로컬 AI 프로필을 포함해
+실행한다.
+
+```bash
+docker compose --env-file deploy/.env --profile local-ai up -d --build
+docker compose --env-file deploy/.env --profile local-ai logs -f ai
+```
+
+첫 실행은 Q4_K_M 모델 약 5GB를 내려받아 `local-ai-model-cache` 볼륨에 보관한다. 모델
+컨테이너는 공인 포트를 열지 않고 Docker 내부망에서만 앱이 접근한다. 회원은 로컬 주소나
+서버 API 키를 입력할 수 없으며 설정에서 `로컬 AI`만 선택한다. 기본 두 개의 동시 생성
+슬롯을 사용하며 앱은 최대 네 요청만 모델 서버에 진입시켜 두 요청까지만 대기시킨다. 그
+이상의 동시 요청은 HTTP 429로 빠르게 재시도를 안내한다. OCI A1 4 OCPU에서는 생성 속도가 느릴 수
+있으므로 클럽 시작 전에 실제 전략 프롬프트로 부하 테스트한다.
+
+기본 모델 URL은 승인한 Hugging Face commit `13fb94bfda8c8cf22497dc57b78f391a9acb426a`에
+고정되어 있다. 모델을 교체할 때 `main` 링크를 쓰지 말고 새 revision의 고정 URL과 모델 ID를
+함께 기록한다.
 
 ## 실시간 시세 전환
 

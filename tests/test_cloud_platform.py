@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 from pydantic import ValidationError
@@ -17,7 +17,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from cloud_app.ai import _anthropic_text, _extract_object, _openai_text
+from cloud_app.ai import (
+    _anthropic_text,
+    _chat_completion_text,
+    _extract_object,
+    local_ai_ready,
+    _openai_text,
+    _provider_request,
+)
 from cloud_app.ai_credentials import (
     decrypt_api_key,
     encrypt_api_key,
@@ -33,7 +40,13 @@ from cloud_app.dashboard_views import (
     sector_heatmap,
 )
 from cloud_app.database import AiConnection, Base, PaperAccount, PaperFill, PaperPosition, Quote, Strategy, User
-from cloud_app.main import AiConnectionBody, delete_ai_connection, put_ai_connection
+from cloud_app.main import (
+    AiConnectionBody,
+    PromptBody,
+    ai_strategy,
+    delete_ai_connection,
+    put_ai_connection,
+)
 from cloud_app.paper import _fill, apply_terminal_events, rebalance_due_accounts
 from cloud_app.security import create_session, hash_password, parse_session, verify_password
 from cloud_app.strategies import (
@@ -146,6 +159,72 @@ class SecurityTests(unittest.TestCase):
         self.assertIsNone(session.get(AiConnection, user.id))
         session.close()
 
+    def test_local_ai_connection_needs_no_member_api_key(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(id="4" * 32, email="local@example.com", display_name="Local", password_hash="x")
+        session.add(user)
+        session.commit()
+        local_settings = SimpleNamespace(
+            local_ai_enabled=True,
+            local_ai_base_url="http://ai:8080/v1",
+            local_ai_model="Qwen2.5-Coder-7B-Instruct-GGUF",
+            local_ai_api_key="server-owned-key",
+        )
+        with patch("cloud_app.main.settings", local_settings), patch(
+            "cloud_app.main.local_ai_ready", return_value=True
+        ):
+            payload = put_ai_connection(
+                AiConnectionBody(
+                    provider="local",
+                    model="user-overridden-model",
+                ),
+                user,
+                session,
+            )
+        self.assertTrue(payload["connected"])
+        self.assertEqual(payload["key_hint"], "서버 관리")
+        stored = session.get(AiConnection, user.id)
+        self.assertEqual(stored.encrypted_api_key, "")
+        self.assertEqual(stored.model, "Qwen2.5-Coder-7B-Instruct-GGUF")
+        session.close()
+
+    def test_local_ai_backpressure_returns_429_without_calling_model(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(id="5" * 32, email="busy@example.com", display_name="Busy", password_hash="x")
+        session.add(user)
+        session.add(
+            AiConnection(
+                user_id=user.id,
+                provider="local",
+                model="Qwen2.5-Coder-7B-Instruct-GGUF",
+                encrypted_api_key="",
+                key_hint="서버 관리",
+            )
+        )
+        session.commit()
+        local_settings = SimpleNamespace(
+            local_ai_enabled=True,
+            local_ai_base_url="http://ai:8080/v1",
+            local_ai_model="Qwen2.5-Coder-7B-Instruct-GGUF",
+            local_ai_api_key="server-owned-key",
+            ai_timeout_seconds=120,
+        )
+        slots = MagicMock()
+        slots.acquire.return_value = False
+        with patch("cloud_app.main.settings", local_settings), patch(
+            "cloud_app.main._local_ai_slots", slots
+        ), patch("cloud_app.main.generate_strategy") as generate:
+            with self.assertRaises(HTTPException) as raised:
+                ai_strategy(PromptBody(prompt="20일 모멘텀 전략"), user, session)
+        self.assertEqual(raised.exception.status_code, 429)
+        generate.assert_not_called()
+        slots.release.assert_not_called()
+        session.close()
+
 
 class StrategyDslTests(unittest.TestCase):
     def test_unsupported_ai_code_cannot_enter_strategy_spec(self):
@@ -165,7 +244,9 @@ class StrategyDslTests(unittest.TestCase):
 
     def test_ai_provider_catalog_and_response_parsers(self):
         providers = {item["id"] for item in provider_catalog()}
-        self.assertEqual(providers, {"openai", "anthropic"})
+        self.assertEqual(providers, {"openai", "anthropic", "local"})
+        local = next(item for item in provider_catalog() if item["id"] == "local")
+        self.assertFalse(local["requires_api_key"])
         self.assertEqual(validate_provider_model("OpenAI", "gpt-5.6-luna"), ("openai", "gpt-5.6-luna"))
         with self.assertRaises(ValueError):
             validate_provider_model("custom", "model")
@@ -174,6 +255,59 @@ class StrategyDslTests(unittest.TestCase):
             "{}",
         )
         self.assertEqual(_anthropic_text({"content": [{"type": "text", "text": "{}"}]}), "{}")
+        self.assertEqual(
+            _chat_completion_text({"choices": [{"message": {"content": "{}"}}]}),
+            "{}",
+        )
+
+    def test_local_ai_request_uses_only_server_configured_endpoint_and_key(self):
+        response = MagicMock()
+        response.json.return_value = {"choices": [{"message": {"content": "{}"}}]}
+        client = MagicMock()
+        client.post.return_value = response
+        result = _provider_request(
+            client,
+            "local",
+            "Qwen2.5-Coder-7B-Instruct-GGUF",
+            "server-owned-key",
+            "20일 모멘텀 전략",
+            local_base_url="http://ai:8080/v1/",
+        )
+        self.assertEqual(result, "{}")
+        url, = client.post.call_args.args
+        self.assertEqual(url, "http://ai:8080/v1/chat/completions")
+        self.assertEqual(
+            client.post.call_args.kwargs["headers"],
+            {"Authorization": "Bearer server-owned-key"},
+        )
+        self.assertEqual(
+            client.post.call_args.kwargs["json"]["response_format"],
+            {"type": "json_object"},
+        )
+
+    def test_local_ai_readiness_requires_the_configured_model(self):
+        response = MagicMock()
+        response.json.return_value = {
+            "data": [{"id": "Qwen2.5-Coder-7B-Instruct-GGUF"}]
+        }
+        with patch("cloud_app.ai.httpx.get", return_value=response) as request:
+            self.assertTrue(
+                local_ai_ready(
+                    base_url="http://ready-ai-test:8080/v1",
+                    model="Qwen2.5-Coder-7B-Instruct-GGUF",
+                    api_key="server-owned-key",
+                    cache_seconds=15,
+                )
+            )
+            self.assertTrue(
+                local_ai_ready(
+                    base_url="http://ready-ai-test:8080/v1",
+                    model="Qwen2.5-Coder-7B-Instruct-GGUF",
+                    api_key="server-owned-key",
+                    cache_seconds=15,
+                )
+            )
+        request.assert_called_once()
 
     def test_factor_compiler_is_signal_only_and_preview_forces_delay(self):
         dates = pd.date_range("2026-01-01", periods=24, freq="D")

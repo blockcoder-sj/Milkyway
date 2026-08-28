@@ -2,14 +2,14 @@ name: milkyway
 
 x-app: &app
   build: .
-  env_file: deploy/.env
+  env_file: ${MILKYWAY_ENV_FILE:-deploy/.env}
   restart: unless-stopped
   depends_on:
     postgres:
       condition: service_healthy
   volumes:
     - ./data_cache:/app/data_cache
-  networks: [backend]
+  networks: [backend, outbound]
   security_opt: [no-new-privileges:true]
   cap_drop: [ALL]
   stop_grace_period: 45s
@@ -34,6 +34,7 @@ services:
 
   app:
     <<: *app
+    command: [uvicorn, cloud_app.main:app, --host, 0.0.0.0, --port, "8000", --workers, "1", --proxy-headers, --forwarded-allow-ips, "*"]
     read_only: true
     tmpfs: [/tmp]
     healthcheck:
@@ -65,6 +66,40 @@ services:
     command: [python, -m, cloud_app.scheduler]
     cpus: "2.0"
     mem_limit: 5g
+
+  ai:
+    image: ghcr.io/ggml-org/llama.cpp:server@sha256:991cf50e9eb7dee4c18090849c7f909bafc5a1884cdde2dc3011df7407da09d6
+    profiles: [local-ai]
+    restart: unless-stopped
+    command:
+      - --model-url
+      - ${LOCAL_AI_MODEL_URL:-https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/13fb94bfda8c8cf22497dc57b78f391a9acb426a/qwen2.5-coder-7b-instruct-q4_k_m.gguf?download=true}
+      - --alias
+      - ${LOCAL_AI_MODEL:-Qwen2.5-Coder-7B-Instruct-GGUF}
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --api-key
+      - ${LOCAL_AI_API_KEY:-local-ai-not-configured}
+      - --ctx-size
+      - "8192"
+      - --parallel
+      - "2"
+      - --cont-batching
+    volumes:
+      - local-ai-model-cache:/root/.cache
+    networks: [backend, outbound]
+    cpus: "4.0"
+    mem_limit: 10g
+    healthcheck:
+      test: [CMD, curl, -fsS, http://localhost:8080/health]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
 
   caddy:
     image: caddy:2.8-alpine
@@ -109,8 +144,10 @@ volumes:
   postgres-data:
   caddy-data:
   caddy-config:
+  local-ai-model-cache:
 
 networks:
   frontend:
   backend:
     internal: true
+  outbound:
