@@ -1,6 +1,39 @@
 # Security remediation checkpoint
 
-Saved: 2026-08-31 (Asia/Seoul)
+Saved: 2026-09-01 (Asia/Seoul)
+
+## 2026-09-01 continuation update
+
+- The complete remediation working tree was preserved in checkpoint commit
+  `51e48e2` (`security: checkpoint remediation and broker boundary`). The tracked
+  working tree was clean immediately afterward and `main` was one commit ahead of
+  `origin/main`. This checkpoint is not a deployment approval and the test suite
+  was not rerun after creating the commit.
+- The host `runtime/` directory remains gitignored and preserves the two owner-only
+  64-byte development credential roots. They were not included in the commit.
+- The prior `milkyway-local-runtime` volume, `quant-club-local` container, and
+  `milkyway:local` image were not present in either available Docker context. A
+  **new empty development volume** named `milkyway-local-runtime` was created; do
+  not describe it as a recovery of the former volume.
+- `milkyway:local` was rebuilt successfully. A local-only container named
+  `quant-club-local` is currently bound to `127.0.0.1:8080` with automatic restart
+  disabled. It uses a temporary 19-symbol smoke dataset copied under
+  `/tmp/milkyway-smoke.*`; `/` and `/health/live` returned HTTP 200. Readiness
+  remains HTTP 503 because `data_gate=false` and `worker=false`, so this proves
+  only local UI/startup behavior, not production readiness. The full 1.1 GiB
+  dataset remains under the separate `us_trading_bot/data_cache` tree and direct
+  Docker bind mounting failed while macOS/iCloud files were not fully materialized.
+- Local Codex CLI is `0.151.0` and the ChatGPT desktop bundle is
+  `26.825.51511`. No `/etc/codex/requirements.toml` or
+  `/etc/codex/managed_config.toml` exists, and the current session still has
+  `permission_profile type="disabled"`. The user must create the system-managed
+  requirements file themselves (the agent must not self-elevate), allowing
+  `:read-only` and `:workspace` with `default_permissions = ":workspace"`, then
+  restart the Codex client, open a new session, and verify `/status` before the
+  Deep Security Scan.
+- No Deep Security Scan exists and there is still no scan ID. The next scan must
+  be a new whole-repository scan. Public deployment and real member credential
+  entry remain **NO-GO**.
 
 ## Latest handoff marker
 
