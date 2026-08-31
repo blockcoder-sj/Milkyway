@@ -83,14 +83,35 @@ def validate_api_key(api_key: str) -> str:
     return value
 
 
-def encrypt_api_key(api_key: str, settings: Settings | None = None) -> str:
-    return encrypt_credential(validate_api_key(api_key), settings)
+def encrypt_api_key(
+    api_key: str,
+    settings: Settings | None = None,
+    *,
+    owner_id: str = "legacy-unscoped",
+    provider: str = "ai",
+) -> str:
+    return encrypt_credential(
+        validate_api_key(api_key),
+        settings,
+        purpose="ai",
+        owner_id=owner_id,
+        field="{}:api-key".format(provider),
+    )
 
 
-def decrypt_api_key(ciphertext: str, settings: Settings | None = None) -> str:
+def decrypt_api_key(
+    ciphertext: str,
+    settings: Settings | None = None,
+    *,
+    owner_id: str = "legacy-unscoped",
+    provider: str = "ai",
+) -> str:
     return decrypt_credential(
         ciphertext,
         settings,
+        purpose="ai",
+        owner_id=owner_id,
+        field="{}:api-key".format(provider),
         error_message="AI API 키를 읽을 수 없습니다. 설정에서 다시 연결해 주세요",
     )
 

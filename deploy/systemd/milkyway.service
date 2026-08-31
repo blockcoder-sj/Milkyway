@@ -8,6 +8,7 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/opt/milkyway
+ExecStartPre=/bin/sh deploy/check-secret-file.sh deploy/.env
 ExecStart=/usr/bin/docker compose --env-file deploy/.env up -d --remove-orphans
 ExecStop=/usr/bin/docker compose --env-file deploy/.env down
 TimeoutStartSec=0

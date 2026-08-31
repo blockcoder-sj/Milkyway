@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
@@ -48,6 +49,19 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(20), default="member")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class BrowserSession(Base):
+    """Revocable browser session; only a SHA-256 token identifier is stored."""
+
+    __tablename__ = "browser_sessions"
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    expires_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    user: Mapped[User] = relationship()
 
 
 class AiConnection(Base):
@@ -215,10 +229,30 @@ class Lease(Base):
 
 
 settings = get_settings()
+_sqlite_path: Path | None = None
 if settings.database_url.startswith("sqlite"):
     raw_path = settings.database_url.split("///", 1)[-1]
     if raw_path != ":memory:":
-        Path(raw_path).parent.mkdir(parents=True, exist_ok=True)
+        _sqlite_path = Path(raw_path)
+        parent = _sqlite_path.parent
+        if parent != Path("."):
+            parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            os.chmod(parent, 0o700)
+
+
+def _secure_sqlite_files() -> None:
+    if _sqlite_path is None:
+        return
+    parent = _sqlite_path.parent
+    if parent != Path(".") and parent.exists():
+        os.chmod(parent, 0o700)
+    for path in (
+        _sqlite_path,
+        Path(str(_sqlite_path) + "-wal"),
+        Path(str(_sqlite_path) + "-shm"),
+    ):
+        if path.exists():
+            os.chmod(path, 0o600)
 
 engine = create_engine(
     settings.database_url,
@@ -235,6 +269,7 @@ if settings.database_url.startswith("sqlite"):
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.execute("PRAGMA busy_timeout=5000")
         cursor.close()
+        _secure_sqlite_files()
 
 
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)
@@ -242,6 +277,7 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False, autoflush=False
 
 def initialize_database() -> None:
     Base.metadata.create_all(engine)
+    _secure_sqlite_files()
     with engine.begin() as connection:
         connection.execute(text("SELECT 1"))
 

@@ -428,7 +428,7 @@ function startMarketBackdrop() {
   function resize() {
     width = innerWidth;
     height = innerHeight;
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
     canvas.width = Math.floor(width * ratio);
     canvas.height = Math.floor(height * ratio);
     canvas.style.width = `${width}px`;
@@ -440,7 +440,12 @@ function startMarketBackdrop() {
   }
 
   function draw(now = 0) {
-    if (!reduced && now - lastFrame < 32) {
+    if (document.hidden) {
+      lastFrame = now;
+      if (!reduced) requestAnimationFrame(draw);
+      return;
+    }
+    if (!reduced && now - lastFrame < 42) {
       requestAnimationFrame(draw);
       return;
     }

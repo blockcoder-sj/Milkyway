@@ -20,5 +20,5 @@ if [ ! -f "$backup" ]; then
     exit 2
 fi
 
-pg_restore --clean --if-exists --no-owner --exit-on-error --dbname="$POSTGRES_DB" "$backup"
+pg_restore --clean --if-exists --no-owner --exit-on-error --dbname="$PGDATABASE" "$backup"
 echo "Restore completed from $backup"

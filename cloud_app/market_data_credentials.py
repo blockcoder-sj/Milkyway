@@ -86,15 +86,38 @@ def validate_market_credential(value: str, label: str) -> str:
 
 
 def encrypt_market_credential(
-    value: str, label: str, settings: Settings | None = None
+    value: str,
+    label: str,
+    settings: Settings | None = None,
+    *,
+    owner_id: str = "legacy-unscoped",
+    provider: str = "market",
+    environment: str = "default",
 ) -> str:
-    return encrypt_credential(validate_market_credential(value, label), settings)
+    return encrypt_credential(
+        validate_market_credential(value, label),
+        settings,
+        purpose="market",
+        owner_id=owner_id,
+        field="{}:{}:{}".format(provider, environment, label.lower()),
+    )
 
 
-def decrypt_market_credential(ciphertext: str, settings: Settings | None = None) -> str:
+def decrypt_market_credential(
+    ciphertext: str,
+    settings: Settings | None = None,
+    *,
+    owner_id: str = "legacy-unscoped",
+    provider: str = "market",
+    environment: str = "default",
+    label: str = "credential",
+) -> str:
     return decrypt_credential(
         ciphertext,
         settings,
+        purpose="market",
+        owner_id=owner_id,
+        field="{}:{}:{}".format(provider, environment, label.lower()),
         error_message="시세 API 자격증명을 읽을 수 없습니다. 설정에서 다시 연결해 주세요",
     )
 

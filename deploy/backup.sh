@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+umask 077
 
 while true; do
     stamp=$(date -u +%Y%m%dT%H%M%SZ)
@@ -7,6 +8,7 @@ while true; do
     destination="/backups/quantclub_${stamp}.dump"
     pg_dump --format=custom --no-owner --file="$temporary"
     mv "$temporary" "$destination"
-    find /backups -type f -name 'quantclub_*.dump' -mtime +14 -delete
+    find /backups -type f -name 'quantclub_*.dump' \
+        ! -name 'quantclub_pre_kms_*.dump' -mtime +14 -delete
     sleep 21600
 done

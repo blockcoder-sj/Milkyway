@@ -1,15 +1,21 @@
+import asyncio
 import datetime as dt
+import hashlib
 import json
+import logging
+import os
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pandas as pd
+import yaml
 from pydantic import ValidationError
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -42,6 +48,7 @@ from cloud_app.dashboard_views import (
 from cloud_app.database import (
     AiConnection,
     Base,
+    BrowserSession,
     MarketDataConnection,
     MemberQuote,
     PaperAccount,
@@ -53,20 +60,46 @@ from cloud_app.database import (
 )
 from cloud_app.main import (
     AiConnectionBody,
+    LoginBody,
     MarketDataConnectionBody,
     PromptBody,
+    _acquire_stream,
+    _migrate_legacy_credentials,
+    _release_stream,
     ai_strategy,
+    current_user,
     delete_ai_connection,
     delete_market_data_connection,
+    login,
+    logout,
     put_ai_connection,
     put_market_data_connection,
 )
+from cloud_app.config import get_settings
+from cloud_app.credential_store import (
+    OCI_KMS_PREFIX,
+    _legacy_fernet,
+    validate_credential_backend,
+)
+from cloud_app.credential_broker import (
+    AiEncryptBody as BrokerAiEncryptBody,
+    _app_identity as broker_app_identity,
+    _paper_identity as broker_paper_identity,
+    ai_encrypt as broker_ai_encrypt,
+    app as credential_broker_app,
+)
+from cloud_app.credential_broker_client import (
+    CredentialBrokerError,
+    _validated_quotes as validate_broker_quotes,
+)
+from cloud_app.http_security import RequestBodyLimitMiddleware
 from cloud_app.kis_quotes import (
     KisAuthenticationError,
     KisCredentials,
     KisQuoteClient,
     KisRateLimitError,
 )
+from cloud_app.manage import migrate_credentials_to_oci
 from cloud_app.market_data_credentials import (
     MarketDataProviderError,
     decrypt_market_credential,
@@ -86,6 +119,7 @@ from cloud_app.paper import (
 )
 from cloud_app.security import create_session, hash_password, parse_session, verify_password
 from cloud_app.strategies import (
+    DatasetSummary,
     StrategySpec,
     compile_raw_scores,
     eligibility_mask,
@@ -99,8 +133,11 @@ from cloud_app.toss_quotes import (
     TossRateLimitError,
 )
 from terminal_events import append_event
+import cloud_app.database as database_module
+import market_calendar as market_calendar_module
 from cloud_app.worker import (
     MemberFeedConfig,
+    _fetch_member_quotes,
     _member_provider,
     collect_member_quotes as collect_worker_member_quotes,
     run_paper_tick,
@@ -140,6 +177,21 @@ class SecurityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_session(token + "tampered", "s" * 40)
 
+    def test_unknown_login_still_runs_password_verification(self):
+        session = MagicMock()
+        session.scalar.return_value = None
+        request = SimpleNamespace(client=SimpleNamespace(host="198.51.100.77"))
+        with patch("cloud_app.main.verify_password", return_value=False) as verify:
+            with self.assertRaises(HTTPException) as raised:
+                login(
+                    LoginBody(email="missing@example.com", password="wrong-password"),
+                    request,
+                    Response(),
+                    session,
+                )
+        self.assertEqual(raised.exception.status_code, 401)
+        verify.assert_called_once()
+
     def test_user_ai_api_key_is_encrypted_and_not_returned_as_hint(self):
         settings = SimpleNamespace(ai_credential_secret="a" * 40, session_secret="s" * 40)
         api_key = "sk-test-this-is-a-long-private-key-1234"
@@ -152,6 +204,1061 @@ class SecurityTests(unittest.TestCase):
                 ciphertext,
                 SimpleNamespace(ai_credential_secret="b" * 40, session_secret="s" * 40),
             )
+
+    def test_production_rejects_every_shipped_placeholder_and_accepts_strong_values(self):
+        base = get_settings()
+        example = replace(
+            base,
+            app_env="production",
+            public_base_url="https://quant.example.com",
+            allowed_hosts=("quant.example.com",),
+            database_url=(
+                "postgresql+psycopg://quantclub:"
+                "replace-with-url-encoded-password@postgres:5432/quantclub"
+            ),
+            session_secret="replace-with-at-least-32-random-characters",
+            invite_code="replace-with-private-club-invite",
+            ai_credential_secret="replace-with-at-least-32-random-characters",
+            market_credential_secret="replace-with-a-different-32-plus-random-value",
+            local_ai_enabled=False,
+        )
+        errors = example.startup_errors("deployment")
+        self.assertTrue(any("SESSION_SECRET" in item for item in errors))
+        self.assertTrue(any("CLUB_INVITE_CODE" in item for item in errors))
+        self.assertTrue(any("DATABASE_URL" in item for item in errors))
+        self.assertTrue(any("AI_CREDENTIAL_SECRET" in item for item in errors))
+        self.assertTrue(any("MARKET_CREDENTIAL_SECRET" in item for item in errors))
+        self.assertTrue(any("example hostname" in item for item in errors))
+
+        strong = replace(
+            example,
+            public_base_url="https://milkyway-quant.club",
+            allowed_hosts=("milkyway-quant.club",),
+            database_url=(
+                "postgresql+psycopg://quantclub:"
+                "Db-0123456789-Strong-Password@postgres:5432/quantclub"
+            ),
+            session_secret="Session-0123456789-abcdefghijklmnopqrstuvwxyz",
+            invite_code="Invite-0123456789-Club-Members-Only",
+            credential_backend="broker",
+            ai_credential_secret="",
+            market_credential_secret="",
+            oci_kms_crypto_endpoint="",
+            oci_ai_credential_key_id="",
+            oci_market_credential_key_id="",
+            credential_broker_url="https://broker.milkyway-quant.club",
+            credential_broker_app_token="App-0123456789-abcdefghijklmnopqrstuvwxyz",
+            credential_broker_paper_token="Paper-9876543210-zyxwvutsrqponmlkjihg",
+        )
+        self.assertEqual(
+            [
+                error
+                for error in strong.startup_errors("deployment")
+                if error != "DATASET_DIR/manifest.json is missing"
+            ],
+            [],
+        )
+        broker = replace(
+            strong,
+            database_url="sqlite:///broker-does-not-use-a-database.sqlite3",
+            credential_backend="oci-kms",
+            oci_kms_crypto_endpoint="https://vault-name-crypto.kms.ap-seoul-1.oraclecloud.com",
+            oci_ai_credential_key_id="ocid1.key.oc1.ap-seoul-1.ai-key",
+            oci_market_credential_key_id="ocid1.key.oc1.ap-seoul-1.market-key",
+            credential_broker_url="",
+        )
+        self.assertEqual(broker.startup_errors("broker"), [])
+
+    def test_v2_credentials_are_bound_to_owner_purpose_and_field_with_legacy_read(self):
+        settings = SimpleNamespace(
+            ai_credential_secret="AI-0123456789-abcdefghijklmnopqrstuvwxyz",
+            market_credential_secret="Market-9876543210-zyxwvutsrqponmlkjihg",
+            production=False,
+        )
+        api_key = "sk-test-this-is-a-long-private-key-1234"
+        encrypted_ai = encrypt_api_key(
+            api_key, settings, owner_id="user-one", provider="openai"
+        )
+        self.assertTrue(encrypted_ai.startswith("v2:"))
+        self.assertEqual(
+            decrypt_api_key(
+                encrypted_ai, settings, owner_id="user-one", provider="openai"
+            ),
+            api_key,
+        )
+        with self.assertRaises(RuntimeError):
+            decrypt_api_key(
+                encrypted_ai, settings, owner_id="user-two", provider="openai"
+            )
+        with self.assertRaises(RuntimeError):
+            decrypt_api_key(
+                encrypted_ai, settings, owner_id="user-one", provider="anthropic"
+            )
+
+        market_key = "c_01HXYZABCDEFG123456789"
+        encrypted_market = encrypt_market_credential(
+            market_key,
+            "App Key",
+            settings,
+            owner_id="user-one",
+            provider="toss",
+            environment="live",
+        )
+        self.assertEqual(
+            decrypt_market_credential(
+                encrypted_market,
+                settings,
+                owner_id="user-one",
+                provider="toss",
+                environment="live",
+                label="App Key",
+            ),
+            market_key,
+        )
+        with self.assertRaises(RuntimeError):
+            decrypt_market_credential(
+                encrypted_market,
+                settings,
+                owner_id="user-two",
+                provider="toss",
+                environment="live",
+                label="App Key",
+            )
+
+        legacy = _legacy_fernet(settings).encrypt(api_key.encode("utf-8")).decode("ascii")
+        self.assertEqual(
+            decrypt_api_key(legacy, settings, owner_id="user-one", provider="openai"),
+            api_key,
+        )
+
+    def test_oci_kms_credentials_keep_roots_external_and_bind_associated_data(self):
+        stored = {}
+        encrypt_details = []
+
+        class FakeKmsClient:
+            fail_encrypt = False
+
+            def encrypt(self, details):
+                if self.fail_encrypt:
+                    raise RuntimeError("simulated KMS outage")
+                encrypt_details.append(details)
+                token = "ciphertext-{}".format(len(stored) + 1)
+                stored[token] = (
+                    details.key_id,
+                    details.associated_data,
+                    details.plaintext,
+                )
+                return SimpleNamespace(data=SimpleNamespace(ciphertext=token))
+
+            def decrypt(self, details):
+                key_id, associated_data, plaintext = stored[details.ciphertext]
+                if key_id != details.key_id or associated_data != details.associated_data:
+                    raise ValueError("KMS associated data mismatch")
+                return SimpleNamespace(data=SimpleNamespace(plaintext=plaintext))
+
+        fake_client = FakeKmsClient()
+        settings = SimpleNamespace(
+            production=True,
+            credential_backend="oci-kms",
+            ai_credential_secret="",
+            market_credential_secret="",
+            oci_kms_crypto_endpoint=(
+                "https://vault-name-crypto.kms.ap-seoul-1.oraclecloud.com"
+            ),
+            oci_ai_credential_key_id="ocid1.key.oc1.ap-seoul-1.ai-key",
+            oci_market_credential_key_id="ocid1.key.oc1.ap-seoul-1.market-key",
+        )
+        api_key = "sk-test-this-is-a-long-private-key-1234"
+        local_ciphertext = encrypt_api_key(
+            api_key,
+            SimpleNamespace(
+                production=False,
+                credential_backend="local",
+                ai_credential_secret="a" * 40,
+            ),
+            owner_id="user-one",
+            provider="openai",
+        )
+        with patch("cloud_app.credential_store._oci_kms_client", return_value=fake_client):
+            ciphertext = encrypt_api_key(
+                api_key, settings, owner_id="user-one", provider="openai"
+            )
+            self.assertTrue(ciphertext.startswith(OCI_KMS_PREFIX))
+            self.assertNotIn(api_key, ciphertext)
+            self.assertEqual(
+                decrypt_api_key(
+                    ciphertext,
+                    settings,
+                    owner_id="user-one",
+                    provider="openai",
+                ),
+                api_key,
+            )
+            with self.assertRaises(RuntimeError):
+                decrypt_api_key(
+                    ciphertext,
+                    settings,
+                    owner_id="user-two",
+                    provider="openai",
+                )
+            with self.assertRaises(RuntimeError):
+                decrypt_api_key(
+                    ciphertext,
+                    settings,
+                    owner_id="user-one",
+                    provider="anthropic",
+                )
+            with self.assertRaises(RuntimeError):
+                decrypt_api_key(
+                    local_ciphertext,
+                    settings,
+                    owner_id="user-one",
+                    provider="openai",
+                )
+            validate_credential_backend(settings)
+            stored_count = len(stored)
+            fake_client.fail_encrypt = True
+            with self.assertRaisesRegex(RuntimeError, "encryption service is unavailable"):
+                encrypt_api_key(
+                    api_key,
+                    settings,
+                    owner_id="user-one",
+                    provider="openai",
+                )
+            self.assertEqual(len(stored), stored_count)
+        self.assertEqual(encrypt_details[0].encryption_algorithm, "AES_256_GCM")
+        self.assertEqual(
+            encrypt_details[0].associated_data,
+            {
+                "field": "openai:api-key",
+                "owner": "user-one",
+                "purpose": "ai",
+                "version": "3",
+            },
+        )
+
+    def test_offline_oci_migration_is_atomic_and_idempotent(self):
+        legacy_ai_root = "AI-0123456789-abcdefghijklmnopqrstuvwxyz"
+        legacy_market_root = "Market-9876543210-zyxwvutsrqponmlkjihg"
+        base = get_settings()
+        legacy_settings = replace(
+            base,
+            app_env="development",
+            credential_backend="local",
+            ai_credential_secret=legacy_ai_root,
+            market_credential_secret=legacy_market_root,
+        )
+        target_settings = replace(
+            base,
+            app_env="production",
+            credential_backend="oci-kms",
+            ai_credential_secret="",
+            market_credential_secret="",
+            oci_kms_crypto_endpoint=(
+                "https://vault-name-crypto.kms.ap-seoul-1.oraclecloud.com"
+            ),
+            oci_ai_credential_key_id="ocid1.key.oc1.ap-seoul-1.ai-key",
+            oci_market_credential_key_id="ocid1.key.oc1.ap-seoul-1.market-key",
+        )
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session_factory = sessionmaker(bind=engine, expire_on_commit=False)
+        session = session_factory()
+        user = User(
+            id="k" * 32,
+            email="kms-migration@example.com",
+            display_name="KMS migration",
+            password_hash="unused",
+        )
+        ai_plaintext = "sk-test-this-is-a-long-private-key-1234"
+        market_key = "c_01HXYZABCDEFG123456789"
+        market_secret = "s_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        session.add_all(
+            [
+                user,
+                AiConnection(
+                    user_id=user.id,
+                    provider="openai",
+                    model="gpt-5.6-luna",
+                    encrypted_api_key=encrypt_api_key(
+                        ai_plaintext,
+                        legacy_settings,
+                        owner_id=user.id,
+                        provider="openai",
+                    ),
+                    key_hint="••••1234",
+                ),
+                MarketDataConnection(
+                    user_id=user.id,
+                    provider="toss",
+                    environment="live",
+                    encrypted_api_key=encrypt_market_credential(
+                        market_key,
+                        "App Key",
+                        legacy_settings,
+                        owner_id=user.id,
+                        provider="toss",
+                        environment="live",
+                    ),
+                    encrypted_api_secret=encrypt_market_credential(
+                        market_secret,
+                        "App Secret",
+                        legacy_settings,
+                        owner_id=user.id,
+                        provider="toss",
+                        environment="live",
+                    ),
+                    key_hint="••••6789",
+                    secret_hint="••••xxxx",
+                ),
+            ]
+        )
+        session.commit()
+        session.close()
+
+        with (
+            patch("cloud_app.main.settings", target_settings),
+            patch("cloud_app.main.SessionLocal", side_effect=session_factory),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "offline OCI KMS migration"):
+                _migrate_legacy_credentials()
+
+        encrypted = {}
+
+        class FakeKmsClient:
+            fail_after = None
+
+            def encrypt(self, details):
+                if self.fail_after is not None and len(encrypted) >= self.fail_after:
+                    raise RuntimeError("simulated KMS migration failure")
+                token = "migration-ciphertext-{}".format(len(encrypted) + 1)
+                encrypted[token] = (
+                    details.key_id,
+                    details.associated_data,
+                    details.plaintext,
+                )
+                return SimpleNamespace(data=SimpleNamespace(ciphertext=token))
+
+            def decrypt(self, details):
+                key_id, associated_data, plaintext = encrypted[details.ciphertext]
+                if key_id != details.key_id or associated_data != details.associated_data:
+                    raise ValueError("KMS associated data mismatch")
+                return SimpleNamespace(data=SimpleNamespace(plaintext=plaintext))
+
+        fake_client = FakeKmsClient()
+        with (
+            patch("cloud_app.manage.get_settings", return_value=target_settings),
+            patch("cloud_app.manage.initialize_database"),
+            patch("cloud_app.manage.SessionLocal", side_effect=session_factory),
+            patch(
+                "cloud_app.manage._migration_secret",
+                side_effect=[
+                    legacy_ai_root,
+                    legacy_market_root,
+                    legacy_ai_root,
+                    legacy_market_root,
+                ],
+            ) as prompt,
+            patch("cloud_app.credential_store._oci_kms_client", return_value=fake_client),
+        ):
+            with self.assertRaisesRegex(SystemExit, "backup-confirmed"):
+                migrate_credentials_to_oci("MIGRATE_TO_OCI_KMS")
+            prompt.assert_not_called()
+            fake_client.fail_after = 1
+            with self.assertRaises(RuntimeError):
+                migrate_credentials_to_oci(
+                    "MIGRATE_TO_OCI_KMS", backup_confirmed=True
+                )
+            rolled_back = session_factory()
+            self.assertFalse(
+                rolled_back.get(AiConnection, user.id).encrypted_api_key.startswith(
+                    OCI_KMS_PREFIX
+                )
+            )
+            self.assertFalse(
+                rolled_back.get(MarketDataConnection, user.id).encrypted_api_key.startswith(
+                    OCI_KMS_PREFIX
+                )
+            )
+            rolled_back.close()
+
+            fake_client.fail_after = None
+            self.assertEqual(
+                migrate_credentials_to_oci(
+                    "MIGRATE_TO_OCI_KMS", backup_confirmed=True
+                ),
+                0,
+            )
+            self.assertEqual(
+                prompt.call_args_list,
+                [
+                    call("Legacy AI/shared credential root: "),
+                    call("Legacy v2 market credential root: "),
+                    call("Legacy AI/shared credential root: "),
+                    call("Legacy v2 market credential root: "),
+                ],
+            )
+            migrated = session_factory()
+            ai_row = migrated.get(AiConnection, user.id)
+            market_row = migrated.get(MarketDataConnection, user.id)
+            self.assertTrue(ai_row.encrypted_api_key.startswith(OCI_KMS_PREFIX))
+            self.assertTrue(market_row.encrypted_api_key.startswith(OCI_KMS_PREFIX))
+            self.assertTrue(market_row.encrypted_api_secret.startswith(OCI_KMS_PREFIX))
+            self.assertEqual(
+                decrypt_api_key(
+                    ai_row.encrypted_api_key,
+                    target_settings,
+                    owner_id=user.id,
+                    provider="openai",
+                ),
+                ai_plaintext,
+            )
+            migrated.close()
+            prompt.reset_mock()
+            self.assertEqual(migrate_credentials_to_oci("MIGRATE_TO_OCI_KMS"), 0)
+            prompt.assert_not_called()
+            corrupted = session_factory()
+            corrupted.get(AiConnection, user.id).encrypted_api_key = (
+                OCI_KMS_PREFIX + "truncated"
+            )
+            corrupted.commit()
+            corrupted.close()
+            with self.assertRaises(RuntimeError):
+                migrate_credentials_to_oci("MIGRATE_TO_OCI_KMS")
+            prompt.assert_not_called()
+
+    def test_broker_backend_has_no_local_crypto_or_raw_decrypt_route(self):
+        broker_settings = SimpleNamespace(
+            credential_backend="broker",
+            production=True,
+            ai_credential_secret="",
+            market_credential_secret="",
+        )
+        with self.assertRaisesRegex(RuntimeError, "restricted to the credential broker"):
+            encrypt_api_key(
+                "sk-broker-boundary-private-value-1234",
+                broker_settings,
+                owner_id="owner-one",
+                provider="openai",
+            )
+        with self.assertRaisesRegex(RuntimeError, "읽을 수 없습니다"):
+            decrypt_api_key(
+                OCI_KMS_PREFIX + "opaque-ciphertext",
+                broker_settings,
+                owner_id="owner-one",
+                provider="openai",
+            )
+        route_paths = {route.path for route in credential_broker_app.routes}
+        self.assertFalse(any("decrypt" in path or "proxy" in path for path in route_paths))
+        self.assertNotIn("/v1/encrypt", route_paths)
+
+    def test_broker_roles_are_distinct_and_ai_encrypt_never_returns_plaintext(self):
+        scoped = SimpleNamespace(
+            credential_broker_app_token="app-token-0123456789-abcdefghijklmnopqrstuvwxyz",
+            credential_broker_paper_token="paper-token-9876543210-zyxwvutsrqponmlkjihg",
+        )
+        with patch("cloud_app.credential_broker.settings", scoped):
+            self.assertEqual(
+                broker_app_identity("Bearer " + scoped.credential_broker_app_token),
+                "app",
+            )
+            self.assertEqual(
+                broker_paper_identity("Bearer " + scoped.credential_broker_paper_token),
+                "paper",
+            )
+            with self.assertRaises(HTTPException) as rejected:
+                broker_app_identity("Bearer " + scoped.credential_broker_paper_token)
+            self.assertEqual(rejected.exception.status_code, 401)
+
+            plaintext = "sk-broker-boundary-private-value-5678"
+            with patch(
+                "cloud_app.credential_broker.encrypt_api_key",
+                return_value=OCI_KMS_PREFIX + "opaque",
+            ):
+                response = broker_ai_encrypt(
+                    BrokerAiEncryptBody(
+                        owner_id="owner-one", provider="openai", api_key=plaintext
+                    ),
+                    "app",
+                )
+            self.assertEqual(response["ciphertext"], OCI_KMS_PREFIX + "opaque")
+            self.assertEqual(response["key_hint"], "••••5678")
+            self.assertNotIn(plaintext, json.dumps(response, ensure_ascii=False))
+
+    def test_broker_quote_response_rejects_injected_or_nonfinite_values(self):
+        observed = dt.datetime.now(dt.timezone.utc).isoformat()
+        valid = {
+            "quotes": [
+                {
+                    "ticker": "AAPL",
+                    "price": 100.0,
+                    "bid": 99.0,
+                    "ask": 101.0,
+                    "volume": 20.0,
+                    "source": "kis_member",
+                    "observed_at": observed,
+                }
+            ]
+        }
+        self.assertEqual(
+            validate_broker_quotes(
+                valid, requested=("AAPL",), allowed_sources={"kis_member"}
+            )[0].ticker,
+            "AAPL",
+        )
+        for field, value in (
+            ("ticker", "MSFT"),
+            ("source", "attacker"),
+            ("price", float("nan")),
+        ):
+            corrupted = json.loads(json.dumps(valid))
+            corrupted["quotes"][0][field] = value
+            with self.assertRaises(CredentialBrokerError):
+                validate_broker_quotes(
+                    corrupted,
+                    requested=("AAPL",),
+                    allowed_sources={"kis_member"},
+                )
+
+    def test_app_and_worker_use_broker_operations_without_local_decrypt(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(
+            id="b" * 32,
+            email="broker-boundary@example.com",
+            display_name="Broker boundary",
+            password_hash="unused",
+        )
+        session.add(user)
+        session.commit()
+        base = get_settings()
+        runtime_settings = replace(base, credential_backend="broker")
+        catalog = [
+            {
+                "id": "openai",
+                "available": True,
+                "ready": True,
+                "label": "OpenAI",
+                "default_model": "gpt-5.6-luna",
+                "model_examples": ["gpt-5.6-luna"],
+                "requires_api_key": True,
+                "disabled_reason": None,
+            }
+        ]
+        with patch("cloud_app.main.settings", runtime_settings), patch(
+            "cloud_app.main.broker_encrypt_ai",
+            return_value=(OCI_KMS_PREFIX + "opaque-ai", "••••1234"),
+        ) as broker_encrypt, patch(
+            "cloud_app.main.broker_ai_catalog", return_value=catalog
+        ), patch(
+            "cloud_app.main.encrypt_api_key",
+            side_effect=AssertionError("public app attempted local encryption"),
+        ):
+            result = put_ai_connection(
+                AiConnectionBody(
+                    provider="openai",
+                    model="gpt-5.6-luna",
+                    api_key="sk-app-never-decrypts-private-key-1234",
+                ),
+                user,
+                session,
+            )
+        broker_encrypt.assert_called_once()
+        self.assertEqual(result["key_hint"], "••••1234")
+
+        now = dt.datetime.now(dt.timezone.utc)
+        connection = MemberFeedConfig(
+            user_id=user.id,
+            provider="kis",
+            environment="real",
+            encrypted_api_key=OCI_KMS_PREFIX + "opaque-key",
+            encrypted_api_secret=OCI_KMS_PREFIX + "opaque-secret",
+            updated_at=now,
+        )
+        quote = QuoteValue("AAPL", 100.0, 99.0, 101.0, 10.0, "kis_member", now)
+        with patch(
+            "cloud_app.worker.broker_member_quotes", return_value=[quote]
+        ) as broker_quotes, patch(
+            "cloud_app.worker._member_provider",
+            side_effect=AssertionError("paper worker attempted local decryption"),
+        ):
+            returned_user, values = _fetch_member_quotes(
+                connection, SimpleNamespace(credential_backend="broker"), ("AAPL",)
+            )
+        broker_quotes.assert_called_once()
+        self.assertEqual(returned_user, user.id)
+        self.assertEqual(values, [quote])
+        session.close()
+
+    def test_market_save_uses_broker_for_verify_retain_and_rebind(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(
+            id="m" * 32,
+            email="broker-market@example.com",
+            display_name="Broker market",
+            password_hash="unused",
+        )
+        session.add(user)
+        session.commit()
+        runtime_settings = replace(get_settings(), credential_backend="broker")
+        first = {
+            "encrypted_api_key": OCI_KMS_PREFIX + "market-key-one",
+            "encrypted_api_secret": OCI_KMS_PREFIX + "market-secret-one",
+            "key_hint": "••••1234",
+            "secret_hint": "••••5678",
+        }
+        rebound = {
+            **first,
+            "encrypted_api_key": OCI_KMS_PREFIX + "market-key-two",
+            "encrypted_api_secret": OCI_KMS_PREFIX + "market-secret-two",
+        }
+        with patch("cloud_app.main.settings", runtime_settings), patch(
+            "cloud_app.main.broker_prepare_market", side_effect=[first, rebound]
+        ) as prepare, patch(
+            "cloud_app.main.decrypt_market_credential",
+            side_effect=AssertionError("public app attempted market decryption"),
+        ), patch(
+            "cloud_app.main.verify_market_data_connection",
+            side_effect=AssertionError("public app attempted provider authentication"),
+        ):
+            put_market_data_connection(
+                MarketDataConnectionBody(
+                    provider="kis",
+                    environment="real",
+                    api_key="KIS-BROKER-KEY-1234567890",
+                    api_secret="KIS-BROKER-SECRET-1234567890",
+                    personal_use_only=True,
+                ),
+                user,
+                session,
+            )
+            put_market_data_connection(
+                MarketDataConnectionBody(
+                    provider="kis",
+                    environment="paper",
+                    personal_use_only=True,
+                ),
+                user,
+                session,
+            )
+        self.assertEqual(prepare.call_count, 2)
+        retained = prepare.call_args_list[1].kwargs
+        self.assertEqual(retained["current_provider"], "kis")
+        self.assertEqual(retained["current_environment"], "real")
+        self.assertEqual(
+            retained["current_encrypted_api_key"], OCI_KMS_PREFIX + "market-key-one"
+        )
+        stored = session.get(MarketDataConnection, user.id)
+        self.assertEqual(stored.environment, "paper")
+        self.assertEqual(stored.encrypted_api_key, OCI_KMS_PREFIX + "market-key-two")
+        session.close()
+
+    def test_ai_generation_uses_broker_without_exposing_provider_key_to_app(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(
+            id="g" * 32,
+            email="broker-generate@example.com",
+            display_name="Broker generate",
+            password_hash="unused",
+        )
+        session.add(user)
+        session.add(
+            AiConnection(
+                user_id=user.id,
+                provider="openai",
+                model="gpt-5.6-luna",
+                encrypted_api_key=OCI_KMS_PREFIX + "opaque-ai",
+                key_hint="••••1234",
+            )
+        )
+        session.commit()
+        runtime_settings = replace(get_settings(), credential_backend="broker")
+        with patch("cloud_app.main.settings", runtime_settings), patch(
+            "cloud_app.main.broker_generate_strategy",
+            return_value=(sample_spec(), "validated preview"),
+        ) as broker_generate, patch(
+            "cloud_app.main.decrypt_api_key",
+            side_effect=AssertionError("public app attempted AI decryption"),
+        ), patch(
+            "cloud_app.main.generate_strategy",
+            side_effect=AssertionError("public app attempted provider request"),
+        ):
+            payload = ai_strategy(
+                PromptBody(prompt="20일 모멘텀 전략을 만들어 주세요"), user, session
+            )
+        broker_generate.assert_called_once()
+        self.assertEqual(payload["spec"]["name"], "20 day momentum")
+        self.assertNotIn("api_key", str(payload))
+        session.close()
+
+    def test_compose_moves_kms_and_provider_secrets_to_separate_broker(self):
+        compose = yaml.safe_load(
+            Path(__file__).resolve().parents[1].joinpath("compose.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        services = compose["services"]
+        app_environment = services["app"]["environment"]
+        paper_environment = services["paper-worker"]["environment"]
+        forbidden_roots = {"AI_CREDENTIAL_SECRET", "MARKET_CREDENTIAL_SECRET"}
+        for name in ("app", "paper-worker", "backtest-worker", "scheduler"):
+            self.assertFalse(
+                forbidden_roots & set(services[name].get("environment", {})), name
+            )
+        self.assertEqual(app_environment["CREDENTIAL_BACKEND"], "broker")
+        self.assertIn("CREDENTIAL_BROKER_URL", app_environment)
+        self.assertIn("CREDENTIAL_BROKER_APP_TOKEN", app_environment)
+        self.assertNotIn("CREDENTIAL_BROKER_PAPER_TOKEN", app_environment)
+        self.assertNotIn("OCI_AI_CREDENTIAL_KEY_ID", app_environment)
+        self.assertNotIn("OCI_MARKET_CREDENTIAL_KEY_ID", app_environment)
+        self.assertIn("MARKET_DATA_SHARING_ALLOWED", app_environment)
+        self.assertEqual(paper_environment["CREDENTIAL_BACKEND"], "broker")
+        self.assertNotIn("OCI_AI_CREDENTIAL_KEY_ID", paper_environment)
+        self.assertNotIn("OCI_MARKET_CREDENTIAL_KEY_ID", paper_environment)
+        self.assertIn("CREDENTIAL_BROKER_PAPER_TOKEN", paper_environment)
+        self.assertNotIn("CREDENTIAL_BROKER_APP_TOKEN", paper_environment)
+        self.assertNotIn("BROKER_API_KEY", paper_environment)
+        self.assertIn("outbound", services["paper-worker"]["networks"])
+        self.assertNotIn("outbound", services["backtest-worker"]["networks"])
+        broker_compose = yaml.safe_load(
+            Path(__file__).resolve().parents[1]
+            .joinpath("compose.credential-broker.yaml")
+            .read_text(encoding="utf-8")
+        )
+        broker_environment = broker_compose["services"]["credential-broker"]["environment"]
+        self.assertEqual(broker_environment["CREDENTIAL_BACKEND"], "oci-kms")
+        self.assertIn("OCI_AI_CREDENTIAL_KEY_ID", broker_environment)
+        self.assertIn("OCI_MARKET_CREDENTIAL_KEY_ID", broker_environment)
+        self.assertIn("BROKER_API_KEY", broker_environment)
+        broker_source = Path(__file__).resolve().parents[1].joinpath(
+            "cloud_app/credential_broker.py"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("from .paper", broker_source)
+        self.assertNotIn(
+            "CREDENTIAL_BACKEND", services["backtest-worker"]["environment"]
+        )
+        self.assertNotIn("CREDENTIAL_BACKEND", services["scheduler"]["environment"])
+        self.assertIn(
+            "./deploy/backup-once.sh:/backup/backup-once.sh:ro",
+            services["backup"]["volumes"],
+        )
+        restore = Path(__file__).resolve().parents[1].joinpath(
+            "deploy/restore.sh"
+        ).read_text(encoding="utf-8")
+        self.assertIn('--dbname="$PGDATABASE"', restore)
+        self.assertNotIn('--dbname="$POSTGRES_DB"', restore)
+
+    def test_offline_migration_accepts_one_shared_prefixless_legacy_root(self):
+        shared_root = "Shared-legacy-0123456789-abcdefghijklmnopqrstuvwxyz"
+        base = get_settings()
+        legacy_settings = replace(
+            base,
+            app_env="development",
+            credential_backend="local",
+            ai_credential_secret=shared_root,
+            market_credential_secret="unused-market-root-012345678901234",
+        )
+        target_settings = replace(
+            base,
+            app_env="production",
+            credential_backend="oci-kms",
+            ai_credential_secret="",
+            market_credential_secret="",
+            oci_kms_crypto_endpoint="https://vault-crypto.example.invalid",
+            oci_ai_credential_key_id="ocid1.key.oc1.ap-seoul-1.ai-key",
+            oci_market_credential_key_id="ocid1.key.oc1.ap-seoul-1.market-key",
+        )
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session_factory = sessionmaker(bind=engine, expire_on_commit=False)
+        session = session_factory()
+        user = User(
+            id="l" * 32,
+            email="legacy-shared@example.com",
+            display_name="Legacy shared",
+            password_hash="unused",
+        )
+        ai_plaintext = "sk-shared-legacy-private-key-1234"
+        market_key = "legacy-market-key-1234567890"
+        market_secret = "legacy-market-secret-1234567890"
+        legacy_fernet = _legacy_fernet(legacy_settings)
+        session.add_all(
+            [
+                user,
+                AiConnection(
+                    user_id=user.id,
+                    provider="openai",
+                    model="gpt-5.6-luna",
+                    encrypted_api_key=legacy_fernet.encrypt(
+                        ai_plaintext.encode("utf-8")
+                    ).decode("ascii"),
+                    key_hint="••••1234",
+                ),
+                MarketDataConnection(
+                    user_id=user.id,
+                    provider="kis",
+                    environment="paper",
+                    encrypted_api_key=legacy_fernet.encrypt(
+                        market_key.encode("utf-8")
+                    ).decode("ascii"),
+                    encrypted_api_secret=legacy_fernet.encrypt(
+                        market_secret.encode("utf-8")
+                    ).decode("ascii"),
+                    key_hint="••••7890",
+                    secret_hint="••••7890",
+                ),
+            ]
+        )
+        session.commit()
+        session.close()
+
+        kms_values = {}
+
+        def fake_encrypt(value, _settings, purpose, owner_id, field):
+            ciphertext = OCI_KMS_PREFIX + "legacy-migration-{}".format(
+                len(kms_values) + 1
+            )
+            kms_values[ciphertext] = (value, purpose, owner_id, field)
+            return ciphertext
+
+        def fake_decrypt(ciphertext, _settings, purpose, owner_id, field):
+            value, stored_purpose, stored_owner, stored_field = kms_values[ciphertext]
+            if (purpose, owner_id, field) != (
+                stored_purpose,
+                stored_owner,
+                stored_field,
+            ):
+                raise ValueError("KMS context mismatch")
+            return value
+
+        with (
+            patch("cloud_app.manage.get_settings", return_value=target_settings),
+            patch("cloud_app.manage.initialize_database"),
+            patch("cloud_app.manage.SessionLocal", side_effect=session_factory),
+            patch("cloud_app.manage._migration_secret", return_value=shared_root) as prompt,
+            patch(
+                "cloud_app.credential_store._encrypt_with_oci_kms",
+                side_effect=fake_encrypt,
+            ),
+            patch(
+                "cloud_app.credential_store._decrypt_with_oci_kms",
+                side_effect=fake_decrypt,
+            ),
+        ):
+            self.assertEqual(
+                migrate_credentials_to_oci(
+                    "MIGRATE_TO_OCI_KMS", backup_confirmed=True
+                ),
+                0,
+            )
+        prompt.assert_called_once_with("Legacy AI/shared credential root: ")
+        migrated = session_factory()
+        self.assertTrue(
+            migrated.get(AiConnection, user.id).encrypted_api_key.startswith(
+                OCI_KMS_PREFIX
+            )
+        )
+        market = migrated.get(MarketDataConnection, user.id)
+        self.assertTrue(market.encrypted_api_key.startswith(OCI_KMS_PREFIX))
+        self.assertTrue(market.encrypted_api_secret.startswith(OCI_KMS_PREFIX))
+        migrated.close()
+
+    def test_strategy_dsl_rejects_unknown_fields(self):
+        payload = sample_spec().model_dump()
+        payload["runtime_code"] = "import os"
+        with self.assertRaises(ValidationError):
+            StrategySpec.model_validate(payload)
+
+    def test_dataset_summary_rejects_price_hash_mismatch_before_readiness(self):
+        with tempfile.TemporaryDirectory() as directory:
+            dataset = Path(directory)
+            prices = dataset / "prices"
+            prices.mkdir()
+            (prices / "AAPL_data.pkl").write_bytes(b"tampered")
+            (dataset / "manifest.json").write_text(
+                json.dumps(
+                    {
+                        "prices": {
+                            "AAPL": {
+                                "first_date": "2026-01-02",
+                                "last_date": "2026-01-02",
+                                "rows": 1,
+                                "sha256": "0" * 64,
+                            }
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "integrity"):
+                DatasetSummary(
+                    SimpleNamespace(
+                        dataset_dir=dataset,
+                        snapshots_glob=str(dataset / "snapshots/*.json"),
+                    )
+                )
+
+    def test_database_backed_logout_revokes_a_copied_cookie(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        session = sessionmaker(bind=engine, expire_on_commit=False)()
+        user = User(
+            id="9" * 32,
+            email="session@example.com",
+            display_name="Session",
+            password_hash="x",
+        )
+        session.add(user)
+        token, _csrf = create_session(user.id, user.role, "s" * 40, 1)
+        payload = parse_session(token, "s" * 40)
+        session.add(
+            BrowserSession(
+                token_hash=hashlib.sha256(payload["jti"].encode()).hexdigest(),
+                user_id=user.id,
+                expires_at=dt.datetime.fromtimestamp(payload["exp"], tz=dt.timezone.utc),
+            )
+        )
+        session.commit()
+        request = SimpleNamespace(cookies={"session": token}, state=SimpleNamespace())
+        with patch("cloud_app.main.settings", replace(get_settings(), session_secret="s" * 40)):
+            authenticated = current_user(request, session)
+            logout(request, Response(), authenticated, session)
+            with self.assertRaises(HTTPException) as raised:
+                current_user(
+                    SimpleNamespace(cookies={"session": token}, state=SimpleNamespace()),
+                    session,
+                )
+        self.assertEqual(raised.exception.status_code, 401)
+        session.close()
+
+    def test_request_body_limit_rejects_declared_and_chunked_oversize(self):
+        async def invoke(headers, messages, limit=16):
+            called = False
+            sent = []
+
+            async def endpoint(_scope, receive, send):
+                nonlocal called
+                called = True
+                await receive()
+                await send({"type": "http.response.start", "status": 204, "headers": []})
+                await send({"type": "http.response.body", "body": b""})
+
+            queue = list(messages)
+
+            async def receive():
+                return queue.pop(0)
+
+            async def send(message):
+                sent.append(message)
+
+            middleware = RequestBodyLimitMiddleware(endpoint, limit)
+            await middleware(
+                {"type": "http", "method": "POST", "path": "/login", "headers": headers},
+                receive,
+                send,
+            )
+            return called, sent[0]["status"]
+
+        declared = asyncio.run(
+            invoke(
+                [(b"content-length", b"17")],
+                [{"type": "http.request", "body": b"", "more_body": False}],
+            )
+        )
+        chunked = asyncio.run(
+            invoke(
+                [],
+                [
+                    {"type": "http.request", "body": b"123456789", "more_body": True},
+                    {"type": "http.request", "body": b"123456789", "more_body": False},
+                ],
+            )
+        )
+        allowed = asyncio.run(
+            invoke(
+                [(b"content-length", b"4")],
+                [{"type": "http.request", "body": b"test", "more_body": False}],
+            )
+        )
+        self.assertEqual(declared, (False, 413))
+        self.assertEqual(chunked, (False, 413))
+        self.assertEqual(allowed, (True, 204))
+
+    def test_request_body_replay_preserves_disconnect_signal(self):
+        async def invoke():
+            observed = []
+            sent = []
+            queue = [
+                {"type": "http.request", "body": b"", "more_body": False},
+                {"type": "http.disconnect"},
+            ]
+
+            async def endpoint(_scope, receive, send):
+                observed.append(await receive())
+                observed.append(await receive())
+                await send({"type": "http.response.start", "status": 204, "headers": []})
+                await send({"type": "http.response.body", "body": b""})
+
+            async def receive():
+                return queue.pop(0)
+
+            async def send(message):
+                sent.append(message)
+
+            await RequestBodyLimitMiddleware(endpoint, 16)(
+                {"type": "http", "method": "GET", "path": "/api/stream", "headers": []},
+                receive,
+                send,
+            )
+            return observed, sent
+
+        observed, sent = asyncio.run(invoke())
+        self.assertEqual(observed[0]["type"], "http.request")
+        self.assertEqual(observed[1]["type"], "http.disconnect")
+        self.assertEqual(sent[0]["status"], 204)
+
+    def test_stream_limits_are_released(self):
+        user_id = "stream-test-user"
+        self.assertTrue(_acquire_stream(user_id))
+        self.assertTrue(_acquire_stream(user_id))
+        self.assertFalse(_acquire_stream(user_id))
+        _release_stream(user_id)
+        self.assertTrue(_acquire_stream(user_id))
+        _release_stream(user_id)
+        _release_stream(user_id)
+
+    def test_sqlite_files_and_parent_are_owner_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = Path(directory) / "runtime"
+            runtime.mkdir(mode=0o755)
+            database = runtime / "club.sqlite3"
+            wal = Path(str(database) + "-wal")
+            database.write_bytes(b"db")
+            wal.write_bytes(b"wal")
+            os.chmod(database, 0o644)
+            os.chmod(wal, 0o644)
+            with patch.object(database_module, "_sqlite_path", database):
+                database_module._secure_sqlite_files()
+            self.assertEqual(runtime.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(database.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(wal.stat().st_mode & 0o777, 0o600)
+
+    def test_finnhub_token_uses_header_and_is_not_logged_on_failure(self):
+        secret = "finnhub-secret-token"
+        with patch.object(market_calendar_module, "_FINNHUB_API_KEY", secret):
+            with patch("requests.get", return_value=SimpleNamespace(status_code=200, json=lambda: {})) as get:
+                market_calendar_module._query_finnhub_market_status()
+            self.assertEqual(get.call_args.kwargs["params"], {"exchange": "US"})
+            self.assertEqual(get.call_args.kwargs["headers"], {"X-Finnhub-Token": secret})
+            with patch("requests.get", side_effect=RuntimeError("url?token=" + secret)):
+                with self.assertLogs("market_calendar", level=logging.WARNING) as logs:
+                    self.assertIsNone(market_calendar_module._query_finnhub_market_status())
+            self.assertNotIn(secret, "\n".join(logs.output))
 
     def test_ai_connection_is_owned_by_one_user(self):
         engine = create_engine("sqlite:///:memory:")
@@ -267,7 +1374,16 @@ class SecurityTests(unittest.TestCase):
         stored = session.get(MarketDataConnection, user.id)
         self.assertNotIn(api_key, stored.encrypted_api_key)
         self.assertNotIn(api_secret, stored.encrypted_api_secret)
-        self.assertEqual(decrypt_market_credential(stored.encrypted_api_key), api_key)
+        self.assertEqual(
+            decrypt_market_credential(
+                stored.encrypted_api_key,
+                owner_id=user.id,
+                provider="kis",
+                environment="real",
+                label="App Key",
+            ),
+            api_key,
+        )
         session.add(
             MemberQuote(
                 user_id=user.id,
@@ -293,6 +1409,17 @@ class SecurityTests(unittest.TestCase):
             )
         verify_again.assert_called_once_with("kis", "paper", api_key, api_secret)
         self.assertEqual(kept["environment"], "paper")
+        rebound = session.get(MarketDataConnection, user.id)
+        self.assertEqual(
+            decrypt_market_credential(
+                rebound.encrypted_api_key,
+                owner_id=user.id,
+                provider="kis",
+                environment="paper",
+                label="App Key",
+            ),
+            api_key,
+        )
         self.assertEqual(session.query(MemberQuote).filter_by(user_id=user.id).count(), 0)
         session.add(
             MemberQuote(
@@ -339,7 +1466,16 @@ class SecurityTests(unittest.TestCase):
         self.assertNotIn("api_key", payload)
         stored = session.get(MarketDataConnection, user.id)
         self.assertNotIn(client_id, stored.encrypted_api_key)
-        self.assertEqual(decrypt_market_credential(stored.encrypted_api_key), client_id)
+        self.assertEqual(
+            decrypt_market_credential(
+                stored.encrypted_api_key,
+                owner_id=user.id,
+                provider="toss",
+                environment="live",
+                label="App Key",
+            ),
+            client_id,
+        )
         session.close()
 
     def test_market_data_save_rejects_a_concurrent_connection_change(self):
@@ -753,16 +1889,32 @@ class MarketDataProviderTests(unittest.TestCase):
     def test_worker_builds_toss_provider_from_decrypted_member_credentials(self):
         import cloud_app.worker as worker_module
 
-        settings = SimpleNamespace(ai_credential_secret="m" * 40, session_secret="s" * 40)
+        settings = SimpleNamespace(
+            ai_credential_secret="a" * 40,
+            market_credential_secret="m" * 40,
+            session_secret="s" * 40,
+        )
         client_id = "c_01HXYZABCDEFG123456789"
         client_secret = "s_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         config = MemberFeedConfig(
             user_id="w" * 32,
             provider="toss",
             environment="live",
-            encrypted_api_key=encrypt_market_credential(client_id, "Client ID", settings),
+            encrypted_api_key=encrypt_market_credential(
+                client_id,
+                "App Key",
+                settings,
+                owner_id="w" * 32,
+                provider="toss",
+                environment="live",
+            ),
             encrypted_api_secret=encrypt_market_credential(
-                client_secret, "Client Secret", settings
+                client_secret,
+                "App Secret",
+                settings,
+                owner_id="w" * 32,
+                provider="toss",
+                environment="live",
             ),
             updated_at=dt.datetime.now(dt.timezone.utc),
         )

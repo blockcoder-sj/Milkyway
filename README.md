@@ -15,7 +15,12 @@ Milkyway Quant Trading Lab은 퀀트 동아리 회원이 자연어 전략을 안
 
 AI 웹 구독 계정은 사용하지 않는다. OpenAI·Anthropic을 선택한 회원은 설정 화면에 자신의
 API 키를 입력하며, 해당 키는 전략 생성 요청에만 사용된다. 운영 환경에서는 반드시
-`AI_CREDENTIAL_SECRET`을 세션 비밀값과 다른 32자 이상의 무작위 값으로 설정한다.
+OCI Vault의 서로 다른 AI·시세 대칭 키와 instance principal을 사용한다. KMS 권한은 공개 앱과
+paper-worker가 아닌 **별도 OCI 인스턴스의 provider-operation broker에만** 부여한다. 앱은
+암호문을 저장하지만 복호화 권한이나 KMS endpoint/key OCID를 받지 않는다. 브로커도 raw decrypt나
+임의 URL proxy를 제공하지 않고 키 암호화, 검증, 전략 생성, 허용 종목 시세 조회만 수행한다.
+Vault AES-GCM 암호문은 사용자·공급자·용도·필드에 associated data로 결합된다. production은
+로컬 공유 암호화 루트, 앱의 직접 KMS backend, legacy/v2 암호문을 허용하지 않는다.
 
 설정의 `증권사 시세 API`에서 회원이 본인의 KIS App Key·App Secret과
 실전/모의 환경을 선택할 수 있다. 저장 전 KIS OAuth 토큰 발급으로 실제 인증하며,
@@ -44,7 +49,8 @@ REST로 조회해 해당 회원의 내부 페이퍼 계좌에만 저장한다. �
 `로컬 AI`는 회원별 키 대신 운영자가 관리하는 공용 모델 서버를 사용한다. 기본 배포 구성은
 llama.cpp의 OpenAI 호환 API와 `Qwen2.5-Coder-7B-Instruct-GGUF` Q4_K_M 모델이다. 모델
 엔드포인트는 서버 환경변수로만 정하며 사용자가 임의 URL을 입력할 수 없다. 활성화하려면
-`deploy/.env`에서 `COMPOSE_PROFILES=local-ai`, `LOCAL_AI_ENABLED=true`와 임의의
+브로커 VM의 `deploy/credential-broker.env`에서 `COMPOSE_PROFILES=local-ai`,
+`LOCAL_AI_ENABLED=true`와 임의의
 `LOCAL_AI_API_KEY`를 설정한 뒤 다음과 같이 로컬 AI 프로필을 함께 실행한다. 첫 실행에서는
 약 5GB 모델 다운로드와 로딩 때문에 수 분이 걸릴 수 있다.
 
@@ -52,24 +58,39 @@ llama.cpp의 OpenAI 호환 API와 `Qwen2.5-Coder-7B-Instruct-GGUF` Q4_K_M 모델
 GGUF를 받는다. 운영자가 모델을 바꿀 때는 모델 ID와 revision 고정 URL을 함께 변경한다.
 
 ```bash
-docker compose --env-file deploy/.env --profile local-ai up -d --build
+docker compose --env-file deploy/credential-broker.env \
+  -f compose.credential-broker.yaml --profile local-ai up -d --build
 ```
 
 로컬 AI는 별도 API 호출료가 없지만 CPU/RAM을 사용한다. 7B Q4 모델 기준으로 앱·데이터베이스와
 함께 운영하려면 16GB보다 24GB RAM 구성이 안전하며, 동시 생성은 기본 2개 슬롯으로 제한한다.
 
-## 로컬 실행
+## 실행
 
 현재 데이터 스냅샷은 Git에서 제외되지만 이 로컬 프로젝트의 `data_cache/`에는 복사되어
-있다. Docker Desktop이 실행 중인 상태에서 다음 명령을 사용한다.
+있다. 운영은 공개 앱 VM과 credential broker VM 두 대를 사용한다. 앱 VM은 어떤 Vault key
+dynamic group에도 포함하지 않고 브로커 VM만 두 key를 사용할 수 있다.
 
 ```bash
-cp deploy/.env.example deploy/.env
-# deploy/.env의 비밀번호, 세션/AI 암호화 비밀값과 초대 코드를 변경
+umask 077
+install -m 600 deploy/.env.example deploy/.env
+# 비밀번호·세션 비밀값·초대 코드, broker HTTPS URL과 역할별 토큰을 교체
 docker compose --env-file deploy/.env up -d --build
 ```
 
-로컬 단일 컨테이너 개발 실행은 다음과 같다.
+브로커 VM에서는 별도로 다음을 실행한다.
+
+```bash
+umask 077
+install -m 600 deploy/credential-broker.env.example deploy/credential-broker.env
+# broker domain, 역할별 토큰, OCI Vault endpoint와 두 key OCID를 교체
+docker compose --env-file deploy/credential-broker.env \
+  -f compose.credential-broker.yaml up -d --build
+```
+
+OCI 밖의 로컬 개발은 production Compose 설정 대신 다음 단일 컨테이너 명령을 사용한다.
+development의 credential root는 writable 컨테이너 filesystem의 owner-only `runtime/`에
+자동 생성되며 실제 회원 키를 입력하지 않는다.
 
 ```bash
 docker build -t milkyway:local .

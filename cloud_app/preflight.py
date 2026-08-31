@@ -12,14 +12,50 @@ from pathlib import Path
 from price_data_pipeline import sha256_file
 
 from .config import get_settings
+from .credential_store import validate_credential_backend
+from .credential_broker_client import broker_preflight
 from .strategies import _load_certified_snapshots
 
 
-def run(check_database: bool = False, check_docker: bool = True) -> dict:
+def run(
+    check_database: bool = False,
+    check_docker: bool = True,
+    service: str = "app",
+) -> dict:
     settings = get_settings()
     checks = {}
-    errors = list(settings.startup_errors())
+    errors = list(settings.startup_errors(service))
     checks["configuration"] = not errors
+    if settings.credential_backend == "broker":
+        try:
+            broker_preflight(settings, "paper" if service == "paper" else "app")
+            checks["credential_broker"] = True
+        except Exception as exc:
+            checks["credential_broker"] = False
+            errors.append(
+                "credential broker round trip failed ({})".format(type(exc).__name__)
+            )
+        checks["credential_kms"] = False
+    elif settings.credential_backend == "oci-kms":
+        kms_configured = (
+            settings.oci_kms_crypto_endpoint.startswith("https://")
+            and settings.oci_ai_credential_key_id.startswith("ocid1.key.")
+            and settings.oci_market_credential_key_id.startswith("ocid1.key.")
+        )
+        if kms_configured:
+            try:
+                validate_credential_backend(settings)
+                checks["credential_kms"] = True
+            except Exception as exc:
+                checks["credential_kms"] = False
+                errors.append(
+                    "credential KMS round trip failed ({})".format(type(exc).__name__)
+                )
+        else:
+            checks["credential_kms"] = False
+            errors.append("credential KMS configuration is incomplete")
+    else:
+        checks["credential_kms"] = not settings.production
     if check_docker:
         checks["docker"] = shutil.which("docker") is not None
         if not checks["docker"]:
@@ -100,8 +136,15 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check-database", action="store_true")
     parser.add_argument("--skip-docker", action="store_true")
+    parser.add_argument(
+        "--service", choices=("app", "paper", "broker", "deployment"), default="app"
+    )
     args = parser.parse_args()
-    result = run(args.check_database, check_docker=not args.skip_docker)
+    result = run(
+        args.check_database,
+        check_docker=not args.skip_docker,
+        service=args.service,
+    )
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if result["ready"] else 1
 

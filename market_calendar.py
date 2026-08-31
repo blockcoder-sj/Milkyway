@@ -82,16 +82,20 @@ def _query_finnhub_market_status():
     try:
         import requests
         url = "https://finnhub.io/api/v1/stock/market-status"
-        resp = requests.get(url, params={"exchange": "US", "token": _FINNHUB_API_KEY},
-                            timeout=5)
+        resp = requests.get(
+            url,
+            params={"exchange": "US"},
+            headers={"X-Finnhub-Token": _FINNHUB_API_KEY},
+            timeout=5,
+        )
         if resp.status_code == 200:
             data = resp.json()
             # {"exchange":"US","holiday":"","isOpen":true,"session":"regular","t":1711...,"timezone":"America/New_York"}
             return data
         else:
             logger.warning("Finnhub API returned %d", resp.status_code)
-    except Exception as e:
-        logger.warning("Finnhub API failed: %s", e)
+    except Exception as exc:
+        logger.warning("Finnhub API failed: %s", type(exc).__name__)
     return None
 
 

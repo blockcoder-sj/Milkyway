@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 deploy/.env
+deploy/credential-broker.env
 *.token.json
 
 # Runtime state and large datasets

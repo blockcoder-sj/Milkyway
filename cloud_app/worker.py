@@ -16,6 +16,11 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from .config import get_settings
+from .credential_broker_client import (
+    broker_member_quotes,
+    broker_preflight,
+    broker_shared_quotes,
+)
 from .database import (
     BacktestJob,
     Lease,
@@ -65,6 +70,16 @@ class MemberFeedConfig:
     encrypted_api_key: str
     encrypted_api_secret: str
     updated_at: dt.datetime
+
+
+class CredentialBrokerSharedQuoteProvider(QuoteProvider):
+    """Shared quote adapter that keeps deployment broker credentials off the worker."""
+
+    def __init__(self, settings):
+        self.settings = settings
+
+    def fetch(self, tickers):
+        return broker_shared_quotes(self.settings, tickers=tuple(sorted(set(tickers))))
 
 
 def heartbeat(session, component: str, detail: str = "") -> None:
@@ -175,8 +190,22 @@ def _member_provider(connection: MemberFeedConfig, settings) -> QuoteProvider:
         cached = _member_provider_cache.get(connection.user_id)
     if cached is not None and cached[0] == version:
         return cached[1]
-    api_key = decrypt_market_credential(connection.encrypted_api_key, settings)
-    api_secret = decrypt_market_credential(connection.encrypted_api_secret, settings)
+    api_key = decrypt_market_credential(
+        connection.encrypted_api_key,
+        settings,
+        owner_id=connection.user_id,
+        provider=connection.provider,
+        environment=connection.environment,
+        label="App Key",
+    )
+    api_secret = decrypt_market_credential(
+        connection.encrypted_api_secret,
+        settings,
+        owner_id=connection.user_id,
+        provider=connection.provider,
+        environment=connection.environment,
+        label="App Secret",
+    )
     if connection.provider == "kis":
         provider = KisQuoteProvider(
             KisCredentials(
@@ -206,6 +235,17 @@ def _fetch_member_quotes(
     settings,
     watchlist: tuple[str, ...],
 ):
+    if getattr(settings, "credential_backend", "local") == "broker":
+        values = broker_member_quotes(
+            settings,
+            owner_id=connection.user_id,
+            provider=connection.provider,
+            environment=connection.environment,
+            encrypted_api_key=connection.encrypted_api_key,
+            encrypted_api_secret=connection.encrypted_api_secret,
+            tickers=watchlist,
+        )
+        return connection.user_id, values
     provider = _member_provider(connection, settings)
     return connection.user_id, provider.fetch(watchlist)
 
@@ -357,11 +397,19 @@ def main() -> int:
     role = os.getenv("WORKER_ROLE", "all").strip().lower()
     if role not in {"all", "backtest", "paper"}:
         raise SystemExit("WORKER_ROLE must be all, backtest or paper")
-    errors = settings.startup_errors()
+    errors = settings.startup_errors(role if role != "all" else "deployment")
     if errors:
         raise SystemExit("Startup configuration failed:\n- " + "\n- ".join(errors))
     initialize_database()
-    provider = make_quote_provider(settings) if role in {"all", "paper"} else None
+    if role in {"all", "paper"} and settings.credential_backend == "broker":
+        broker_preflight(settings, "paper")
+    provider = None
+    if role in {"all", "paper"}:
+        provider = (
+            CredentialBrokerSharedQuoteProvider(settings)
+            if settings.credential_backend == "broker" and settings.quote_provider == "kis"
+            else make_quote_provider(settings)
+        )
     logger.info(
         "worker started instance=%s role=%s quote_provider=%s",
         INSTANCE_ID,

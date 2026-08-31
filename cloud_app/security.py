@@ -61,6 +61,7 @@ def create_session(user_id: str, role: str, secret: str, hours: int) -> tuple[st
         "sub": user_id,
         "role": role,
         "csrf": csrf,
+        "jti": secrets.token_urlsafe(32),
         "exp": int((dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=hours)).timestamp()),
     }
     body = _b64(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode())
@@ -75,6 +76,14 @@ def parse_session(token: str, secret: str) -> dict:
         if not hmac.compare_digest(signature, expected):
             raise ValueError("bad signature")
         payload = json.loads(_unb64(body))
+        if not isinstance(payload, dict):
+            raise ValueError("bad payload")
+        if not isinstance(payload.get("sub"), str) or not payload["sub"]:
+            raise ValueError("bad subject")
+        if not isinstance(payload.get("csrf"), str) or len(payload["csrf"]) < 20:
+            raise ValueError("bad csrf")
+        if not isinstance(payload.get("jti"), str) or len(payload["jti"]) < 20:
+            raise ValueError("bad session id")
         if int(payload["exp"]) < int(dt.datetime.now(dt.timezone.utc).timestamp()):
             raise ValueError("expired")
         return payload

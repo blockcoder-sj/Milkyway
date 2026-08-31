@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
+import hashlib
 import hmac
 import json
+import logging
 import threading
 import time
 from collections import defaultdict, deque
@@ -25,15 +28,28 @@ from .ai_credentials import (
     encrypt_api_key,
     key_hint,
     provider_catalog,
+    validate_api_key,
     validate_provider_model,
 )
 from .config import get_settings
+from .credential_store import credential_ciphertext_prefix
+from .credential_broker_client import (
+    CredentialBrokerError,
+    broker_ai_catalog,
+    broker_encrypt_ai,
+    broker_generate_strategy,
+    broker_prepare_market,
+    broker_preflight,
+    broker_validate_ai,
+    broker_validate_market,
+)
 from .database import (
     BacktestJob,
     AiConnection,
     EquityPoint,
     MarketDataConnection,
     MemberQuote,
+    BrowserSession,
     PaperAccount,
     PaperFill,
     RuntimeHeartbeat,
@@ -44,6 +60,7 @@ from .database import (
     utcnow,
 )
 from .dashboard_views import completed_session_freshness, market_overview, news_feed, sector_heatmap
+from .http_security import RequestBodyLimitMiddleware
 from .paper import account_snapshot
 from .market_data_credentials import (
     MarketDataProviderError,
@@ -63,28 +80,40 @@ from .security import (
     validate_password,
     verify_password,
 )
-from .strategies import StrategySpec, get_dataset_bundle, strategy_code_preview
+from .strategies import (
+    StrategySpec,
+    get_dashboard_dataset,
+    get_dataset_summary,
+    strategy_code_preview,
+)
 
 
 settings = get_settings()
+logger = logging.getLogger("cloud_app.main")
+_DUMMY_PASSWORD_HASH = hash_password("milkyway-invalid-login-placeholder")
 _local_ai_slots = threading.BoundedSemaphore(settings.local_ai_max_concurrent_requests)
 _market_data_verification_slots = threading.BoundedSemaphore(2)
 STATIC = Path(__file__).resolve().parent / "static"
 app = FastAPI(title=settings.app_name, docs_url=None if settings.production else "/docs")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
+app.add_middleware(RequestBodyLimitMiddleware, max_bytes=settings.max_request_body_bytes)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
+def _broker_enabled() -> bool:
+    return getattr(settings, "credential_backend", "local") == "broker"
+
+
 class RegisterBody(BaseModel):
-    email: str
+    email: str = Field(min_length=3, max_length=254)
     display_name: str = Field(min_length=2, max_length=60)
-    password: str
-    invite_code: str
+    password: str = Field(min_length=10, max_length=128)
+    invite_code: str = Field(min_length=8, max_length=256)
 
 
 class LoginBody(BaseModel):
-    email: str
-    password: str
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=1, max_length=128)
 
 
 class PromptBody(BaseModel):
@@ -128,17 +157,57 @@ class StatusBody(BaseModel):
 
 _attempt_lock = threading.Lock()
 _attempts: dict[str, deque[float]] = defaultdict(deque)
+_max_rate_limit_keys = max(1024, settings.max_users * 100)
+_stream_lock = threading.Lock()
+_stream_counts: dict[str, int] = defaultdict(int)
+_stream_total = 0
 
 
 def _rate_limit(key: str, limit: int, window_seconds: int) -> None:
     now = time.monotonic()
     with _attempt_lock:
+        if key not in _attempts and len(_attempts) >= _max_rate_limit_keys:
+            stale_before = now - 3600
+            for stale_key in [
+                candidate
+                for candidate, values in _attempts.items()
+                if not values or values[-1] < stale_before
+            ]:
+                _attempts.pop(stale_key, None)
+            if len(_attempts) >= _max_rate_limit_keys:
+                raise HTTPException(
+                    status_code=429,
+                    detail="요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+                )
         bucket = _attempts[key]
         while bucket and bucket[0] < now - window_seconds:
             bucket.popleft()
         if len(bucket) >= limit:
             raise HTTPException(status_code=429, detail="요청이 너무 많습니다. 잠시 후 다시 시도하세요.")
         bucket.append(now)
+
+
+def _acquire_stream(user_id: str) -> bool:
+    global _stream_total
+    with _stream_lock:
+        if _stream_total >= settings.max_streams_total:
+            return False
+        if _stream_counts[user_id] >= settings.max_streams_per_user:
+            return False
+        _stream_counts[user_id] += 1
+        _stream_total += 1
+        return True
+
+
+def _release_stream(user_id: str) -> None:
+    global _stream_total
+    with _stream_lock:
+        if _stream_counts.get(user_id, 0) <= 0:
+            return
+        _stream_counts[user_id] -= 1
+        if _stream_counts[user_id] == 0:
+            _stream_counts.pop(user_id, None)
+        _stream_total = max(0, _stream_total - 1)
 
 
 def get_db():
@@ -160,7 +229,22 @@ def current_user(request: Request, session: Session = Depends(get_db)) -> User:
     user = session.get(User, payload["sub"])
     if user is None or not user.active:
         raise HTTPException(status_code=401, detail="비활성 계정입니다")
+    session_id = str(payload.get("jti", ""))
+    if not session_id:
+        raise HTTPException(status_code=401, detail="세션이 만료되었습니다")
+    token_hash = hashlib.sha256(session_id.encode("utf-8")).hexdigest()
+    browser_session = session.get(BrowserSession, token_hash)
+    if browser_session is None or browser_session.user_id != user.id:
+        raise HTTPException(status_code=401, detail="세션이 만료되었습니다")
+    expires_at = browser_session.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=dt.timezone.utc)
+    if expires_at <= utcnow():
+        session.delete(browser_session)
+        session.commit()
+        raise HTTPException(status_code=401, detail="세션이 만료되었습니다")
     request.state.session_payload = payload
+    request.state.browser_session = browser_session
     return user
 
 
@@ -172,8 +256,27 @@ def csrf_guard(request: Request, user: User = Depends(current_user)) -> User:
     return user
 
 
-def _set_session(response: Response, user: User) -> str:
+def _set_session(response: Response, user: User, session: Session) -> str:
     token, csrf = create_session(user.id, user.role, settings.session_secret, settings.session_hours)
+    payload = parse_session(token, settings.session_secret)
+    token_hash = hashlib.sha256(payload["jti"].encode("utf-8")).hexdigest()
+    session.execute(delete(BrowserSession).where(BrowserSession.expires_at <= utcnow()))
+    stale_user_sessions = session.scalars(
+        select(BrowserSession)
+        .where(BrowserSession.user_id == user.id)
+        .order_by(BrowserSession.created_at.desc())
+        .offset(9)
+    ).all()
+    for stale_session in stale_user_sessions:
+        session.delete(stale_session)
+    session.add(
+        BrowserSession(
+            token_hash=token_hash,
+            user_id=user.id,
+            expires_at=dt.datetime.fromtimestamp(payload["exp"], tz=dt.timezone.utc),
+        )
+    )
+    session.commit()
     response.set_cookie(
         "session",
         token,
@@ -195,13 +298,153 @@ def _owned_strategy(session: Session, user: User, strategy_id: str) -> Strategy:
     return row
 
 
+def _migrate_legacy_credentials() -> None:
+    """Upgrade local ciphertext, or reject records needing offline KMS migration."""
+
+    session = SessionLocal()
+    changed = False
+    try:
+        target_prefix = credential_ciphertext_prefix(settings)
+        for row in session.scalars(select(AiConnection)).all():
+            if row.provider == "local" or not row.encrypted_api_key:
+                continue
+            if row.encrypted_api_key.startswith(target_prefix):
+                if _broker_enabled():
+                    broker_validate_ai(
+                        settings,
+                        owner_id=row.user_id,
+                        provider=row.provider,
+                        ciphertext=row.encrypted_api_key,
+                    )
+                elif target_prefix != "v2:":
+                    validate_api_key(
+                        decrypt_api_key(
+                            row.encrypted_api_key,
+                            settings,
+                            owner_id=row.user_id,
+                            provider=row.provider,
+                        )
+                    )
+                continue
+            if not row.encrypted_api_key.startswith(target_prefix):
+                if target_prefix != "v2:":
+                    raise RuntimeError(
+                        "Stored AI credentials require the offline OCI KMS migration command"
+                    )
+                plaintext = decrypt_api_key(
+                    row.encrypted_api_key,
+                    settings,
+                    owner_id=row.user_id,
+                    provider=row.provider,
+                )
+                row.encrypted_api_key = encrypt_api_key(
+                    plaintext,
+                    settings,
+                    owner_id=row.user_id,
+                    provider=row.provider,
+                )
+                changed = True
+        for row in session.scalars(select(MarketDataConnection)).all():
+            if row.encrypted_api_key.startswith(target_prefix):
+                if _broker_enabled():
+                    pass
+                elif target_prefix != "v2:":
+                    validate_market_credential(
+                        decrypt_market_credential(
+                            row.encrypted_api_key,
+                            settings,
+                            owner_id=row.user_id,
+                            provider=row.provider,
+                            environment=row.environment,
+                            label="App Key",
+                        ),
+                        "App Key",
+                    )
+            else:
+                if target_prefix != "v2:":
+                    raise RuntimeError(
+                        "Stored market credentials require the offline OCI KMS migration command"
+                    )
+                plaintext_key = decrypt_market_credential(
+                    row.encrypted_api_key,
+                    settings,
+                    owner_id=row.user_id,
+                    provider=row.provider,
+                    environment=row.environment,
+                    label="App Key",
+                )
+                row.encrypted_api_key = encrypt_market_credential(
+                    plaintext_key,
+                    "App Key",
+                    settings,
+                    owner_id=row.user_id,
+                    provider=row.provider,
+                    environment=row.environment,
+                )
+                changed = True
+            if row.encrypted_api_secret.startswith(target_prefix):
+                if _broker_enabled():
+                    broker_validate_market(
+                        settings,
+                        owner_id=row.user_id,
+                        provider=row.provider,
+                        environment=row.environment,
+                        encrypted_api_key=row.encrypted_api_key,
+                        encrypted_api_secret=row.encrypted_api_secret,
+                    )
+                elif target_prefix != "v2:":
+                    validate_market_credential(
+                        decrypt_market_credential(
+                            row.encrypted_api_secret,
+                            settings,
+                            owner_id=row.user_id,
+                            provider=row.provider,
+                            environment=row.environment,
+                            label="App Secret",
+                        ),
+                        "App Secret",
+                    )
+            else:
+                if target_prefix != "v2:":
+                    raise RuntimeError(
+                        "Stored market credentials require the offline OCI KMS migration command"
+                    )
+                plaintext_secret = decrypt_market_credential(
+                    row.encrypted_api_secret,
+                    settings,
+                    owner_id=row.user_id,
+                    provider=row.provider,
+                    environment=row.environment,
+                    label="App Secret",
+                )
+                row.encrypted_api_secret = encrypt_market_credential(
+                    plaintext_secret,
+                    "App Secret",
+                    settings,
+                    owner_id=row.user_id,
+                    provider=row.provider,
+                    environment=row.environment,
+                )
+                changed = True
+        if changed:
+            session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 @app.on_event("startup")
 def startup() -> None:
-    errors = settings.startup_errors()
+    errors = settings.startup_errors("app")
     if errors:
         raise RuntimeError("Startup configuration failed: " + "; ".join(errors))
     initialize_database()
-    get_dataset_bundle(settings)
+    if _broker_enabled():
+        broker_preflight(settings, "app")
+    _migrate_legacy_credentials()
+    get_dataset_summary(settings)
 
 
 @app.middleware("http")
@@ -238,9 +481,9 @@ def ready(session: Session = Depends(get_db)):
     try:
         session.execute(text("SELECT 1"))
         details["database"] = True
-        bundle = get_dataset_bundle(settings)
-        details["dataset"] = bool(bundle.data)
-        details["data_gate"] = bundle.forward_data_gate_ready
+        summary = get_dataset_summary(settings)
+        details["dataset"] = summary.symbol_count > 0
+        details["data_gate"] = summary.forward_data_gate_ready
         heartbeat = session.get(RuntimeHeartbeat, "paper-worker")
         if heartbeat:
             observed = heartbeat.observed_at
@@ -248,7 +491,8 @@ def ready(session: Session = Depends(get_db)):
                 observed = observed.replace(tzinfo=dt.timezone.utc)
             details["worker"] = observed >= utcnow() - dt.timedelta(seconds=settings.worker_stale_seconds)
     except Exception as exc:
-        details["error"] = str(exc)[:300]
+        logger.warning("readiness component check failed error=%s", type(exc).__name__)
+        details["error"] = "component check failed"
     ok = details["database"] and details["dataset"] and details["data_gate"]
     return JSONResponse({"status": "ready" if ok else "not_ready", "components": details}, status_code=200 if ok else 503)
 
@@ -278,7 +522,7 @@ def register(body: RegisterBody, request: Request, response: Response, session: 
     except IntegrityError:
         session.rollback()
         raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다")
-    csrf = _set_session(response, user)
+    csrf = _set_session(response, user, session)
     return {"user": {"id": user.id, "email": user.email, "display_name": user.display_name}, "csrf": csrf}
 
 
@@ -291,14 +535,25 @@ def login(body: LoginBody, request: Request, response: Response, session: Sessio
     except ValueError:
         email = "invalid"
     user = session.scalar(select(User).where(User.email == email))
-    if user is None or not verify_password(body.password, user.password_hash) or not user.active:
+    password_hash = user.password_hash if user is not None else _DUMMY_PASSWORD_HASH
+    password_matches = verify_password(body.password, password_hash)
+    if user is None or not password_matches or not user.active:
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다")
-    csrf = _set_session(response, user)
+    csrf = _set_session(response, user, session)
     return {"user": {"id": user.id, "email": user.email, "display_name": user.display_name}, "csrf": csrf}
 
 
 @app.post("/api/auth/logout", status_code=204)
-def logout(response: Response, _user: User = Depends(csrf_guard)):
+def logout(
+    request: Request,
+    response: Response,
+    _user: User = Depends(csrf_guard),
+    session: Session = Depends(get_db),
+):
+    browser_session = getattr(request.state, "browser_session", None)
+    if browser_session is not None:
+        session.delete(browser_session)
+        session.commit()
     response.delete_cookie("session", path="/")
 
 
@@ -314,12 +569,15 @@ def me(request: Request, user: User = Depends(current_user)):
 
 
 def _ai_connection_payload(row: AiConnection | None) -> dict:
-    local_ready = settings.local_ai_enabled and local_ai_ready(
-        base_url=settings.local_ai_base_url,
-        model=settings.local_ai_model,
-        api_key=settings.local_ai_api_key,
-    )
-    catalog = provider_catalog(settings, local_ready=local_ready)
+    if _broker_enabled():
+        catalog = broker_ai_catalog(settings)
+    else:
+        local_ready = settings.local_ai_enabled and local_ai_ready(
+            base_url=settings.local_ai_base_url,
+            model=settings.local_ai_model,
+            api_key=settings.local_ai_api_key,
+        )
+        catalog = provider_catalog(settings, local_ready=local_ready)
     availability = {
         item["id"]: item["available"] and item["ready"] for item in catalog
     }
@@ -330,11 +588,7 @@ def _ai_connection_payload(row: AiConnection | None) -> dict:
         "configured": configured,
         "available": bool(available),
         "provider": row.provider if row else None,
-        "model": (
-            settings.local_ai_model
-            if row is not None and row.provider == "local"
-            else row.model if row else None
-        ),
+        "model": row.model if row else None,
         "key_hint": row.key_hint if row else None,
         "updated_at": row.updated_at if row else None,
         "providers": catalog,
@@ -360,17 +614,42 @@ def put_ai_connection(
     row = session.get(AiConnection, user.id)
     supplied_key = body.api_key.get_secret_value() if body.api_key else ""
     if provider == "local":
-        if not settings.local_ai_enabled:
+        if _broker_enabled():
+            try:
+                local_entry = next(
+                    item for item in broker_ai_catalog(settings) if item.get("id") == "local"
+                )
+            except (CredentialBrokerError, StopIteration) as exc:
+                detail = exc.detail if isinstance(exc, CredentialBrokerError) else "로컬 AI 공급자 정보가 없습니다"
+                status_code = exc.status_code if isinstance(exc, CredentialBrokerError) else 503
+                raise HTTPException(status_code=status_code, detail=detail)
+            local_enabled = bool(local_entry.get("available"))
+            model = str(local_entry.get("default_model") or model)
+        else:
+            local_enabled = settings.local_ai_enabled
+            model = settings.local_ai_model
+        if not local_enabled:
             raise HTTPException(status_code=503, detail="서버 관리자가 로컬 AI를 먼저 활성화해야 합니다")
-        model = settings.local_ai_model
         encrypted_key = ""
         hint = "서버 관리"
     elif not supplied_key and (row is None or row.provider != provider):
         raise HTTPException(status_code=422, detail="새 AI 공급자를 연결하려면 API 키를 입력해 주세요")
     elif supplied_key:
         try:
-            encrypted_key = encrypt_api_key(supplied_key, settings)
-            hint = key_hint(supplied_key)
+            if _broker_enabled():
+                encrypted_key, hint = broker_encrypt_ai(
+                    settings,
+                    owner_id=user.id,
+                    provider=provider,
+                    api_key=supplied_key,
+                )
+            else:
+                encrypted_key = encrypt_api_key(
+                    supplied_key, settings, owner_id=user.id, provider=provider
+                )
+                hint = key_hint(supplied_key)
+        except CredentialBrokerError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=exc.detail)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc))
     else:
@@ -454,34 +733,66 @@ def put_market_data_connection(
     supplied_key = body.api_key.get_secret_value() if body.api_key else ""
     supplied_secret = body.api_secret.get_secret_value() if body.api_secret else ""
     same_provider = row is not None and row.provider == provider
-    try:
-        if supplied_key:
-            api_key = validate_market_credential(supplied_key, "App Key")
-        elif same_provider:
-            api_key = decrypt_market_credential(row.encrypted_api_key, settings)
-        else:
-            raise ValueError("새 시세 공급자를 연결하려면 App Key를 입력해 주세요")
-        if supplied_secret:
-            api_secret = validate_market_credential(supplied_secret, "App Secret")
-        elif same_provider:
-            api_secret = decrypt_market_credential(row.encrypted_api_secret, settings)
-        else:
-            raise ValueError("새 시세 공급자를 연결하려면 App Secret을 입력해 주세요")
-    except (RuntimeError, ValueError) as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+    prepared = None
+    if _broker_enabled():
+        try:
+            prepared = broker_prepare_market(
+                settings,
+                owner_id=user.id,
+                provider=provider,
+                environment=environment,
+                api_key=supplied_key,
+                api_secret=supplied_secret,
+                current_provider=row.provider if same_provider else None,
+                current_environment=row.environment if same_provider else None,
+                current_encrypted_api_key=row.encrypted_api_key if same_provider else None,
+                current_encrypted_api_secret=row.encrypted_api_secret if same_provider else None,
+            )
+        except CredentialBrokerError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=exc.detail)
+    else:
+        try:
+            if supplied_key:
+                api_key = validate_market_credential(supplied_key, "App Key")
+            elif same_provider:
+                api_key = decrypt_market_credential(
+                    row.encrypted_api_key,
+                    settings,
+                    owner_id=user.id,
+                    provider=row.provider,
+                    environment=row.environment,
+                    label="App Key",
+                )
+            else:
+                raise ValueError("새 시세 공급자를 연결하려면 App Key를 입력해 주세요")
+            if supplied_secret:
+                api_secret = validate_market_credential(supplied_secret, "App Secret")
+            elif same_provider:
+                api_secret = decrypt_market_credential(
+                    row.encrypted_api_secret,
+                    settings,
+                    owner_id=user.id,
+                    provider=row.provider,
+                    environment=row.environment,
+                    label="App Secret",
+                )
+            else:
+                raise ValueError("새 시세 공급자를 연결하려면 App Secret을 입력해 주세요")
+        except (RuntimeError, ValueError) as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
 
-    verification_slot = _market_data_verification_slots.acquire(blocking=False)
-    if not verification_slot:
-        raise HTTPException(
-            status_code=429,
-            detail="시세 API 인증 요청이 많습니다. 잠시 후 다시 시도해 주세요",
-        )
-    try:
-        verify_market_data_connection(provider, environment, api_key, api_secret)
-    except MarketDataProviderError as exc:
-        raise HTTPException(status_code=502, detail=str(exc))
-    finally:
-        _market_data_verification_slots.release()
+        verification_slot = _market_data_verification_slots.acquire(blocking=False)
+        if not verification_slot:
+            raise HTTPException(
+                status_code=429,
+                detail="시세 API 인증 요청이 많습니다. 잠시 후 다시 시도해 주세요",
+            )
+        try:
+            verify_market_data_connection(provider, environment, api_key, api_secret)
+        except MarketDataProviderError as exc:
+            raise HTTPException(status_code=502, detail=str(exc))
+        finally:
+            _market_data_verification_slots.release()
 
     # Authentication is network I/O and stays outside the row lock. Re-read
     # and lock immediately before mutation so worker and settings operations
@@ -500,16 +811,32 @@ def put_market_data_connection(
         )
     row = locked_row
 
-    encrypted_key = (
-        encrypt_market_credential(api_key, "App Key", settings)
-        if supplied_key or row is None
-        else row.encrypted_api_key
-    )
-    encrypted_secret = (
-        encrypt_market_credential(api_secret, "App Secret", settings)
-        if supplied_secret or row is None
-        else row.encrypted_api_secret
-    )
+    # Always bind fresh ciphertext to the selected provider/environment. This
+    # also safely rebinds retained credentials when only the environment changes.
+    if prepared is not None:
+        encrypted_key = prepared["encrypted_api_key"]
+        encrypted_secret = prepared["encrypted_api_secret"]
+        key_value_hint = prepared["key_hint"]
+        secret_value_hint = prepared["secret_hint"]
+    else:
+        encrypted_key = encrypt_market_credential(
+            api_key,
+            "App Key",
+            settings,
+            owner_id=user.id,
+            provider=provider,
+            environment=environment,
+        )
+        encrypted_secret = encrypt_market_credential(
+            api_secret,
+            "App Secret",
+            settings,
+            owner_id=user.id,
+            provider=provider,
+            environment=environment,
+        )
+        key_value_hint = market_credential_hint(api_key)
+        secret_value_hint = market_credential_hint(api_secret)
     verified_at = utcnow()
     if row is None:
         row = MarketDataConnection(
@@ -518,8 +845,8 @@ def put_market_data_connection(
             environment=environment,
             encrypted_api_key=encrypted_key,
             encrypted_api_secret=encrypted_secret,
-            key_hint=market_credential_hint(api_key),
-            secret_hint=market_credential_hint(api_secret),
+            key_hint=key_value_hint,
+            secret_hint=secret_value_hint,
             verified_at=verified_at,
         )
     else:
@@ -527,8 +854,8 @@ def put_market_data_connection(
         row.environment = environment
         row.encrypted_api_key = encrypted_key
         row.encrypted_api_secret = encrypted_secret
-        row.key_hint = market_credential_hint(api_key)
-        row.secret_hint = market_credential_hint(api_secret)
+        row.key_hint = key_value_hint
+        row.secret_hint = secret_value_hint
         row.verified_at = verified_at
         row.updated_at = verified_at
     # A reverified or replaced connection must never inherit a quote collected
@@ -605,7 +932,17 @@ def ai_strategy(body: PromptBody, user: User = Depends(csrf_guard), session: Ses
         raise HTTPException(status_code=409, detail="설정에서 AI를 먼저 연결해 주세요")
     local_slot_acquired = False
     try:
-        if connection.provider == "local":
+        if _broker_enabled():
+            _rate_limit("ai:" + user.id, 10, 3600)
+            spec, _preview = broker_generate_strategy(
+                settings,
+                owner_id=user.id,
+                provider=connection.provider,
+                model=connection.model,
+                ciphertext=connection.encrypted_api_key,
+                prompt=body.prompt,
+            )
+        elif connection.provider == "local":
             if not settings.local_ai_enabled:
                 raise RuntimeError("로컬 AI 서버가 비활성화되어 있습니다")
             local_slot_acquired = _local_ai_slots.acquire(blocking=False)
@@ -618,20 +955,28 @@ def ai_strategy(body: PromptBody, user: User = Depends(csrf_guard), session: Ses
             model = settings.local_ai_model
             local_base_url = settings.local_ai_base_url
         else:
-            api_key = decrypt_api_key(connection.encrypted_api_key, settings)
+            api_key = decrypt_api_key(
+                connection.encrypted_api_key,
+                settings,
+                owner_id=user.id,
+                provider=connection.provider,
+            )
             model = connection.model
             local_base_url = None
-        _rate_limit("ai:" + user.id, 10, 3600)
-        spec, _preview = generate_strategy(
-            body.prompt,
-            provider=connection.provider,
-            model=model,
-            api_key=api_key,
-            timeout_seconds=settings.ai_timeout_seconds,
-            local_base_url=local_base_url,
-        )
+        if not _broker_enabled():
+            _rate_limit("ai:" + user.id, 10, 3600)
+            spec, _preview = generate_strategy(
+                body.prompt,
+                provider=connection.provider,
+                model=model,
+                api_key=api_key,
+                timeout_seconds=settings.ai_timeout_seconds,
+                local_base_url=local_base_url,
+            )
     except AiProviderError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
+    except CredentialBrokerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
     except ValueError as exc:
@@ -656,23 +1001,23 @@ def create_backtest(body: BacktestBody, user: User = Depends(csrf_guard), sessio
         raise HTTPException(status_code=422, detail="시작일은 종료일보다 늦을 수 없습니다")
     if (body.end_date - body.start_date).days > 370:
         raise HTTPException(status_code=422, detail="현재 클럽 데이터셋은 최대 1년 구간만 허용합니다")
-    bundle = get_dataset_bundle(settings)
-    first_execution = dt.date.fromisoformat(bundle.first_certified_execution_date)
+    summary = get_dataset_summary(settings)
+    first_execution = dt.date.fromisoformat(summary.first_certified_execution_date)
     if body.bias_mode == "strict" and body.start_date < first_execution:
         raise HTTPException(
             status_code=422,
             detail="엄격 PIT 시작일은 첫 인증 스냅샷의 다음 거래일 {} 이후여야 합니다".format(
-                bundle.first_certified_execution_date
+                summary.first_certified_execution_date
             ),
         )
-    if body.end_date > bundle.index.max().date():
+    if body.end_date > summary.last_completed_session:
         raise HTTPException(
             status_code=422,
             detail="마지막 완료 세션 {}을 넘을 수 없습니다".format(
-                bundle.index.max().date().isoformat()
+                summary.last_completed_session.isoformat()
             ),
         )
-    if body.bias_mode == "strict" and not bundle.forward_data_gate_ready:
+    if body.bias_mode == "strict" and not summary.forward_data_gate_ready:
         raise HTTPException(
             status_code=503,
             detail="최신 일일 데이터 품질 게이트가 통과될 때까지 엄격 PIT 백테스트를 중단합니다",
@@ -807,7 +1152,7 @@ def account_history(account_id: str, user: User = Depends(current_user), session
 
 @app.get("/api/dashboard")
 def dashboard(user: User = Depends(current_user), session: Session = Depends(get_db)):
-    bundle = get_dataset_bundle(settings)
+    bundle = get_dashboard_dataset(settings)
     market_groups = market_overview(
         session, quote_interval_seconds=settings.quote_interval_seconds
     )
@@ -823,7 +1168,7 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
     }
     accounts = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user.id)).all()
     worker = session.get(RuntimeHeartbeat, "paper-worker")
-    last_completed_session = bundle.index.max().date()
+    last_completed_session = bundle.last_completed_session
     freshness = completed_session_freshness(last_completed_session)
     ai_connection = session.get(AiConnection, user.id)
     market_data_connection = session.get(MarketDataConnection, user.id)
@@ -835,11 +1180,11 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
         "news": news_feed(settings.news_feed_path),
         "accounts": [account_snapshot(session, row) for row in accounts],
         "data": {
-            "first_completed_session": bundle.index.min().date(),
+            "first_completed_session": bundle.first_completed_session,
             "last_completed_session": last_completed_session,
             "calendar_age_days": max(0, (utcnow().date() - last_completed_session).days),
             **freshness,
-            "symbol_count": len(bundle.data),
+            "symbol_count": bundle.symbol_count,
             "first_certified_snapshot": bundle.first_snapshot_date,
             "first_certified_execution_date": bundle.first_certified_execution_date,
             "forward_data_gate_ready": bundle.forward_data_gate_ready,
@@ -861,12 +1206,25 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
 
 
 @app.get("/api/stream")
-def stream(_user: User = Depends(current_user)):
-    def events():
-        for _ in range(120):
-            yield "event: heartbeat\ndata: {}\n\n".format(int(time.time()))
-            time.sleep(15)
-    return StreamingResponse(events(), media_type="text/event-stream")
+async def stream(request: Request, user: User = Depends(current_user)):
+    if not _acquire_stream(user.id):
+        raise HTTPException(status_code=429, detail="실시간 연결 한도를 초과했습니다")
+
+    async def events():
+        try:
+            for _ in range(120):
+                if await request.is_disconnected():
+                    break
+                yield "event: heartbeat\ndata: {}\n\n".format(int(time.time()))
+                await asyncio.sleep(15)
+        finally:
+            _release_stream(user.id)
+
+    return StreamingResponse(
+        events(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.exception_handler(ValidationError)

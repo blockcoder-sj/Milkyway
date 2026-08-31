@@ -2,17 +2,27 @@ name: milkyway
 
 x-app: &app
   build: .
-  env_file: ${MILKYWAY_ENV_FILE:-deploy/.env}
   restart: unless-stopped
   depends_on:
     postgres:
       condition: service_healthy
   volumes:
-    - ./data_cache:/app/data_cache
-  networks: [backend, outbound]
+    - ./data_cache:/app/data_cache:ro
   security_opt: [no-new-privileges:true]
   cap_drop: [ALL]
   stop_grace_period: 45s
+
+x-runtime-environment: &runtime-environment
+  APP_ENV: ${APP_ENV:-production}
+  APP_NAME: ${APP_NAME:-Milkyway Quant Trading Lab}
+  DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+  DATASET_DIR: ${DATASET_DIR:-/app/data_cache/backtest_datasets/2026_equities_pit_20260824}
+  SNAPSHOTS_GLOB: ${SNAPSHOTS_GLOB:-/app/data_cache/universe_snapshots/*.json}
+  TERMINAL_EVENTS_PATH: ${TERMINAL_EVENTS_PATH:-/app/data_cache/universe_events/events.jsonl}
+  SECTOR_MAP_PATH: ${SECTOR_MAP_PATH:-/app/data_cache/_sector_map.json}
+  NEWS_FEED_PATH: ${NEWS_FEED_PATH:-/app/data_cache/news/news_feed.json}
+  WORKER_STALE_SECONDS: ${WORKER_STALE_SECONDS:-90}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
 
 services:
   postgres:
@@ -34,11 +44,37 @@ services:
 
   app:
     <<: *app
-    command: [uvicorn, cloud_app.main:app, --host, 0.0.0.0, --port, "8000", --workers, "1", --proxy-headers, --forwarded-allow-ips, "*"]
+    environment:
+      <<: *runtime-environment
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:?set ALLOWED_HOSTS}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      SESSION_HOURS: ${SESSION_HOURS:-12}
+      CLUB_INVITE_CODE: ${CLUB_INVITE_CODE:?set CLUB_INVITE_CODE}
+      CREDENTIAL_BACKEND: broker
+      CREDENTIAL_BROKER_URL: ${CREDENTIAL_BROKER_URL:?set CREDENTIAL_BROKER_URL}
+      CREDENTIAL_BROKER_APP_TOKEN: ${CREDENTIAL_BROKER_APP_TOKEN:?set CREDENTIAL_BROKER_APP_TOKEN}
+      AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-120}
+      LOCAL_AI_MAX_CONCURRENT_REQUESTS: ${LOCAL_AI_MAX_CONCURRENT_REQUESTS:-4}
+      QUOTE_PROVIDER: ${QUOTE_PROVIDER:-mock}
+      MARKET_DATA_SHARING_ALLOWED: ${MARKET_DATA_SHARING_ALLOWED:-false}
+      MAX_BACKTESTS_PER_USER_DAY: ${MAX_BACKTESTS_PER_USER_DAY:-20}
+      MAX_STRATEGIES_PER_USER: ${MAX_STRATEGIES_PER_USER:-10}
+      MAX_ACCOUNTS_PER_USER: ${MAX_ACCOUNTS_PER_USER:-3}
+      MAX_USERS: ${MAX_USERS:-40}
+      MAX_REQUEST_BODY_BYTES: ${MAX_REQUEST_BODY_BYTES:-16384}
+      MAX_STREAMS_PER_USER: ${MAX_STREAMS_PER_USER:-2}
+      MAX_STREAMS_TOTAL: ${MAX_STREAMS_TOTAL:-64}
+    command: [uvicorn, cloud_app.main:app, --host, 0.0.0.0, --port, "8000", --workers, "1", --proxy-headers, --forwarded-allow-ips, "172.30.250.2"]
+    networks:
+      proxy:
+        ipv4_address: 172.30.250.3
+      backend:
+      outbound:
     read_only: true
     tmpfs: [/tmp]
     healthcheck:
-      test: [CMD, curl, -fsS, http://localhost:8000/health/live]
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live', timeout=3).read()"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -47,59 +83,55 @@ services:
 
   paper-worker:
     <<: *app
+    depends_on:
+      app:
+        condition: service_healthy
     command: [python, -m, cloud_app.worker]
     environment:
+      <<: *runtime-environment
       WORKER_ROLE: paper
+      CREDENTIAL_BACKEND: broker
+      CREDENTIAL_BROKER_URL: ${CREDENTIAL_BROKER_URL:?set CREDENTIAL_BROKER_URL}
+      CREDENTIAL_BROKER_PAPER_TOKEN: ${CREDENTIAL_BROKER_PAPER_TOKEN:?set CREDENTIAL_BROKER_PAPER_TOKEN}
+      QUOTE_PROVIDER: ${QUOTE_PROVIDER:-mock}
+      QUOTE_INTERVAL_SECONDS: ${QUOTE_INTERVAL_SECONDS:-30}
+      MARKET_DATA_SHARING_ALLOWED: ${MARKET_DATA_SHARING_ALLOWED:-false}
+    networks: [backend, outbound]
+    read_only: true
+    tmpfs: [/tmp]
     cpus: "1.0"
     mem_limit: 4g
 
   backtest-worker:
     <<: *app
+    depends_on:
+      app:
+        condition: service_healthy
     command: [python, -m, cloud_app.worker]
     environment:
+      <<: *runtime-environment
       WORKER_ROLE: backtest
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
     cpus: "2.0"
     mem_limit: 6g
 
   scheduler:
     <<: *app
+    depends_on:
+      app:
+        condition: service_healthy
     command: [python, -m, cloud_app.scheduler]
+    environment:
+      <<: *runtime-environment
+    volumes:
+      - ./data_cache:/app/data_cache
+    networks: [backend, outbound]
+    read_only: true
+    tmpfs: [/tmp]
     cpus: "2.0"
     mem_limit: 5g
-
-  ai:
-    image: ghcr.io/ggml-org/llama.cpp:server@sha256:991cf50e9eb7dee4c18090849c7f909bafc5a1884cdde2dc3011df7407da09d6
-    profiles: [local-ai]
-    restart: unless-stopped
-    command:
-      - --model-url
-      - ${LOCAL_AI_MODEL_URL:-https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/13fb94bfda8c8cf22497dc57b78f391a9acb426a/qwen2.5-coder-7b-instruct-q4_k_m.gguf?download=true}
-      - --alias
-      - ${LOCAL_AI_MODEL:-Qwen2.5-Coder-7B-Instruct-GGUF}
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8080"
-      - --api-key
-      - ${LOCAL_AI_API_KEY:-local-ai-not-configured}
-      - --ctx-size
-      - "8192"
-      - --parallel
-      - "2"
-      - --cont-batching
-    volumes:
-      - local-ai-model-cache:/root/.cache
-    networks: [backend, outbound]
-    cpus: "4.0"
-    mem_limit: 10g
-    healthcheck:
-      test: [CMD, curl, -fsS, http://localhost:8080/health]
-      interval: 15s
-      timeout: 5s
-      start_period: 30s
-      retries: 5
-    security_opt: [no-new-privileges:true]
-    cap_drop: [ALL]
 
   caddy:
     image: caddy:2.8-alpine
@@ -117,7 +149,10 @@ services:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
-    networks: [frontend, backend]
+    networks:
+      frontend:
+      proxy:
+        ipv4_address: 172.30.250.2
     security_opt: [no-new-privileges:true]
 
   backup:
@@ -134,6 +169,7 @@ services:
     volumes:
       - ./backups:/backups
       - ./deploy/backup.sh:/backup/backup.sh:ro
+      - ./deploy/backup-once.sh:/backup/backup-once.sh:ro
       - ./deploy/restore.sh:/restore.sh:ro
     networks: [backend]
     entrypoint: [/bin/sh, /backup/backup.sh]
@@ -144,10 +180,14 @@ volumes:
   postgres-data:
   caddy-data:
   caddy-config:
-  local-ai-model-cache:
 
 networks:
   frontend:
+  proxy:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.250.0/24
   backend:
     internal: true
   outbound:

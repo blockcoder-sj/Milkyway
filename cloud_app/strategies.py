@@ -9,14 +9,16 @@ from __future__ import annotations
 import glob
 import datetime as dt
 import hashlib
+import hmac
 import json
+import pickle
 import threading
 from pathlib import Path
 from typing import Literal
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from backtest_core import run_backtest
 from market_calendar import next_trading_day
@@ -37,19 +39,23 @@ FactorKind = Literal[
 ]
 
 
-class FactorSpec(BaseModel):
+class StrictSpecModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class FactorSpec(StrictSpecModel):
     kind: FactorKind
     lookback: int = Field(default=20, ge=2, le=252)
     weight: float = Field(default=1.0, ge=-5.0, le=5.0)
 
 
-class FilterSpec(BaseModel):
+class FilterSpec(StrictSpecModel):
     min_price: float = Field(default=5.0, ge=1.0, le=1000.0)
     min_average_volume: float = Field(default=200_000, ge=0, le=1_000_000_000)
     history_days: int = Field(default=60, ge=20, le=252)
 
 
-class PortfolioSpec(BaseModel):
+class PortfolioSpec(StrictSpecModel):
     initial_cash: float = Field(default=100_000, ge=1_000, le=10_000_000)
     max_positions: int = Field(default=10, ge=1, le=50)
     rebalance_days: int = Field(default=10, ge=1, le=30)
@@ -57,7 +63,7 @@ class PortfolioSpec(BaseModel):
     stop_loss_pct: float | None = Field(default=-0.05, ge=-0.50, le=-0.005)
 
 
-class StrategySpec(BaseModel):
+class StrategySpec(StrictSpecModel):
     schema_version: Literal[1] = 1
     name: str = Field(min_length=2, max_length=100)
     description: str = Field(default="", max_length=1000)
@@ -117,9 +123,95 @@ class DatasetBundle:
         self.fingerprint = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
 
 
+class DatasetSummary:
+    """Small manifest-only view used by the web process and readiness checks."""
+
+    def __init__(self, settings: Settings):
+        self.settings = settings
+        self.manifest_path = settings.dataset_dir / "manifest.json"
+        self.manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        self.data = self.manifest.get("prices", {})
+        if not self.data:
+            raise ValueError("Dataset manifest contains no approved prices")
+        self.price_root = (settings.dataset_dir / "prices").resolve()
+        self.verified_price_paths: dict[str, Path] = {}
+        for ticker, metadata in self.data.items():
+            if not isinstance(metadata, dict):
+                raise ValueError("Dataset manifest price metadata is invalid")
+            path = (self.price_root / "{}_data.pkl".format(ticker)).resolve()
+            if path.parent != self.price_root or not path.is_file():
+                raise ValueError("Dataset manifest price file is missing or unsafe")
+            expected_hash = str(metadata.get("sha256", ""))
+            digest = hashlib.sha256()
+            with path.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            if len(expected_hash) != 64 or not hmac.compare_digest(
+                digest.hexdigest(), expected_hash
+            ):
+                raise ValueError("Dataset price integrity check failed")
+            self.verified_price_paths[str(ticker)] = path
+        first_date = min(str(item["first_date"]) for item in self.data.values())
+        last_date = max(str(item["last_date"]) for item in self.data.values())
+        self.first_completed_session = dt.date.fromisoformat(first_date)
+        self.last_completed_session = dt.date.fromisoformat(last_date)
+        self.index = pd.DatetimeIndex([self.first_completed_session, self.last_completed_session])
+        self.symbol_count = len(self.data)
+        self.snapshots = _load_certified_snapshots(settings.snapshots_glob)
+        if not self.snapshots:
+            raise ValueError("No certified universe snapshots were found")
+        self.first_snapshot_date = min(str(item["effective_date"]) for item in self.snapshots)
+        self.first_certified_execution_date = next_trading_day(
+            dt.date.fromisoformat(self.first_snapshot_date)
+        ).isoformat()
+        validation_path = settings.dataset_dir / "validation_report.json"
+        self.validation = (
+            json.loads(validation_path.read_text(encoding="utf-8"))
+            if validation_path.exists()
+            else {}
+        )
+        latest_snapshot_hash = self.snapshots[-1]["membership_sha256"]
+        validation_window_end = str(self.validation.get("window", {}).get("end", ""))
+        self.forward_data_gate_ready = bool(
+            self.validation.get("forward_strategy_data_gate_ready", False)
+            and self.validation.get("current_snapshot_membership_sha256")
+            == latest_snapshot_hash
+            and validation_window_end >= self.last_completed_session.isoformat()
+        )
+        self.fingerprint = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
+
+
+class DashboardDataset(DatasetSummary):
+    """Manifest metadata plus only the last two closes for sector display."""
+
+    def __init__(self, settings: Settings, summary: DatasetSummary | None = None):
+        if summary is None:
+            super().__init__(settings)
+        else:
+            self.__dict__.update(summary.__dict__)
+        closes: dict[str, pd.Series] = {}
+        for ticker, path in self.verified_price_paths.items():
+            try:
+                frame = pd.read_pickle(path)
+                if "Close" not in frame.columns:
+                    continue
+                series = pd.to_numeric(frame["Close"], errors="coerce").dropna().tail(2)
+                if len(series) == 2:
+                    closes[str(ticker)] = series.astype("float32")
+            except (OSError, ValueError, TypeError, EOFError, pickle.UnpicklingError):
+                continue
+        self.panels = {"Close": pd.DataFrame(closes, dtype="float32")}
+
+
 _bundle_lock = threading.Lock()
 _bundle: DatasetBundle | None = None
 _bundle_mtime: tuple[int, int, int] | None = None
+_summary_lock = threading.Lock()
+_summary: DatasetSummary | None = None
+_summary_mtime: tuple[int, int, int] | None = None
+_dashboard_lock = threading.Lock()
+_dashboard: DashboardDataset | None = None
+_dashboard_mtime: tuple[int, int, int] | None = None
 
 
 def _load_certified_snapshots(pattern: str) -> list[dict]:
@@ -142,20 +234,46 @@ def _load_certified_snapshots(pattern: str) -> list[dict]:
     return [by_date[key] for key in sorted(by_date)]
 
 
-def get_dataset_bundle(settings: Settings | None = None) -> DatasetBundle:
-    global _bundle, _bundle_mtime
-    settings = settings or get_settings()
+def _dataset_mtime(settings: Settings) -> tuple[int, int, int]:
     manifest = settings.dataset_dir / "manifest.json"
     validation = settings.dataset_dir / "validation_report.json"
     snapshot_mtime = max(
         (Path(path).stat().st_mtime_ns for path in glob.glob(settings.snapshots_glob)),
         default=0,
     )
-    current_mtime = (
+    return (
         manifest.stat().st_mtime_ns,
         validation.stat().st_mtime_ns if validation.exists() else 0,
         snapshot_mtime,
     )
+
+
+def get_dataset_summary(settings: Settings | None = None) -> DatasetSummary:
+    global _summary, _summary_mtime
+    settings = settings or get_settings()
+    current_mtime = _dataset_mtime(settings)
+    with _summary_lock:
+        if _summary is None or _summary_mtime != current_mtime:
+            _summary = DatasetSummary(settings)
+            _summary_mtime = current_mtime
+        return _summary
+
+
+def get_dashboard_dataset(settings: Settings | None = None) -> DashboardDataset:
+    global _dashboard, _dashboard_mtime
+    settings = settings or get_settings()
+    current_mtime = _dataset_mtime(settings)
+    with _dashboard_lock:
+        if _dashboard is None or _dashboard_mtime != current_mtime:
+            _dashboard = DashboardDataset(settings, get_dataset_summary(settings))
+            _dashboard_mtime = current_mtime
+        return _dashboard
+
+
+def get_dataset_bundle(settings: Settings | None = None) -> DatasetBundle:
+    global _bundle, _bundle_mtime
+    settings = settings or get_settings()
+    current_mtime = _dataset_mtime(settings)
     with _bundle_lock:
         if _bundle is None or _bundle_mtime != current_mtime:
             _bundle = DatasetBundle(settings)

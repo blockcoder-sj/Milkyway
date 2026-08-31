@@ -21,6 +21,6 @@ runcmd:
   - apt-get update
   - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   - usermod -aG docker ubuntu
-  - mkdir -p /opt/milkyway
+  - install -d -m 0750 -o ubuntu -g ubuntu /opt/milkyway
   - systemctl enable --now docker fail2ban unattended-upgrades
   - sysctl --system
