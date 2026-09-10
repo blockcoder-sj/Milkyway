@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import time
 from dataclasses import dataclass
 
 import requests
 from requests.adapters import HTTPAdapter
 
+from .bounded_io import read_requests_json
+
 
 logger = logging.getLogger("cloud_app.kis_quotes")
+_MAX_TOKEN_RESPONSE_BYTES = 64 * 1024
+_MAX_QUOTE_RESPONSE_BYTES = 256 * 1024
 
 
 class KisQuoteError(RuntimeError):
@@ -23,6 +28,10 @@ class KisAuthenticationError(KisQuoteError):
 
 class KisRateLimitError(KisQuoteError):
     """KIS rejected the request because a request limit was reached."""
+
+
+class KisWorkBudgetExceeded(KisQuoteError):
+    """The bounded wall-clock or provider-call budget was consumed."""
 
 
 @dataclass(frozen=True)
@@ -38,7 +47,13 @@ class KisQuoteClient:
 
     _exchange_codes = ("NAS", "NYS", "AMS")
 
-    def __init__(self, credentials: KisCredentials):
+    def __init__(
+        self,
+        credentials: KisCredentials,
+        *,
+        deadline_monotonic: float | None = None,
+        max_provider_calls: int | None = None,
+    ):
         if not credentials.api_key or not credentials.api_secret:
             raise RuntimeError("KIS quote credentials are incomplete")
         self.credentials = credentials
@@ -53,6 +68,27 @@ class KisQuoteClient:
         self.token = ""
         self.token_expires_at = dt.datetime.min
         self.exchange_cache: dict[str, str] = {}
+        self.deadline_monotonic = deadline_monotonic
+        self.max_provider_calls = max_provider_calls
+        self.provider_calls = 0
+
+    def _consume_provider_call(self) -> None:
+        if (
+            self.max_provider_calls is not None
+            and self.provider_calls >= self.max_provider_calls
+        ):
+            raise KisWorkBudgetExceeded("KIS provider-call budget was exhausted")
+        if self.deadline_monotonic is not None and time.monotonic() >= self.deadline_monotonic:
+            raise KisWorkBudgetExceeded("KIS request deadline was exhausted")
+        self.provider_calls += 1
+
+    def _request_timeout(self) -> float:
+        if self.deadline_monotonic is None:
+            return 10.0
+        remaining = self.deadline_monotonic - time.monotonic()
+        if remaining <= 0:
+            raise KisWorkBudgetExceeded("KIS request deadline was exhausted")
+        return max(0.001, min(10.0, remaining))
 
     @staticmethod
     def _raise_for_rejection(response, payload: dict | None = None) -> None:
@@ -79,6 +115,7 @@ class KisQuoteClient:
         raise KisQuoteError("KIS quote request was rejected ({})".format(code or "unknown"))
 
     def _refresh_token(self) -> None:
+        self._consume_provider_call()
         response = self.session.post(
             self.base_url + "/oauth2/tokenP",
             json={
@@ -86,10 +123,17 @@ class KisQuoteClient:
                 "appkey": self.credentials.api_key,
                 "appsecret": self.credentials.api_secret,
             },
-            timeout=10,
+            timeout=self._request_timeout(),
+            stream=True,
         )
-        self._raise_for_rejection(response)
-        payload = response.json() if response.content else {}
+        try:
+            self._raise_for_rejection(response)
+            payload = read_requests_json(
+                response, maximum_bytes=_MAX_TOKEN_RESPONSE_BYTES
+            )
+        except Exception:
+            response.close()
+            raise
         self._raise_for_rejection(response, payload)
         try:
             self.token = payload["access_token"]
@@ -101,6 +145,8 @@ class KisQuoteClient:
         try:
             self._refresh_token()
             return True
+        except KisWorkBudgetExceeded:
+            raise
         except (KisQuoteError, requests.RequestException, TypeError, ValueError) as exc:
             logger.error("KIS token request failed: %s", type(exc).__name__)
             return False
@@ -117,14 +163,23 @@ class KisQuoteClient:
         }
 
     def _request_quote(self, ticker: str, exchange_code: str) -> dict | None:
+        headers = self._headers()
+        self._consume_provider_call()
         response = self.session.get(
             self.base_url + "/uapi/overseas-price/v1/quotations/price",
-            headers=self._headers(),
+            headers=headers,
             params={"AUTH": "", "EXCD": exchange_code, "SYMB": ticker},
-            timeout=10,
+            timeout=self._request_timeout(),
+            stream=True,
         )
-        self._raise_for_rejection(response)
-        payload = response.json() if response.content else {}
+        try:
+            self._raise_for_rejection(response)
+            payload = read_requests_json(
+                response, maximum_bytes=_MAX_QUOTE_RESPONSE_BYTES
+            )
+        except Exception:
+            response.close()
+            raise
         self._raise_for_rejection(response, payload)
         output = payload.get("output", {})
         price = float(output.get("last", 0) or 0)
@@ -159,6 +214,8 @@ class KisQuoteClient:
                     self.token_expires_at = dt.datetime.min
                     self._refresh_token()
                 except KisRateLimitError:
+                    raise
+                except KisWorkBudgetExceeded:
                     raise
                 except (KisQuoteError, requests.RequestException) as exc:
                     last_error = exc

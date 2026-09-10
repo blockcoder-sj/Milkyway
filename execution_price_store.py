@@ -160,8 +160,10 @@ def main() -> int:
         panel = build_0935_panel(
             load_observations(args.store), tolerance_minutes=args.tolerance_minutes
         )
+        if not args.output.name.endswith(".csv.gz"):
+            raise SystemExit("execution price exports must use a .csv.gz output path")
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        panel.to_pickle(args.output)
+        panel.to_csv(args.output, compression={"method": "gzip", "mtime": 0})
         print("{} rows={} columns={}".format(args.output, *panel.shape))
     return 0
 

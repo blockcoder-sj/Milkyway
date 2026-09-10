@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -22,6 +23,7 @@ from sqlalchemy.orm import sessionmaker
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+os.environ.setdefault("APP_ENV", "development")
 
 from cloud_app.ai import (
     _anthropic_text,
@@ -83,13 +85,16 @@ from cloud_app.credential_store import (
 )
 from cloud_app.credential_broker import (
     AiEncryptBody as BrokerAiEncryptBody,
+    SharedAiGenerateBody,
     _app_identity as broker_app_identity,
     _paper_identity as broker_paper_identity,
     ai_encrypt as broker_ai_encrypt,
     app as credential_broker_app,
+    shared_ai_generate,
 )
 from cloud_app.credential_broker_client import (
     CredentialBrokerError,
+    broker_generate_shared_strategy,
     _validated_quotes as validate_broker_quotes,
 )
 from cloud_app.http_security import RequestBodyLimitMiddleware
@@ -142,6 +147,7 @@ from cloud_app.worker import (
     collect_member_quotes as collect_worker_member_quotes,
     run_paper_tick,
 )
+from price_data_pipeline import PRICE_FORMAT, PRICE_SCHEMA_VERSION, price_file_path
 
 
 def sample_spec(**portfolio_overrides):
@@ -181,7 +187,9 @@ class SecurityTests(unittest.TestCase):
         session = MagicMock()
         session.scalar.return_value = None
         request = SimpleNamespace(client=SimpleNamespace(host="198.51.100.77"))
-        with patch("cloud_app.main.verify_password", return_value=False) as verify:
+        with patch("cloud_app.main._consume_login_budget"), patch(
+            "cloud_app.main.verify_password", return_value=False
+        ) as verify:
             with self.assertRaises(HTTPException) as raised:
                 login(
                     LoginBody(email="missing@example.com", password="wrong-password"),
@@ -236,10 +244,11 @@ class SecurityTests(unittest.TestCase):
             allowed_hosts=("milkyway-quant.club",),
             database_url=(
                 "postgresql+psycopg://quantclub:"
-                "Db-0123456789-Strong-Password@postgres:5432/quantclub"
+                "Db-0123456789-Strong-Password@postgres:5432/quantclub?sslmode=verify-full&sslrootcert=/run/secrets/postgres_tls_ca"
             ),
             session_secret="Session-0123456789-abcdefghijklmnopqrstuvwxyz",
             invite_code="Invite-0123456789-Club-Members-Only",
+            legacy_invite_enabled=False,
             credential_backend="broker",
             ai_credential_secret="",
             market_credential_secret="",
@@ -249,6 +258,9 @@ class SecurityTests(unittest.TestCase):
             credential_broker_url="https://broker.milkyway-quant.club",
             credential_broker_app_token="App-0123456789-abcdefghijklmnopqrstuvwxyz",
             credential_broker_paper_token="Paper-9876543210-zyxwvutsrqponmlkjihg",
+            credential_broker_backtest_token="Backtest-5432109876-abcdefghijklmnop",
+            authority_enabled=True,
+            member_credentials_enabled=True,
         )
         self.assertEqual(
             [
@@ -260,11 +272,16 @@ class SecurityTests(unittest.TestCase):
         )
         broker = replace(
             strong,
-            database_url="sqlite:///broker-does-not-use-a-database.sqlite3",
+            database_url="postgresql+psycopg://milkyway_authority:Authority-Db-0123456789-Strong@postgres:5432/quantclub?sslmode=verify-full&sslrootcert=/run/secrets/postgres_tls_ca",
             credential_backend="oci-kms",
-            oci_kms_crypto_endpoint="https://vault-name-crypto.kms.ap-seoul-1.oraclecloud.com",
-            oci_ai_credential_key_id="ocid1.key.oc1.ap-seoul-1.ai-key",
-            oci_market_credential_key_id="ocid1.key.oc1.ap-seoul-1.market-key",
+            oci_kms_crypto_endpoint="https://fixture-crypto.kms.ap-seoul-1.oraclecloud.com",
+            oci_ai_credential_key_id="ocid1.key.oc1.ap-seoul-1.ai-fixture",
+            oci_market_credential_key_id="ocid1.key.oc1.ap-seoul-1.market-fixture",
+            shared_ai_enabled=True,
+            shared_ai_provider="openai",
+            shared_ai_model="gpt-5.6-luna",
+            service_role="broker",
+            oci_shared_ai_secret_id="ocid1.vaultsecret.oc1.ap-seoul-1.aaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             credential_broker_url="",
         )
         self.assertEqual(broker.startup_errors("broker"), [])
@@ -685,6 +702,140 @@ class SecurityTests(unittest.TestCase):
             self.assertEqual(response["key_hint"], "••••5678")
             self.assertNotIn(plaintext, json.dumps(response, ensure_ascii=False))
 
+    def test_shared_ai_contract_accepts_only_prompt_and_uses_fixed_broker_settings(self):
+        with self.assertRaises(ValidationError):
+            SharedAiGenerateBody.model_validate(
+                {
+                    "prompt": "20일 모멘텀 전략을 만들어 주세요",
+                    "provider": "attacker-selected",
+                    "api_key": "attacker-supplied-secret",
+                }
+            )
+
+        fixed = SimpleNamespace(
+            max_users=40,
+            shared_ai_enabled=True,
+            shared_ai_provider="openai",
+            shared_ai_model="gpt-5.6-luna",
+            shared_ai_api_key="Shared-AI-0123456789-abcdefghijklmnopqrstuvwxyz",
+            ai_timeout_seconds=120,
+            local_ai_enabled=False,
+            local_ai_api_key="",
+            local_ai_base_url="http://ai.invalid/v1",
+        )
+        spec = sample_spec()
+        with patch("cloud_app.credential_broker.settings", fixed), patch(
+            "cloud_app.credential_broker._rate_limit"
+        ), patch(
+            "cloud_app.credential_broker.generate_strategy",
+            return_value=(spec, "preview"),
+        ) as generate:
+            payload = shared_ai_generate(
+                SharedAiGenerateBody(prompt="20일 모멘텀 전략을 만들어 주세요"),
+                "app",
+            )
+        generate.assert_called_once()
+        self.assertGreater(generate.call_args.kwargs["timeout_seconds"], 0)
+        self.assertLessEqual(generate.call_args.kwargs["timeout_seconds"], 120)
+        self.assertEqual(generate.call_args.args, (
+            "20일 모멘텀 전략을 만들어 주세요",
+        ))
+        self.assertEqual(
+            {key: value for key, value in generate.call_args.kwargs.items() if key != "timeout_seconds"},
+            dict(provider="openai", model="gpt-5.6-luna", api_key=fixed.shared_ai_api_key, local_base_url=None),
+        )
+        self.assertEqual(payload["spec"]["name"], spec.name)
+        self.assertNotIn(fixed.shared_ai_api_key, json.dumps(payload, ensure_ascii=False))
+
+    def test_shared_ai_client_sends_prompt_only(self):
+        settings = SimpleNamespace(ai_timeout_seconds=120)
+        spec = sample_spec()
+        with patch(
+            "cloud_app.credential_broker_client._request",
+            return_value={
+                "spec": spec.model_dump(mode="json"),
+                "preview": "preview",
+            },
+        ) as request:
+            returned, preview = broker_generate_shared_strategy(
+                settings,
+                prompt="20일 모멘텀 전략을 만들어 주세요",
+            )
+        self.assertEqual(returned.name, spec.name)
+        self.assertEqual(preview, "preview")
+        self.assertEqual(
+            request.call_args.args[3],
+            {"prompt": "20일 모멘텀 전략을 만들어 주세요"},
+        )
+
+    def test_production_route_tables_exclude_member_credential_operations(self):
+        environment = os.environ.copy()
+        secret_directory = tempfile.TemporaryDirectory()
+        self.addCleanup(secret_directory.cleanup)
+        shared_ai_secret = Path(secret_directory.name, "shared-ai-api-key")
+        shared_ai_secret.write_text(
+            "Shared-AI-0123456789-abcdefghijklmnopqrstuvwxyz\n", encoding="utf-8"
+        )
+        shared_ai_secret.chmod(0o600)
+        environment.update(
+            APP_ENV="production",
+            MEMBER_CREDENTIALS_ENABLED="false",
+            PUBLIC_BASE_URL="https://milkyway.internal.club",
+            ALLOWED_HOSTS="milkyway.internal.club",
+            DATABASE_URL=(
+                "postgresql+psycopg://milkyway_app:"
+                "Db-0123456789-Strong-Password@postgres:5432/quantclub"
+            ),
+            SESSION_SECRET="Session-0123456789-abcdefghijklmnopqrstuvwxyz",
+            LEGACY_CLUB_INVITE_ENABLED="false",
+            CREDENTIAL_BACKEND="broker",
+            CREDENTIAL_BROKER_URL="https://broker.internal.club",
+            CREDENTIAL_BROKER_APP_TOKEN="App-0123456789-abcdefghijklmnopqrstuvwxyz",
+            CREDENTIAL_BROKER_PAPER_TOKEN="Paper-9876543210-zyxwvutsrqponmlkjihg",
+            SHARED_AI_ENABLED="true",
+            SHARED_AI_PROVIDER="openai",
+            SHARED_AI_MODEL="gpt-5.6-luna",
+            QUOTE_PROVIDER="mock",
+            MARKET_DATA_SHARING_ALLOWED="false",
+            KIS_QUOTE_TRANSPORT="rest",
+        )
+        environment.pop("SHARED_AI_API_KEY", None)
+        environment.pop("SHARED_AI_API_KEY_FILE", None)
+        script = """
+import json
+from cloud_app.main import app as public_app
+from cloud_app.credential_broker import app as broker_app
+print(json.dumps({
+    "public": [[route.path, sorted(getattr(route, "methods", []) or [])] for route in public_app.routes],
+    "broker": [route.path for route in broker_app.routes],
+}))
+"""
+        completed = subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=PROJECT_ROOT,
+            env=environment,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        routes = json.loads(completed.stdout.strip().splitlines()[-1])
+        public_routes = {(path, tuple(methods)) for path, methods in routes["public"]}
+        self.assertNotIn(("/api/me/ai-connection", ("PUT",)), public_routes)
+        self.assertNotIn(("/api/me/market-data-connection", ("PUT",)), public_routes)
+        self.assertNotIn(("/api/me/ai-connection", ("DELETE",)), public_routes)
+        self.assertNotIn(("/api/me/market-data-connection", ("DELETE",)), public_routes)
+        for path in (
+            "/v1/ai/encrypt",
+            "/v1/ai/validate",
+            "/v1/ai/generate",
+            "/v1/market/prepare",
+            "/v1/market/validate",
+            "/v1/market/quotes",
+        ):
+            self.assertNotIn(path, routes["broker"])
+        self.assertIn("/v1/ai/shared-generate", routes["broker"])
+        self.assertIn("/v1/market/shared-quotes", routes["broker"])
+
     def test_broker_quote_response_rejects_injected_or_nonfinite_values(self):
         observed = dt.datetime.now(dt.timezone.utc).isoformat()
         valid = {
@@ -924,7 +1075,7 @@ class SecurityTests(unittest.TestCase):
         self.assertNotIn("CREDENTIAL_BROKER_APP_TOKEN", paper_environment)
         self.assertNotIn("BROKER_API_KEY", paper_environment)
         self.assertIn("outbound", services["paper-worker"]["networks"])
-        self.assertNotIn("outbound", services["backtest-worker"]["networks"])
+        self.assertIn("outbound", services["backtest-worker"]["networks"])
         broker_compose = yaml.safe_load(
             Path(__file__).resolve().parents[1]
             .joinpath("compose.credential-broker.yaml")
@@ -932,16 +1083,29 @@ class SecurityTests(unittest.TestCase):
         )
         broker_environment = broker_compose["services"]["credential-broker"]["environment"]
         self.assertEqual(broker_environment["CREDENTIAL_BACKEND"], "oci-kms")
+        self.assertEqual(broker_environment["MEMBER_CREDENTIALS_ENABLED"], "true")
+        self.assertEqual(broker_environment["AUTHORITY_ENABLED"], "true")
+        self.assertNotIn("SHARED_AI_API_KEY", broker_environment)
+        self.assertNotIn("SHARED_AI_API_KEY_FILE", broker_environment)
+        self.assertIn("OCI_SHARED_AI_SECRET_ID", broker_environment)
         self.assertIn("OCI_AI_CREDENTIAL_KEY_ID", broker_environment)
         self.assertIn("OCI_MARKET_CREDENTIAL_KEY_ID", broker_environment)
-        self.assertIn("BROKER_API_KEY", broker_environment)
+        self.assertNotIn("BROKER_API_KEY", broker_environment)
+        self.assertNotIn("BROKER_API_SECRET", broker_environment)
+        self.assertNotIn("BROKER_API_KEY_FILE", broker_environment)
+        self.assertNotIn("BROKER_API_SECRET_FILE", broker_environment)
+        self.assertIn("OCI_BROKER_API_KEY_SECRET_ID", broker_environment)
+        self.assertIn("OCI_BROKER_API_SECRET_SECRET_ID", broker_environment)
         broker_source = Path(__file__).resolve().parents[1].joinpath(
             "cloud_app/credential_broker.py"
         ).read_text(encoding="utf-8")
         self.assertNotIn("from .paper", broker_source)
-        self.assertNotIn(
+        self.assertIn(
             "CREDENTIAL_BACKEND", services["backtest-worker"]["environment"]
         )
+        self.assertIn("CREDENTIAL_BROKER_BACKTEST_TOKEN", services["backtest-worker"]["environment"])
+        self.assertNotIn("CREDENTIAL_BROKER_APP_TOKEN", services["backtest-worker"]["environment"])
+        self.assertNotIn("CREDENTIAL_BROKER_BACKTEST_TOKEN", app_environment)
         self.assertNotIn("CREDENTIAL_BACKEND", services["scheduler"]["environment"])
         self.assertIn(
             "./deploy/backup-once.sh:/backup/backup-once.sh:ro",
@@ -1079,10 +1243,12 @@ class SecurityTests(unittest.TestCase):
             dataset = Path(directory)
             prices = dataset / "prices"
             prices.mkdir()
-            (prices / "AAPL_data.pkl").write_bytes(b"tampered")
+            price_file_path(prices, "AAPL").write_bytes(b"tampered")
             (dataset / "manifest.json").write_text(
                 json.dumps(
                     {
+                        "schema_version": PRICE_SCHEMA_VERSION,
+                        "price_format": PRICE_FORMAT,
                         "prices": {
                             "AAPL": {
                                 "first_date": "2026-01-02",
@@ -1250,8 +1416,10 @@ class SecurityTests(unittest.TestCase):
 
     def test_finnhub_token_uses_header_and_is_not_logged_on_failure(self):
         secret = "finnhub-secret-token"
+        response = MagicMock(status_code=200, headers={})
+        response.iter_content.return_value = [b"{}"]
         with patch.object(market_calendar_module, "_FINNHUB_API_KEY", secret):
-            with patch("requests.get", return_value=SimpleNamespace(status_code=200, json=lambda: {})) as get:
+            with patch("requests.get", return_value=response) as get:
                 market_calendar_module._query_finnhub_market_status()
             self.assertEqual(get.call_args.kwargs["params"], {"exchange": "US"})
             self.assertEqual(get.call_args.kwargs["headers"], {"X-Finnhub-Token": secret})
@@ -1323,6 +1491,7 @@ class SecurityTests(unittest.TestCase):
         session.add(user)
         session.commit()
         local_settings = SimpleNamespace(
+            member_credentials_enabled=True,
             local_ai_enabled=True,
             local_ai_base_url="http://ai:8080/v1",
             local_ai_model="Qwen2.5-Coder-7B-Instruct-GGUF",
@@ -1595,7 +1764,7 @@ class SecurityTests(unittest.TestCase):
         session.add(MemberQuote(user_id=owner.id, ticker="AAPL", price=200, bid=0, ask=0, volume=0, source="kis_member", observed_at=now))
         session.commit()
         self.assertEqual(quote_map(session, ["AAPL"], user_id=owner.id), {"AAPL": 200.0})
-        self.assertEqual(quote_map(session, ["AAPL"], user_id=other.id), {"AAPL": 100.0})
+        self.assertEqual(quote_map(session, ["AAPL"], user_id=other.id), {})
         session.close()
 
     def test_local_ai_backpressure_returns_429_without_calling_model(self):
@@ -1615,6 +1784,7 @@ class SecurityTests(unittest.TestCase):
         )
         session.commit()
         local_settings = SimpleNamespace(
+            member_credentials_enabled=True,
             local_ai_enabled=True,
             local_ai_base_url="http://ai:8080/v1",
             local_ai_model="Qwen2.5-Coder-7B-Instruct-GGUF",
@@ -1647,8 +1817,9 @@ class KisQuoteClientTests(unittest.TestCase):
     def response(status_code: int, payload: dict):
         response = MagicMock()
         response.status_code = status_code
-        response.content = b"payload"
-        response.json.return_value = payload
+        encoded = json.dumps(payload).encode("utf-8")
+        response.headers = {"Content-Length": str(len(encoded))}
+        response.iter_content.return_value = [encoded]
         if status_code >= 400:
             response.raise_for_status.side_effect = RuntimeError("unexpected status handling")
         return response
@@ -1721,9 +1892,9 @@ class TossQuoteClientTests(unittest.TestCase):
     def response(status_code: int, payload: dict, headers: dict | None = None):
         response = MagicMock()
         response.status_code = status_code
-        response.content = b"payload"
-        response.headers = headers or {}
-        response.json.return_value = payload
+        encoded = json.dumps(payload).encode("utf-8")
+        response.headers = {"Content-Length": str(len(encoded)), **(headers or {})}
+        response.iter_content.return_value = [encoded]
         return response
 
     def test_authenticate_uses_form_encoded_client_credentials(self):
@@ -2032,9 +2203,13 @@ class StrategyDslTests(unittest.TestCase):
 
     def test_local_ai_request_uses_only_server_configured_endpoint_and_key(self):
         response = MagicMock()
-        response.json.return_value = {"choices": [{"message": {"content": "{}"}}]}
+        payload = json.dumps(
+            {"choices": [{"message": {"content": "{}"}}]}
+        ).encode("utf-8")
+        response.headers = {"Content-Length": str(len(payload))}
+        response.iter_bytes.return_value = [payload]
         client = MagicMock()
-        client.post.return_value = response
+        client.stream.return_value.__enter__.return_value = response
         result = _provider_request(
             client,
             "local",
@@ -2044,23 +2219,28 @@ class StrategyDslTests(unittest.TestCase):
             local_base_url="http://ai:8080/v1/",
         )
         self.assertEqual(result, "{}")
-        url, = client.post.call_args.args
+        method, url = client.stream.call_args.args
+        self.assertEqual(method, "POST")
         self.assertEqual(url, "http://ai:8080/v1/chat/completions")
         self.assertEqual(
-            client.post.call_args.kwargs["headers"],
+            client.stream.call_args.kwargs["headers"],
             {"Authorization": "Bearer server-owned-key"},
         )
         self.assertEqual(
-            client.post.call_args.kwargs["json"]["response_format"],
+            client.stream.call_args.kwargs["json"]["response_format"],
             {"type": "json_object"},
         )
 
     def test_local_ai_readiness_requires_the_configured_model(self):
         response = MagicMock()
-        response.json.return_value = {
-            "data": [{"id": "Qwen2.5-Coder-7B-Instruct-GGUF"}]
-        }
-        with patch("cloud_app.ai.httpx.get", return_value=response) as request:
+        payload = json.dumps(
+            {"data": [{"id": "Qwen2.5-Coder-7B-Instruct-GGUF"}]}
+        ).encode("utf-8")
+        response.headers = {"Content-Length": str(len(payload))}
+        response.iter_bytes.return_value = [payload]
+        stream = MagicMock()
+        stream.return_value.__enter__.return_value = response
+        with patch("cloud_app.ai.httpx.stream", stream) as request:
             self.assertTrue(
                 local_ai_ready(
                     base_url="http://ready-ai-test:8080/v1",
@@ -2207,7 +2387,7 @@ class PaperLedgerTests(unittest.TestCase):
     def setUp(self):
         engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(engine)
-        self.session = sessionmaker(bind=engine, expire_on_commit=False)()
+        self.session = sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)()
         user = User(
             id="u" * 32,
             email="member@example.com",
@@ -2295,6 +2475,7 @@ class PaperLedgerTests(unittest.TestCase):
             patch("cloud_app.worker.regular_market_open", return_value=True),
             patch("cloud_app.worker.apply_terminal_events", return_value={"settled": 0, "review_accounts": 0}),
             patch("cloud_app.worker.collect_watchlist", return_value=set()),
+            patch("cloud_app.worker.collect_watchlist_ordered", return_value=()),
             patch("cloud_app.worker.collect_member_quotes", side_effect=collect_personal_quotes),
             patch("cloud_app.worker.rebalance_due_accounts", side_effect=inspect_engine_quotes),
             patch("cloud_app.worker.mark_and_stop_accounts", return_value=0),
@@ -2302,6 +2483,53 @@ class PaperLedgerTests(unittest.TestCase):
         ):
             run_paper_tick(provider, SimpleNamespace())
         self.assertEqual(observed, {"AAPL": 222.0})
+
+    def test_shared_mode_ignores_legacy_member_quotes_for_paper_fills(self):
+        now = dt.datetime.now(dt.timezone.utc)
+        self.session.add_all(
+            [
+                MarketDataConnection(
+                    user_id=self.account.user_id,
+                    provider="kis",
+                    environment="paper",
+                    encrypted_api_key="legacy-encrypted-key",
+                    encrypted_api_secret="legacy-encrypted-secret",
+                    key_hint="••••1234",
+                    secret_hint="••••5678",
+                    verified_at=now,
+                ),
+                Quote(
+                    ticker="AAPL",
+                    price=111.0,
+                    bid=110.0,
+                    ask=112.0,
+                    volume=10.0,
+                    source="kis",
+                    observed_at=now,
+                ),
+                MemberQuote(
+                    user_id=self.account.user_id,
+                    ticker="AAPL",
+                    price=999.0,
+                    bid=998.0,
+                    ask=1000.0,
+                    volume=10.0,
+                    source="kis_member",
+                    observed_at=now,
+                ),
+            ]
+        )
+        self.session.commit()
+        with patch(
+            "cloud_app.paper.get_settings",
+            return_value=SimpleNamespace(member_credentials_enabled=False),
+        ):
+            prices = quote_map(
+                self.session,
+                ["AAPL"],
+                user_id=self.account.user_id,
+            )
+        self.assertEqual(prices, {"AAPL": 111.0})
 
     def test_fill_dedupe_prevents_duplicate_paper_execution(self):
         first = _fill(
@@ -2359,6 +2587,33 @@ class PaperLedgerTests(unittest.TestCase):
         self.assertAlmostEqual(positions["BBB"].shares, 500.0)
         self.assertAlmostEqual(self.account.cash, 39_850.0)
 
+    def test_new_buy_and_stop_sale_are_visible_to_same_tick_equity(self):
+        from cloud_app.database import EquityPoint
+        from cloud_app.paper import mark_and_stop_accounts
+        et_now = dt.datetime(2026, 8, 25, 10, tzinfo=dt.timezone(dt.timedelta(hours=-4)))
+        bundle = SimpleNamespace(index=pd.DatetimeIndex(["2026-08-24"]), forward_data_gate_ready=True)
+        with (
+            patch("cloud_app.paper._market_context", return_value=(et_now, True, True)),
+            patch("cloud_app.paper.get_dataset_bundle", return_value=bundle),
+            patch("cloud_app.paper.prev_trading_day", return_value=dt.date(2026, 8, 24)),
+            patch("cloud_app.paper.latest_candidates", return_value=["AAA"]),
+            patch("cloud_app.paper.quote_map", return_value={"AAA": 100.0}),
+        ):
+            self.assertEqual(rebalance_due_accounts(self.session), 1)
+            mark_and_stop_accounts(self.session)
+        self.session.commit()
+        holdings = self.session.query(PaperPosition).all()
+        expected = self.account.cash + sum(row.shares * row.last_price for row in holdings)
+        self.assertGreater(expected, 99000)
+        self.assertAlmostEqual(self.session.query(EquityPoint).one().equity, expected)
+        later = dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=6)
+        with patch("cloud_app.paper.quote_map", return_value={"AAA": 50.0}), patch("cloud_app.paper.utcnow", return_value=later):
+            self.assertEqual(mark_and_stop_accounts(self.session), 1)
+        self.session.commit()
+        self.assertEqual(self.session.query(PaperPosition).count(), 0)
+        latest = self.session.query(EquityPoint).order_by(EquityPoint.observed_at.desc()).first()
+        self.assertAlmostEqual(latest.equity, self.account.cash)
+
     def test_unresolved_exit_freezes_then_verified_cash_settles(self):
         self.session.add(
             PaperPosition(
@@ -2386,6 +2641,10 @@ class PaperLedgerTests(unittest.TestCase):
             )
             self.assertEqual(result["review_accounts"], 1)
             self.assertEqual(self.account.status, "review_required")
+            from cloud_app.paper import mark_and_stop_accounts
+            with patch("cloud_app.paper.quote_map", return_value={"EXIT": 1.0}):
+                self.assertEqual(mark_and_stop_accounts(self.session), 0)
+            self.assertEqual(self.session.query(PaperPosition).count(), 1)
             append_event(
                 path,
                 {
@@ -2402,7 +2661,7 @@ class PaperLedgerTests(unittest.TestCase):
             )
             self.session.commit()
             self.assertEqual(result["settled"], 1)
-            self.assertEqual(self.account.status, "active")
+            self.assertEqual(self.account.status, "paused")
             self.assertEqual(self.session.query(PaperPosition).count(), 0)
             self.assertAlmostEqual(self.account.cash, 100_040)
 

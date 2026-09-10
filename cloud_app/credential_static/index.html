@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Milkyway · 개인 증권사 연결</title><script src="/credentials.js" defer></script></head>
+<body><main>
+<h1>개인 증권사 연결</h1>
+<p>동아리 계정으로 로그인한 뒤 본인의 증권사 API를 연결하세요. 연결한 API는 개인 페이퍼 트레이딩 시세 조회에 사용합니다. AI는 동아리 공용 설정을 사용합니다.</p>
+<form id="login"><h2>동아리 계정 로그인</h2>
+<p><label>이메일 <input name="email" type="email" autocomplete="username" maxlength="254" required></label></p>
+<p><label>비밀번호 <input name="password" type="password" autocomplete="current-password" minlength="10" maxlength="128" required></label></p>
+<button type="submit">로그인</button></form>
+<section id="member" hidden><p id="identity"></p>
+<form id="market"><h2>증권사 API 연결 · 교체</h2>
+<p><label>증권사 <select name="provider" required></select></label></p>
+<p><label>API 환경 <select name="environment" required></select></label></p>
+<p id="provider-help"></p>
+<p><label>App Key / Client ID <input name="api_key" type="password" autocomplete="off" maxlength="4096" required></label></p>
+<p><label>App Secret / Client Secret <input name="api_secret" type="password" autocomplete="off" maxlength="4096" required></label></p>
+<button type="submit">인증 후 저장</button></form>
+<p><button id="disconnect" type="button">증권사 연결 삭제</button> <button id="logout" type="button">로그아웃</button></p>
+</section><p id="message" role="status" aria-live="polite"></p>
+</main></body></html>

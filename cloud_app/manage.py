@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import getpass
 import hmac
+import secrets
 from dataclasses import replace
 
 from sqlalchemy import delete, select
@@ -14,11 +16,15 @@ from .config import get_settings
 from .credential_store import OCI_KMS_PREFIX
 from .database import (
     AiConnection,
+    AuthoritySession,
     BrowserSession,
+    Invitation,
     MarketDataConnection,
     SessionLocal,
     User,
+    apply_runtime_grants,
     initialize_database,
+    invitation_token_hash,
 )
 from .market_data_credentials import (
     decrypt_market_credential,
@@ -42,7 +48,8 @@ def create_admin(email: str, display_name: str) -> int:
             existing.role = "admin"
             existing.password_hash = hash_password(password)
             existing.active = True
-            session.execute(delete(BrowserSession).where(BrowserSession.user_id == existing.id))
+            session_model = AuthoritySession if get_settings().authority_enabled else BrowserSession
+            session.execute(delete(session_model).where(session_model.user_id == existing.id))
         else:
             session.add(
                 User(
@@ -56,6 +63,54 @@ def create_admin(email: str, display_name: str) -> int:
     finally:
         session.close()
     print("Admin account is ready:", email)
+    return 0
+
+
+def create_invitation(email: str, expires_hours: int) -> int:
+    """Create one recipient-bound invitation and reveal its bearer token once."""
+
+    initialize_database()
+    email = normalize_email(email)
+    if not 1 <= expires_hours <= 168:
+        raise SystemExit("Invitation expiry must be between 1 and 168 hours")
+    token = secrets.token_urlsafe(32)
+    invitation = Invitation.create(
+        token=token,
+        email=email,
+        expires_at=dt.datetime.now(dt.timezone.utc)
+        + dt.timedelta(hours=expires_hours),
+        secret=get_settings().session_secret,
+    )
+    session = SessionLocal()
+    try:
+        session.add(invitation)
+        session.commit()
+    finally:
+        session.close()
+    print("Invitation email:", email)
+    print("Invitation token (shown once):", token)
+    return 0
+
+
+def revoke_invitation() -> int:
+    initialize_database()
+    token = getpass.getpass("Invitation token to revoke: ")
+    try:
+        token_hash = invitation_token_hash(token, get_settings().session_secret)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+    session = SessionLocal()
+    try:
+        invitation = session.get(Invitation, token_hash)
+        if invitation is None:
+            raise SystemExit("Invitation was not found")
+        if invitation.redeemed_at is not None:
+            raise SystemExit("Redeemed invitations cannot be revoked retroactively")
+        session.delete(invitation)
+        session.commit()
+    finally:
+        session.close()
+    print("Invitation revoked")
     return 0
 
 
@@ -241,15 +296,28 @@ def migrate_credentials_to_oci(confirm: str, *, backup_confirmed: bool = False) 
 def main() -> int:
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("initialize-database")
     admin = commands.add_parser("create-admin")
     admin.add_argument("--email", required=True)
     admin.add_argument("--name", required=True)
+    invite = commands.add_parser("create-invitation")
+    invite.add_argument("--email", required=True)
+    invite.add_argument("--expires-hours", type=int, default=24)
+    commands.add_parser("revoke-invitation")
     migrate = commands.add_parser("migrate-credentials-to-oci")
     migrate.add_argument("--confirm", required=True)
     migrate.add_argument("--backup-confirmed", action="store_true")
     args = parser.parse_args()
+    if args.command == "initialize-database":
+        initialize_database()
+        apply_runtime_grants()
+        return 0
     if args.command == "create-admin":
         return create_admin(args.email, args.name)
+    if args.command == "create-invitation":
+        return create_invitation(args.email, args.expires_hours)
+    if args.command == "revoke-invitation":
+        return revoke_invitation()
     if args.command == "migrate-credentials-to-oci":
         return migrate_credentials_to_oci(
             args.confirm, backup_confirmed=args.backup_confirmed

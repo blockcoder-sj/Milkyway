@@ -11,10 +11,16 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import fcntl
+import gzip
+import zlib
 import hashlib
+import hmac
+import io
 import json
 import os
+import re
 import shutil
+import stat
 import subprocess
 import tempfile
 import time
@@ -30,7 +36,96 @@ from universe_snapshot import eligible_symbols, load_snapshot
 
 
 REQUIRED_COLUMNS = ("Open", "High", "Low", "Close", "Volume")
+PRICE_FILE_SUFFIX = "_data.csv.gz"
+PRICE_FORMAT = "csv-gzip-v1"
+PRICE_SCHEMA_VERSION = 2
+MAX_PRICE_FILE_BYTES = 16 * 1024 * 1024
+MAX_PRICE_UNCOMPRESSED_BYTES = 64 * 1024 * 1024
+MAX_PRICE_ROWS = 1_000_000
+MAX_DATASET_SYMBOLS = 6_000
+MAX_DATASET_ROWS = 3_000_000
+MAX_DATASET_COMPRESSED_BYTES = 1024 * 1024 * 1024
+MAX_DATASET_UNCOMPRESSED_BYTES = 512 * 1024 * 1024
+MAX_MANIFEST_BYTES = 16 * 1024 * 1024
+TICKER_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9.^_-]{0,19}$")
 UF_DATALESS = 0x40000000
+
+
+def require_price_manifest(manifest: Mapping) -> None:
+    if manifest.get("schema_version") != PRICE_SCHEMA_VERSION:
+        raise ValueError("dataset must be regenerated with price schema version 2")
+    if manifest.get("price_format") != PRICE_FORMAT:
+        raise ValueError("dataset uses a legacy or unsupported price format")
+    prices = manifest.get("prices")
+    if not isinstance(prices, dict) or not prices:
+        raise ValueError("dataset manifest contains no approved prices")
+    if len(prices) > MAX_DATASET_SYMBOLS:
+        raise ValueError("dataset manifest symbol limit exceeded")
+    declared_rows = 0
+    for ticker, metadata in prices.items():
+        if not TICKER_PATTERN.fullmatch(str(ticker)) or not isinstance(metadata, dict):
+            raise ValueError("dataset manifest price metadata is invalid")
+        rows = metadata.get("rows")
+        if not isinstance(rows, int) or isinstance(rows, bool) or not 1 <= rows <= MAX_PRICE_ROWS:
+            raise ValueError("dataset manifest row count is invalid")
+        digest = metadata.get("sha256")
+        if (
+            not isinstance(digest, str)
+            or len(digest) != 64
+            or any(character not in "0123456789abcdef" for character in digest)
+        ):
+            raise ValueError("dataset manifest price hash is invalid")
+        declared_rows += rows
+    if declared_rows > MAX_DATASET_ROWS:
+        raise ValueError("dataset manifest aggregate row limit exceeded")
+
+
+def load_manifest_snapshot(path: Path | str) -> tuple[dict, bytes, str]:
+    """Capture one regular-file manifest generation and its exact digest."""
+
+    path = Path(path)
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise ValueError("dataset manifest must be a regular file")
+        if metadata.st_size <= 0 or metadata.st_size > MAX_MANIFEST_BYTES:
+            raise ValueError("dataset manifest size is outside the allowed range")
+        with os.fdopen(descriptor, "rb", closefd=False) as handle:
+            payload = handle.read(MAX_MANIFEST_BYTES + 1)
+    finally:
+        os.close(descriptor)
+    if len(payload) != metadata.st_size or len(payload) > MAX_MANIFEST_BYTES:
+        raise ValueError("dataset manifest changed while it was being read")
+    try:
+        manifest = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("dataset manifest is invalid") from exc
+    if not isinstance(manifest, dict):
+        raise ValueError("dataset manifest must be an object")
+    require_price_manifest(manifest)
+    return manifest, payload, hashlib.sha256(payload).hexdigest()
+
+
+def assert_manifest_generation(path: Path | str, expected_sha256: str) -> None:
+    _manifest, _payload, current_sha256 = load_manifest_snapshot(path)
+    if not hmac.compare_digest(current_sha256, expected_sha256):
+        raise ValueError("dataset manifest generation changed during load")
+
+
+def validate_dataset_inventory(dataset_dir: Path | str, manifest: Mapping) -> None:
+    """Reject an oversized or unsafe generation before parsing any CSV."""
+
+    price_dir = Path(dataset_dir) / "prices"
+    compressed_bytes = 0
+    for ticker in manifest["prices"]:
+        path = price_file_path(price_dir, str(ticker))
+        metadata = path.lstat()
+        if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode):
+            raise ValueError("dataset price inventory contains an unsafe file")
+        compressed_bytes += metadata.st_size
+        if compressed_bytes > MAX_DATASET_COMPRESSED_BYTES:
+            raise ValueError("dataset aggregate compressed size limit exceeded")
 
 
 def sha256_file(path: Path | str) -> str:
@@ -47,7 +142,7 @@ def is_dataless(path: Path | str) -> bool:
 
 
 def hydration_status(data_dir: Path | str) -> dict:
-    paths = list(Path(data_dir).glob("*_data.pkl"))
+    paths = list(Path(data_dir).glob("*" + PRICE_FILE_SUFFIX))
     dataless = sum(is_dataless(path) for path in paths)
     return {
         "files": len(paths),
@@ -215,12 +310,107 @@ def _extract_download(raw: pd.DataFrame, ticker: str, batch_size: int) -> Option
         return None
 
 
-def _atomic_pickle(frame: pd.DataFrame, path: Path) -> None:
+def price_file_path(directory: Path | str, ticker: str, *, stale: bool = False) -> Path:
+    value = str(ticker).strip().upper()
+    if not TICKER_PATTERN.fullmatch(value):
+        raise ValueError("invalid price ticker")
+    suffix = "_stale_data.csv.gz" if stale else PRICE_FILE_SUFFIX
+    return Path(directory) / (value + suffix)
+
+
+def read_price_frame(
+    path: Path | str,
+    *,
+    require_valid: bool = False,
+    expected_sha256: str | None = None,
+    metrics: dict | None = None,
+) -> pd.DataFrame:
+    """Read the bounded, non-executable on-disk price interchange format."""
+
+    path = Path(path)
+    if not path.name.endswith(PRICE_FILE_SUFFIX):
+        raise ValueError("legacy or unsupported price file format")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags)
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise ValueError("price file must be a regular non-symlink file")
+        if metadata.st_size <= 0 or metadata.st_size > MAX_PRICE_FILE_BYTES:
+            raise ValueError("price file size is outside the allowed range")
+        with os.fdopen(descriptor, "rb", closefd=False) as handle:
+            payload = handle.read(MAX_PRICE_FILE_BYTES + 1)
+    finally:
+        os.close(descriptor)
+    if len(payload) != metadata.st_size or len(payload) > MAX_PRICE_FILE_BYTES:
+        raise ValueError("price file changed while it was being read")
+    digest = hashlib.sha256(payload).hexdigest()
+    if expected_sha256 is not None and (
+        len(expected_sha256) != 64
+        or not hmac.compare_digest(digest, expected_sha256)
+    ):
+        raise ValueError("price file integrity check failed")
+    expanded = 0
+    decoded = bytearray()
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(payload), mode="rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                expanded += len(chunk)
+                if expanded > MAX_PRICE_UNCOMPRESSED_BYTES:
+                    raise ValueError("expanded price file size exceeds the allowed range")
+                decoded.extend(chunk)
+    except (gzip.BadGzipFile, EOFError, zlib.error) as exc:
+        raise ValueError("price file must contain valid gzip data") from exc
+    frame = pd.read_csv(
+        io.BytesIO(decoded),
+        nrows=MAX_PRICE_ROWS + 1,
+        low_memory=False,
+    )
+    if list(frame.columns) != ["Date", *REQUIRED_COLUMNS]:
+        raise ValueError("price file schema is invalid")
+    if len(frame) > MAX_PRICE_ROWS:
+        raise ValueError("price file row limit exceeded")
+    dates = pd.to_datetime(frame.pop("Date"), errors="coerce")
+    if dates.isna().any():
+        raise ValueError("price file contains an invalid date")
+    date_index = pd.DatetimeIndex(dates)
+    if not date_index.is_monotonic_increasing or date_index.has_duplicates:
+        raise ValueError("price file dates must be strictly increasing")
+    frame.index = date_index
+    normalized = _normalize_frame(frame)
+    if require_valid:
+        quality = validate_price_frame(normalized)
+        if not quality.get("valid"):
+            raise ValueError("price file quality is invalid: {}".format(quality))
+    if metrics is not None:
+        metrics.update(
+            compressed_bytes=len(payload),
+            uncompressed_bytes=expanded,
+            rows=len(normalized),
+            sha256=digest,
+        )
+    return normalized
+
+
+def _atomic_price_frame(frame: pd.DataFrame, path: Path) -> None:
+    if not path.name.endswith(PRICE_FILE_SUFFIX):
+        raise ValueError("price output path must use {}".format(PRICE_FILE_SUFFIX))
+    normalized = _normalize_frame(frame)
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(prefix=path.name + ".", dir=str(path.parent))
     os.close(descriptor)
     try:
-        frame.to_pickle(temporary)
+        normalized.to_csv(
+            temporary,
+            columns=list(REQUIRED_COLUMNS),
+            index=True,
+            index_label="Date",
+            date_format="%Y-%m-%d",
+            float_format="%.17g",
+            compression={"method": "gzip", "mtime": 0},
+        )
+        with open(temporary, "r+b") as handle:
+            os.fsync(handle.fileno())
         os.replace(temporary, path)
     finally:
         if os.path.exists(temporary):
@@ -313,8 +503,8 @@ def build_dataset(
             if not quality["valid"]:
                 failed[ticker] = "quality:{}".format(quality)
                 continue
-            path = price_dir / "{}_data.pkl".format(ticker)
-            _atomic_pickle(frame, path)
+            path = price_file_path(price_dir, ticker)
+            _atomic_price_frame(frame, path)
             succeeded[ticker] = {
                 "rows": int(len(frame)),
                 "first_date": frame.index.min().date().isoformat(),
@@ -332,7 +522,8 @@ def build_dataset(
         )
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": PRICE_SCHEMA_VERSION,
+        "price_format": PRICE_FORMAT,
         "dataset_type": "exchange_listed_2026_ohlcv",
         "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "duration_seconds": (
@@ -375,7 +566,7 @@ def finalize_completed_sessions(
 
     dataset_dir = Path(dataset_dir)
     manifest_path = dataset_dir / "manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest, _manifest_bytes, _manifest_sha256 = load_manifest_snapshot(manifest_path)
     cutoff = pd.Timestamp(end_exclusive)
     price_dir = dataset_dir / "prices"
     quarantine_dir = dataset_dir / "quarantine_prices"
@@ -385,15 +576,15 @@ def finalize_completed_sessions(
     # Existing files passed the earlier gate.  Remove the incomplete session,
     # validate again, and create hashes for the exact completed-session slice.
     for ticker in sorted(manifest.get("prices", {})):
-        path = price_dir / "{}_data.pkl".format(ticker)
+        path = price_file_path(price_dir, ticker)
         try:
-            frame = _normalize_frame(pd.read_pickle(path))
+            frame = read_price_frame(path)
             frame = frame[frame.index < cutoff]
             quality = validate_price_frame(frame)
             if not quality["valid"]:
                 failures[ticker] = "post_trim_quality:{}".format(quality)
                 continue
-            _atomic_pickle(frame, path)
+            _atomic_price_frame(frame, path)
             succeeded[ticker] = {
                 "rows": int(len(frame)),
                 "first_date": frame.index.min().date().isoformat(),
@@ -439,8 +630,8 @@ def finalize_completed_sessions(
             frame = frame[frame.index < cutoff]
             quality = validate_price_frame(frame)
             if quality["valid"]:
-                path = price_dir / "{}_data.pkl".format(ticker)
-                _atomic_pickle(frame, path)
+                path = price_file_path(price_dir, ticker)
+                _atomic_price_frame(frame, path)
                 succeeded[ticker] = {
                     "rows": int(len(frame)),
                     "first_date": frame.index.min().date().isoformat(),
@@ -448,8 +639,8 @@ def finalize_completed_sessions(
                     "sha256": sha256_file(path),
                 }
                 continue
-            quarantine_path = quarantine_dir / "{}_data.pkl".format(ticker)
-            _atomic_pickle(frame, quarantine_path)
+            quarantine_path = price_file_path(quarantine_dir, ticker)
+            _atomic_price_frame(frame, quarantine_path)
             quarantine[ticker] = {
                 "quality": quality,
                 "sha256": sha256_file(quarantine_path),
@@ -478,10 +669,10 @@ def finalize_completed_sessions(
     # but move it outside ``prices`` so no ad-hoc glob loader can include it.
     quarantine_dir.mkdir(parents=True, exist_ok=True)
     for ticker in remaining_failures:
-        stale_path = price_dir / "{}_data.pkl".format(ticker)
+        stale_path = price_file_path(price_dir, ticker)
         if not stale_path.exists():
             continue
-        audit_path = quarantine_dir / "{}_stale_data.pkl".format(ticker)
+        audit_path = price_file_path(quarantine_dir, ticker, stale=True)
         os.replace(stale_path, audit_path)
         quarantine.setdefault(ticker, {})["stale_file_sha256"] = sha256_file(audit_path)
     _atomic_json(manifest, manifest_path)
@@ -511,7 +702,9 @@ def update_completed_sessions(
     dataset_dir.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a+") as lock_handle:
         fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest, _manifest_bytes, _manifest_sha256 = load_manifest_snapshot(
+            manifest_path
+        )
         snapshots = [load_snapshot(path) for path in snapshot_paths]
         if not snapshots:
             raise ValueError("At least one current snapshot is required")
@@ -567,14 +760,14 @@ def update_completed_sessions(
             for symbols, start, raw, batch_error in payloads:
                 for ticker in symbols:
                     fresh = _extract_download(raw, ticker, len(symbols)) if raw is not None else None
-                    path = price_dir / "{}_data.pkl".format(ticker)
+                    path = price_file_path(price_dir, ticker)
                     if fresh is None or fresh.empty:
                         refresh_errors[ticker] = batch_error or "empty_download"
                         continue
                     fresh = fresh[fresh.index < cutoff]
                     fresh, ticker_repairs = repair_ohlc_bounds(fresh)
                     if ticker in existing and path.exists():
-                        old = _normalize_frame(pd.read_pickle(path))
+                        old = read_price_frame(path, require_valid=True)
                         overlap = old.index.intersection(fresh.index)
                         needs_restatement = False
                         if len(overlap):
@@ -603,7 +796,7 @@ def update_completed_sessions(
                         continue
                     if path.exists():
                         previous_hashes[ticker] = manifest["prices"][ticker]["sha256"]
-                    _atomic_pickle(combined, path)
+                    _atomic_price_frame(combined, path)
                     manifest.setdefault("prices", {})[ticker] = {
                         "rows": int(len(combined)),
                         "first_date": combined.index.min().date().isoformat(),
@@ -666,7 +859,8 @@ def validate_dataset(
 ) -> dict:
     dataset_dir = Path(dataset_dir)
     manifest_path = dataset_dir / "manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest, _manifest_bytes, manifest_sha256 = load_manifest_snapshot(manifest_path)
+    validate_dataset_inventory(dataset_dir, manifest)
     expected = set(manifest.get("prices", {}))
     current_snapshot_membership_sha256 = None
     if current_snapshot_path is not None:
@@ -684,11 +878,14 @@ def validate_dataset(
                     manifest.get("failures", {}).get(ticker, "not_in_manifest")
                 ),
             }
-        path = dataset_dir / "prices" / "{}_data.pkl".format(ticker)
+        path = price_file_path(dataset_dir / "prices", ticker)
         if not path.exists():
             return ticker, {"valid": False, "error": "missing_file"}
         try:
-            frame = pd.read_pickle(path)
+            frame = read_price_frame(
+                path,
+                expected_sha256=str(manifest["prices"][ticker].get("sha256", "")),
+            )
         except Exception as exc:
             return ticker, {"valid": False, "error": "read_error:{}".format(exc)}
         result = validate_price_frame(frame, start=start, end=end)
@@ -709,8 +906,8 @@ def validate_dataset(
     strategy_blockers = []
     data_availability_exclusions = []
     for ticker in sorted(invalid):
-        quarantine_path = dataset_dir / "quarantine_prices" / "{}_data.pkl".format(ticker)
-        executable_path = dataset_dir / "prices" / "{}_data.pkl".format(ticker)
+        quarantine_path = price_file_path(dataset_dir / "quarantine_prices", ticker)
+        executable_path = price_file_path(dataset_dir / "prices", ticker)
         # A failed incremental row is not placed in quarantine because the
         # previously verified history must remain executable. Use that prior
         # history to decide whether silently excluding the ticker today would
@@ -722,7 +919,7 @@ def validate_dataset(
             data_availability_exclusions.append(ticker)
             continue
         try:
-            frame = _normalize_frame(pd.read_pickle(candidate_evidence_path))
+            frame = read_price_frame(candidate_evidence_path)
             recent = frame[frame.index <= pd.Timestamp(end)].tail(60)
             would_pass_screen = bool(
                 len(recent) >= 60
@@ -737,7 +934,8 @@ def validate_dataset(
             data_availability_exclusions.append(ticker)
 
     report = {
-        "schema_version": 1,
+        "schema_version": PRICE_SCHEMA_VERSION,
+        "price_format": PRICE_FORMAT,
         "validated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "dataset_dir": str(dataset_dir),
         "window": {"start": start, "end": end},
@@ -755,6 +953,7 @@ def validate_dataset(
         "invalid": invalid,
         "unresolved_terminal_events": unresolved,
     }
+    assert_manifest_generation(manifest_path, manifest_sha256)
     _atomic_json(report, dataset_dir / "validation_report.json")
     return report
 
@@ -763,17 +962,17 @@ def reconcile_dataset_storage(dataset_dir: Path | str) -> dict:
     """Ensure only manifest-approved symbols remain in the executable price directory."""
     dataset_dir = Path(dataset_dir)
     manifest_path = dataset_dir / "manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest, _manifest_bytes, _manifest_sha256 = load_manifest_snapshot(manifest_path)
     price_dir = dataset_dir / "prices"
     quarantine_dir = dataset_dir / "quarantine_prices"
     quarantine_dir.mkdir(parents=True, exist_ok=True)
     approved = set(manifest.get("prices", {}))
     moved = []
-    for path in sorted(price_dir.glob("*_data.pkl")):
-        ticker = path.name[: -len("_data.pkl")]
+    for path in sorted(price_dir.glob("*" + PRICE_FILE_SUFFIX)):
+        ticker = path.name[: -len(PRICE_FILE_SUFFIX)]
         if ticker in approved:
             continue
-        destination = quarantine_dir / "{}_stale_data.pkl".format(ticker)
+        destination = price_file_path(quarantine_dir, ticker, stale=True)
         os.replace(path, destination)
         manifest.setdefault("quarantine", {}).setdefault(ticker, {})[
             "stale_file_sha256"
@@ -782,7 +981,7 @@ def reconcile_dataset_storage(dataset_dir: Path | str) -> dict:
     missing_approved = sorted(
         ticker
         for ticker in approved
-        if not (price_dir / "{}_data.pkl".format(ticker)).exists()
+        if not price_file_path(price_dir, ticker).exists()
     )
     manifest["storage_reconciled_at_utc"] = dt.datetime.now(dt.timezone.utc).isoformat()
     manifest["storage_approved_file_count"] = len(approved) - len(missing_approved)
@@ -799,18 +998,18 @@ def recover_quarantine(dataset_dir: Path | str) -> dict:
     """Promote quarantined frames that pass the current, versioned quality rules."""
     dataset_dir = Path(dataset_dir)
     manifest_path = dataset_dir / "manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest, _manifest_bytes, _manifest_sha256 = load_manifest_snapshot(manifest_path)
     price_dir = dataset_dir / "prices"
     quarantine_dir = dataset_dir / "quarantine_prices"
     recovered = []
     still_invalid = {}
     for ticker in sorted(manifest.get("failures", {})):
-        path = quarantine_dir / "{}_data.pkl".format(ticker)
+        path = price_file_path(quarantine_dir, ticker)
         if not path.exists():
             still_invalid[ticker] = manifest["failures"][ticker]
             continue
         try:
-            frame = _normalize_frame(pd.read_pickle(path))
+            frame = read_price_frame(path)
             quality = validate_price_frame(frame)
         except Exception as exc:
             still_invalid[ticker] = "quarantine_read_error:{}".format(exc)
@@ -818,8 +1017,8 @@ def recover_quarantine(dataset_dir: Path | str) -> dict:
         if not quality["valid"]:
             still_invalid[ticker] = "quality:{}".format(quality)
             continue
-        destination = price_dir / "{}_data.pkl".format(ticker)
-        _atomic_pickle(frame, destination)
+        destination = price_file_path(price_dir, ticker)
+        _atomic_price_frame(frame, destination)
         manifest.setdefault("prices", {})[ticker] = {
             "rows": int(len(frame)),
             "first_date": frame.index.min().date().isoformat(),
@@ -847,7 +1046,9 @@ def derive_dataset_for_snapshot(
     output_dir = Path(output_dir)
     snapshot_path = Path(snapshot_path)
     parent_manifest_path = parent_dataset_dir / "manifest.json"
-    parent = json.loads(parent_manifest_path.read_text(encoding="utf-8"))
+    parent, _parent_bytes, _parent_sha256 = load_manifest_snapshot(
+        parent_manifest_path
+    )
     snapshot = load_snapshot(snapshot_path)
     if not snapshot.get("certification_eligible", False):
         raise ValueError("Cannot derive from an uncertified universe snapshot")
@@ -858,8 +1059,8 @@ def derive_dataset_for_snapshot(
     failures = {}
     for ticker in requested:
         metadata = parent.get("prices", {}).get(ticker)
-        source = parent_dataset_dir / "prices" / "{}_data.pkl".format(ticker)
-        destination = price_dir / "{}_data.pkl".format(ticker)
+        source = price_file_path(parent_dataset_dir / "prices", ticker)
+        destination = price_file_path(price_dir, ticker)
         if metadata is None or not source.exists():
             failures[ticker] = parent.get("failures", {}).get(
                 ticker, "not_available_in_parent_dataset"
@@ -876,7 +1077,8 @@ def derive_dataset_for_snapshot(
         prices[ticker] = dict(metadata)
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": PRICE_SCHEMA_VERSION,
+        "price_format": PRICE_FORMAT,
         "dataset_type": "derived_exchange_listed_equity_ohlcv",
         "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "derived_from_dataset": str(parent_dataset_dir),
@@ -898,15 +1100,46 @@ def derive_dataset_for_snapshot(
     return manifest
 
 
-def load_price_dataset(dataset_dir: Path | str) -> dict[str, pd.DataFrame]:
+def load_price_dataset(
+    dataset_dir: Path | str,
+    *,
+    manifest: Mapping | None = None,
+    manifest_sha256: str | None = None,
+) -> dict[str, pd.DataFrame]:
     dataset_dir = Path(dataset_dir)
-    manifest = json.loads((dataset_dir / "manifest.json").read_text(encoding="utf-8"))
+    manifest_path = dataset_dir / "manifest.json"
+    if manifest is None:
+        manifest, _payload, manifest_sha256 = load_manifest_snapshot(manifest_path)
+    else:
+        require_price_manifest(manifest)
+    validate_dataset_inventory(dataset_dir, manifest)
     data = {}
+    total_rows = 0
+    total_compressed = 0
+    total_uncompressed = 0
     for ticker, metadata in manifest.get("prices", {}).items():
-        path = dataset_dir / "prices" / "{}_data.pkl".format(ticker)
-        if sha256_file(path) != metadata["sha256"]:
-            raise ValueError("Price hash mismatch: {}".format(path))
-        data[ticker] = _normalize_frame(pd.read_pickle(path))
+        path = price_file_path(dataset_dir / "prices", ticker)
+        metrics = {}
+        frame = read_price_frame(
+            path,
+            require_valid=True,
+            expected_sha256=str(metadata.get("sha256", "")),
+            metrics=metrics,
+        )
+        if len(frame) != metadata["rows"]:
+            raise ValueError("Price row count mismatch: {}".format(path))
+        total_rows += metrics["rows"]
+        total_compressed += metrics["compressed_bytes"]
+        total_uncompressed += metrics["uncompressed_bytes"]
+        if total_rows > MAX_DATASET_ROWS:
+            raise ValueError("dataset aggregate row limit exceeded")
+        if total_compressed > MAX_DATASET_COMPRESSED_BYTES:
+            raise ValueError("dataset aggregate compressed size limit exceeded")
+        if total_uncompressed > MAX_DATASET_UNCOMPRESSED_BYTES:
+            raise ValueError("dataset aggregate expanded size limit exceeded")
+        data[ticker] = frame
+    if manifest_sha256 is not None:
+        assert_manifest_generation(manifest_path, manifest_sha256)
     return data
 
 

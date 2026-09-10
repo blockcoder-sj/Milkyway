@@ -7,17 +7,29 @@ module intentionally exposes no generic decrypt or proxy primitive.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import math
+import secrets
+import threading
+import time
 from urllib.parse import urlsplit
 
 import httpx
 
 from .config import Settings
+from .bounded_io import ResponseTooLarge, read_httpx_json
 from .paper import QuoteValue
 from .strategies import StrategySpec
 
 
 _MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+_catalog_condition = threading.Condition()
+_catalog_cache: dict[str, object] = {
+    "key": None,
+    "expires_at": 0.0,
+    "providers": (),
+    "probing": False,
+}
 
 
 class CredentialBrokerError(RuntimeError):
@@ -49,6 +61,8 @@ def _token(settings: Settings, role: str) -> str:
         value = getattr(settings, "credential_broker_app_token", "")
     elif role == "paper":
         value = getattr(settings, "credential_broker_paper_token", "")
+    elif role == "backtest":
+        value = getattr(settings, "credential_broker_backtest_token", "")
     else:  # pragma: no cover - internal programming guard
         raise ValueError("unsupported credential broker role")
     if not value:
@@ -65,7 +79,8 @@ def _request(
     timeout_seconds: float = 30.0,
 ) -> dict:
     try:
-        response = httpx.post(
+        with httpx.stream(
+            "POST",
             _broker_origin(settings) + path,
             headers={
                 "Authorization": "Bearer " + _token(settings, role),
@@ -74,35 +89,57 @@ def _request(
             json=payload,
             timeout=timeout_seconds,
             trust_env=False,
-        )
-    except httpx.RequestError:
+        ) as response:
+            status_code = response.status_code
+            result = read_httpx_json(
+                response, maximum_bytes=_MAX_RESPONSE_BYTES
+            )
+    except (httpx.RequestError, ResponseTooLarge, ValueError):
         raise CredentialBrokerError("자격증명 서비스에 연결할 수 없습니다") from None
-    if len(response.content) > _MAX_RESPONSE_BYTES:
-        raise CredentialBrokerError("자격증명 서비스 응답이 허용 크기를 초과했습니다")
-    if response.status_code >= 400:
-        safe_status = response.status_code if response.status_code in {409, 422, 429, 502, 503} else 503
+    if status_code >= 400:
+        safe_status = status_code if status_code in {401, 403, 409, 422, 429, 502, 503} else 503
         detail = "자격증명 서비스 요청에 실패했습니다"
         try:
-            candidate = response.json().get("detail")
+            candidate = result.get("detail")
             if isinstance(candidate, str) and 0 < len(candidate) <= 300:
                 detail = candidate
-        except (TypeError, ValueError):
+        except (AttributeError, TypeError, ValueError):
             pass
         raise CredentialBrokerError(detail, safe_status)
-    try:
-        result = response.json()
-    except ValueError:
-        raise CredentialBrokerError("자격증명 서비스 응답이 올바르지 않습니다") from None
     if not isinstance(result, dict):
         raise CredentialBrokerError("자격증명 서비스 응답이 올바르지 않습니다")
     return result
 
 
 def broker_preflight(settings: Settings, role: str) -> None:
-    path = "/v1/preflight" if role == "app" else "/v1/paper-preflight"
+    path = {"app": "/v1/preflight", "paper": "/v1/paper-preflight", "backtest": "/v1/backtest-preflight"}[role]
     result = _request(settings, role, path, {})
     if result.get("status") != "ok":
         raise CredentialBrokerError("자격증명 서비스 사전 점검에 실패했습니다")
+    if getattr(settings, "authority_enabled", False) and not result.get("authority_enabled"):
+        raise CredentialBrokerError("독립 인증 서비스 설정이 일치하지 않습니다")
+    if role == "paper":
+        expected = {
+            "quote_provider": settings.quote_provider,
+            "sharing_allowed": settings.market_data_sharing_allowed,
+            "environment": settings.kis_environment,
+            "transport": settings.kis_quote_transport,
+            "max_batch_size": settings.shared_quote_batch_size,
+            "max_symbols_per_tick": settings.shared_quote_max_symbols_per_tick,
+            "quote_interval_seconds": settings.quote_interval_seconds,
+            "tick_deadline_seconds": settings.shared_quote_tick_deadline_seconds,
+            "max_age_seconds": settings.quote_max_age_seconds,
+        }
+        if any(result.get(key) != value for key, value in expected.items()):
+            raise CredentialBrokerError(
+                "paper worker와 broker의 공용 시세 설정이 일치하지 않습니다"
+            )
+
+
+def broker_auth(settings: Settings, operation: str, payload: dict) -> dict:
+    if operation not in {"register", "login", "logout"}:
+        raise ValueError("unsupported authentication operation")
+    return _request(settings, "app", "/v1/auth/" + operation, payload, timeout_seconds=15)
 
 
 def broker_validate_ai(
@@ -135,11 +172,53 @@ def broker_encrypt_ai(
 
 
 def broker_ai_catalog(settings: Settings) -> list[dict]:
-    result = _request(settings, "app", "/v1/ai/catalog", {})
-    catalog = result.get("providers")
-    if not isinstance(catalog, list) or len(catalog) > 10:
-        raise CredentialBrokerError("자격증명 서비스 공급자 목록이 올바르지 않습니다")
-    return catalog
+    key = (
+        _broker_origin(settings),
+        hashlib.sha256(_token(settings, "app").encode("utf-8")).digest(),
+    )
+    now = time.monotonic()
+    with _catalog_condition:
+        if _catalog_cache["key"] == key and now < float(
+            _catalog_cache["expires_at"]
+        ):
+            return [dict(item) for item in _catalog_cache["providers"]]
+        if _catalog_cache["key"] == key and _catalog_cache["probing"]:
+            _catalog_condition.wait(timeout=2.5)
+            cached = _catalog_cache["providers"]
+            if cached:
+                return [dict(item) for item in cached]
+            raise CredentialBrokerError("자격증명 서비스 상태 확인이 진행 중입니다")
+        stale = (
+            tuple(_catalog_cache["providers"])
+            if _catalog_cache["key"] == key
+            else ()
+        )
+        _catalog_cache.update(key=key, probing=True)
+    try:
+        result = _request(
+            settings, "app", "/v1/ai/catalog", {}, timeout_seconds=2.0
+        )
+        catalog = result.get("providers")
+        if not isinstance(catalog, list) or len(catalog) > 10 or any(
+            not isinstance(item, dict) for item in catalog
+        ):
+            raise CredentialBrokerError("자격증명 서비스 공급자 목록이 올바르지 않습니다")
+    except CredentialBrokerError:
+        with _catalog_condition:
+            _catalog_cache.update(probing=False, expires_at=time.monotonic() + 2.0)
+            _catalog_condition.notify_all()
+        if stale:
+            return [dict(item) for item in stale]
+        raise
+    with _catalog_condition:
+        _catalog_cache.update(
+            key=key,
+            providers=tuple(dict(item) for item in catalog),
+            expires_at=time.monotonic() + 15.0,
+            probing=False,
+        )
+        _catalog_condition.notify_all()
+    return [dict(item) for item in catalog]
 
 
 def broker_generate_strategy(
@@ -172,6 +251,59 @@ def broker_generate_strategy(
     if not isinstance(preview, str) or len(preview) > 20_000:
         raise CredentialBrokerError("자격증명 서비스가 잘못된 전략을 반환했습니다", 502)
     return spec, preview
+
+
+def broker_generate_shared_strategy(
+    settings: Settings, *, prompt: str, session_token: str = "", csrf: str = ""
+) -> tuple[StrategySpec, str]:
+    """Generate through the broker without exposing provider choice or credentials."""
+
+    payload = {"prompt": prompt}
+    if getattr(settings, "authority_enabled", False):
+        permitted = _request(settings, "app", "/v1/permits/shared-ai", {
+            "session_token": session_token, "csrf": csrf, "prompt": prompt,
+            "nonce": secrets.token_urlsafe(24),
+        })
+        payload["permit"] = permitted.get("permit", "")
+    result = _request(
+        settings,
+        "app",
+        "/v1/ai/shared-generate",
+        payload,
+        timeout_seconds=float(settings.ai_timeout_seconds) + 10.0,
+    )
+    try:
+        spec = StrategySpec.model_validate(result.get("spec"))
+    except Exception:
+        raise CredentialBrokerError(
+            "자격증명 서비스가 잘못된 전략을 반환했습니다", 502
+        ) from None
+    preview = result.get("preview")
+    if not isinstance(preview, str) or len(preview) > 20_000:
+        raise CredentialBrokerError(
+            "자격증명 서비스가 잘못된 전략을 반환했습니다", 502
+        )
+    return spec, preview
+
+
+def broker_next_work(settings: Settings, role: str) -> dict | None:
+    result = _request(settings, role, "/v1/work/" + role + "/next", {})
+    work = result.get("work")
+    if work is None:
+        return None
+    import re
+    if (not isinstance(work, dict) or not re.fullmatch(r"[A-Za-z0-9_-]{43}", str(work.get("claim", "")))
+            or not re.fullmatch(r"[a-f0-9]{32}", str(work.get("resource_id", "")))):
+        raise CredentialBrokerError("작업 권한 응답이 올바르지 않습니다")
+    return work
+
+
+def broker_complete_work(settings: Settings, role: str, claim: str) -> None:
+    _request(settings, role, "/v1/work/" + role + "/complete", {"claim": claim})
+
+
+def broker_work_quotes(settings: Settings, claim: str) -> None:
+    _request(settings, "paper", "/v1/work/paper/quotes", {"claim": claim}, timeout_seconds=settings.quote_deadline_seconds + 5)
 
 
 def broker_validate_market(
@@ -268,14 +400,17 @@ def broker_member_quotes(
 
 
 def broker_shared_quotes(
-    settings: Settings, *, tickers: tuple[str, ...]
+    settings: Settings,
+    *,
+    tickers: tuple[str, ...],
+    timeout_seconds: float = 45.0,
 ) -> list[QuoteValue]:
     result = _request(
         settings,
         "paper",
         "/v1/market/shared-quotes",
         {"tickers": list(tickers)},
-        timeout_seconds=45.0,
+        timeout_seconds=max(0.1, min(45.0, float(timeout_seconds))),
     )
     return _validated_quotes(result, requested=tickers, allowed_sources={"kis"})
 

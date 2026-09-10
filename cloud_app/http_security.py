@@ -2,15 +2,25 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 
 class RequestBodyLimitMiddleware:
     """Reject oversized fixed-length and streamed HTTP bodies before parsing."""
 
-    def __init__(self, app, max_bytes: int):
+    def __init__(
+        self,
+        app,
+        max_bytes: int,
+        *,
+        read_timeout_seconds: float = 15.0,
+        max_messages: int = 64,
+    ):
         self.app = app
         self.max_bytes = max(1, int(max_bytes))
+        self.read_timeout_seconds = max(0.001, float(read_timeout_seconds))
+        self.max_messages = max(1, int(max_messages))
 
     async def __call__(self, scope, receive, send):
         if scope.get("type") != "http":
@@ -35,9 +45,21 @@ class RequestBodyLimitMiddleware:
 
         messages = []
         received = 0
+        deadline = asyncio.get_running_loop().time() + self.read_timeout_seconds
         while True:
-            message = await receive()
+            remaining = deadline - asyncio.get_running_loop().time()
+            if remaining <= 0:
+                await self._reject(send, 408, "Request body read timed out")
+                return
+            try:
+                message = await asyncio.wait_for(receive(), timeout=remaining)
+            except asyncio.TimeoutError:
+                await self._reject(send, 408, "Request body read timed out")
+                return
             messages.append(message)
+            if len(messages) > self.max_messages:
+                await self._reject(send, 400, "Too many request body chunks")
+                return
             if message.get("type") == "http.disconnect":
                 break
             if message.get("type") != "http.request":

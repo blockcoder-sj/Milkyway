@@ -13,6 +13,11 @@ import secrets
 
 
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+CURRENT_SCRYPT_N = 2**15
+CURRENT_SCRYPT_R = 8
+CURRENT_SCRYPT_P = 1
+_MIN_ACCEPTED_SCRYPT_N = 2**14
+_MAX_ACCEPTED_SCRYPT_N = 2**18
 
 
 def normalize_email(value: str) -> str:
@@ -27,22 +32,70 @@ def validate_password(value: str) -> None:
         raise ValueError("비밀번호는 10~128자여야 합니다")
 
 
-def hash_password(password: str) -> str:
+def hash_password(
+    password: str,
+    *,
+    n: int = CURRENT_SCRYPT_N,
+    r: int = CURRENT_SCRYPT_R,
+    p: int = CURRENT_SCRYPT_P,
+) -> str:
     validate_password(password)
+    if (
+        n < _MIN_ACCEPTED_SCRYPT_N
+        or n > _MAX_ACCEPTED_SCRYPT_N
+        or n & (n - 1)
+        or not 1 <= r <= 16
+        or not 1 <= p <= 4
+    ):
+        raise ValueError("scrypt password policy is invalid")
     salt = os.urandom(16)
-    digest = hashlib.scrypt(password.encode(), salt=salt, n=2**14, r=8, p=1, dklen=32)
-    return "scrypt$16384$8$1${}${}".format(salt.hex(), digest.hex())
+    digest = hashlib.scrypt(
+        password.encode(), salt=salt, n=n, r=r, p=p, dklen=32, maxmem=64 * 1024 * 1024
+    )
+    return "scrypt${}${}${}${}${}".format(n, r, p, salt.hex(), digest.hex())
+
+
+def _password_hash_parameters(encoded: str) -> tuple[int, int, int, bytes, bytes]:
+    algorithm, n_raw, r_raw, p_raw, salt_hex, digest_hex = encoded.split("$")
+    if algorithm != "scrypt":
+        raise ValueError("unsupported password hash")
+    n, r, p = int(n_raw), int(r_raw), int(p_raw)
+    if (
+        n < _MIN_ACCEPTED_SCRYPT_N
+        or n > _MAX_ACCEPTED_SCRYPT_N
+        or n & (n - 1)
+        or not 1 <= r <= 16
+        or not 1 <= p <= 4
+    ):
+        raise ValueError("invalid scrypt parameters")
+    salt = bytes.fromhex(salt_hex)
+    digest = bytes.fromhex(digest_hex)
+    if len(salt) != 16 or len(digest) != 32:
+        raise ValueError("invalid password hash size")
+    return n, r, p, salt, digest
+
+
+def password_needs_rehash(encoded: str) -> bool:
+    try:
+        n, r, p, _salt, _digest = _password_hash_parameters(encoded)
+    except (ValueError, TypeError):
+        return True
+    return (n, r, p) != (CURRENT_SCRYPT_N, CURRENT_SCRYPT_R, CURRENT_SCRYPT_P)
 
 
 def verify_password(password: str, encoded: str) -> bool:
     try:
-        algorithm, n, r, p, salt_hex, digest_hex = encoded.split("$")
-        if algorithm != "scrypt":
-            return False
+        n, r, p, salt, expected = _password_hash_parameters(encoded)
         actual = hashlib.scrypt(
-            password.encode(), salt=bytes.fromhex(salt_hex), n=int(n), r=int(r), p=int(p), dklen=32
+            password.encode(),
+            salt=salt,
+            n=n,
+            r=r,
+            p=p,
+            dklen=32,
+            maxmem=64 * 1024 * 1024,
         )
-        return hmac.compare_digest(actual, bytes.fromhex(digest_hex))
+        return hmac.compare_digest(actual, expected)
     except (ValueError, TypeError):
         return False
 

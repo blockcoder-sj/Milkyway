@@ -22,6 +22,8 @@ import os
 import json
 import time
 
+from cloud_app.bounded_io import read_requests_json
+
 logger = logging.getLogger("market_calendar")
 
 # ============================================================
@@ -72,6 +74,7 @@ def _xcal_in_range(date_obj):
 _FINNHUB_API_KEY = os.environ.get("FINNHUB_API_KEY", "")
 _finnhub_cache = {}  # {date_str: {"is_open": bool, "holiday": str, "ts": float}}
 _FINNHUB_CACHE_TTL = 3600  # 1시간 캐시
+_MAX_FINNHUB_RESPONSE_BYTES = 64 * 1024
 
 
 def _query_finnhub_market_status():
@@ -87,12 +90,16 @@ def _query_finnhub_market_status():
             params={"exchange": "US"},
             headers={"X-Finnhub-Token": _FINNHUB_API_KEY},
             timeout=5,
+            stream=True,
         )
         if resp.status_code == 200:
-            data = resp.json()
+            data = read_requests_json(
+                resp, maximum_bytes=_MAX_FINNHUB_RESPONSE_BYTES
+            )
             # {"exchange":"US","holiday":"","isOpen":true,"session":"regular","t":1711...,"timezone":"America/New_York"}
             return data
         else:
+            resp.close()
             logger.warning("Finnhub API returned %d", resp.status_code)
     except Exception as exc:
         logger.warning("Finnhub API failed: %s", type(exc).__name__)

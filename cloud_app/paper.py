@@ -44,6 +44,30 @@ class QuoteValue:
     observed_at: dt.datetime
 
 
+def _round_robin_unique(groups: dict[str, Iterable[str]]) -> tuple[str, ...]:
+    queues = {
+        owner: list(dict.fromkeys(str(value) for value in values))
+        for owner, values in sorted(groups.items())
+    }
+    result: list[str] = []
+    seen: set[str] = set()
+    offset = 0
+    while True:
+        added = False
+        for owner in sorted(queues):
+            values = queues[owner]
+            if offset >= len(values):
+                continue
+            value = values[offset]
+            if value not in seen:
+                seen.add(value)
+                result.append(value)
+            added = True
+        if not added:
+            return tuple(result)
+        offset += 1
+
+
 class QuoteProvider:
     def fetch(self, tickers: Iterable[str]) -> list[QuoteValue]:
         raise NotImplementedError
@@ -144,21 +168,28 @@ def _spec(account: PaperAccount) -> StrategySpec:
     return StrategySpec.model_validate_json(account.strategy.spec_json)
 
 
-def collect_watchlist(session: Session, user_id: str | None = None) -> set[str]:
+def collect_watchlist_ordered(session: Session, user_id: str | None = None) -> tuple[str, ...]:
+    """Return held symbols first, then baselines and rebalance candidates."""
+
     account_statement = select(PaperAccount).where(PaperAccount.status == "active")
     if user_id is not None:
         account_statement = account_statement.where(PaperAccount.user_id == user_id)
     accounts = session.scalars(account_statement).all()
-    tickers = {"SPY", "QQQ", "IWM", "VIXY"} if user_id is None else set()
-    position_statement = (
-        select(PaperPosition).join(PaperAccount).where(PaperAccount.status == "active")
-    )
-    if user_id is not None:
-        position_statement = position_statement.where(PaperAccount.user_id == user_id)
-    position_rows = session.scalars(position_statement).all()
-    tickers.update(position.ticker for position in position_rows)
+    tickers: list[str] = []
+    seen: set[str] = set()
+
+    def append(values) -> None:
+        for value in values:
+            ticker = str(value)
+            if ticker not in seen:
+                seen.add(ticker)
+                tickers.append(ticker)
+
+    append(collect_holding_watchlist_ordered(session, user_id=user_id))
+    if user_id is None:
+        append(("SPY", "QQQ", "IWM", "VIXY"))
     if not accounts:
-        return tickers
+        return tuple(tickers)
     et_now, _market_open, rebalance_window = _market_context()
     due_accounts = [
         account
@@ -171,14 +202,43 @@ def collect_watchlist(session: Session, user_id: str | None = None) -> set[str]:
         )
     ]
     if not due_accounts:
-        return tickers
+        return tuple(tickers)
     bundle = get_dataset_bundle()
     strategy_candidates: dict[str, list[str]] = {}
+    candidates_by_user: dict[str, list[str]] = {}
     for account in due_accounts:
         if account.strategy_id not in strategy_candidates:
             strategy_candidates[account.strategy_id] = latest_candidates(_spec(account), bundle)
-        tickers.update(strategy_candidates[account.strategy_id])
-    return tickers
+        candidates_by_user.setdefault(account.user_id, []).extend(
+            strategy_candidates[account.strategy_id]
+        )
+    append(_round_robin_unique(candidates_by_user))
+    return tuple(tickers)
+
+
+def collect_holding_watchlist_ordered(
+    session: Session, user_id: str | None = None
+) -> tuple[str, ...]:
+    """Return a tenant-fair, de-duplicated list of active holdings."""
+
+    position_statement = (
+        select(PaperPosition.ticker, PaperAccount.user_id)
+        .join(PaperAccount)
+        .where(PaperAccount.status == "active")
+    )
+    if user_id is not None:
+        position_statement = position_statement.where(PaperAccount.user_id == user_id)
+    position_rows = session.execute(position_statement).all()
+    holdings_by_user: dict[str, list[str]] = {}
+    for ticker, owner_id in position_rows:
+        holdings_by_user.setdefault(str(owner_id), []).append(str(ticker))
+    return _round_robin_unique(
+        {owner: sorted(values) for owner, values in holdings_by_user.items()}
+    )
+
+
+def collect_watchlist(session: Session, user_id: str | None = None) -> set[str]:
+    return set(collect_watchlist_ordered(session, user_id=user_id))
 
 
 def apply_terminal_events(session: Session, settings: Settings | None = None) -> dict:
@@ -203,7 +263,9 @@ def apply_terminal_events(session: Session, settings: Settings | None = None) ->
             review_accounts += 1
             continue
         if account.status == "review_required":
-            account.status = "active"
+            # Capacity may have changed while the account was frozen. Move it
+            # to paused so the normal app activation path re-runs admission.
+            account.status = "paused"
         for event in verified:
             ticker = event["ticker"]
             position = positions.get(ticker)
@@ -252,7 +314,12 @@ def apply_terminal_events(session: Session, settings: Settings | None = None) ->
                     dedupe_key=key,
                 )
             )
+            # Production disables autoflush. Successor chains and the next
+            # ledger phase must see these changes in this same transaction.
+            session.flush()
             settled += 1
+    # Status-only freezes/recoveries must affect the next phase's SQL filters.
+    session.flush()
     return {"settled": settled, "review_accounts": review_accounts}
 
 
@@ -293,15 +360,23 @@ def store_member_quotes(session: Session, user_id: str, values: Iterable[QuoteVa
 def quote_map(
     session: Session,
     tickers: Iterable[str],
-    max_age_seconds: int = 180,
+    max_age_seconds: int | None = None,
     *,
     user_id: str | None = None,
 ) -> dict[str, float]:
     wanted = sorted(set(tickers))
     if not wanted:
         return {}
+    settings = get_settings()
+    if max_age_seconds is None:
+        max_age_seconds = int(getattr(settings, "quote_max_age_seconds", 180))
     cutoff = utcnow() - dt.timedelta(seconds=max_age_seconds)
-    if user_id is not None and session.get(MarketDataConnection, user_id) is not None:
+    if (
+        settings.member_credentials_enabled
+        and user_id is not None
+    ):
+        if session.get(MarketDataConnection, user_id) is None:
+            return {}
         rows = session.scalars(
             select(MemberQuote).where(
                 MemberQuote.user_id == user_id,
@@ -384,6 +459,9 @@ def _fill(
             dedupe_key=dedupe_key,
         )
     )
+    # Subsequent fills, stops and equity queries share this transaction while
+    # SessionLocal has autoflush=False. Publish inserts/deletes before them.
+    session.flush()
     return True
 
 

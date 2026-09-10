@@ -14,112 +14,55 @@
     }
   }
 
-  function create({getUser, getPreferences, getAiConnection, getMarketDataConnection, onAiLoad, onAiSave, onAiDisconnect, onMarketDataLoad, onMarketDataSave, onMarketDataDisconnect, onSave, onLogout, onError}) {
+  function create({getUser, getPreferences, getAiConnection, getMarketDataConnection, onAiLoad, onMarketDataLoad, onSave, onLogout, onError}) {
     let activeTrigger = null;
-
-    function selectedProvider(connection, providerId) {
-      return connection.providers?.find((provider) => provider.id === providerId) || connection.providers?.[0];
-    }
-
-    function updateModelOptions(connection, providerId, preferredModel = "") {
-      const provider = selectedProvider(connection, providerId);
-      const datalist = $("#aiModelOptions");
-      datalist.innerHTML = (provider?.model_examples || []).map((model) => `<option value="${model}"></option>`).join("");
-      const modelInput = $("#aiModel");
-      modelInput.value = preferredModel || provider?.default_model || "";
-      modelInput.readOnly = provider?.id === "local";
-    }
-
-    function updateKeyHelp(connection, providerId) {
-      const provider = selectedProvider(connection, providerId);
-      const sameProvider = connection.connected && connection.provider === providerId;
-      const requiresKey = provider?.requires_api_key !== false;
-      const keyInput = $("#aiApiKey");
-      $("#aiApiKeyField").classList.toggle("hidden", !requiresKey);
-      keyInput.disabled = !requiresKey;
-      keyInput.required = requiresKey && !sameProvider;
-      keyInput.placeholder = sameProvider ? `${connection.key_hint} · 비워 두면 기존 키 유지` : "API 키 입력";
-      if (!requiresKey) {
-        $("#aiKeyHelp").textContent = !provider?.available
-          ? provider?.disabled_reason || "로컬 AI 서버 설정이 필요합니다."
-          : provider?.ready
-            ? "API 키 없이 Milkyway 서버의 공용 로컬 모델을 사용합니다."
-            : "로컬 AI 모델을 내려받거나 시작하는 중입니다. 준비 후 자동으로 연결됩니다.";
-      } else {
-        $("#aiKeyHelp").textContent = sameProvider
-          ? `현재 ${connection.key_hint} 키가 저장되어 있습니다. 새 키를 입력하면 교체됩니다.`
-          : "처음 연결하거나 공급자를 바꿀 때 API 키를 입력해야 합니다.";
-      }
-      $("#aiBillingNote").textContent = requiresKey
-        ? "API 사용료와 한도는 선택한 공급자의 본인 계정에 적용됩니다."
-        : "로컬 AI는 별도 API 사용료가 없으며 서버 자원을 함께 사용합니다.";
-    }
 
     function renderAiConnection() {
       const connection = getAiConnection?.() || {connected: false, providers: []};
-      const providerSelect = $("#aiProvider");
-      providerSelect.innerHTML = (connection.providers || []).map((provider) => {
-        const suffix = !provider.available ? " · 서버 설정 필요" : provider.ready ? "" : " · 모델 준비 중";
-        return `<option value="${provider.id}" ${provider.available ? "" : "disabled"}>${provider.label}${suffix}</option>`;
-      }).join("");
-      const providerId = connection.provider || connection.providers?.[0]?.id || "";
-      providerSelect.value = providerId;
-      updateModelOptions(connection, providerId, connection.model || "");
-      updateKeyHelp(connection, providerId);
-      $("#aiApiKey").value = "";
       const status = $("#aiConnectionStatus");
-      const selected = selectedProvider(connection, providerId);
-      status.textContent = connection.connected
-        ? "연결됨"
-        : connection.configured && selected?.available
-          ? "모델 준비 중"
-          : connection.configured ? "서버 설정 필요" : "연결 필요";
+      status.textContent = connection.connected ? "사용 가능" : "운영자 설정 필요";
       status.className = `status-pill ${connection.connected ? "ok" : "warn"}`;
-      $("#aiDisconnectBtn").classList.toggle("hidden", !connection.configured);
-    }
-
-    function updateMarketDataEnvironments(connection, providerId, preferredEnvironment = "") {
-      const provider = connection.providers?.find((item) => item.id === providerId) || connection.providers?.[0];
-      const select = $("#marketDataEnvironment");
-      select.innerHTML = (provider?.environments || []).map((environment) => `<option value="${environment.id}">${environment.label}</option>`).join("");
-      select.value = preferredEnvironment || provider?.environments?.[0]?.id || "";
-    }
-
-    function updateMarketDataKeyHelp(connection, providerId) {
-      const provider = connection.providers?.find((item) => item.id === providerId) || connection.providers?.[0] || {};
-      const sameProvider = connection.configured && connection.provider === providerId;
-      const labels = provider.credential_labels || {key: "App Key", secret: "App Secret"};
-      const placeholders = provider.credential_placeholders || {key: "App Key 입력", secret: "App Secret 입력"};
-      const setupLink = $("#marketDataSetupLink");
-      $("#marketDataApiKeyLabel").textContent = labels.key;
-      $("#marketDataApiSecretLabel").textContent = labels.secret;
-      setupLink.href = provider.setup_url || "#";
-      setupLink.textContent = `${provider.label || "증권사"} API 키 발급 페이지 열기`;
-      $("#marketDataApiKey").required = !sameProvider;
-      $("#marketDataApiSecret").required = !sameProvider;
-      $("#marketDataApiKey").placeholder = sameProvider ? `${connection.key_hint} · 비워 두면 기존 값 유지` : placeholders.key;
-      $("#marketDataApiSecret").placeholder = sameProvider ? `${connection.secret_hint} · 비워 두면 기존 값 유지` : placeholders.secret;
-      const verified = connection.verified_at ? new Date(connection.verified_at).toLocaleString("ko-KR") : "";
-      $("#marketDataKeyHelp").textContent = sameProvider
-        ? `현재 ${connection.key_hint} / ${connection.secret_hint}가 암호화되어 있습니다. 마지막 인증 성공: ${verified || "확인 불가"}.`
-        : provider.setup_help || "저장 시 증권사 토큰 발급으로 키를 검증합니다.";
+      const provider = connection.provider || "공용 AI";
+      const model = connection.model ? ` · ${connection.model}` : "";
+      $("#aiConnectionSummary").textContent = connection.connected
+        ? `${provider}${model}을(를) 서버 공용 설정으로 사용합니다. 회원 브라우저는 API 키를 받거나 전송하지 않습니다.`
+        : "동아리 공용 AI가 아직 준비되지 않았습니다. 운영자가 broker 서버에서 공급자·모델·키를 설정해야 합니다.";
     }
 
     function renderMarketDataConnection() {
       const connection = getMarketDataConnection?.() || {connected: false, providers: []};
-      const providerSelect = $("#marketDataProvider");
-      providerSelect.innerHTML = (connection.providers || []).map((provider) => `<option value="${provider.id}">${provider.label}</option>`).join("");
-      const providerId = connection.provider || connection.providers?.[0]?.id || "";
-      providerSelect.value = providerId;
-      updateMarketDataEnvironments(connection, providerId, connection.environment || "");
-      $("#marketDataApiKey").value = "";
-      $("#marketDataApiSecret").value = "";
-      updateMarketDataKeyHelp(connection, providerId);
-      $("#marketDataPersonalUse").checked = connection.configured;
       const status = $("#marketDataConnectionStatus");
-      status.textContent = connection.connected ? "마지막 인증 성공" : "연결 필요";
+      let manage = $("#marketDataManageLink");
+      if (!manage) {
+        manage = document.createElement("a");
+        manage.id = "marketDataManageLink";
+        manage.textContent = "개인 증권사 API 연결·관리";
+        manage.rel = "noreferrer noopener";
+        $("#marketDataConnectionSummary").after(manage);
+      }
+      manage.hidden = true;
+      if (connection.usage_scope === "personal_paper_only") {
+        status.textContent = connection.connected ? "개인 API 연결됨" : "개인 API 연결 필요";
+        status.className = `status-pill ${connection.connected ? "ok" : "warn"}`;
+        $("#marketDataConnectionSummary").textContent = connection.connected
+          ? `${connection.provider} · ${connection.environment}. 본인의 페이퍼 계좌에 사용합니다.`
+          : "개인 증권사 API를 연결하면 본인의 전략으로 페이퍼 트레이딩을 시작할 수 있습니다.";
+        if (connection.management === "credential_broker" && connection.management_url) {
+          const url = new URL(connection.management_url);
+          if (url.protocol === "https:") {
+            manage.href = url.href;
+            manage.hidden = false;
+          }
+        }
+        return;
+      }
+      status.textContent = connection.connected ? "공용 피드 설정됨" : "운영자 설정 필요";
       status.className = `status-pill ${connection.connected ? "ok" : "warn"}`;
-      $("#marketDataDisconnectBtn").classList.toggle("hidden", !connection.configured);
+      const environment = connection.environment ? ` · ${connection.environment}` : "";
+      const transport = connection.transport === "rest_polling" ? "REST 주기 조회" : "데이터셋";
+      $("#marketDataConnectionSummary").textContent = connection.connected
+        ? `${connection.provider || "공용 시세"}${environment} · ${transport}. 증권사 키는 broker 서버에만 있고 페이퍼 엔진에는 정규화된 시세만 전달됩니다.`
+        : "공용 시세가 아직 준비되지 않았습니다. 운영자가 공급자 권한을 확인한 뒤 broker 서버에서 활성화해야 합니다.";
     }
 
     function render() {
@@ -198,72 +141,6 @@
       }));
       $$('[data-profile-menu-action]').forEach((button) => button.addEventListener("click", () => handleMenuAction(button.dataset.profileMenuAction)));
       $$('[data-profile-tab]').forEach((button) => button.addEventListener("click", () => showTab(button.dataset.profileTab)));
-      $("#aiProvider").addEventListener("change", (event) => {
-        const connection = getAiConnection?.() || {connected: false, providers: []};
-        updateModelOptions(connection, event.target.value);
-        updateKeyHelp(connection, event.target.value);
-      });
-      $("#marketDataProvider").addEventListener("change", (event) => {
-        const connection = getMarketDataConnection?.() || {connected: false, providers: []};
-        updateMarketDataEnvironments(connection, event.target.value);
-        updateMarketDataKeyHelp(connection, event.target.value);
-      });
-      $("#aiConnectionForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const button = $("#aiConnectionSaveBtn");
-        const original = button.textContent;
-        button.disabled = true;
-        button.textContent = "저장 중…";
-        try {
-          const values = Object.fromEntries(new FormData(event.target).entries());
-          if (!values.api_key) delete values.api_key;
-          await onAiSave(values);
-          renderAiConnection();
-        } catch (error) {
-          onError(error);
-        } finally {
-          button.disabled = false;
-          button.textContent = original;
-        }
-      });
-      $("#aiDisconnectBtn").addEventListener("click", async () => {
-        if (!window.confirm("저장된 AI 연결을 해제할까요?")) return;
-        try {
-          await onAiDisconnect();
-          renderAiConnection();
-        } catch (error) {
-          onError(error);
-        }
-      });
-      $("#marketDataConnectionForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const button = $("#marketDataConnectionSaveBtn");
-        const original = button.textContent;
-        button.disabled = true;
-        button.textContent = "증권사 인증 확인 중…";
-        try {
-          const values = Object.fromEntries(new FormData(event.target).entries());
-          values.personal_use_only = values.personal_use_only === "on";
-          if (!values.api_key) delete values.api_key;
-          if (!values.api_secret) delete values.api_secret;
-          await onMarketDataSave(values);
-          renderMarketDataConnection();
-        } catch (error) {
-          onError(error);
-        } finally {
-          button.disabled = false;
-          button.textContent = original;
-        }
-      });
-      $("#marketDataDisconnectBtn").addEventListener("click", async () => {
-        if (!window.confirm("저장된 증권사 시세 API 연결을 해제할까요?")) return;
-        try {
-          await onMarketDataDisconnect();
-          renderMarketDataConnection();
-        } catch (error) {
-          onError(error);
-        }
-      });
       $("#profileSettingsForm").addEventListener("submit", (event) => {
         event.preventDefault();
         const preferences = Object.fromEntries(new FormData(event.target).entries());

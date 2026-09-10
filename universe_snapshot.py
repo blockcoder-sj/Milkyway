@@ -29,9 +29,21 @@ import tempfile
 from pathlib import Path
 from typing import Iterable, Mapping, Optional
 
+import requests
+
+from cloud_app.bounded_io import (
+    FileBudgetExceeded, FileReadBudget, read_bounded_file, read_requests_bytes,
+)
+
 
 NASDAQ_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt"
 OTHER_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt"
+MAX_SNAPSHOT_BYTES = 32 * 1024 * 1024
+MAX_SNAPSHOT_RECORDS = 100_000
+
+
+class SnapshotAggregateBudgetExceeded(ValueError):
+    """The captured snapshot would exceed a caller's cumulative byte budget."""
 
 DEFAULT_EXCHANGES = frozenset(
     {"NASDAQ", "NYSE", "NYSE_AMERICAN", "NYSE_ARCA", "CBOE_BZX", "IEX"}
@@ -373,8 +385,10 @@ def save_snapshot(
     )
     path = output_dir / filename
     payload = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, indent=2).encode("utf-8") + b"\n"
+    if len(payload) > MAX_SNAPSHOT_BYTES:
+        raise ValueError("Universe snapshot exceeds the byte limit")
     if path.exists():
-        existing = json.loads(path.read_text(encoding="utf-8"))
+        existing = read_bounded_json(path, maximum_bytes=MAX_SNAPSHOT_BYTES)
         if existing.get("membership_sha256") != membership_sha:
             raise FileExistsError("Snapshot path collision: {}".format(path))
         return path
@@ -392,8 +406,34 @@ def save_snapshot(
     return path
 
 
-def load_snapshot(path: Path | str, *, verify: bool = True) -> dict:
-    snapshot = json.loads(Path(path).read_text(encoding="utf-8"))
+def load_snapshot_with_size(
+    path: Path | str,
+    *,
+    verify: bool = True,
+    remaining_bytes: int | None = None,
+    byte_budget: FileReadBudget | None = None,
+) -> tuple[dict, int]:
+    if remaining_bytes is not None:
+        if byte_budget is not None:
+            raise ValueError("supply only one snapshot byte budget")
+        byte_budget = FileReadBudget(max(0, int(remaining_bytes)))
+    try:
+        payload = read_bounded_file(
+            path, maximum_bytes=MAX_SNAPSHOT_BYTES, budget=byte_budget
+        )
+    except FileBudgetExceeded as exc:
+        raise SnapshotAggregateBudgetExceeded(
+            "Universe snapshots exceed the aggregate byte limit"
+        ) from exc
+    try:
+        snapshot = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("Universe snapshot must be UTF-8 JSON") from exc
+    if not isinstance(snapshot, dict):
+        raise ValueError("Universe snapshot must be an object")
+    records = snapshot.get("records")
+    if not isinstance(records, list) or len(records) > MAX_SNAPSHOT_RECORDS:
+        raise ValueError("Universe snapshot record limit exceeded")
     if verify:
         actual = sha256_bytes(_canonical_json(snapshot.get("records", [])))
         expected = snapshot.get("membership_sha256")
@@ -403,6 +443,11 @@ def load_snapshot(path: Path | str, *, verify: bool = True) -> dict:
                     path, expected, actual
                 )
             )
+    return snapshot, len(payload)
+
+
+def load_snapshot(path: Path | str, *, verify: bool = True) -> dict:
+    snapshot, _payload_size = load_snapshot_with_size(path, verify=verify)
     return snapshot
 
 
@@ -440,17 +485,20 @@ def diff_snapshots(previous: Mapping, current: Mapping) -> dict:
 
 
 def fetch_official_sources(timeout: float = 30.0) -> dict[str, str]:
-    import requests
-
     headers = {"User-Agent": "us-trading-bot-universe/1.0 research contact=local"}
     sources = {}
     for name, url in (
         ("nasdaqlisted.txt", NASDAQ_LISTED_URL),
         ("otherlisted.txt", OTHER_LISTED_URL),
     ):
-        response = requests.get(url, headers=headers, timeout=timeout)
-        response.raise_for_status()
-        text = response.content.decode("utf-8-sig")
+        response = requests.get(url, headers=headers, timeout=timeout, stream=True)
+        try:
+            response.raise_for_status()
+            payload = read_requests_bytes(response, maximum_bytes=16 * 1024 * 1024)
+        except Exception:
+            response.close()
+            raise
+        text = payload.decode("utf-8-sig")
         if "File Creation Time:" not in text:
             raise ValueError("Missing source timestamp in {}".format(url))
         sources[name] = text
@@ -474,7 +522,9 @@ def main() -> int:
     if args.from_exchange_cache:
         if not args.effective_date:
             parser.error("--effective-date is required with --from-exchange-cache")
-        exchange_map = json.loads(args.from_exchange_cache.read_text(encoding="utf-8"))
+        exchange_map = read_bounded_json(
+            args.from_exchange_cache, maximum_bytes=16 * 1024 * 1024
+        )
         snapshot = build_legacy_snapshot(
             exchange_map, effective_date=args.effective_date
         )

@@ -11,9 +11,13 @@ from typing import Iterable
 import requests
 from requests.adapters import HTTPAdapter
 
+from .bounded_io import read_requests_json
+
 
 logger = logging.getLogger("cloud_app.toss_quotes")
 _SYMBOL_PATTERN = re.compile(r"^[A-Z0-9.-]+$")
+_MAX_TOKEN_RESPONSE_BYTES = 64 * 1024
+_MAX_QUOTE_RESPONSE_BYTES = 512 * 1024
 
 
 class TossOpenApiError(RuntimeError):
@@ -98,9 +102,16 @@ class TossQuoteClient:
                 "client_secret": self.credentials.client_secret,
             },
             timeout=10,
+            stream=True,
         )
-        self._raise_for_status(response)
-        payload = response.json() if response.content else {}
+        try:
+            self._raise_for_status(response)
+            payload = read_requests_json(
+                response, maximum_bytes=_MAX_TOKEN_RESPONSE_BYTES
+            )
+        except Exception:
+            response.close()
+            raise
         self._raise_for_status(response, payload)
         try:
             token = str(payload["access_token"])
@@ -159,22 +170,29 @@ class TossQuoteClient:
                 headers=self._headers(),
                 params={"symbols": ",".join(symbols)},
                 timeout=10,
+                stream=True,
             )
             try:
                 self._raise_for_status(response)
-                payload = response.json() if response.content else {}
+                payload = read_requests_json(
+                    response, maximum_bytes=_MAX_QUOTE_RESPONSE_BYTES
+                )
                 self._raise_for_status(response, payload)
                 result = payload.get("result")
                 if not isinstance(result, list):
                     raise TossOpenApiError("Toss quote response has no result list")
                 return result
             except TossAuthenticationError:
+                response.close()
                 if authentication_retried:
                     raise
                 authentication_retried = True
                 self.token = ""
                 self.token_expires_at = dt.datetime.min.replace(tzinfo=dt.timezone.utc)
                 self.authenticate()
+            except Exception:
+                response.close()
+                raise
 
     def get_prices(self, tickers: Iterable[str]) -> list[dict]:
         symbols = self._normalize_symbols(tickers)

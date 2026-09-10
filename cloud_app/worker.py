@@ -6,35 +6,47 @@ import datetime as dt
 import json
 import logging
 import os
+import signal
 import socket
 import threading
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 
 from .config import get_settings
 from .credential_broker_client import (
+    CredentialBrokerError,
     broker_member_quotes,
     broker_preflight,
     broker_shared_quotes,
+    broker_next_work,
+    broker_complete_work,
+    broker_work_quotes,
 )
 from .database import (
     BacktestJob,
+    bind_runtime_context,
     Lease,
     MarketDataConnection,
     RuntimeHeartbeat,
     SessionLocal,
-    initialize_database,
+    WorkCursor,
+    acquire_transaction_lock,
+    prepare_runtime_database,
+    quota_allocation,
     utcnow,
 )
 from .kis_quotes import KisCredentials
 from .market_data_credentials import decrypt_market_credential
 from .paper import (
     apply_terminal_events,
+    collect_holding_watchlist_ordered,
     collect_watchlist,
+    collect_watchlist_ordered,
     KisQuoteProvider,
     make_quote_provider,
     mark_and_stop_accounts,
@@ -62,6 +74,30 @@ _MEMBER_QUOTE_WORKERS = 8
 _MEMBER_RETRY_SECONDS = 60.0
 
 
+class PaperTickDeadlineExceeded(RuntimeError):
+    """The complete quote and ledger tick exceeded its liveness budget."""
+
+
+@contextmanager
+def _paper_tick_deadline(seconds: float):
+    """Hard-bound the whole production paper tick on the Unix worker."""
+
+    if not hasattr(signal, "setitimer") or threading.current_thread() is not threading.main_thread():
+        raise RuntimeError("paper tick deadlines require the main Unix worker thread")
+    previous_handler = signal.getsignal(signal.SIGALRM)
+
+    def expired(_signum, _frame):
+        raise PaperTickDeadlineExceeded("paper tick deadline was exceeded")
+
+    signal.signal(signal.SIGALRM, expired)
+    signal.setitimer(signal.ITIMER_REAL, max(0.001, float(seconds)))
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+
+
 @dataclass(frozen=True)
 class MemberFeedConfig:
     user_id: str
@@ -79,7 +115,41 @@ class CredentialBrokerSharedQuoteProvider(QuoteProvider):
         self.settings = settings
 
     def fetch(self, tickers):
-        return broker_shared_quotes(self.settings, tickers=tuple(sorted(set(tickers))))
+        ordered = tuple(dict.fromkeys(str(value).strip().upper() for value in tickers))
+        maximum = int(
+            getattr(self.settings, "shared_quote_max_symbols_per_tick", len(ordered))
+        )
+        if len(ordered) > maximum:
+            raise RuntimeError(
+                "shared quote worklist exceeded the admitted per-tick limit"
+            )
+        batch_size = min(200, max(1, int(self.settings.shared_quote_batch_size)))
+        deadline = time.monotonic() + float(
+            getattr(self.settings, "shared_quote_tick_deadline_seconds", 30.0)
+        )
+        values = []
+        for offset in range(0, len(ordered), batch_size):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                logger.warning("shared quote tick deadline exhausted offset=%s", offset)
+                break
+            batch = ordered[offset : offset + batch_size]
+            try:
+                values.extend(
+                    broker_shared_quotes(
+                        self.settings,
+                        tickers=batch,
+                        timeout_seconds=remaining,
+                    )
+                )
+            except CredentialBrokerError as exc:
+                logger.warning(
+                    "shared quote batch failed offset=%s size=%s error=%s",
+                    offset,
+                    len(batch),
+                    type(exc).__name__,
+                )
+        return values
 
 
 def heartbeat(session, component: str, detail: str = "") -> None:
@@ -110,59 +180,228 @@ def acquire_lease(session, name: str, ttl_seconds: int) -> bool:
     return False
 
 
-def claim_backtest(session) -> BacktestJob | None:
-    statement = (
-        select(BacktestJob)
-        .where(BacktestJob.status == "queued")
-        .order_by(BacktestJob.created_at)
-        .limit(1)
+def _rotating_work_slice(
+    session,
+    name: str,
+    values,
+    maximum: int,
+) -> tuple[str, ...]:
+    """Select a durable wrapping slice so stable suffixes get eventual service."""
+
+    ordered = tuple(dict.fromkeys(str(value) for value in values))
+    maximum = max(0, int(maximum))
+    if not ordered or maximum == 0:
+        return ()
+    with quota_allocation(session, "work-cursor", name):
+        statement = select(WorkCursor).where(WorkCursor.name == name)
+        if session.bind.dialect.name == "postgresql":
+            statement = statement.with_for_update()
+        cursor = session.scalar(statement)
+        if cursor is None:
+            cursor = WorkCursor(name=name, position=0)
+            session.add(cursor)
+        if cursor.cursor_key and cursor.cursor_key in ordered:
+            start = (ordered.index(cursor.cursor_key) + 1) % len(ordered)
+        else:
+            start = int(cursor.position or 0) % len(ordered)
+        count = min(maximum, len(ordered))
+        selected = tuple(ordered[(start + offset) % len(ordered)] for offset in range(count))
+        cursor.position = (start + count) % len(ordered)
+        cursor.cursor_key = selected[-1]
+        cursor.updated_at = utcnow()
+        session.flush()
+        return selected
+
+
+def _fair_quote_work_slice(
+    session,
+    holdings,
+    candidates,
+    maximum: int,
+) -> tuple[str, ...]:
+    """Rotate one held-first worklist so every admitted symbol is serviced."""
+
+    holding_values = tuple(dict.fromkeys(str(value) for value in holdings))
+    holding_set = set(holding_values)
+    candidate_values = tuple(
+        value
+        for value in dict.fromkeys(str(value) for value in candidates)
+        if value not in holding_set
     )
-    if session.bind.dialect.name == "postgresql":
-        statement = statement.with_for_update(skip_locked=True)
-    job = session.scalar(statement)
-    if job is None:
-        return None
-    job.status = "running"
-    job.progress = 5
-    job.worker_id = INSTANCE_ID
-    job.started_at = utcnow()
-    session.commit()
-    return job
+    return _rotating_work_slice(
+        session,
+        "shared-quote-worklist",
+        holding_values + candidate_values,
+        maximum,
+    )
+
+
+def claim_backtest(session) -> BacktestJob | None:
+    settings = get_settings()
+    stale_before = utcnow() - dt.timedelta(seconds=settings.backtest_timeout_seconds)
+    session.execute(
+        update(BacktestJob)
+        .where(
+            BacktestJob.status == "running",
+            BacktestJob.started_at.is_not(None),
+            BacktestJob.started_at < stale_before,
+        )
+        .values(
+            status="failed",
+            error="Backtest exceeded its execution deadline",
+            finished_at=utcnow(),
+        )
+    )
+    with quota_allocation(session, "backtest-claim", "global"):
+        owners = tuple(
+            session.scalars(
+                select(BacktestJob.user_id)
+                .where(BacktestJob.status == "queued")
+                .distinct()
+                .order_by(BacktestJob.user_id)
+            ).all()
+        )
+        if not owners:
+            session.commit()
+            return None
+        cursor = session.get(WorkCursor, "backtest-owner")
+        last_owner = cursor.cursor_key if cursor is not None else ""
+        owner = next((candidate for candidate in owners if candidate > last_owner), owners[0])
+        statement = (
+            select(BacktestJob)
+            .where(BacktestJob.status == "queued", BacktestJob.user_id == owner)
+            .order_by(BacktestJob.created_at, BacktestJob.id)
+            .limit(1)
+        )
+        if session.bind.dialect.name == "postgresql":
+            statement = statement.with_for_update(skip_locked=True)
+        job = session.scalar(statement)
+        if job is None:
+            session.rollback()
+            return None
+        if cursor is None:
+            cursor = WorkCursor(name="backtest-owner", position=0)
+            session.add(cursor)
+        cursor.cursor_key = owner
+        cursor.updated_at = utcnow()
+        job.status = "running"
+        job.progress = 5
+        job.worker_id = INSTANCE_ID
+        job.started_at = utcnow()
+        session.commit()
+        return job
+
+
+def _prune_backtest_results(session, user_id: str, settings) -> None:
+    cutoff = utcnow() - dt.timedelta(days=settings.backtest_retention_days)
+    session.execute(
+        delete(BacktestJob).where(
+            BacktestJob.user_id == user_id,
+            BacktestJob.status.in_(("completed", "failed")),
+            BacktestJob.finished_at.is_not(None),
+            BacktestJob.finished_at < cutoff,
+        )
+    )
+    excess = session.scalars(
+        select(BacktestJob.id)
+        .where(
+            BacktestJob.user_id == user_id,
+            BacktestJob.status.in_(("completed", "failed")),
+        )
+        .order_by(BacktestJob.finished_at.desc(), BacktestJob.id.desc())
+        .offset(settings.max_completed_backtests_per_user)
+    ).all()
+    if excess:
+        session.execute(delete(BacktestJob).where(BacktestJob.id.in_(excess)))
+
+
+@contextmanager
+def _backtest_deadline(seconds: int):
+    """Interrupt CPU-bound work in the worker main thread on POSIX."""
+
+    if threading.current_thread() is not threading.main_thread() or not hasattr(
+        signal, "setitimer"
+    ):
+        started = time.monotonic()
+        yield
+        if time.monotonic() - started > seconds:
+            raise TimeoutError("Backtest exceeded its execution deadline")
+        return
+
+    def expired(_signum, _frame):
+        raise TimeoutError("Backtest exceeded its execution deadline")
+
+    previous = signal.getsignal(signal.SIGALRM)
+    signal.signal(signal.SIGALRM, expired)
+    signal.setitimer(signal.ITIMER_REAL, float(seconds))
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0.0)
+        signal.signal(signal.SIGALRM, previous)
 
 
 def process_one_backtest() -> bool:
     session = SessionLocal()
+    work = None
     try:
-        job = claim_backtest(session)
+        runtime_settings = get_settings()
+        if runtime_settings.authority_enabled:
+            work = broker_next_work(runtime_settings, "backtest")
+            if work is None:
+                return False
+            bind_runtime_context(session, claim_token=work["claim"])
+            job = session.get(BacktestJob, work["resource_id"])
+        else:
+            job = claim_backtest(session)
         if job is None:
             return False
-        logger.info("backtest started job=%s", job.id)
+        job_id = job.id
+        logger.info("backtest started job=%s", job_id)
         spec = StrategySpec.model_validate_json(job.strategy.spec_json)
-        result = run_strategy_backtest(
-            spec,
-            start=job.start_date.isoformat(),
-            end=job.end_date.isoformat(),
-            bias_mode=job.bias_mode,
+        arguments = {"start": job.start_date.isoformat(), "end": job.end_date.isoformat(), "bias_mode": job.bias_mode}
+        # Computation can last minutes. Release the DB transaction and later
+        # re-enter through the same live claim before persisting the result.
+        session.rollback()
+        with _backtest_deadline(runtime_settings.backtest_timeout_seconds):
+            result = run_strategy_backtest(spec, **arguments)
+        encoded_result = json.dumps(
+            result, ensure_ascii=False, default=str, separators=(",", ":")
         )
-        job.result_json = json.dumps(result, ensure_ascii=False, default=str, separators=(",", ":"))
+        if len(encoded_result.encode("utf-8")) > runtime_settings.max_backtest_result_bytes:
+            raise ValueError("Backtest result exceeded the retained byte limit")
+        job = session.get(BacktestJob, job_id)
+        if job is None or job.status != "running":
+            return True
+        job.result_json = encoded_result
         job.status = "completed"
         job.progress = 100
         job.finished_at = utcnow()
+        if not runtime_settings.authority_enabled:
+            _prune_backtest_results(session, job.user_id, runtime_settings)
         session.commit()
         logger.info("backtest completed job=%s", job.id)
         return True
     except Exception as exc:
         session.rollback()
-        if "job" in locals() and job is not None:
-            job = session.get(BacktestJob, job.id)
-            job.status = "failed"
-            job.error = "{}: {}".format(type(exc).__name__, str(exc))[:4000]
-            job.finished_at = utcnow()
-            session.commit()
+        if "job_id" in locals():
+            job = session.get(BacktestJob, job_id)
+            if job is not None:
+                job.status = "failed"
+                job.error = "{}: {}".format(type(exc).__name__, str(exc))[:4000]
+                job.finished_at = utcnow()
+                if not get_settings().authority_enabled:
+                    _prune_backtest_results(session, job.user_id, get_settings())
+                session.commit()
         logger.error("backtest failed: %s\n%s", exc, traceback.format_exc())
         return True
     finally:
         session.close()
+        if work is not None:
+            try:
+                broker_complete_work(get_settings(), "backtest", work["claim"])
+            except CredentialBrokerError:
+                logger.warning("backtest claim completion unavailable; expiry remains enforced")
 
 
 def _member_feed_config(connection: MarketDataConnection) -> MemberFeedConfig:
@@ -270,6 +509,8 @@ def _refresh_paper_progress(completed: int, total: int) -> None:
 
 
 def collect_member_quotes(session, settings) -> tuple[int, int]:
+    if not getattr(settings, "member_credentials_enabled", True):
+        return 0, 0
     if not regular_market_open():
         return 0, 0
     connections = session.scalars(select(MarketDataConnection)).all()
@@ -323,10 +564,10 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
     # Network I/O is complete before row locks are taken, keeping settings
     # updates responsive while still ordering replace/delete against quote writes.
     for connection, user_id, values in fetched_quotes:
+        acquire_transaction_lock(session, "market-connection", user_id)
         current = session.scalar(
             select(MarketDataConnection)
             .where(MarketDataConnection.user_id == user_id)
-            .with_for_update()
             .execution_options(populate_existing=True)
         )
         if current is None or _member_feed_version(current) != _member_feed_version(connection):
@@ -345,46 +586,70 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
 
 def run_paper_tick(provider, settings=None) -> None:
     settings = settings or get_settings()
+    if getattr(settings, "authority_enabled", False):
+        run_authorized_paper_tick(settings)
+        return
     session = SessionLocal()
     try:
-        if not acquire_lease(session, "paper-engine", 90):
-            session.rollback()
-            return
-        # Publish the lease before network I/O so another worker cannot start
-        # the same paper tick while this one is collecting member quotes.
-        session.commit()
-        terminal = apply_terminal_events(session)
-        quote_count = 0
-        member_quote_count = 0
-        member_quote_errors = 0
-        rebalance_count = 0
-        stop_count = 0
-        if regular_market_open():
-            watchlist = collect_watchlist(session)
-            quotes = provider.fetch(watchlist)
-            quote_count = store_quotes(session, quotes)
-            member_quote_count, member_quote_errors = collect_member_quotes(session, settings)
-            # SessionLocal disables autoflush. Make this tick's fresh shared and
-            # member quotes visible to quote_map before any fills are evaluated.
-            session.flush()
-            # Keep the next-open contract aligned with backtest_core: rebalance
-            # first, then apply the intraday stop to post-rebalance holdings.
-            rebalance_count = rebalance_due_accounts(session)
-            stop_count = mark_and_stop_accounts(session)
-        heartbeat(
-            session,
-            "paper-worker",
-            "quotes={} member_quotes={} member_errors={} stops={} rebalance_fills={} terminal={} review={}".format(
-                quote_count,
-                member_quote_count,
-                member_quote_errors,
-                stop_count,
-                rebalance_count,
-                terminal["settled"],
-                terminal["review_accounts"],
-            ),
-        )
-        session.commit()
+        with _paper_tick_deadline(
+            float(getattr(settings, "shared_quote_tick_deadline_seconds", 30.0))
+        ):
+            if not acquire_lease(session, "paper-engine", 90):
+                session.rollback()
+                return
+            # Publish the lease before network I/O so another worker cannot start
+            # the same paper tick while this one is collecting member quotes.
+            session.commit()
+            terminal = apply_terminal_events(session)
+            quote_count = 0
+            member_quote_count = 0
+            member_quote_errors = 0
+            rebalance_count = 0
+            stop_count = 0
+            if regular_market_open():
+                watchlist = collect_watchlist_ordered(session)
+                maximum = int(
+                    getattr(settings, "shared_quote_max_symbols_per_tick", len(watchlist))
+                )
+                holdings = collect_holding_watchlist_ordered(session)
+                holding_set = set(holdings)
+                candidates = tuple(value for value in watchlist if value not in holding_set)
+                admitted = _fair_quote_work_slice(
+                    session, holdings, candidates, maximum
+                )
+                # Advance the fairness cursor even when the provider fails. Otherwise
+                # a persistently failing prefix rolls the cursor back and can starve
+                # every valid symbol behind it forever. Terminal-event application is
+                # idempotent and is safe to commit at this boundary as well.
+                session.commit()
+                quotes = provider.fetch(admitted)
+                quote_count = store_quotes(session, quotes)
+                member_quote_count, member_quote_errors = collect_member_quotes(session, settings)
+                # SessionLocal disables autoflush. Make this tick's fresh shared and
+                # member quotes visible to quote_map before any fills are evaluated.
+                session.flush()
+                # Keep the next-open contract aligned with backtest_core: rebalance
+                # first, then apply the intraday stop to post-rebalance holdings.
+                rebalance_count = rebalance_due_accounts(session)
+                stop_count = mark_and_stop_accounts(session)
+            heartbeat(
+                session,
+                "paper-worker",
+                "quotes={} member_quotes={} member_errors={} stops={} rebalance_fills={} terminal={} review={}".format(
+                    quote_count,
+                    member_quote_count,
+                    member_quote_errors,
+                    stop_count,
+                    rebalance_count,
+                    terminal["settled"],
+                    terminal["review_accounts"],
+                ),
+            )
+            session.commit()
+    except PaperTickDeadlineExceeded:
+        session.invalidate()
+        logger.critical("paper tick hard deadline exceeded; terminating worker")
+        raise
     except Exception:
         session.rollback()
         logger.exception("paper tick failed")
@@ -392,17 +657,80 @@ def run_paper_tick(provider, settings=None) -> None:
         session.close()
 
 
+def run_authorized_paper_tick(settings):
+    with _paper_tick_deadline(settings.shared_quote_tick_deadline_seconds):
+        with ThreadPoolExecutor(max_workers=min(8, settings.quote_max_concurrent_requests)) as executor:
+            futures = [executor.submit(_fetch_authorized_paper_work, settings)
+                       for _ in range(min(8, settings.quote_max_concurrent_requests))]
+            for future in as_completed(futures):
+                work = future.result()
+                if work is not None:
+                    _apply_authorized_paper_work(settings, work)
+    with SessionLocal() as session:
+        heartbeat(session, "paper-worker", "authorized member batches")
+        session.commit()
+
+
+def _finish_authorized_paper_work(settings, work):
+    try:
+        broker_complete_work(settings, "paper", work["claim"])
+    except CredentialBrokerError:
+        logger.warning("paper claim completion unavailable; expiry remains enforced")
+
+
+def _fetch_authorized_paper_work(settings):
+    work = None
+    try:
+        # The broker chooses the account and exact symbols using trusted data.
+        # Service credentials alone cannot request arbitrary owners or symbols.
+        work = broker_next_work(settings, "paper")
+        if work is None:
+            return None
+        if work.get("quotes_required", True):
+            broker_work_quotes(settings, work["claim"])
+        return work
+    except Exception:
+        logger.exception("authorized paper quote fetch failed")
+        if work is not None:
+            _finish_authorized_paper_work(settings, work)
+        return None
+
+
+def _apply_authorized_paper_work(settings, work):
+    # Ledger work remains on the main Unix thread under the one whole-tick
+    # signal deadline. Only independent network fetches use the thread pool.
+    try:
+        with SessionLocal() as session:
+            bind_runtime_context(session, claim_token=work["claim"])
+            apply_terminal_events(session, settings)
+            if regular_market_open() and work.get("quotes_required", True):
+                rebalance_due_accounts(session)
+                mark_and_stop_accounts(session)
+            heartbeat(session, "paper-worker", "authorized account tick")
+            session.commit()
+    except PaperTickDeadlineExceeded:
+        raise
+    except Exception:
+        logger.exception("authorized paper tick failed")
+    finally:
+        _finish_authorized_paper_work(settings, work)
+
+
 def main() -> int:
     settings = get_settings()
     role = os.getenv("WORKER_ROLE", "all").strip().lower()
     if role not in {"all", "backtest", "paper"}:
         raise SystemExit("WORKER_ROLE must be all, backtest or paper")
+    if settings.production and role == "all":
+        raise SystemExit(
+            "production requires separate paper and backtest workers for quote liveness"
+        )
     errors = settings.startup_errors(role if role != "all" else "deployment")
     if errors:
         raise SystemExit("Startup configuration failed:\n- " + "\n- ".join(errors))
-    initialize_database()
-    if role in {"all", "paper"} and settings.credential_backend == "broker":
-        broker_preflight(settings, "paper")
+    prepare_runtime_database()
+    if settings.credential_backend == "broker":
+        broker_preflight(settings, "paper" if role == "all" else role)
     provider = None
     if role in {"all", "paper"}:
         provider = (

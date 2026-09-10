@@ -12,16 +12,19 @@ from price_data_pipeline import update_completed_sessions, validate_dataset
 from terminal_events import append_snapshot_diff
 from universe_snapshot import (
     DEFAULT_EXCHANGES,
+    SnapshotAggregateBudgetExceeded,
     build_snapshot,
     fetch_official_sources,
-    load_snapshot,
+    load_snapshot_with_size,
     save_snapshot,
 )
 
 from .config import get_settings
+from .bounded_io import FileReadBudget, bounded_paths
 
 
 logger = logging.getLogger("cloud_app.data_refresh")
+MAX_PRIOR_SNAPSHOT_BYTES = 64 * 1024 * 1024
 
 
 def _new_york_today() -> dt.date:
@@ -41,11 +44,22 @@ def run_daily_refresh() -> dict:
         allowed_exchanges=DEFAULT_EXCHANGES,
     )
     snapshot_dir = Path(settings.snapshots_glob).parent
-    before_paths = sorted(Path(item) for item in glob.glob(settings.snapshots_glob))
+    before_paths = sorted(
+        bounded_paths(
+            (Path(item) for item in glob.iglob(settings.snapshots_glob)),
+            maximum_count=1000,
+        )
+    )
     prior_snapshots = []
+    byte_budget = FileReadBudget(MAX_PRIOR_SNAPSHOT_BYTES)
     for path in before_paths:
         try:
-            prior_snapshots.append(load_snapshot(path))
+            prior_snapshot, _file_size = load_snapshot_with_size(
+                path, byte_budget=byte_budget,
+            )
+            prior_snapshots.append(prior_snapshot)
+        except SnapshotAggregateBudgetExceeded:
+            raise
         except (OSError, ValueError, json.JSONDecodeError):
             logger.warning("ignoring invalid prior snapshot: %s", path)
     previous = (

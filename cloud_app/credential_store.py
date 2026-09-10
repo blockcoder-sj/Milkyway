@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import secrets
+import threading
 from functools import lru_cache
 from pathlib import Path
 
@@ -23,13 +24,22 @@ LOCAL_PREFIX = "v2:"
 # OCI debug HTTP logging can include cryptographic request bodies. Credential
 # operations therefore never inherit an application-wide DEBUG log level.
 logging.getLogger("oci").setLevel(logging.WARNING)
+_kms_slots = threading.BoundedSemaphore(get_settings().kms_max_concurrent_requests)
+
+
+class KmsCapacityError(RuntimeError):
+    """The process-local KMS work budget is already saturated."""
 
 
 def _credential_backend(settings: Settings) -> str:
     backend = getattr(settings, "credential_backend", "local") or "local"
-    if backend not in {"local", "oci-kms", "broker"}:
+    if backend not in {"local", "oci-kms", "broker", "shared"}:
         raise RuntimeError("Unsupported credential encryption backend")
-    if bool(getattr(settings, "production", False)) and backend not in {"oci-kms", "broker"}:
+    if bool(getattr(settings, "production", False)) and backend not in {
+        "oci-kms",
+        "broker",
+        "shared",
+    }:
         raise RuntimeError("Production credentials require an external credential service")
     return backend
 
@@ -144,17 +154,22 @@ def _encrypt_with_oci_kms(
     owner_id: str,
     field: str,
 ) -> str:
-    import oci
+    if not _kms_slots.acquire(blocking=False):
+        raise KmsCapacityError("OCI KMS request capacity is saturated")
+    try:
+        import oci
 
-    endpoint = getattr(settings, "oci_kms_crypto_endpoint", "")
-    details = oci.key_management.models.EncryptDataDetails(
-        key_id=_oci_key_id(settings, purpose),
-        plaintext=base64.b64encode(value.encode("utf-8")).decode("ascii"),
-        associated_data=_context_fields(purpose, owner_id, field, 3),
-        encryption_algorithm="AES_256_GCM",
-        logging_context={"application": "milkyway", "purpose": purpose},
-    )
-    response = _oci_kms_client(endpoint).encrypt(details)
+        endpoint = getattr(settings, "oci_kms_crypto_endpoint", "")
+        details = oci.key_management.models.EncryptDataDetails(
+            key_id=_oci_key_id(settings, purpose),
+            plaintext=base64.b64encode(value.encode("utf-8")).decode("ascii"),
+            associated_data=_context_fields(purpose, owner_id, field, 3),
+            encryption_algorithm="AES_256_GCM",
+            logging_context={"application": "milkyway", "purpose": purpose},
+        )
+        response = _oci_kms_client(endpoint).encrypt(details)
+    finally:
+        _kms_slots.release()
     ciphertext = getattr(response.data, "ciphertext", "")
     if not ciphertext or len(ciphertext) > 16_384:
         raise RuntimeError("OCI KMS returned an invalid credential ciphertext")
@@ -168,20 +183,25 @@ def _decrypt_with_oci_kms(
     owner_id: str,
     field: str,
 ) -> str:
-    import oci
-
     payload = ciphertext[len(OCI_KMS_PREFIX) :]
     if not payload or len(payload) > 16_384:
         raise ValueError("credential ciphertext is invalid")
-    endpoint = getattr(settings, "oci_kms_crypto_endpoint", "")
-    details = oci.key_management.models.DecryptDataDetails(
-        key_id=_oci_key_id(settings, purpose),
-        ciphertext=payload,
-        associated_data=_context_fields(purpose, owner_id, field, 3),
-        encryption_algorithm="AES_256_GCM",
-        logging_context={"application": "milkyway", "purpose": purpose},
-    )
-    response = _oci_kms_client(endpoint).decrypt(details)
+    if not _kms_slots.acquire(blocking=False):
+        raise KmsCapacityError("OCI KMS request capacity is saturated")
+    try:
+        import oci
+
+        endpoint = getattr(settings, "oci_kms_crypto_endpoint", "")
+        details = oci.key_management.models.DecryptDataDetails(
+            key_id=_oci_key_id(settings, purpose),
+            ciphertext=payload,
+            associated_data=_context_fields(purpose, owner_id, field, 3),
+            encryption_algorithm="AES_256_GCM",
+            logging_context={"application": "milkyway", "purpose": purpose},
+        )
+        response = _oci_kms_client(endpoint).decrypt(details)
+    finally:
+        _kms_slots.release()
     plaintext = getattr(response.data, "plaintext", "")
     if not plaintext or len(plaintext) > 4096:
         raise ValueError("credential plaintext is invalid")
@@ -190,7 +210,10 @@ def _decrypt_with_oci_kms(
 
 def credential_ciphertext_prefix(settings: Settings | None = None) -> str:
     settings = settings or get_settings()
-    return OCI_KMS_PREFIX if _credential_backend(settings) in {"oci-kms", "broker"} else LOCAL_PREFIX
+    backend = _credential_backend(settings)
+    if backend == "shared":
+        raise RuntimeError("Shared provider mode does not store member credential ciphertext")
+    return OCI_KMS_PREFIX if backend in {"oci-kms", "broker"} else LOCAL_PREFIX
 
 
 def encrypt_credential(
@@ -203,11 +226,13 @@ def encrypt_credential(
 ) -> str:
     settings = settings or get_settings()
     backend = _credential_backend(settings)
-    if backend == "broker":
+    if backend in {"broker", "shared"}:
         raise RuntimeError("Credential encryption is restricted to the credential broker")
     if backend == "oci-kms":
         try:
             return _encrypt_with_oci_kms(value, settings, purpose, owner_id, field)
+        except KmsCapacityError:
+            raise
         except Exception as exc:
             raise RuntimeError(
                 "Credential encryption service is unavailable ({})".format(
@@ -234,7 +259,7 @@ def decrypt_credential(
     settings = settings or get_settings()
     try:
         backend = _credential_backend(settings)
-        if backend == "broker":
+        if backend in {"broker", "shared"}:
             raise RuntimeError("Credential decryption is restricted to the credential broker")
         if ciphertext.startswith(OCI_KMS_PREFIX):
             if backend != "oci-kms":
@@ -251,6 +276,8 @@ def decrypt_credential(
         return AESGCM(_context_key(settings, purpose, context)).decrypt(
             raw[:12], raw[12:], context
         ).decode("utf-8")
+    except KmsCapacityError:
+        raise
     except Exception:
         raise RuntimeError(error_message) from None
 

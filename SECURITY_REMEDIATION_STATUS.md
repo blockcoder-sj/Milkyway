@@ -1,203 +1,262 @@
 # Security remediation checkpoint
 
-Saved: 2026-09-01 (Asia/Seoul)
+Saved: 2026-09-05 (Asia/Seoul)
 
-## 2026-09-01 continuation update
+## Resumed managed-session progress (2026-09-05, work in progress)
 
-- The complete remediation working tree was preserved in checkpoint commit
-  `51e48e2` (`security: checkpoint remediation and broker boundary`). The tracked
-  working tree was clean immediately afterward and `main` was one commit ahead of
-  `origin/main`. This checkpoint is not a deployment approval and the test suite
-  was not rerun after creating the commit.
-- The host `runtime/` directory remains gitignored and preserves the two owner-only
-  64-byte development credential roots. They were not included in the commit.
-- The prior `milkyway-local-runtime` volume, `quant-club-local` container, and
-  `milkyway:local` image were not present in either available Docker context. A
-  **new empty development volume** named `milkyway-local-runtime` was created; do
-  not describe it as a recovery of the former volume.
-- `milkyway:local` was rebuilt successfully. A local-only container named
-  `quant-club-local` is currently bound to `127.0.0.1:8080` with automatic restart
-  disabled. It uses a temporary 19-symbol smoke dataset copied under
-  `/tmp/milkyway-smoke.*`; `/` and `/health/live` returned HTTP 200. Readiness
-  remains HTTP 503 because `data_gate=false` and `worker=false`, so this proves
-  only local UI/startup behavior, not production readiness. The full 1.1 GiB
-  dataset remains under the separate `us_trading_bot/data_cache` tree and direct
-  Docker bind mounting failed while macOS/iCloud files were not fully materialized.
-- Local Codex CLI is `0.151.0` and the ChatGPT desktop bundle is
-  `26.825.51511`. No `/etc/codex/requirements.toml` or
-  `/etc/codex/managed_config.toml` exists, and the current session still has
-  `permission_profile type="disabled"`. The user must create the system-managed
-  requirements file themselves (the agent must not self-elevate), allowing
-  `:read-only` and `:workspace` with `default_permissions = ":workspace"`, then
-  restart the Codex client, open a new session, and verify `/status` before the
-  Deep Security Scan.
-- No Deep Security Scan exists and there is still no scan ID. The next scan must
-  be a new whole-repository scan. Public deployment and real member credential
-  entry remain **NO-GO**.
+This section supersedes the earlier environment/tooling and source-state descriptions
+below. Historical occurrence lists remain an audit trail, not a current closure claim.
+No real OCI gate is superseded.
 
-## Latest handoff marker
+- Managed `:workspace` and automatic escalation review work. Docker builds, official
+  dependency metadata and isolated PostgreSQL checks are available; no session restart
+  is needed. The pre-existing dirty baseline remains at
+  `/var/folders/bk/f34r9qkn13d_w47jxgcx62nh0000gn/T/milkyway-remediation-weq7mxby`.
+  User `runtime/` and pre-existing Docker volumes have not been modified.
+- Shared AI and personal brokerage modes are now independently wired. Production
+  uses independent broker session/permit/work issuance, direct browser credential
+  entry on the broker origin, private encrypted credential rows, and transaction-local
+  PostgreSQL RLS contexts. Workers request trusted member batches/jobs instead of
+  caller-selected owners, ciphertext or symbols. These six occurrence candidates
+  are under fresh independent read-only review; they are not yet declared closed.
+- SQL migration clears historical table, column and future-object grants. Admission
+  triggers preserve per-member/global limits despite RLS. Metadata queries exclude
+  ciphertext. Missing RLS/authority functions or excessive runtime roles fail startup.
+- PostgreSQL uses private-interface TLS 1.3 and clients verify the CA and server name.
+  Added an offline TLS generator that refuses overwrite; the CA private key stays
+  outside both runtime VMs. A disposable test used this generator and the actual
+  role-init script, including its existing-database repeat path.
+- Latest complete unit/regression suite: **192/192 passed** in the pinned verification
+  image, network disabled, current source read-only and temporary runtime. Executable
+  temporary storage is enabled only for harmless shell-stub tests.
+- Latest PostgreSQL integration: **8/8 passed**, including fresh/upgrade grants, RLS,
+  pool context, TLS positive/negative checks, actual PG16 encrypted dump/restore and
+  tamper rejection, and real ASGI HTTP routes with separate app/authority/worker DB
+  connections. HTTP controls cover two-member registration, key management, cross-member
+  denial, exact multiaccount work scope, replay denial, shared AI permit issuance,
+  logout and 24 concurrent session issuances retaining the ten-session cap. Dataset,
+  provider I/O and credentials were synthetic; these are not provider/OCI success.
+- All three Compose configurations (including optional local AI and restore) passed
+  `config --quiet` with synthetic values, and rendered service environment checks
+  confirmed role/token separation. No real env file was read or printed.
+- Runtime/audit/lock-tool dependencies have full Linux/Python3.11 wheel hash locks;
+  container images use official digests and OS packages signed immutable snapshots.
+  Clean build, pip-audit JSON (no known Python advisories) and CycloneDX were recorded.
+  Verification image `milkyway:remediation-20260905` uses manifest index
+  `sha256:2dd04e90636c585ec459f6342a795e65c143eabdfe1d972cdfdc115897bb499a`;
+  current tests bind newer source, so this is not the final release image.
+- Independent final host/provider-process review found no remaining High/Medium
+  defect in its bounded candidates. Host checks precede APT mutation and propagate
+  failure. Provider slow-body/deadline, error mapping, child reaping/replacement and
+  OAuth reuse controls passed. Raw remote provider secrets are rejected before file
+  reads; broker-only Vault CURRENT retrieval is process bounded. Real Vault/IAM/Audit
+  evidence remains absent.
+- Malformed own strategy JSON and oversized member quote batches now quarantine the
+  affected account while preserving durable member rotation in configuration_required status. Dataset certification
+  failures remain fail closed. Focused regressions are included in the 192 tests.
+- Deployment documentation and examples describe the accepted shared-AI/personal-
+  brokerage topology, DB-first startup, broker-origin login, KMS, TLS and existing-volume
+  migration. Final candidate image `milkyway:remediation-final-20260905` was built,
+  manifest index `sha256:fe571c1ad2c84810dbea837615d15ad21bfdbd58544e1cbf1df77ae422be0c68`.
+- Fresh final independent authority/ledger review gave bounded approval with no
+  remaining concrete High/Medium issue in its scope. It independently passed 8/8
+  PostgreSQL and 26/26 owning tests. Verified closures include long backtests, the
+  actual threaded-fetch/main-thread-ledger worker, per-account fill-key prefixes,
+  frozen-account recovery, multi-hop corporate actions, same-tick holdings/equity,
+  freeze-before-stop behavior and provider-specific browser environment choices.
+  Test sessions now explicitly match production autoflush=False. The six DB/broker
+  source paths are independently reviewed closed, pending the new whole scan.
+- The new whole-repository Deep Security Scan has **not started yet**. Source is now
+  frozen for final packaged-image checks and the required fresh managed-session scan.
+  No real OCI release, KMS/IAM/Audit, member provider authentication, deployed capacity,
+  or deployment gate is claimed.
 
-- Context was explicitly saved before moving work to a new Mac.
-- No Deep Security Scan exists to resume: both attempts failed before scan
-  creation because the effective permission profile was `disabled`; there is no
-  scan ID or partial result.
-- Open the preserved repository in a new Codex session whose effective profile is
-  managed `:workspace`, then use the continuation prompt below to start a new
-  whole-repository Deep Security Scan.
-- The present working tree is intentionally uncommitted. Preserve every existing
-  change, `runtime/` data, and the `milkyway-local-runtime` Docker volume.
-- Public deployment and real member credential entry remain **NO-GO**.
+Current complete test logs: `/private/tmp/milkyway-locked-tests.log` and
+`/private/tmp/milkyway-postgres-checks.log`. Canonical fix evidence is also recorded in
+the prior scan's `artifacts/fix_report.md`. Public deployment and real credentials
+remain **NO-GO**.
 
-## Repository state
+## Current decision
 
-- Base commit: `5632baf`
-- Security remediation is present in the working tree and is not committed yet.
-- Preserve the working tree, `milkyway-local-runtime` Docker volume, and `runtime/` files.
-- Local server container name: `quant-club-local`.
+Public deployment and real member/provider credential entry remain **NO-GO**.
 
-## Completed verification
+- The effective session permission profile was confirmed before this work as
+  `permission_profile type="managed"`, profile `:workspace`. It is **not**
+  `permission_profile type="disabled"`.
+- Root `AGENTS.md` and this status file were read completely before the new scan
+  or file changes.
+- The pre-existing uncommitted working tree, gitignored `runtime/` data, and user
+  Docker volumes were preserved. No reset, checkout, data deletion, volume
+  deletion, deployment, or real credential entry was performed.
+- The latest sealed whole-repository scan has no High findings. Of its 39 Medium
+  occurrences, independent source review currently classifies 30 as having their
+  traced source path closed and 9 as still vulnerable. Because the full suite and
+  live integration gates could not run, the overall remediation outcome is
+  **blocked**, not verified/fixed.
+- Local mocks, static probes, dummy Compose values, and paper trading are not
+  evidence of real OCI KMS/IAM/Audit or provider success.
 
-- The current 88-test unit/regression suite passed inside the final rebuilt
-  `milkyway:local` image.
-- The OCI KMS tests use the real OCI SDK models and fake KMS transport.
-- The expanded tests cover v3 owner/provider associated-data rejection, no local
-  fallback during KMS failure, production legacy rejection, offline migration
-  rollback/success/idempotency, corrupted v3 rejection, shared prefixless legacy
-  root compatibility, broker role separation, no raw decrypt/proxy route,
-  app/paper no-local-decrypt behavior, AI generation, market retain/rebind, and
-  Compose broker/KMS/backup scopes.
-- A real disposable Docker PostgreSQL 16 database was seeded, dumped in custom
-  format, checksum/list verified, deliberately dropped, restored, and content
-  verified. This exposed and fixed the non-executable restore entrypoint and the
-  incorrect `POSTGRES_DB`/`PGDATABASE` variable. The exact test dump, containers,
-  network, and volume were removed after verification.
-- Disposable end-to-end flow passed: registration, authentication, CSRF logout,
-  copied-cookie rejection, security headers, and oversized-body rejection.
-- Python dependency audit reported no known vulnerabilities after upgrading
-  `cryptography` to the fixed 50.x line and adding OCI SDK 2.185.x.
-- Production example secrets fail startup validation.
-- Compose rendering confirmed service-specific secret allowlists and read-only
-  dataset mounts for app/paper/backtest; only scheduler has dataset write access.
-- All 5,298 manifest-approved price files are SHA-256 checked before readiness.
-- Latest local app used about 136 MiB and returned HTTP 200 from health endpoints.
+## Latest sealed whole-repository Deep Security Scan
 
-## Security changes in the working tree
+- Scan ID: `c89a3440-23f1-4951-81be-44fbf08e3196`
+- Scanned base revision: `67b2a7474db02cef5615d3ecbf56c884df1cb7ed`
+- Completed: `2026-09-04T23:09:13Z`
+- Coverage: complete whole-repository coverage; 30 independent scan reviews
+- Findings: 52 total: 0 High, 39 Medium, 13 Low
+- Aggregate scan token usage: 931,542,058
+- Canonical artifact directory:
+  `/private/var/folders/bk/f34r9qkn13d_w47jxgcx62nh0000gn/T/codex-security-scans-lXgnbx/Milkyway/67b2a7474db02cef5615d3ecbf56c884df1cb7ed_20260904T060438Z_b_2oux3_`
+- Canonical files include `report.md`, `findings.json`, `coverage.json`,
+  `scan-manifest.json`, `exports/results.sarif`, checkpoints, and
+  `artifacts/fix_report.md`.
 
-- Reject shipped/default/reused production secrets and example hosts.
-- Development keeps separate owner-only local v2 roots. Production now rejects
-  local roots and uses separate OCI Vault AI/market keys with v3 AES-GCM
-  associated data bound to purpose, member, provider, environment, and field.
-- Legacy/v2 production records fail startup until the stopped-service,
-  interactive migration re-encrypts and verifies every field through OCI KMS in
-  one rollback-safe transaction. Current v3 records are also KMS-validated.
-- Migration refuses legacy/v2 records without an explicit verified-backup
-  attestation. The one-shot backup creates an owner-only custom-format dump,
-  verifies its SHA-256 and structure, and keeps pre-KMS rollback dumps out of the
-  routine 14-day deletion rule.
-- Persistent hashed browser-session records make logout revocable.
-- Owner-only SQLite/runtime permissions.
-- Pre-parser fixed-length and streamed HTTP body limits.
-- Async, disconnect-aware, per-user/global-limited SSE.
-- Service-specific Compose environments and network separation.
-- Finnhub token moved to a header and exception logs sanitized.
-- Lightweight web dataset views remove the former full OHLCV memory load.
-- Strict strategy DSL rejects unknown fields; AI output is never executed.
-- Production app and paper processes now use a separately deployed
-  provider-operation broker. Only the broker VM receives OCI KMS, deployment KIS,
-  or local-AI secrets. App/paper receive different bearer tokens and can invoke
-  only fixed encrypt/validate/generate/quote operations; no raw decrypt or generic
-  provider proxy is exposed. Broker requests are bounded and rate/concurrency
-  limited.
-- The broker has its own Compose, HTTPS Caddy edge, systemd unit, env template,
-  read-only runtime, and explicit two-VM deployment/IAM procedure.
+The 39 Medium occurrences were independently collapsed into 24 root-cause
+groups before patching. Focused regressions were added in
+`tests/test_medium_security_regressions.py` and adjacent owning suites.
 
-## Remaining deployment blockers
+## Source paths closed during this remediation
 
-Do not enter real member API keys or publicly deploy yet. All remaining blockers
-require authority or infrastructure that is not available in this session:
+Independent read-only review found the traced source paths closed for 30 Medium
+occurrences, including:
 
-1. Provision two OCI instances. The public app VM must be excluded from every
-   credential-key dynamic group; only the broker VM may receive the four exact
-   KEY_ENCRYPT/KEY_DECRYPT permissions. Provision the real Vault, two keys, broker
-   DNS/TLS, source-restricted NSG, Audit retention/alarms, and provider usage alarms.
-2. Put real endpoint/key OCIDs only in `deploy/credential-broker.env` on the broker
-   VM, deploy both Compose stacks, and prove the broker startup two-key KMS round
-   trip plus app/paper role preflights. No OCI account, CLI, instance principal, or
-   production credentials are available locally, so this cannot be simulated as
-   a successful real KMS operation.
-3. Run the whole-repository Deep Security Scan in a new managed `:workspace`
-   permission session. The current session still reports
-   `permission_profile type="disabled"`.
+1. targeted login lockout while preserving bounded correct-password recovery;
+2. one-time, expiring, email-bound invitations with pre-hash/global admission;
+3. shared credential-backend startup and shared-mode legacy-row bypass removal;
+4. stronger scrypt parameters and successful-login hash upgrading;
+5. placeholder, file-secret, permission, symlink, and cross-secret validation;
+6. bounded HTTP streaming and bounded auxiliary file/count/aggregate reads;
+7. durable shared-quote worklist rotation, exact freshness admission, one-batch
+   broker cadence, whole-paper-tick deadline, and paused reactivation admission;
+8. fair/outstanding/deadline/result/retention controls for backtests;
+9. dashboard broker single-flight/caching and DB-session release;
+10. authenticated encrypted backup output and a separate restore topology;
+11. independently promoted immutable dataset generations and explicit terminal
+    event approval, separated from the scheduler writer;
+12. provider readiness/preflight consistency, non-rendering Compose validation,
+    and immutable GitHub Action commit pins.
 
-The former High raw bulk-decryption path is structurally removed for an app or
-paper process compromise in the documented two-VM topology: those processes have
-only ciphertext and a fixed-operation broker token, not a KMS identity, endpoint,
-key OCID, raw decrypt route, provider token, or arbitrary proxy. Independent review
-found implementation/deployment regressions in the first patch (broker read-only
-startup import, paper egress, stale deployment/migration instructions); all were
-corrected and sent through a second independent audit.
+This is a source-review classification only. The unavailable focused/full and
+live checks listed below prevent a final `fixed` outcome under the fix contract.
 
-Residual risk remains: a compromised public app can capture credentials newly
-submitted while it is compromised and can misuse rate-limited allowed operations
-for multiple members. A paper token can request normalized quotes for stored
-connections. Neither role can retrieve stored plaintext through the implemented
-API. Eliminating new-input capture and tenant-global operation authority requires
-a separately trusted browser-facing auth/origin or per-user execution identity;
-this is a different integrity architecture, not a missing local code fix.
+## Open Medium occurrences
 
-The required Deep Security Scan did not start. Exact tool error:
+Nine Medium occurrences remain source-vulnerable:
 
-> Deep Scan cannot safely start a read-only worker: the parent must provide a managed filesystem permission profile.
+### Database tenant and service containment (3)
 
-The current continuation session also reports `permission_profile type="disabled"`.
-The scan was actually retried on 2026-08-30 and failed with the same error before
-creating a scan, so there is no scan ID or partial scan to resume. On a new session
-with a managed filesystem permission profile, start a new Deep Scan over the whole
-repository and remediate any validated high/medium findings before deployment.
+- `occ_240dee7248d3342394fb3ec0`
+- `occ_f21cf020aea0766e6d9dd46e`
+- `occ_f19a293e0f861adea9e5b504`
 
-## Latest independent verification
+Blanket all-table/current-and-future grants were removed and relationship
+columns were narrowed, but a stolen runtime DSN can still read or mutate rows
+across members within that service's broad table authority. Complete closure
+requires a database-enforced tenant/service boundary such as an independently
+authenticated per-tenant context plus RLS or tightly scoped approved procedures,
+followed by positive/negative tests on fresh and upgraded PostgreSQL databases.
+Caller-supplied user IDs from a compromised app are not an independent boundary.
 
-Three fresh read-only reviewers completed after the broker correction loop:
+### Reusable coarse broker capabilities (3)
 
-- `HIGH-CRED-BULK-DECRYPT`: **fixed**. Production app/paper cannot locally decrypt,
-  receive a KMS identity or key metadata, call a raw-decrypt route, or use a generic
-  provider proxy. The broker exposes only fixed normalized operations.
-- No additional locally actionable High/Medium was found in the credential boundary.
-- The role-global operation authority and capture of credentials newly submitted to
-  an already-compromised public app are architectural residual risks. Removing them
-  requires an independently trusted browser-facing identity/capability issuer or
-  per-user/job-isolated execution, with corresponding DNS/TLS/NSG/auth changes.
-- A separate environment audit confirmed that real OCI creation, two-key KMS round
-  trips, app-VM denial, and Audit evidence require external OCI authority. The Deep
-  Scan tool is present, but its managed permission profile is not active in this
-  session.
+- `occ_143f4e98598ec53b5f7a37d7`
+- `occ_f84e28665b83604a4ebdc8fb`
+- `occ_ba10a40f3ed321d640d66494`
 
-## New-session continuation prompt
+The long-lived app token still authorizes any allowed AI prompt and the long-lived
+paper token still authorizes caller-chosen quote work. Local limits, deadlines,
+fixed providers, and quote-only endpoints reduce impact but do not provide
+member-bound or schedule/worklist-bound short-lived capabilities, replay-resistant
+nonces, a durable authoritative budget, or reserved scheduler capacity outside a
+compromised caller. This needs an independently trusted capability issuer/store;
+it is an architectural gate, not evidence that OCI has passed.
 
-Open this repository in a new Codex session and paste:
+### Mutable executable supply chain (2)
 
-```text
-현재 effective permission_profile이 managed :workspace이고 disabled가 아닌지 먼저 확인해.
-루트 AGENTS.md와 SECURITY_REMEDIATION_STATUS.md를 끝까지 읽고 기존 작업 트리를 보존해.
-남은 보안 작업을 계속 진행해: 새 whole-repository Deep Security Scan을 시작하고,
-발견된 high/medium은 focused regression test -> 최소 완전 수정 -> 전체 테스트 ->
-fresh independent read-only agent 검증 순서로 통과할 때까지 반복해.
-실제 OCI 권한/인프라 없이는 수행할 수 없는 항목만 마지막에 정확한 증거와 함께 보고해.
-실제 OCI KMS/Audit 성공을 시뮬레이션 결과로 대체하거나 공개 배포 GO를 선언하지 마.
-```
+- `occ_8296379c3a4e7fe2c459be18`
+- `occ_dc40e1db16b6e1e885652bf2`
 
-## Resume checklist
+GitHub Actions and the Python base/llama images are pinned, but Python dependencies
+remain ranged and unhashed, `pip-audit` is unpinned, the Docker build upgrades pip
+and OS packages from mutable repositories, and PostgreSQL/Caddy use mutable tags.
+Closure needs an authoritative transitive hash lock, approved image/package
+digests, `--require-hashes`, a clean image build, and audit/SBOM evidence. Those
+values were not guessed while registry/package network access was unavailable.
 
-1. Review `git diff` and keep the uncommitted remediation intact.
-2. Provision the documented two-VM broker boundary, Vault keys, exact broker-only
-   dynamic group/IAM, TLS/NSG, Audit and provider usage alarms.
-3. Require broker startup KMS round trip and app preflight
-   `credential_broker=true`; verify the app VM receives AccessDenied for both keys.
-4. Run the blocked whole-repository Deep Security Scan in managed `:workspace`.
-5. Re-run the checked-in commands after inserting deployment-specific values and
-   record the results. Only then accept real member API keys.
+### Provider-secret manager boundary (1)
 
-For the scan session, select a managed `:workspace` permission profile before
-starting Codex; the current `permission_profile type="disabled"` cannot be changed
-in place. Public deployment remains **NO-GO** until both the real OCI gates and a
-sealed scan with no unresolved high/medium findings are recorded as passing.
+- `occ_d839d825b71cf34ea8506204`
+
+Raw provider secrets were removed from container environment variables and are
+now mounted from owner-only no-follow files, but they are still plaintext host
+files rather than values released by a protected secret manager/KMS identity.
+No OCI Vault deployment or equivalent protected secret-delivery evidence exists.
+
+## Earlier checkpoint verification (superseded where updated above)
+
+Passed in this managed session:
+
+- `APP_ENV=development python3 -m unittest -v
+  tests.test_universe_data_pipeline tests.test_dashboard_frontend_contract`:
+  24/24 passed after the final patches.
+- Focused standalone quote-capacity probe: all 200 default-admitted symbols were
+  covered in five 40-symbol ticks using the durable worklist rotation.
+- Focused whole-paper-tick signal deadline probe: passed.
+- Dataset promotion, exact snapshot aggregate-budget, and daily-refresh
+  new-versus-prior snapshot regressions: passed within the 24 tests above.
+- Python source compilation: 37 files, zero failures.
+- `bash -n deploy/*.sh deploy/postgres/*.sh`: passed.
+- `git diff --check`: passed.
+- Main, credential-broker (including `local-ai`), and restore Compose
+  `config --quiet` validation with non-secret dummy values: passed. This proves
+  configuration shape only.
+- Direct deployment-secret, secret-file permission/symlink, bounded-I/O, and
+  encrypted-backup boundary probes run earlier in this cycle passed.
+- Fresh independent read-only review repeatedly found no new High/Medium in the
+  final quote/snapshot delta and judged the quote starvation occurrence's source
+  path closed.
+
+Not passed or unavailable:
+
+- `APP_ENV=development python3 -m unittest discover -s tests -v` discovered 27
+  entries: 24 passed and three test modules failed to import. The host lacks
+  `PyYAML` and `FastAPI`; it also lacks SQLAlchemy, cryptography, OCI, and
+  `hashlib.scrypt`. Therefore the new Medium-focused suite and the broader cloud
+  security suites did **not** run to completion.
+- Installing requirements in an isolated temporary virtual environment failed
+  because package-index DNS/network access was unavailable.
+- Docker is installed, but access to
+  `/Users/kimseungzoo/.docker/run/docker.sock` is denied. Images, disposable
+  PostgreSQL, and containerized full tests could not run.
+- No live PostgreSQL role/RLS/procedure matrix, concurrency/load test, encrypted
+  restore drill, real KIS/AI provider authentication, or provider licence proof
+  was performed.
+- No trusted production dataset generation has been deployed and promoted on the
+  target topology.
+
+## Real OCI infrastructure gates — none simulated as success
+
+This session has no deployed public-app VM, credential-broker VM, Vault keys,
+dynamic groups, IAM policies, or OCI Audit/Alarm resources. Consequently:
+
+1. Broker-VM successful use of both required Vault keys is **not tested**.
+2. Public-app-VM `AccessDenied` for both keys is **not tested**; the public VM's
+   exclusion from both key dynamic groups is also not proven.
+3. OCI Audit records for successful key use and denied attempts, Audit retention,
+   queries, alarms, and notification delivery are **not tested**.
+4. Broker-only secret release, backup-key custody, network security lists/NSGs,
+   DNS/TLS, and two-VM source restrictions are **not deployed or evidenced**.
+
+No local mock, dummy value, file encryption test, or paper-trading result may be
+substituted for these gates.
+
+## Handoff
+
+- Preserve all current tracked/untracked changes, `runtime/`, and user Docker
+  volumes.
+- Do not enter real API keys or member credentials and do not publicly deploy.
+- Next local work is to finish the independent DB and broker boundaries,
+  integrate shared AI with member brokerage, run fresh/upgraded PostgreSQL
+  role/RLS/capability tests, complete independent reviews, and seal a fresh scan.
+- After that, deploy the real two-VM/Vault/IAM/Audit topology and collect the
+  exact allow/deny/Audit evidence above. Only a fresh sealed whole-repository
+  scan plus all real gates can reconsider the **NO-GO** decision.

@@ -1,12 +1,50 @@
 #cloud-config
-package_update: true
-package_upgrade: true
-packages:
-  - ca-certificates
-  - curl
-  - fail2ban
-  - unattended-upgrades
+package_update: false
+package_upgrade: false
+apt:
+  preserve_sources_list: true
 write_files:
+  - path: /usr/local/sbin/milkyway-bootstrap-host
+    permissions: '0755'
+    content: |
+      #!/bin/sh
+      set -eu
+      . /etc/os-release
+      test "$ID" = ubuntu
+      test "$VERSION_ID" = 24.04
+      case "$(dpkg --print-architecture)" in arm64|amd64) ;; *) exit 1 ;; esac
+      test -r /usr/share/keyrings/ubuntu-archive-keyring.gpg
+      install -d -m 0700 /var/lib/milkyway/original-apt-sources
+      for source in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do
+          test -e "$source" || continue
+          test "$source" != /etc/apt/sources.list.d/milkyway.sources || continue
+          destination=/var/lib/milkyway/original-apt-sources/$(basename "$source")
+          test ! -e "$destination"
+          mv "$source" "$destination"
+      done
+      cat > /etc/apt/sources.list.d/milkyway.sources <<'SOURCES'
+      Types: deb
+      URIs: https://snapshot.ubuntu.com/ubuntu/20260901T000000Z/
+      Suites: noble noble-updates noble-security
+      Components: main universe
+      Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+      Check-Valid-Until: no
+      SOURCES
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get -o APT::Update::Error-Mode=any update
+      apt-get upgrade -y
+      apt-get install -y --no-install-recommends \
+          ca-certificates=20260601~24.04.1 \
+          curl=8.5.0-2ubuntu10.13 \
+          fail2ban=1.0.2-3ubuntu0.1 \
+          docker.io=29.1.3-0ubuntu3~24.04.2 \
+          docker-compose-v2=2.40.3+ds1-0ubuntu1~24.04.1 \
+          docker-buildx=0.30.1-0ubuntu1~24.04.1 \
+          containerd=2.2.1-0ubuntu1~24.04.3 \
+          runc=1.3.4-0ubuntu1~24.04.1
+      docker --version
+      docker compose version
+      docker buildx version
   - path: /etc/sysctl.d/99-milkyway.conf
     permissions: '0644'
     content: |
@@ -14,13 +52,9 @@ write_files:
       net.ipv4.conf.all.rp_filter=1
       net.ipv4.conf.default.rp_filter=1
 runcmd:
-  - install -m 0755 -d /etc/apt/keyrings
-  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-  - chmod a+r /etc/apt/keyrings/docker.asc
-  - sh -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list'
-  - apt-get update
-  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - set -eu
+  - /usr/local/sbin/milkyway-bootstrap-host
   - usermod -aG docker ubuntu
   - install -d -m 0750 -o ubuntu -g ubuntu /opt/milkyway
-  - systemctl enable --now docker fail2ban unattended-upgrades
+  - systemctl enable --now docker fail2ban
   - sysctl --system

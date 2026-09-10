@@ -10,6 +10,8 @@ deploy/credential-broker.env
 runtime/
 backups/
 data_cache/
+data_staging/
+promoted_data/
 logs/
 *.sqlite3
 *.sqlite3-shm
@@ -24,4 +26,5 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 .vscode/
+.codex/
 .claude/

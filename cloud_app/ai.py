@@ -12,6 +12,7 @@ import httpx
 from pydantic import ValidationError
 
 from .ai_credentials import provider_requires_api_key, validate_api_key, validate_provider_model
+from .bounded_io import ResponseTooLarge, read_httpx_json
 from .strategies import StrategySpec, strategy_code_preview
 
 
@@ -23,6 +24,8 @@ _local_status_cache: dict[str, object] = {
     "ready": False,
     "probing": False,
 }
+_MAX_AI_RESPONSE_BYTES = 512 * 1024
+_MAX_STATUS_RESPONSE_BYTES = 256 * 1024
 
 SYSTEM_PROMPT = """You translate Korean or English trading ideas into one JSON object.
 Return JSON only, with no markdown. Never emit Python, shell, imports, URLs, or prose.
@@ -87,20 +90,30 @@ def local_ai_ready(
         _local_status_cache.update(key=cache_key, probing=True)
     ready = False
     try:
-        response = httpx.get(
+        with httpx.stream(
+            "GET",
             base_url.rstrip("/") + "/models",
             headers=headers,
             timeout=timeout_seconds,
             trust_env=False,
-        )
-        response.raise_for_status()
+        ) as response:
+            response.raise_for_status()
+            payload = read_httpx_json(
+                response, maximum_bytes=_MAX_STATUS_RESPONSE_BYTES
+            )
         model_ids = {
             item.get("id")
-            for item in response.json().get("data", [])
+            for item in payload.get("data", [])
             if isinstance(item, dict)
         }
         ready = model in model_ids
-    except (httpx.HTTPError, AttributeError, TypeError, ValueError):
+    except (
+        httpx.HTTPError,
+        AttributeError,
+        TypeError,
+        ValueError,
+        ResponseTooLarge,
+    ):
         ready = False
     with _local_status_lock:
         _local_status_cache.update(
@@ -151,8 +164,15 @@ def _provider_request(
     prompt: str,
     local_base_url: str | None = None,
 ) -> str:
+    def post_json(url: str, **kwargs):
+        with client.stream("POST", url, **kwargs) as response:
+            response.raise_for_status()
+            return read_httpx_json(
+                response, maximum_bytes=_MAX_AI_RESPONSE_BYTES
+            )
+
     if provider == "openai":
-        response = client.post(
+        payload = post_json(
             "https://api.openai.com/v1/responses",
             headers={"Authorization": "Bearer " + api_key},
             json={
@@ -162,13 +182,12 @@ def _provider_request(
                 "max_output_tokens": 1200,
             },
         )
-        response.raise_for_status()
-        return _openai_text(response.json())
+        return _openai_text(payload)
     if provider == "local":
         if not local_base_url:
             raise AiProviderError("로컬 AI 서버가 설정되지 않았습니다")
         headers = {"Authorization": "Bearer " + api_key} if api_key else {}
-        response = client.post(
+        payload = post_json(
             local_base_url.rstrip("/") + "/chat/completions",
             headers=headers,
             json={
@@ -182,9 +201,8 @@ def _provider_request(
                 "response_format": {"type": "json_object"},
             },
         )
-        response.raise_for_status()
-        return _chat_completion_text(response.json())
-    response = client.post(
+        return _chat_completion_text(payload)
+    payload = post_json(
         "https://api.anthropic.com/v1/messages",
         headers={"x-api-key": api_key, "anthropic-version": "2023-06-01"},
         json={
@@ -195,8 +213,7 @@ def _provider_request(
             "temperature": 0.1,
         },
     )
-    response.raise_for_status()
-    return _anthropic_text(response.json())
+    return _anthropic_text(payload)
 
 
 def _safe_provider_error(exc: httpx.HTTPStatusError, provider: str) -> AiProviderError:

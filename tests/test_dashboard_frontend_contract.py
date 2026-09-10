@@ -46,25 +46,22 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertIn("profileDialog", ids)
         self.assertIn("profileSettingsForm", ids)
         self.assertIn("aiConnectionSettings", ids)
-        self.assertIn("aiConnectionForm", ids)
-        self.assertIn("aiProvider", ids)
-        self.assertIn("aiModel", ids)
-        self.assertIn("aiApiKey", ids)
-        self.assertIn("aiDisconnectBtn", ids)
+        self.assertIn("aiConnectionSummary", ids)
         self.assertIn("aiConnectBtn", ids)
         self.assertIn("marketDataConnectionSettings", ids)
-        self.assertIn("marketDataConnectionForm", ids)
-        self.assertIn("marketDataProvider", ids)
-        self.assertIn("marketDataEnvironment", ids)
-        self.assertIn("marketDataApiKey", ids)
-        self.assertIn("marketDataApiSecret", ids)
-        self.assertIn("marketDataApiKeyLabel", ids)
-        self.assertIn("marketDataApiSecretLabel", ids)
-        self.assertIn("marketDataSetupLink", ids)
-        self.assertIn("marketDataPersonalUse", ids)
-        self.assertIn("marketDataDisconnectBtn", ids)
-        self.assertEqual(by_id["aiConnectionForm"][1].get("method"), "post")
-        self.assertEqual(by_id["marketDataConnectionForm"][1].get("method"), "post")
+        self.assertIn("marketDataConnectionSummary", ids)
+        for forbidden in (
+            "aiConnectionForm",
+            "aiApiKey",
+            "aiDisconnectBtn",
+            "marketDataConnectionForm",
+            "marketDataApiKey",
+            "marketDataApiSecret",
+            "marketDataDisconnectBtn",
+        ):
+            self.assertNotIn(forbidden, ids)
+        self.assertNotIn('name="api_key"', self.html)
+        self.assertNotIn('name="api_secret"', self.html)
         self.assertNotIn("aiStatus", ids)
 
     def test_strategy_builder_uses_connection_action(self):
@@ -73,10 +70,11 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertNotIn("동아리 로컬 AI", self.html)
         self.assertNotIn("AI 웹 구독 계정", self.html)
         self.assertNotIn("대시보드 시작 화면", self.html)
-        self.assertIn("requires_api_key", PROFILE.read_text(encoding="utf-8"))
-        self.assertIn("onMarketDataSave", PROFILE.read_text(encoding="utf-8"))
-        self.assertIn("credential_labels", PROFILE.read_text(encoding="utf-8"))
-        self.assertIn("setup_url", PROFILE.read_text(encoding="utf-8"))
+        profile = PROFILE.read_text(encoding="utf-8")
+        self.assertIn("회원 브라우저", profile)
+        self.assertNotIn("api_key", profile)
+        self.assertNotIn("onMarketDataSave", profile)
+        self.assertNotIn("onAiSave", profile)
         self.assertIn('data-profile-menu-action="settings"', self.html)
         self.assertIn('data-profile-menu-action="logout"', self.html)
 

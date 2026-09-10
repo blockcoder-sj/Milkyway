@@ -11,7 +11,7 @@
 
 ## Checks
 
-- [ ] `python -m unittest discover -s tests -v`
+- [ ] `APP_ENV=development python -m unittest discover -s tests -v`
 - [ ] `git diff --check`
 - [ ] Login, AI connection and affected dashboard flow were sanity-checked
 - [ ] No secrets, tokens, cache, or logs are included

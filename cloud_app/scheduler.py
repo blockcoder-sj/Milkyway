@@ -12,7 +12,7 @@ from market_calendar import is_trading_day
 
 from .config import get_settings
 from .data_refresh import run_daily_refresh
-from .database import SessionLocal, initialize_database
+from .database import SessionLocal, prepare_runtime_database
 from .worker import acquire_lease, heartbeat
 
 
@@ -35,7 +35,7 @@ def main() -> int:
     errors = get_settings().startup_errors("scheduler")
     if errors:
         raise SystemExit("Startup configuration failed:\n- " + "\n- ".join(errors))
-    initialize_database()
+    prepare_runtime_database()
     last_run: dt.date | None = None
     logger.info("data scheduler started host=%s", socket.gethostname())
     while True:

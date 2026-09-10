@@ -6,11 +6,14 @@ import asyncio
 import datetime as dt
 import hashlib
 import hmac
+import ipaddress
 import json
 import logging
+import re
 import threading
 import time
 from collections import defaultdict, deque
+from dataclasses import dataclass
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
@@ -31,12 +34,14 @@ from .ai_credentials import (
     validate_api_key,
     validate_provider_model,
 )
-from .config import get_settings
+from .config import get_settings, member_ai_credentials_enabled
 from .credential_store import credential_ciphertext_prefix
 from .credential_broker_client import (
     CredentialBrokerError,
+    broker_auth,
     broker_ai_catalog,
     broker_encrypt_ai,
+    broker_generate_shared_strategy,
     broker_generate_strategy,
     broker_prepare_market,
     broker_preflight,
@@ -49,14 +54,20 @@ from .database import (
     EquityPoint,
     MarketDataConnection,
     MemberQuote,
+    LoginThrottle,
     BrowserSession,
+    Invitation,
     PaperAccount,
     PaperFill,
     RuntimeHeartbeat,
     SessionLocal,
     Strategy,
     User,
-    initialize_database,
+    acquire_transaction_lock,
+    bind_runtime_context,
+    prepare_runtime_database,
+    quota_allocation,
+    invitation_token_hash,
     utcnow,
 )
 from .dashboard_views import completed_session_freshness, market_overview, news_feed, sector_heatmap
@@ -77,6 +88,7 @@ from .security import (
     hash_password,
     normalize_email,
     parse_session,
+    password_needs_rehash,
     validate_password,
     verify_password,
 )
@@ -93,15 +105,34 @@ logger = logging.getLogger("cloud_app.main")
 _DUMMY_PASSWORD_HASH = hash_password("milkyway-invalid-login-placeholder")
 _local_ai_slots = threading.BoundedSemaphore(settings.local_ai_max_concurrent_requests)
 _market_data_verification_slots = threading.BoundedSemaphore(2)
+_password_slots = threading.BoundedSemaphore(settings.password_max_concurrent_requests)
 STATIC = Path(__file__).resolve().parent / "static"
 app = FastAPI(title=settings.app_name, docs_url=None if settings.production else "/docs")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts))
-app.add_middleware(RequestBodyLimitMiddleware, max_bytes=settings.max_request_body_bytes)
+app.add_middleware(
+    RequestBodyLimitMiddleware,
+    max_bytes=settings.max_request_body_bytes,
+    read_timeout_seconds=settings.request_body_read_timeout_seconds,
+    max_messages=settings.max_request_body_messages,
+)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 def _broker_enabled() -> bool:
     return getattr(settings, "credential_backend", "local") == "broker"
+
+
+def _member_api(method: str, path: str, *, market: bool = False, **kwargs):
+    """Register member AI and market operations according to their own modes."""
+
+    enabled = settings.member_credentials_enabled if market else member_ai_credentials_enabled(settings)
+    if enabled and not settings.authority_enabled:
+        return getattr(app, method)(path, **kwargs)
+
+    def disabled_route(function):
+        return function
+
+    return disabled_route
 
 
 class RegisterBody(BaseModel):
@@ -157,6 +188,7 @@ class StatusBody(BaseModel):
 
 _attempt_lock = threading.Lock()
 _attempts: dict[str, deque[float]] = defaultdict(deque)
+_attempt_windows: dict[str, int] = {}
 _max_rate_limit_keys = max(1024, settings.max_users * 100)
 _stream_lock = threading.Lock()
 _stream_counts: dict[str, int] = defaultdict(int)
@@ -167,24 +199,107 @@ def _rate_limit(key: str, limit: int, window_seconds: int) -> None:
     now = time.monotonic()
     with _attempt_lock:
         if key not in _attempts and len(_attempts) >= _max_rate_limit_keys:
-            stale_before = now - 3600
-            for stale_key in [
-                candidate
-                for candidate, values in _attempts.items()
-                if not values or values[-1] < stale_before
-            ]:
-                _attempts.pop(stale_key, None)
+            for stale_key, values in list(_attempts.items()):
+                window = _attempt_windows.get(stale_key, 3600)
+                while values and values[0] < now - window:
+                    values.popleft()
+                if not values:
+                    _attempts.pop(stale_key, None)
+                    _attempt_windows.pop(stale_key, None)
             if len(_attempts) >= _max_rate_limit_keys:
-                raise HTTPException(
-                    status_code=429,
-                    detail="요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+                oldest = min(
+                    _attempts,
+                    key=lambda candidate: (
+                        _attempts[candidate][-1] if _attempts[candidate] else float("-inf")
+                    ),
                 )
+                _attempts.pop(oldest, None)
+                _attempt_windows.pop(oldest, None)
         bucket = _attempts[key]
+        _attempt_windows[key] = int(window_seconds)
         while bucket and bucket[0] < now - window_seconds:
             bucket.popleft()
         if len(bucket) >= limit:
             raise HTTPException(status_code=429, detail="요청이 너무 많습니다. 잠시 후 다시 시도하세요.")
         bucket.append(now)
+
+
+def _client_rate_identity(value: str) -> str:
+    """Bound IPv6 privacy-address churn while retaining distinct IPv4 clients."""
+
+    try:
+        address = ipaddress.ip_address(value)
+    except ValueError:
+        return "unknown"
+    if isinstance(address, ipaddress.IPv6Address):
+        return str(ipaddress.ip_network("{}/64".format(address), strict=False))
+    return address.compressed
+
+
+def _login_budget_key(kind: str, value: str) -> str:
+    return hmac.new(
+        settings.session_secret.encode("utf-8"),
+        ("login-budget\0" + kind + "\0" + value).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _consume_login_budget(
+    session: Session,
+    kind: str,
+    value: str,
+    limit: int,
+    window_seconds: int,
+    *,
+    enforce: bool = True,
+    commit: bool = True,
+) -> bool:
+    """Persist an admission decision before password verification runs."""
+
+    key_hash = _login_budget_key(kind, value)
+    now = utcnow()
+    with quota_allocation(session, "login-throttle", key_hash):
+        if kind == "global":
+            session.execute(
+                delete(LoginThrottle).where(
+                    LoginThrottle.updated_at
+                    < now
+                    - dt.timedelta(
+                        seconds=max(120, settings.login_account_window_seconds * 2)
+                    )
+                )
+            )
+        row = session.get(LoginThrottle, key_hash)
+        if row is None:
+            row = LoginThrottle(
+                key_hash=key_hash,
+                bucket_kind=kind,
+                attempts=0,
+                window_started_at=now,
+                updated_at=now,
+            )
+        started = row.window_started_at
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=dt.timezone.utc)
+        if started <= now - dt.timedelta(seconds=window_seconds):
+            row.attempts = 0
+            row.window_started_at = now
+        saturated = row.attempts >= limit
+        if saturated and enforce:
+            session.rollback()
+            raise HTTPException(
+                status_code=429,
+                detail="로그인 요청이 많습니다. 잠시 후 다시 시도하세요.",
+            )
+        if not saturated:
+            row.attempts += 1
+        row.updated_at = now
+        session.add(row)
+        if commit:
+            session.commit()
+        else:
+            session.flush()
+        return saturated
 
 
 def _acquire_stream(user_id: str) -> bool:
@@ -218,10 +333,20 @@ def get_db():
         session.close()
 
 
-def current_user(request: Request, session: Session = Depends(get_db)) -> User:
+def _authenticate_request(request: Request, session: Session) -> User:
     token = request.cookies.get("session")
     if not token:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다")
+    if settings.authority_enabled:
+        if not isinstance(token, str) or len(token) != 43:
+            raise HTTPException(401, "세션이 만료되었습니다")
+        bind_runtime_context(session, auth_token=token)
+        row = session.execute(text("SELECT * FROM milkyway_private.principal()")).mappings().one_or_none()
+        if row is None:
+            raise HTTPException(401, "세션이 만료되었습니다")
+        request.state.session_payload = {"sub": row["user_id"], "csrf": row["csrf"], "role": row["role"]}
+        # Construct a detached public identity. The app has no users-table grant.
+        return User(id=row["user_id"], email=row["email"], display_name=row["display_name"], role=row["role"], active=True)
     try:
         payload = parse_session(token, settings.session_secret)
     except ValueError:
@@ -246,6 +371,25 @@ def current_user(request: Request, session: Session = Depends(get_db)) -> User:
     request.state.session_payload = payload
     request.state.browser_session = browser_session
     return user
+
+
+def current_user(request: Request, session: Session = Depends(get_db)) -> User:
+    return _authenticate_request(request, session)
+
+
+@dataclass(frozen=True)
+class StreamPrincipal:
+    user_id: str
+
+
+def stream_principal(request: Request) -> StreamPrincipal:
+    """Authenticate an SSE request without retaining a pooled DB connection."""
+
+    session = SessionLocal()
+    try:
+        return StreamPrincipal(user_id=_authenticate_request(request, session).id)
+    finally:
+        session.close()
 
 
 def csrf_guard(request: Request, user: User = Depends(current_user)) -> User:
@@ -301,11 +445,14 @@ def _owned_strategy(session: Session, user: User, strategy_id: str) -> Strategy:
 def _migrate_legacy_credentials() -> None:
     """Upgrade local ciphertext, or reject records needing offline KMS migration."""
 
+    if settings.authority_enabled or not settings.member_credentials_enabled:
+        return
     session = SessionLocal()
     changed = False
     try:
         target_prefix = credential_ciphertext_prefix(settings)
-        for row in session.scalars(select(AiConnection)).all():
+        ai_rows = session.scalars(select(AiConnection)).all() if member_ai_credentials_enabled(settings) else ()
+        for row in ai_rows:
             if row.provider == "local" or not row.encrypted_api_key:
                 continue
             if row.encrypted_api_key.startswith(target_prefix):
@@ -440,7 +587,7 @@ def startup() -> None:
     errors = settings.startup_errors("app")
     if errors:
         raise RuntimeError("Startup configuration failed: " + "; ".join(errors))
-    initialize_database()
+    prepare_runtime_database()
     if _broker_enabled():
         broker_preflight(settings, "app")
     _migrate_legacy_credentials()
@@ -477,7 +624,13 @@ def live():
 
 @app.get("/health/ready")
 def ready(session: Session = Depends(get_db)):
-    details = {"database": False, "dataset": False, "data_gate": False, "worker": False}
+    details = {
+        "database": False,
+        "dataset": False,
+        "data_gate": False,
+        "demo_data": settings.local_demo_data,
+        "worker": False,
+    }
     try:
         session.execute(text("SELECT 1"))
         details["database"] = True
@@ -493,32 +646,103 @@ def ready(session: Session = Depends(get_db)):
     except Exception as exc:
         logger.warning("readiness component check failed error=%s", type(exc).__name__)
         details["error"] = "component check failed"
-    ok = details["database"] and details["dataset"] and details["data_gate"]
+    # The deterministic local dataset intentionally has no point-in-time data
+    # certification. It is nevertheless a ready development sandbox; strict
+    # backtests remain unavailable because ``data_gate`` stays false.
+    ok = details["database"] and details["dataset"] and (
+        details["data_gate"] or settings.local_demo_data
+    )
     return JSONResponse({"status": "ready" if ok else "not_ready", "components": details}, status_code=200 if ok else 503)
 
 
 @app.post("/api/auth/register", status_code=201)
 def register(body: RegisterBody, request: Request, response: Response, session: Session = Depends(get_db)):
-    _rate_limit("register:" + (request.client.host if request.client else "unknown"), 5, 3600)
-    if not hmac.compare_digest(body.invite_code, settings.invite_code):
-        raise HTTPException(status_code=403, detail="초대 코드가 올바르지 않습니다")
-    user_count = int(session.scalar(select(func.count()).select_from(User)) or 0)
-    if user_count >= settings.max_users:
-        raise HTTPException(status_code=409, detail="동아리 계정 정원이 마감되었습니다")
+    source = _client_rate_identity(request.client.host if request.client else "unknown")
+    _rate_limit("register:" + source, 5, 3600)
+    if settings.authority_enabled:
+        return _authority_login_response(response, "register", body.model_dump())
     try:
         email = normalize_email(body.email)
         validate_password(body.password)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
-    user = User(
-        email=email,
-        display_name=body.display_name.strip(),
-        password_hash=hash_password(body.password),
-        role="member",
-    )
-    session.add(user)
     try:
-        session.commit()
+        with quota_allocation(session, "registration", "global"):
+            user_count = int(session.scalar(select(func.count()).select_from(User)) or 0)
+            if user_count >= settings.max_users:
+                raise HTTPException(status_code=409, detail="동아리 계정 정원이 마감되었습니다")
+            if session.scalar(select(User.id).where(User.email == email)) is not None:
+                raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다")
+
+            invitation = None
+            legacy_allowed = settings.legacy_invite_enabled and hmac.compare_digest(
+                body.invite_code, settings.invite_code
+            )
+            if not legacy_allowed:
+                try:
+                    token_hash = invitation_token_hash(
+                        body.invite_code, settings.session_secret
+                    )
+                except ValueError:
+                    raise HTTPException(
+                        status_code=403, detail="초대 코드가 올바르지 않습니다"
+                    ) from None
+                statement = select(Invitation).where(
+                    Invitation.token_hash == token_hash
+                )
+                if session.bind.dialect.name == "postgresql":
+                    statement = statement.with_for_update()
+                invitation = session.scalar(statement)
+                if invitation is None:
+                    raise HTTPException(
+                        status_code=403, detail="초대 코드가 올바르지 않습니다"
+                    )
+                expires_at = invitation.expires_at
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=dt.timezone.utc)
+                if (
+                    invitation.redeemed_at is not None
+                    or expires_at <= utcnow()
+                    or not hmac.compare_digest(invitation.email, email)
+                ):
+                    raise HTTPException(
+                        status_code=403, detail="초대 코드가 올바르지 않습니다"
+                    )
+
+            _consume_login_budget(
+                session,
+                "registration",
+                "all-registration-attempts",
+                settings.registration_global_attempts,
+                3600,
+                commit=False,
+            )
+
+            acquired = _password_slots.acquire(blocking=False)
+            if not acquired:
+                raise HTTPException(
+                    status_code=429,
+                    detail="가입 요청이 많습니다. 잠시 후 다시 시도하세요.",
+                )
+            try:
+                encoded_password = hash_password(body.password)
+            finally:
+                _password_slots.release()
+            user = User(
+                email=email,
+                display_name=body.display_name.strip(),
+                password_hash=encoded_password,
+                role="member",
+            )
+            session.add(user)
+            session.flush()
+            if invitation is not None:
+                invitation.redeemed_at = utcnow()
+                invitation.redeemed_by = user.id
+            session.commit()
+    except HTTPException:
+        session.rollback()
+        raise
     except IntegrityError:
         session.rollback()
         raise HTTPException(status_code=409, detail="이미 가입된 이메일입니다")
@@ -528,17 +752,59 @@ def register(body: RegisterBody, request: Request, response: Response, session: 
 
 @app.post("/api/auth/login")
 def login(body: LoginBody, request: Request, response: Response, session: Session = Depends(get_db)):
-    key = "login:" + (request.client.host if request.client else "unknown")
+    key = "login:" + _client_rate_identity(
+        request.client.host if request.client else "unknown"
+    )
     _rate_limit(key, 10, 600)
+    if settings.authority_enabled:
+        return _authority_login_response(response, "login", body.model_dump())
     try:
         email = normalize_email(body.email)
     except ValueError:
         email = "invalid"
+    _consume_login_budget(
+        session,
+        "global",
+        "all-login-attempts",
+        settings.login_global_attempts,
+        60,
+    )
+    account_saturated = _consume_login_budget(
+        session,
+        "account",
+        email,
+        settings.login_account_attempts,
+        settings.login_account_window_seconds,
+        enforce=False,
+    )
     user = session.scalar(select(User).where(User.email == email))
     password_hash = user.password_hash if user is not None else _DUMMY_PASSWORD_HASH
-    password_matches = verify_password(body.password, password_hash)
+    acquired = _password_slots.acquire(blocking=False)
+    if not acquired:
+        raise HTTPException(status_code=429, detail="로그인 요청이 많습니다. 잠시 후 다시 시도하세요.")
+    try:
+        password_matches = verify_password(body.password, password_hash)
+        replacement_hash = (
+            hash_password(body.password)
+            if password_matches and password_needs_rehash(password_hash)
+            else None
+        )
+    finally:
+        _password_slots.release()
     if user is None or not password_matches or not user.active:
+        if account_saturated is True:
+            raise HTTPException(
+                status_code=429,
+                detail="로그인 요청이 많습니다. 잠시 후 다시 시도하세요.",
+            )
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다")
+    if replacement_hash is not None:
+        user.password_hash = replacement_hash
+    session.execute(
+        delete(LoginThrottle).where(
+            LoginThrottle.key_hash == _login_budget_key("account", email)
+        )
+    )
     csrf = _set_session(response, user, session)
     return {"user": {"id": user.id, "email": user.email, "display_name": user.display_name}, "csrf": csrf}
 
@@ -550,6 +816,11 @@ def logout(
     _user: User = Depends(csrf_guard),
     session: Session = Depends(get_db),
 ):
+    if settings.authority_enabled:
+        try:
+            broker_auth(settings, "logout", {"session_token": request.cookies.get("session", ""), "csrf": request.headers.get("X-CSRF-Token", "")})
+        except CredentialBrokerError as exc:
+            raise HTTPException(exc.status_code, exc.detail) from None
     browser_session = getattr(request.state, "browser_session", None)
     if browser_session is not None:
         session.delete(browser_session)
@@ -568,9 +839,26 @@ def me(request: Request, user: User = Depends(current_user)):
     }
 
 
+def _authority_login_response(response: Response, operation: str, payload: dict) -> dict:
+    try:
+        result = broker_auth(settings, operation, payload)
+    except CredentialBrokerError as exc:
+        raise HTTPException(exc.status_code, exc.detail) from None
+    token = result.pop("session_token", None)
+    if not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9_-]{43}", token):
+        raise HTTPException(503, "인증 서비스 응답이 올바르지 않습니다")
+    response.set_cookie("session", token, max_age=settings.session_hours * 3600,
+                        httponly=True, secure=settings.production, samesite="strict", path="/")
+    return result
+
+
 def _ai_connection_payload(row: AiConnection | None) -> dict:
     if _broker_enabled():
-        catalog = broker_ai_catalog(settings)
+        try:
+            catalog = broker_ai_catalog(settings)
+        except CredentialBrokerError:
+            logger.warning("shared AI status probe unavailable")
+            catalog = []
     else:
         local_ready = settings.local_ai_enabled and local_ai_ready(
             base_url=settings.local_ai_base_url,
@@ -578,9 +866,23 @@ def _ai_connection_payload(row: AiConnection | None) -> dict:
             api_key=settings.local_ai_api_key,
         )
         catalog = provider_catalog(settings, local_ready=local_ready)
-    availability = {
-        item["id"]: item["available"] and item["ready"] for item in catalog
-    }
+    if not member_ai_credentials_enabled(settings):
+        entry = catalog[0] if catalog else {}
+        available = bool(entry.get("available") and entry.get("ready"))
+        configured = bool(settings.shared_ai_enabled)
+        return {
+            "connected": configured,
+            "configured": configured,
+            "available": available,
+            "provider": entry.get("id", settings.shared_ai_provider),
+            "model": entry.get("default_model", settings.shared_ai_model),
+            "provider_verified": bool(entry.get("provider_verified", False)),
+            "key_hint": None,
+            "updated_at": None,
+            "providers": catalog,
+            "management": "club_server",
+        }
+    availability = {item["id"]: item["available"] and item["ready"] for item in catalog}
     configured = row is not None
     available = configured and availability.get(row.provider, False)
     return {
@@ -597,10 +899,11 @@ def _ai_connection_payload(row: AiConnection | None) -> dict:
 
 @app.get("/api/me/ai-connection")
 def get_ai_connection(user: User = Depends(current_user), session: Session = Depends(get_db)):
-    return _ai_connection_payload(session.get(AiConnection, user.id))
+    row = session.get(AiConnection, user.id) if member_ai_credentials_enabled(settings) else None
+    return _ai_connection_payload(row)
 
 
-@app.put("/api/me/ai-connection")
+@_member_api("put", "/api/me/ai-connection")
 def put_ai_connection(
     body: AiConnectionBody,
     user: User = Depends(csrf_guard),
@@ -674,7 +977,7 @@ def put_ai_connection(
     return _ai_connection_payload(row)
 
 
-@app.delete("/api/me/ai-connection", status_code=204)
+@_member_api("delete", "/api/me/ai-connection", status_code=204)
 def delete_ai_connection(user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
     row = session.get(AiConnection, user.id)
     if row is not None:
@@ -683,6 +986,23 @@ def delete_ai_connection(user: User = Depends(csrf_guard), session: Session = De
 
 
 def _market_data_connection_payload(row: MarketDataConnection | None) -> dict:
+    if not settings.member_credentials_enabled:
+        shared = settings.quote_provider == "kis" and settings.market_data_sharing_allowed
+        return {
+            "connected": shared,
+            "configured": settings.quote_provider == "kis",
+            "provider": settings.quote_provider,
+            "environment": settings.kis_environment if settings.quote_provider == "kis" else None,
+            "key_hint": None,
+            "secret_hint": None,
+            "verified_at": None,
+            "verification_status": "worker_managed" if shared else "not_configured",
+            "updated_at": None,
+            "providers": [],
+            "usage_scope": "shared_club_feed",
+            "management": "club_server",
+            "transport": "rest_polling" if settings.quote_provider == "kis" else "dataset",
+        }
     return {
         "connected": row is not None,
         "configured": row is not None,
@@ -695,6 +1015,8 @@ def _market_data_connection_payload(row: MarketDataConnection | None) -> dict:
         "updated_at": row.updated_at if row else None,
         "providers": market_data_provider_catalog(),
         "usage_scope": "personal_paper_only",
+        "management": "credential_broker" if settings.authority_enabled else "member",
+        "management_url": settings.credential_broker_url + "/credentials" if settings.authority_enabled else None,
     }
 
 
@@ -708,10 +1030,15 @@ def _market_data_connection_version(row: MarketDataConnection | None) -> str | N
 def get_market_data_connection(
     user: User = Depends(current_user), session: Session = Depends(get_db)
 ):
-    return _market_data_connection_payload(session.get(MarketDataConnection, user.id))
+    row = (
+        session.get(MarketDataConnection, user.id)
+        if settings.member_credentials_enabled
+        else None
+    )
+    return _market_data_connection_payload(row)
 
 
-@app.put("/api/me/market-data-connection")
+@_member_api("put", "/api/me/market-data-connection", market=True)
 def put_market_data_connection(
     body: MarketDataConnectionBody,
     user: User = Depends(csrf_guard),
@@ -794,13 +1121,13 @@ def put_market_data_connection(
         finally:
             _market_data_verification_slots.release()
 
-    # Authentication is network I/O and stays outside the row lock. Re-read
-    # and lock immediately before mutation so worker and settings operations
-    # always lock connection -> member quotes in the same order.
+    # Authentication is network I/O and stays outside the transaction lock.
+    # The advisory lock does not require paper-worker UPDATE rights on the
+    # credential row and remains held until commit/rollback.
+    acquire_transaction_lock(session, "market-connection", user.id)
     locked_row = session.scalar(
         select(MarketDataConnection)
         .where(MarketDataConnection.user_id == user.id)
-        .with_for_update()
         .execution_options(populate_existing=True)
     )
     if _market_data_connection_version(locked_row) != expected_version:
@@ -873,14 +1200,14 @@ def put_market_data_connection(
     return _market_data_connection_payload(row)
 
 
-@app.delete("/api/me/market-data-connection", status_code=204)
+@_member_api("delete", "/api/me/market-data-connection", market=True, status_code=204)
 def delete_market_data_connection(
     user: User = Depends(csrf_guard), session: Session = Depends(get_db)
 ):
+    acquire_transaction_lock(session, "market-connection", user.id)
     row = session.scalar(
         select(MarketDataConnection)
         .where(MarketDataConnection.user_id == user.id)
-        .with_for_update()
         .execution_options(populate_existing=True)
     )
     if row is not None:
@@ -910,29 +1237,46 @@ def list_strategies(user: User = Depends(current_user), session: Session = Depen
 
 
 def _save_strategy(session: Session, user: User, spec: StrategySpec, prompt: str) -> Strategy:
-    count = session.scalar(select(func.count()).select_from(Strategy).where(Strategy.user_id == user.id))
-    if int(count or 0) >= settings.max_strategies_per_user:
-        raise HTTPException(status_code=409, detail="사용자별 전략 수 한도를 초과했습니다")
-    row = Strategy(
-        user_id=user.id,
-        name=spec.name,
-        description=spec.description,
-        original_prompt=prompt,
-        spec_json=spec.model_dump_json(),
-    )
-    session.add(row)
-    session.commit()
+    with quota_allocation(session, "strategies", user.id):
+        count = session.scalar(select(func.count()).select_from(Strategy).where(Strategy.user_id == user.id))
+        if int(count or 0) >= settings.max_strategies_per_user:
+            raise HTTPException(status_code=409, detail="사용자별 전략 수 한도를 초과했습니다")
+        row = Strategy(
+            user_id=user.id,
+            name=spec.name,
+            description=spec.description,
+            original_prompt=prompt,
+            spec_json=spec.model_dump_json(),
+        )
+        session.add(row)
+        session.commit()
     return row
 
 
 @app.post("/api/strategies/generate", status_code=201)
-def ai_strategy(body: PromptBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
-    connection = session.get(AiConnection, user.id)
-    if connection is None:
+def ai_strategy(body: PromptBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db), request: Request = None):
+    member_ai = member_ai_credentials_enabled(settings)
+    connection = (
+        session.get(AiConnection, user.id)
+        if member_ai
+        else None
+    )
+    if member_ai and connection is None:
         raise HTTPException(status_code=409, detail="설정에서 AI를 먼저 연결해 주세요")
     local_slot_acquired = False
     try:
-        if _broker_enabled():
+        if not member_ai:
+            if settings.authority_enabled:
+                session.rollback()
+            if not _broker_enabled():
+                raise RuntimeError("동아리 공용 AI broker가 설정되지 않았습니다")
+            _rate_limit("ai:" + user.id, 10, 3600)
+            spec, _preview = broker_generate_shared_strategy(
+                settings,
+                prompt=body.prompt,
+                **({"session_token": request.cookies.get("session", ""), "csrf": request.headers.get("X-CSRF-Token", "")} if settings.authority_enabled else {}),
+            )
+        elif _broker_enabled():
             _rate_limit("ai:" + user.id, 10, 3600)
             spec, _preview = broker_generate_strategy(
                 settings,
@@ -963,7 +1307,7 @@ def ai_strategy(body: PromptBody, user: User = Depends(csrf_guard), session: Ses
             )
             model = connection.model
             local_base_url = None
-        if not _broker_enabled():
+        if member_ai and not _broker_enabled():
             _rate_limit("ai:" + user.id, 10, 3600)
             spec, _preview = generate_strategy(
                 body.prompt,
@@ -1023,23 +1367,45 @@ def create_backtest(body: BacktestBody, user: User = Depends(csrf_guard), sessio
             detail="최신 일일 데이터 품질 게이트가 통과될 때까지 엄격 PIT 백테스트를 중단합니다",
         )
     today = utcnow().date()
-    count = session.scalar(
-        select(func.count()).select_from(BacktestJob).where(
-            BacktestJob.user_id == user.id,
-            BacktestJob.created_at >= dt.datetime.combine(today, dt.time.min, tzinfo=dt.timezone.utc),
-        )
-    )
-    if int(count or 0) >= settings.max_backtests_per_user_day:
-        raise HTTPException(status_code=429, detail="일일 백테스트 한도를 초과했습니다")
-    job = BacktestJob(
-        user_id=user.id,
-        strategy_id=strategy.id,
-        bias_mode=body.bias_mode,
-        start_date=body.start_date,
-        end_date=body.end_date,
-    )
-    session.add(job)
-    session.commit()
+    with quota_allocation(session, "backtests", "global"):
+        with quota_allocation(session, "backtests", user.id):
+            daily_count = session.scalar(
+                select(func.count()).select_from(BacktestJob).where(
+                    BacktestJob.user_id == user.id,
+                    BacktestJob.created_at
+                    >= dt.datetime.combine(today, dt.time.min, tzinfo=dt.timezone.utc),
+                )
+            )
+            if int(daily_count or 0) >= settings.max_backtests_per_user_day:
+                raise HTTPException(status_code=429, detail="일일 백테스트 한도를 초과했습니다")
+            user_outstanding = session.scalar(
+                select(func.count()).select_from(BacktestJob).where(
+                    BacktestJob.user_id == user.id,
+                    BacktestJob.status.in_(("queued", "running")),
+                )
+            )
+            if int(user_outstanding or 0) >= settings.max_outstanding_backtests_per_user:
+                raise HTTPException(
+                    status_code=429, detail="완료되지 않은 백테스트 한도를 초과했습니다"
+                )
+            global_outstanding = session.scalar(
+                select(func.count()).select_from(BacktestJob).where(
+                    BacktestJob.status.in_(("queued", "running"))
+                )
+            )
+            if int(global_outstanding or 0) >= settings.max_outstanding_backtests_total:
+                raise HTTPException(
+                    status_code=429, detail="공용 백테스트 대기열이 가득 찼습니다"
+                )
+            job = BacktestJob(
+                user_id=user.id,
+                strategy_id=strategy.id,
+                bias_mode=body.bias_mode,
+                start_date=body.start_date,
+                end_date=body.end_date,
+            )
+            session.add(job)
+            session.commit()
     return {"id": job.id, "status": job.status}
 
 
@@ -1067,26 +1433,65 @@ def list_backtests(user: User = Depends(current_user), session: Session = Depend
     ]
 
 
+def _ensure_shared_quote_capacity(
+    session: Session, *, additional_positions: int = 0
+) -> None:
+    """Bound held plus rebalance-candidate demand to the freshness window."""
+
+    if settings.quote_provider != "kis":
+        return
+    # Include the worker loop's mandatory one-second sleep and leave the
+    # boundary second unused. quote_map() consumes the same configured age.
+    effective_tick_seconds = max(
+        settings.quote_interval_seconds,
+        int(settings.shared_quote_tick_deadline_seconds + 0.999999),
+    ) + 1
+    refreshes = max(
+        1,
+        (settings.quote_max_age_seconds - 1) // effective_tick_seconds,
+    )
+    capacity = settings.shared_quote_max_symbols_per_tick * refreshes
+    # Four market baselines are refreshed alongside member holdings.
+    position_capacity = max(0, capacity - 4)
+    active_accounts = session.scalars(
+        select(PaperAccount).where(PaperAccount.status == "active")
+    ).all()
+    # A due account can simultaneously need quotes for every current holding
+    # and a disjoint target set of the same configured size.
+    reserved = 2 * sum(
+        StrategySpec.model_validate_json(account.strategy.spec_json).portfolio.max_positions
+        for account in active_accounts
+    )
+    if reserved + (2 * int(additional_positions)) > position_capacity:
+        raise HTTPException(
+            status_code=409,
+            detail="공용 시세 freshness 용량을 초과해 새 활성 계좌를 만들 수 없습니다",
+        )
+
+
 @app.post("/api/accounts", status_code=201)
 def create_account(body: AccountBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
     strategy = _owned_strategy(session, user, body.strategy_id)
-    count = session.scalar(
-        select(func.count()).select_from(PaperAccount).where(PaperAccount.user_id == user.id)
-    )
-    if int(count or 0) >= settings.max_accounts_per_user:
-        raise HTTPException(status_code=409, detail="사용자별 페이퍼 계좌 한도를 초과했습니다")
     spec = StrategySpec.model_validate_json(strategy.spec_json)
-    row = PaperAccount(
-        user_id=user.id,
-        strategy_id=strategy.id,
-        name=body.name.strip(),
-        initial_cash=spec.portfolio.initial_cash,
-        cash=spec.portfolio.initial_cash,
-    )
-    session.add(row)
-    session.flush()
-    session.add(EquityPoint(account_id=row.id, equity=row.cash, cash=row.cash))
-    session.commit()
+    with quota_allocation(session, "accounts", "global"):
+        with quota_allocation(session, "accounts", user.id):
+            count = session.scalar(
+                select(func.count()).select_from(PaperAccount).where(PaperAccount.user_id == user.id)
+            )
+            if int(count or 0) >= settings.max_accounts_per_user:
+                raise HTTPException(status_code=409, detail="사용자별 페이퍼 계좌 한도를 초과했습니다")
+            _ensure_shared_quote_capacity(
+                session, additional_positions=spec.portfolio.max_positions
+            )
+            row = PaperAccount(
+                user_id=user.id,
+                strategy_id=strategy.id,
+                name=body.name.strip(),
+                initial_cash=spec.portfolio.initial_cash,
+                cash=spec.portfolio.initial_cash,
+            )
+            session.add(row)
+            session.commit()
     return account_snapshot(session, row)
 
 
@@ -1112,13 +1517,19 @@ def update_account(
     )
     if row is None:
         raise HTTPException(status_code=404, detail="계좌를 찾을 수 없습니다")
-    if row.status == "review_required":
+    if row.status in {"review_required", "configuration_required"}:
         raise HTTPException(
             status_code=409,
             detail="상장 이탈/corporate action 검토가 필요해 사용자가 재개할 수 없습니다",
         )
-    row.status = body.status
-    session.commit()
+    with quota_allocation(session, "accounts", "global"):
+        if row.status != "active" and body.status == "active":
+            spec = StrategySpec.model_validate_json(row.strategy.spec_json)
+            _ensure_shared_quote_capacity(
+                session, additional_positions=spec.portfolio.max_positions
+            )
+        row.status = body.status
+        session.commit()
     return account_snapshot(session, row)
 
 
@@ -1152,6 +1563,14 @@ def account_history(account_id: str, user: User = Depends(current_user), session
 
 @app.get("/api/dashboard")
 def dashboard(user: User = Depends(current_user), session: Session = Depends(get_db)):
+    if not member_ai_credentials_enabled(settings):
+        # Authentication performed DB reads, but no writes are pending. Release
+        # the checkout before a bounded broker status probe, then lazily acquire
+        # a connection again for dashboard state.
+        session.rollback()
+        ai_connection_payload = _ai_connection_payload(None)
+    else:
+        ai_connection_payload = None
     bundle = get_dashboard_dataset(settings)
     market_groups = market_overview(
         session, quote_interval_seconds=settings.quote_interval_seconds
@@ -1170,8 +1589,18 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
     worker = session.get(RuntimeHeartbeat, "paper-worker")
     last_completed_session = bundle.last_completed_session
     freshness = completed_session_freshness(last_completed_session)
-    ai_connection = session.get(AiConnection, user.id)
-    market_data_connection = session.get(MarketDataConnection, user.id)
+    ai_connection = (
+        session.get(AiConnection, user.id)
+        if member_ai_credentials_enabled(settings)
+        else None
+    )
+    market_data_connection = (
+        session.get(MarketDataConnection, user.id)
+        if settings.member_credentials_enabled
+        else None
+    )
+    if ai_connection_payload is None:
+        ai_connection_payload = _ai_connection_payload(ai_connection)
     return {
         "market": [row for rows in market_groups.values() for row in rows],
         "market_groups": market_groups,
@@ -1198,16 +1627,16 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
             "observed_at": worker.observed_at if worker else None,
             "detail": worker.detail if worker else "not started",
         },
-        "ai_enabled": _ai_connection_payload(ai_connection)["connected"],
-        "ai_connection": _ai_connection_payload(ai_connection),
+        "ai_enabled": ai_connection_payload["connected"],
+        "ai_connection": ai_connection_payload,
         "market_data_connection": _market_data_connection_payload(market_data_connection),
         "quote_provider": settings.quote_provider,
     }
 
 
 @app.get("/api/stream")
-async def stream(request: Request, user: User = Depends(current_user)):
-    if not _acquire_stream(user.id):
+async def stream(request: Request, principal: StreamPrincipal = Depends(stream_principal)):
+    if not _acquire_stream(principal.user_id):
         raise HTTPException(status_code=429, detail="실시간 연결 한도를 초과했습니다")
 
     async def events():
@@ -1218,7 +1647,7 @@ async def stream(request: Request, user: User = Depends(current_user)):
                 yield "event: heartbeat\ndata: {}\n\n".format(int(time.time()))
                 await asyncio.sleep(15)
         finally:
-            _release_stream(user.id)
+            _release_stream(principal.user_id)
 
     return StreamingResponse(
         events(),

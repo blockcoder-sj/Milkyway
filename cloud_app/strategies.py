@@ -8,10 +8,7 @@ from __future__ import annotations
 
 import glob
 import datetime as dt
-import hashlib
-import hmac
 import json
-import pickle
 import threading
 from pathlib import Path
 from typing import Literal
@@ -22,10 +19,27 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from backtest_core import run_backtest
 from market_calendar import next_trading_day
-from price_data_pipeline import build_strategy_eligibility_mask, load_price_dataset
+from price_data_pipeline import (
+    MAX_DATASET_COMPRESSED_BYTES,
+    MAX_PRICE_FILE_BYTES,
+    MAX_DATASET_ROWS,
+    MAX_DATASET_UNCOMPRESSED_BYTES,
+    build_strategy_eligibility_mask,
+    assert_manifest_generation,
+    load_price_dataset,
+    load_manifest_snapshot,
+    price_file_path,
+    read_price_frame,
+    require_price_manifest,
+    validate_dataset_inventory,
+)
 from terminal_events import effective_verified_events, load_events
-from universe_snapshot import load_snapshot
+from universe_snapshot import (
+    SnapshotAggregateBudgetExceeded,
+    load_snapshot_with_size,
+)
 
+from .bounded_io import FileReadBudget, bounded_paths, read_bounded_json
 from .config import Settings, get_settings
 
 
@@ -37,6 +51,22 @@ FactorKind = Literal[
     "volume_momentum",
     "rsi",
 ]
+MAX_VALIDATION_REPORT_BYTES = 4 * 1024 * 1024
+MAX_CERTIFIED_SNAPSHOTS = 1000
+MAX_CERTIFIED_SNAPSHOT_BYTES = 64 * 1024 * 1024
+MAX_VALIDATION_BLOCKERS = 10_000
+
+
+def _load_validation_report(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    value = read_bounded_json(path, maximum_bytes=MAX_VALIDATION_REPORT_BYTES)
+    if not isinstance(value, dict):
+        raise ValueError("dataset validation report must be an object")
+    blockers = value.get("strategy_candidate_data_blockers", [])
+    if not isinstance(blockers, list) or len(blockers) > MAX_VALIDATION_BLOCKERS:
+        raise ValueError("dataset validation report blocker limit exceeded")
+    return value
 
 
 class StrictSpecModel(BaseModel):
@@ -86,9 +116,19 @@ class StrategySpec(StrictSpecModel):
 class DatasetBundle:
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.data = load_price_dataset(settings.dataset_dir)
         self.manifest_path = settings.dataset_dir / "manifest.json"
-        self.manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        self.manifest, _manifest_bytes, manifest_sha256 = load_manifest_snapshot(
+            self.manifest_path
+        )
+        self.data = load_price_dataset(
+            settings.dataset_dir,
+            manifest=self.manifest,
+            manifest_sha256=manifest_sha256,
+        )
+        # Keep the full bundle's public dataset metadata consistent with the
+        # manifest-only DatasetSummary.  Callers use this in strategy responses
+        # after the price data has been loaded and integrity-checked.
+        self.symbol_count = len(self.data)
         index_values = set()
         for frame in self.data.values():
             index_values.update(frame.index)
@@ -99,7 +139,7 @@ class DatasetBundle:
             ).astype("float32")
             for column in ("Open", "High", "Low", "Close", "Volume")
         }
-        self.snapshots = _load_certified_snapshots(settings.snapshots_glob)
+        self.snapshots = _snapshots_for_settings(settings)
         if not self.snapshots:
             raise ValueError("No certified universe snapshots were found")
         self.first_snapshot_date = min(str(item["effective_date"]) for item in self.snapshots)
@@ -107,11 +147,14 @@ class DatasetBundle:
             dt.date.fromisoformat(self.first_snapshot_date)
         ).isoformat()
         validation_path = settings.dataset_dir / "validation_report.json"
-        self.validation = (
-            json.loads(validation_path.read_text(encoding="utf-8"))
-            if validation_path.exists()
-            else {}
-        )
+        self.validation = _load_validation_report(validation_path)
+        if (
+            settings.production
+            and self.validation.get("approved_manifest_sha256") != manifest_sha256
+        ):
+            raise ValueError(
+                "production dataset was not independently promoted for this manifest"
+            )
         latest_snapshot_hash = self.snapshots[-1]["membership_sha256"]
         validation_window_end = str(self.validation.get("window", {}).get("end", ""))
         self.forward_data_gate_ready = bool(
@@ -119,8 +162,14 @@ class DatasetBundle:
             and self.validation.get("current_snapshot_membership_sha256")
             == latest_snapshot_hash
             and validation_window_end >= self.index.max().date().isoformat()
+            and (
+                not settings.production
+                or self.validation.get("approved_manifest_sha256")
+                == manifest_sha256
+            )
         )
-        self.fingerprint = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
+        assert_manifest_generation(self.manifest_path, manifest_sha256)
+        self.fingerprint = manifest_sha256
 
 
 class DatasetSummary:
@@ -129,27 +178,54 @@ class DatasetSummary:
     def __init__(self, settings: Settings):
         self.settings = settings
         self.manifest_path = settings.dataset_dir / "manifest.json"
-        self.manifest = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+        self.manifest, _manifest_bytes, manifest_sha256 = load_manifest_snapshot(
+            self.manifest_path
+        )
         self.data = self.manifest.get("prices", {})
         if not self.data:
             raise ValueError("Dataset manifest contains no approved prices")
+        validate_dataset_inventory(settings.dataset_dir, self.manifest)
         self.price_root = (settings.dataset_dir / "prices").resolve()
         self.verified_price_paths: dict[str, Path] = {}
+        total_rows = 0
+        total_compressed = 0
+        total_uncompressed = 0
         for ticker, metadata in self.data.items():
             if not isinstance(metadata, dict):
                 raise ValueError("Dataset manifest price metadata is invalid")
-            path = (self.price_root / "{}_data.pkl".format(ticker)).resolve()
+            raw_path = price_file_path(self.price_root, str(ticker))
+            if raw_path.is_symlink():
+                raise ValueError("Dataset manifest price file is missing or unsafe")
+            path = raw_path.resolve()
             if path.parent != self.price_root or not path.is_file():
                 raise ValueError("Dataset manifest price file is missing or unsafe")
+            if path.stat().st_size <= 0 or path.stat().st_size > MAX_PRICE_FILE_BYTES:
+                raise ValueError("Dataset manifest price file size is unsafe")
             expected_hash = str(metadata.get("sha256", ""))
-            digest = hashlib.sha256()
-            with path.open("rb") as handle:
-                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                    digest.update(chunk)
-            if len(expected_hash) != 64 or not hmac.compare_digest(
-                digest.hexdigest(), expected_hash
+            metrics = {}
+            frame = read_price_frame(
+                path,
+                require_valid=True,
+                expected_sha256=expected_hash,
+                metrics=metrics,
+            )
+            total_rows += metrics["rows"]
+            total_compressed += metrics["compressed_bytes"]
+            total_uncompressed += metrics["uncompressed_bytes"]
+            if total_rows > MAX_DATASET_ROWS:
+                raise ValueError("Dataset aggregate row limit exceeded")
+            if total_compressed > MAX_DATASET_COMPRESSED_BYTES:
+                raise ValueError("Dataset aggregate compressed size limit exceeded")
+            if total_uncompressed > MAX_DATASET_UNCOMPRESSED_BYTES:
+                raise ValueError("Dataset aggregate expanded size limit exceeded")
+            if (
+                int(metadata.get("rows", -1)) != len(frame)
+                or str(metadata.get("first_date", ""))
+                != frame.index.min().date().isoformat()
+                or str(metadata.get("last_date", ""))
+                != frame.index.max().date().isoformat()
             ):
-                raise ValueError("Dataset price integrity check failed")
+                raise ValueError("Dataset price metadata does not match file contents")
             self.verified_price_paths[str(ticker)] = path
         first_date = min(str(item["first_date"]) for item in self.data.values())
         last_date = max(str(item["last_date"]) for item in self.data.values())
@@ -157,7 +233,7 @@ class DatasetSummary:
         self.last_completed_session = dt.date.fromisoformat(last_date)
         self.index = pd.DatetimeIndex([self.first_completed_session, self.last_completed_session])
         self.symbol_count = len(self.data)
-        self.snapshots = _load_certified_snapshots(settings.snapshots_glob)
+        self.snapshots = _snapshots_for_settings(settings)
         if not self.snapshots:
             raise ValueError("No certified universe snapshots were found")
         self.first_snapshot_date = min(str(item["effective_date"]) for item in self.snapshots)
@@ -165,11 +241,14 @@ class DatasetSummary:
             dt.date.fromisoformat(self.first_snapshot_date)
         ).isoformat()
         validation_path = settings.dataset_dir / "validation_report.json"
-        self.validation = (
-            json.loads(validation_path.read_text(encoding="utf-8"))
-            if validation_path.exists()
-            else {}
-        )
+        self.validation = _load_validation_report(validation_path)
+        if (
+            settings.production
+            and self.validation.get("approved_manifest_sha256") != manifest_sha256
+        ):
+            raise ValueError(
+                "production dataset was not independently promoted for this manifest"
+            )
         latest_snapshot_hash = self.snapshots[-1]["membership_sha256"]
         validation_window_end = str(self.validation.get("window", {}).get("end", ""))
         self.forward_data_gate_ready = bool(
@@ -177,8 +256,14 @@ class DatasetSummary:
             and self.validation.get("current_snapshot_membership_sha256")
             == latest_snapshot_hash
             and validation_window_end >= self.last_completed_session.isoformat()
+            and (
+                not settings.production
+                or self.validation.get("approved_manifest_sha256")
+                == manifest_sha256
+            )
         )
-        self.fingerprint = hashlib.sha256(self.manifest_path.read_bytes()).hexdigest()
+        assert_manifest_generation(self.manifest_path, manifest_sha256)
+        self.fingerprint = manifest_sha256
 
 
 class DashboardDataset(DatasetSummary):
@@ -192,14 +277,19 @@ class DashboardDataset(DatasetSummary):
         closes: dict[str, pd.Series] = {}
         for ticker, path in self.verified_price_paths.items():
             try:
-                frame = pd.read_pickle(path)
+                frame = read_price_frame(
+                    path,
+                    require_valid=True,
+                    expected_sha256=str(self.data[ticker].get("sha256", "")),
+                )
                 if "Close" not in frame.columns:
                     continue
                 series = pd.to_numeric(frame["Close"], errors="coerce").dropna().tail(2)
                 if len(series) == 2:
                     closes[str(ticker)] = series.astype("float32")
-            except (OSError, ValueError, TypeError, EOFError, pickle.UnpicklingError):
+            except (OSError, ValueError, TypeError, EOFError):
                 continue
+        assert_manifest_generation(self.manifest_path, self.fingerprint)
         self.panels = {"Close": pd.DataFrame(closes, dtype="float32")}
 
 
@@ -218,9 +308,17 @@ def _load_certified_snapshots(pattern: str) -> list[dict]:
     # Repeated capture attempts can produce multiple files for one effective
     # date. Keep the latest authenticated capture for that date.
     by_date: dict[str, dict] = {}
-    for raw_path in sorted(glob.glob(pattern)):
+    snapshot_paths = bounded_paths(
+        glob.iglob(pattern), maximum_count=MAX_CERTIFIED_SNAPSHOTS
+    )
+    byte_budget = FileReadBudget(MAX_CERTIFIED_SNAPSHOT_BYTES)
+    for raw_path in sorted(snapshot_paths):
         try:
-            snapshot = load_snapshot(Path(raw_path))
+            snapshot, _file_size = load_snapshot_with_size(
+                raw_path, byte_budget=byte_budget,
+            )
+        except SnapshotAggregateBudgetExceeded:
+            raise
         except (ValueError, OSError, json.JSONDecodeError):
             continue
         if not snapshot.get("certification_eligible", False):
@@ -234,11 +332,43 @@ def _load_certified_snapshots(pattern: str) -> list[dict]:
     return [by_date[key] for key in sorted(by_date)]
 
 
+def _load_local_demo_snapshots(pattern: str) -> list[dict]:
+    """Load only explicitly marked synthetic snapshots for the local demo."""
+
+    snapshots = []
+    byte_budget = FileReadBudget(MAX_CERTIFIED_SNAPSHOT_BYTES)
+    for raw_path in sorted(
+        bounded_paths(glob.iglob(pattern), maximum_count=MAX_CERTIFIED_SNAPSHOTS)
+    ):
+        try:
+            snapshot, _file_size = load_snapshot_with_size(
+                raw_path, byte_budget=byte_budget
+            )
+        except (SnapshotAggregateBudgetExceeded, ValueError, OSError, json.JSONDecodeError):
+            continue
+        if snapshot.get("snapshot_type") == "local_demo_synthetic":
+            snapshots.append(snapshot)
+    return snapshots
+
+
+def _snapshots_for_settings(settings: Settings) -> list[dict]:
+    snapshots = _load_certified_snapshots(settings.snapshots_glob)
+    if not snapshots and settings.local_demo_data and not settings.production:
+        return _load_local_demo_snapshots(settings.snapshots_glob)
+    return snapshots
+
+
 def _dataset_mtime(settings: Settings) -> tuple[int, int, int]:
     manifest = settings.dataset_dir / "manifest.json"
     validation = settings.dataset_dir / "validation_report.json"
     snapshot_mtime = max(
-        (Path(path).stat().st_mtime_ns for path in glob.glob(settings.snapshots_glob)),
+        (
+            path.stat().st_mtime_ns
+            for path in bounded_paths(
+                glob.iglob(settings.snapshots_glob),
+                maximum_count=MAX_CERTIFIED_SNAPSHOTS,
+            )
+        ),
         default=0,
     )
     return (

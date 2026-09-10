@@ -14,11 +14,14 @@ import datetime as dt
 import fcntl
 import hashlib
 import json
+import math
 import os
+import stat
 from pathlib import Path
 from typing import Iterable, Mapping, Optional
 
 from universe_snapshot import listed_symbols, load_snapshot
+from cloud_app.bounded_io import read_bounded_text
 
 
 EVENT_TYPES = {
@@ -31,6 +34,9 @@ EVENT_TYPES = {
     "symbol_change",
 }
 EVENT_STATUSES = {"unresolved", "verified", "rejected"}
+MAX_TERMINAL_EVENTS_BYTES = 4 * 1024 * 1024
+MAX_TERMINAL_EVENT_RECORDS = 10_000
+MAX_TERMINAL_EVENT_RECORD_BYTES = 16 * 1024
 
 
 def _canonical_event(event: Mapping) -> dict:
@@ -72,10 +78,10 @@ def validate_event(event: Mapping) -> dict:
     cash = result["cash_per_share"]
     ratio = result["share_ratio"]
     successor = result["successor_symbol"]
-    if cash is not None and cash < 0:
-        raise ValueError("cash_per_share must be non-negative")
-    if ratio is not None and ratio <= 0:
-        raise ValueError("share_ratio must be positive")
+    if cash is not None and (not math.isfinite(cash) or not 0 <= cash <= 1_000_000_000):
+        raise ValueError("cash_per_share must be finite and within the supported range")
+    if ratio is not None and (not math.isfinite(ratio) or not 0 < ratio <= 1_000_000):
+        raise ValueError("share_ratio must be finite and within the supported range")
     if bool(successor) != bool(ratio is not None):
         raise ValueError("successor_symbol and share_ratio must be supplied together")
     if result["status"] == "verified":
@@ -91,26 +97,35 @@ def validate_event(event: Mapping) -> dict:
     return result
 
 
+def _parse_event_lines(text: str, path: Path) -> list[dict]:
+    events = []
+    seen = set()
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        if line_number > MAX_TERMINAL_EVENT_RECORDS:
+            raise ValueError("terminal event record limit exceeded")
+        if len(line.encode("utf-8")) > MAX_TERMINAL_EVENT_RECORD_BYTES:
+            raise ValueError("terminal event record is too large")
+        try:
+            raw = json.loads(line)
+            event = validate_event(raw)
+        except Exception as exc:
+            raise ValueError("Invalid event at {}:{}: {}".format(path, line_number, exc)) from exc
+        if event["event_id"] in seen:
+            continue
+        seen.add(event["event_id"])
+        events.append(event)
+    return events
+
+
 def load_events(path: Path | str) -> list[dict]:
     path = Path(path)
     if not path.exists():
         return []
-    events = []
-    seen = set()
-    with path.open(encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            if not line.strip():
-                continue
-            try:
-                raw = json.loads(line)
-                event = validate_event(raw)
-            except Exception as exc:
-                raise ValueError("Invalid event at {}:{}: {}".format(path, line_number, exc)) from exc
-            if event["event_id"] in seen:
-                continue
-            seen.add(event["event_id"])
-            events.append(event)
-    return events
+    return _parse_event_lines(
+        read_bounded_text(path, maximum_bytes=MAX_TERMINAL_EVENTS_BYTES), path
+    )
 
 
 def append_event(path: Path | str, event: Mapping) -> tuple[dict, bool]:
@@ -118,20 +133,33 @@ def append_event(path: Path | str, event: Mapping) -> tuple[dict, bool]:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     validated = validate_event(event)
-    with path.open("a+", encoding="utf-8") as handle:
+    descriptor = os.open(
+        path,
+        os.O_RDWR | os.O_APPEND | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0),
+        0o600,
+    )
+    with os.fdopen(descriptor, "a+", encoding="utf-8") as handle:
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        metadata = os.fstat(handle.fileno())
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_TERMINAL_EVENTS_BYTES:
+            raise ValueError("terminal event store is not a bounded regular file")
         handle.seek(0)
-        existing_ids = set()
-        for line in handle:
-            if line.strip():
-                existing_ids.add(validate_event(json.loads(line))["event_id"])
+        existing = handle.read(MAX_TERMINAL_EVENTS_BYTES + 1)
+        if len(existing.encode("utf-8")) != metadata.st_size:
+            raise ValueError("terminal event store changed while it was read")
+        existing_ids = {item["event_id"] for item in _parse_event_lines(existing, path)}
         if validated["event_id"] in existing_ids:
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
             return validated, False
         stored = dict(validated)
         stored["recorded_at_utc"] = dt.datetime.now(dt.timezone.utc).isoformat()
+        encoded = json.dumps(stored, ensure_ascii=False, sort_keys=True) + "\n"
+        if len(encoded.encode("utf-8")) > MAX_TERMINAL_EVENT_RECORD_BYTES:
+            raise ValueError("terminal event record is too large")
+        if metadata.st_size + len(encoded.encode("utf-8")) > MAX_TERMINAL_EVENTS_BYTES:
+            raise ValueError("terminal event store byte limit exceeded")
         handle.seek(0, os.SEEK_END)
-        handle.write(json.dumps(stored, ensure_ascii=False, sort_keys=True) + "\n")
+        handle.write(encoded)
         handle.flush()
         os.fsync(handle.fileno())
         fcntl.flock(handle.fileno(), fcntl.LOCK_UN)

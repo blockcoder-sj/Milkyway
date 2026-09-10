@@ -14,10 +14,19 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+import price_data_pipeline as price_pipeline
 from backtest_core import run_backtest
+from cloud_app import data_refresh as data_refresh_module
+from cloud_app.promote_data import DATASET_RELATIVE_PATH, promote
 from execution_price_store import build_0935_panel
 from price_data_pipeline import (
+    PRICE_FORMAT,
+    PRICE_SCHEMA_VERSION,
+    _atomic_price_frame,
     build_eligibility_mask,
+    load_price_dataset,
+    price_file_path,
+    read_price_frame,
     repair_ohlc_bounds,
     sha256_file,
     update_completed_sessions,
@@ -31,9 +40,11 @@ from terminal_events import (
     unresolved_events,
 )
 from universe_snapshot import (
+    SnapshotAggregateBudgetExceeded,
     build_snapshot,
     eligible_symbols,
     load_snapshot,
+    load_snapshot_with_size,
     save_snapshot,
 )
 
@@ -105,6 +116,80 @@ class UniverseSnapshotTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "hash mismatch"):
                 load_snapshot(path)
 
+    def test_snapshot_capture_enforces_callers_remaining_aggregate_budget(self):
+        snapshot = build_snapshot(NASDAQ_TEXT, OTHER_TEXT)
+        with tempfile.TemporaryDirectory() as directory:
+            path = save_snapshot(snapshot, directory)
+            captured, payload_size = load_snapshot_with_size(path)
+            self.assertEqual(captured["membership_sha256"], snapshot["membership_sha256"])
+            with self.assertRaises(SnapshotAggregateBudgetExceeded):
+                load_snapshot_with_size(path, remaining_bytes=payload_size - 1)
+
+    def test_daily_refresh_keeps_the_new_snapshot_after_loading_history(self):
+        new_snapshot = build_snapshot(
+            NASDAQ_TEXT,
+            OTHER_TEXT,
+            captured_at=dt.datetime(2026, 8, 26, tzinfo=dt.timezone.utc),
+        )
+        prior_snapshot = build_snapshot(
+            NASDAQ_TEXT.replace(
+                "GOOD|Good Corp. Common Stock|Q|N|N|100|N|N\n", ""
+            ),
+            OTHER_TEXT,
+            captured_at=dt.datetime(2026, 8, 25, tzinfo=dt.timezone.utc),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            prior_path = save_snapshot(prior_snapshot, root / "snapshots")
+            settings = SimpleNamespace(
+                snapshots_glob=str(root / "snapshots" / "*.json"),
+                dataset_dir=root / "dataset",
+                terminal_events_path=root / "events.jsonl",
+            )
+            captured = {}
+
+            def capture_snapshot(snapshot, _directory, raw_sources=None):
+                captured["snapshot"] = snapshot
+                return root / "snapshots" / "new.json"
+
+            with patch.object(
+                data_refresh_module, "get_settings", return_value=settings
+            ), patch.object(
+                data_refresh_module,
+                "fetch_official_sources",
+                return_value={
+                    "nasdaqlisted.txt": NASDAQ_TEXT,
+                    "otherlisted.txt": OTHER_TEXT,
+                },
+            ), patch.object(
+                data_refresh_module, "build_snapshot", return_value=new_snapshot
+            ), patch.object(
+                data_refresh_module, "save_snapshot", side_effect=capture_snapshot
+            ), patch.object(
+                data_refresh_module, "append_snapshot_diff", return_value=[]
+            ), patch.object(
+                data_refresh_module, "update_completed_sessions", return_value={}
+            ), patch.object(
+                data_refresh_module,
+                "validate_dataset",
+                return_value={
+                    "forward_strategy_data_gate_ready": True,
+                    "strategy_candidate_data_blockers": [],
+                    "unresolved_terminal_event_count": 0,
+                },
+            ), patch.object(
+                data_refresh_module,
+                "_new_york_today",
+                return_value=dt.date(2026, 8, 26),
+            ):
+                data_refresh_module.run_daily_refresh()
+
+            self.assertTrue(prior_path.exists())
+            self.assertEqual(
+                captured["snapshot"]["membership_sha256"],
+                new_snapshot["membership_sha256"],
+            )
+
     def test_snapshot_diff_is_unresolved_not_fake_terminal_loss(self):
         previous = build_snapshot(NASDAQ_TEXT, OTHER_TEXT)
         current = build_snapshot(
@@ -117,6 +202,104 @@ class UniverseSnapshotTests(unittest.TestCase):
             self.assertEqual([event["ticker"] for event in added], ["GOOD"])
             self.assertEqual(load_events(path)[0]["status"], "unresolved")
             self.assertIsNone(load_events(path)[0]["cash_per_share"])
+
+
+class DataPromotionTests(unittest.TestCase):
+    def test_only_reviewed_generation_and_explicit_events_are_published(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = root / "staging"
+            published = root / "published"
+            dataset = staging / DATASET_RELATIVE_PATH
+            prices = dataset / "prices"
+            prices.mkdir(parents=True)
+            frame = pd.DataFrame(
+                {
+                    "Open": [10.0],
+                    "High": [11.0],
+                    "Low": [9.0],
+                    "Close": [10.5],
+                    "Volume": [100.0],
+                },
+                index=pd.to_datetime(["2026-08-24"]),
+            )
+            price_path = prices / "GOOD_data.csv.gz"
+            _atomic_price_frame(frame, price_path)
+            manifest = {
+                "schema_version": PRICE_SCHEMA_VERSION,
+                "price_format": PRICE_FORMAT,
+                "prices": {
+                    "GOOD": {
+                        "rows": 1,
+                        "first_date": "2026-08-24",
+                        "last_date": "2026-08-24",
+                        "sha256": sha256_file(price_path),
+                    }
+                },
+            }
+            (dataset / "manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            snapshot = build_snapshot(
+                NASDAQ_TEXT,
+                OTHER_TEXT,
+                captured_at=dt.datetime(2026, 8, 24, tzinfo=dt.timezone.utc),
+            )
+            save_snapshot(snapshot, staging / "universe_snapshots")
+            (dataset / "validation_report.json").write_text(
+                json.dumps(
+                    {
+                        "forward_strategy_data_gate_ready": True,
+                        "current_snapshot_membership_sha256": snapshot[
+                            "membership_sha256"
+                        ],
+                        "window": {"end": "2026-08-24"},
+                        "strategy_candidate_data_blockers": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "provenance"):
+                promote(
+                    staging,
+                    published,
+                    confirm="NOT_REVIEWED",
+                    approved_event_ids=set(),
+                )
+            destination = promote(
+                staging,
+                published,
+                confirm="REVIEWED_SOURCE_PROVENANCE",
+                approved_event_ids=set(),
+            )
+            approved = json.loads(
+                destination.joinpath(
+                    DATASET_RELATIVE_PATH, "validation_report.json"
+                ).read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                approved["approved_manifest_sha256"],
+                destination.name.removeprefix("generation-"),
+            )
+
+            append_event(
+                staging / "universe_events/events.jsonl",
+                {
+                    "ticker": "GOOD",
+                    "effective_date": "2026-08-24",
+                    "event_type": "liquidation",
+                    "status": "verified",
+                    "cash_per_share": 1.0,
+                    "source": "operator evidence",
+                },
+            )
+            with self.assertRaisesRegex(ValueError, "explicit operator approval"):
+                promote(
+                    staging,
+                    published,
+                    confirm="REVIEWED_SOURCE_PROVENANCE",
+                    approved_event_ids=set(),
+                )
 
 
 class DataContractTests(unittest.TestCase):
@@ -238,10 +421,11 @@ File Creation Time: 0103202618:30||||||
             dataset = root / "dataset"
             price_dir = dataset / "prices"
             price_dir.mkdir(parents=True)
-            price_path = price_dir / "AAA_data.pkl"
-            old.to_pickle(price_path)
+            price_path = price_file_path(price_dir, "AAA")
+            _atomic_price_frame(old, price_path)
             manifest = {
-                "schema_version": 1,
+                "schema_version": PRICE_SCHEMA_VERSION,
+                "price_format": PRICE_FORMAT,
                 "provider_parameters": {"start": "2026-01-01", "end_exclusive": "2026-01-03"},
                 "snapshot_paths": [], "snapshot_membership_sha256": [],
                 "prices": {"AAA": {"rows": 2, "first_date": "2026-01-01", "last_date": "2026-01-02", "sha256": sha256_file(price_path)}},
@@ -254,7 +438,7 @@ File Creation Time: 0103202618:30||||||
                 result = update_completed_sessions(
                     dataset, [snapshot_path], end_exclusive="2026-01-04", batch_size=50
                 )
-            updated = pd.read_pickle(price_path)
+            updated = read_price_frame(price_path)
             self.assertEqual(list(updated.index), list(pd.to_datetime(["2026-01-01", "2026-01-02", "2026-01-03"])))
             self.assertEqual(result["refresh_errors"], {})
             self.assertEqual(json.loads((dataset / "manifest.json").read_text())["prices"]["AAA"]["rows"], 3)
@@ -276,14 +460,18 @@ File Creation Time: 0103202618:30||||||
             dataset = root / "dataset"
             price_dir = dataset / "prices"
             price_dir.mkdir(parents=True)
-            price_path = price_dir / "GOOD_data.pkl"
-            frame.to_pickle(price_path)
+            price_path = price_file_path(price_dir, "GOOD")
+            _atomic_price_frame(frame, price_path)
             (dataset / "manifest.json").write_text(
                 json.dumps(
                     {
+                        "schema_version": PRICE_SCHEMA_VERSION,
+                        "price_format": PRICE_FORMAT,
                         "prices": {
                             "GOOD": {
                                 "sha256": sha256_file(price_path),
+                                "rows": len(frame),
+                                "first_date": "2026-06-01",
                                 "last_date": "2026-08-21",
                             }
                         }
@@ -300,6 +488,51 @@ File Creation Time: 0103202618:30||||||
             )
             self.assertFalse(report["forward_strategy_data_gate_ready"])
             self.assertIn("GOOD", report["strategy_candidate_data_blockers"])
+
+    def test_dataset_load_rejects_manifest_generation_change(self):
+        frame = pd.DataFrame(
+            {
+                "Open": [10.0],
+                "High": [11.0],
+                "Low": [9.0],
+                "Close": [10.5],
+                "Volume": [300_000.0],
+            },
+            index=pd.to_datetime(["2026-01-02"]),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            dataset = Path(directory)
+            price_dir = dataset / "prices"
+            price_dir.mkdir()
+            price_path = price_file_path(price_dir, "AAA")
+            _atomic_price_frame(frame, price_path)
+            manifest = {
+                "schema_version": PRICE_SCHEMA_VERSION,
+                "price_format": PRICE_FORMAT,
+                "generation": 1,
+                "prices": {
+                    "AAA": {
+                        "rows": 1,
+                        "first_date": "2026-01-02",
+                        "last_date": "2026-01-02",
+                        "sha256": sha256_file(price_path),
+                    }
+                },
+            }
+            manifest_path = dataset / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            original_read = price_pipeline.read_price_frame
+
+            def replace_manifest(*args, **kwargs):
+                result = original_read(*args, **kwargs)
+                replacement = dict(manifest)
+                replacement["generation"] = 2
+                manifest_path.write_text(json.dumps(replacement), encoding="utf-8")
+                return result
+
+            with patch.object(price_pipeline, "read_price_frame", replace_manifest):
+                with self.assertRaisesRegex(ValueError, "generation changed"):
+                    load_price_dataset(dataset)
 
 
 class BacktestIntegrationTests(unittest.TestCase):

@@ -8,7 +8,6 @@ alongside every value rendered by the browser.
 from __future__ import annotations
 
 import datetime as dt
-import json
 import math
 import threading
 from pathlib import Path
@@ -21,7 +20,14 @@ from sqlalchemy.orm import Session
 
 from market_calendar import count_trading_days_between, get_market_hours, is_trading_day, prev_trading_day
 
+from .bounded_io import read_bounded_json
 from .database import Quote, utcnow
+
+
+MAX_SECTOR_MAP_BYTES = 4 * 1024 * 1024
+MAX_SECTOR_MAP_ITEMS = 100_000
+MAX_NEWS_FEED_BYTES = 2 * 1024 * 1024
+MAX_NEWS_FEED_ITEMS = 5_000
 
 
 MARKET_GROUPS = {
@@ -166,8 +172,12 @@ def sector_heatmap(bundle, sector_map_path: Path) -> dict:
             "cells": [],
         }
     try:
-        raw_map = json.loads(sector_map_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        raw_map = read_bounded_json(
+            sector_map_path, maximum_bytes=MAX_SECTOR_MAP_BYTES
+        )
+        if not isinstance(raw_map, dict) or len(raw_map) > MAX_SECTOR_MAP_ITEMS:
+            raise ValueError("sector map shape is invalid")
+    except (OSError, ValueError):
         return {
             "status": "invalid_sector_map",
             "as_of": last_session,
@@ -223,12 +233,15 @@ def news_feed(path: Path) -> dict:
     if not path.exists():
         return {"status": "awaiting_source", "provider": None, "observed_at": None, "items": []}
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        raw = read_bounded_json(path, maximum_bytes=MAX_NEWS_FEED_BYTES)
+    except (OSError, ValueError):
         return {"status": "invalid_feed", "provider": None, "observed_at": None, "items": []}
     container = raw if isinstance(raw, dict) else {"items": raw}
+    raw_items = container.get("items", [])
+    if not isinstance(raw_items, list) or len(raw_items) > MAX_NEWS_FEED_ITEMS:
+        return {"status": "invalid_feed", "provider": None, "observed_at": None, "items": []}
     items = []
-    for item in container.get("items", [])[:20]:
+    for item in raw_items[:20]:
         if not isinstance(item, dict):
             continue
         title = str(item.get("title", "")).strip()[:300]

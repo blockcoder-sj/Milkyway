@@ -187,32 +187,14 @@
     </section>
     <section class="hidden" data-profile-panel="settings">
       <div id="aiConnectionSettings" class="settings-block" tabindex="-1">
-        <div class="settings-heading"><div><p class="eyebrow">AI CONNECTION</p><h4>AI</h4></div><span id="aiConnectionStatus" class="status-pill">연결 필요</span></div>
-        <p class="settings-copy">본인의 클라우드 API 또는 Milkyway 서버의 로컬 AI를 선택할 수 있습니다. 입력한 키 원문은 다시 표시하지 않고 서버에 암호화해 저장합니다.</p>
-        <form id="aiConnectionForm" class="stack ai-connection-form" method="post">
-          <label>AI 공급자<select name="provider" id="aiProvider" required></select></label>
-          <label>모델 ID<input name="model" id="aiModel" list="aiModelOptions" maxlength="100" autocomplete="off" required></label>
-          <datalist id="aiModelOptions"></datalist>
-          <label id="aiApiKeyField">API 키<input name="api_key" id="aiApiKey" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
-          <p id="aiKeyHelp" class="fineprint">처음 연결하거나 공급자를 바꿀 때 API 키를 입력해야 합니다.</p>
-          <div class="settings-actions"><button id="aiConnectionSaveBtn" class="primary" type="submit">연결 저장</button><button id="aiDisconnectBtn" class="ghost hidden" type="button">연결 해제</button></div>
-        </form>
-        <p id="aiBillingNote" class="settings-billing-note">API 사용료와 한도는 선택한 공급자의 본인 계정에 적용됩니다.</p>
+        <div class="settings-heading"><div><p class="eyebrow">SHARED AI</p><h4>동아리 공용 AI</h4></div><span id="aiConnectionStatus" class="status-pill">확인 중</span></div>
+        <p id="aiConnectionSummary" class="settings-copy">AI 공급자와 키는 운영자가 서버에서 관리합니다. 회원 브라우저는 API 키를 입력하거나 전달하지 않습니다.</p>
+        <p class="settings-billing-note">모든 회원 요청은 같은 서버 공용 한도와 비용 예산을 사용합니다.</p>
       </div>
       <div id="marketDataConnectionSettings" class="settings-block connection-block" tabindex="-1">
-        <div class="settings-heading"><div><p class="eyebrow">MARKET DATA CONNECTION</p><h4>증권사 시세 API</h4></div><span id="marketDataConnectionStatus" class="status-pill">연결 필요</span></div>
-        <p class="settings-copy">본인 증권사의 API 자격증명을 연결합니다. 키 원문은 다시 표시하지 않고 서버에 암호화해 저장합니다.</p>
-        <form id="marketDataConnectionForm" class="stack market-data-connection-form" method="post">
-          <label>시세 공급자<select name="provider" id="marketDataProvider" required></select></label>
-          <label>연결 환경<select name="environment" id="marketDataEnvironment" required></select></label>
-          <label><span id="marketDataApiKeyLabel">App Key</span><input name="api_key" id="marketDataApiKey" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
-          <label><span id="marketDataApiSecretLabel">App Secret</span><input name="api_secret" id="marketDataApiSecret" type="password" minlength="20" maxlength="512" autocomplete="new-password"></label>
-          <label class="consent-row"><input name="personal_use_only" id="marketDataPersonalUse" type="checkbox" required><span>본인의 개인 페이퍼 트레이딩 체결가에만 사용합니다.</span></label>
-          <p id="marketDataKeyHelp" class="fineprint">저장 시 증권사 토큰 발급으로 키를 검증합니다.</p>
-          <p class="fineprint"><a id="marketDataSetupLink" href="https://apiportal.koreainvestment.com/" target="_blank" rel="noopener noreferrer">API 키 발급 페이지 열기</a></p>
-          <div class="settings-actions"><button id="marketDataConnectionSaveBtn" class="primary" type="submit">연결 확인 및 저장</button><button id="marketDataDisconnectBtn" class="ghost hidden" type="button">연결 해제</button></div>
-        </form>
-        <p class="settings-billing-note">개인 증권사 키로 받은 시세를 다른 회원에게 재배포하지 않습니다. 공용 실시간 피드는 별도 라이선스가 확인된 공급자를 사용해야 합니다.</p>
+        <div class="settings-heading"><div><p class="eyebrow">SHARED MARKET DATA</p><h4>동아리 공용 증권사 시세</h4></div><span id="marketDataConnectionStatus" class="status-pill">확인 중</span></div>
+        <p id="marketDataConnectionSummary" class="settings-copy">증권사 키는 별도 broker 서버가 보관하며, 회원과 공개 앱은 종목 코드만 전달합니다.</p>
+        <p class="settings-billing-note">현재 구현은 KIS REST 현재가를 주기적으로 수집해 페이퍼 트레이딩에 공유합니다. 실제 주문은 전송하지 않으며, 외부 표시·재배포 권한 확인 전에는 KIS 공유를 켜지 않습니다.</p>
       </div>
       <div class="settings-block preferences-block">
         <div class="settings-heading"><div><p class="eyebrow">PREFERENCES</p><h4>화면 설정</h4></div></div>
@@ -224,7 +206,7 @@
     </section>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/profile.js?v=20260828-12" defer></script>
-  <script src="/static/app.js?v=20260828-12" defer></script>
+  <script src="/static/profile.js?v=20260904-13" defer></script>
+  <script src="/static/app.js?v=20260904-13" defer></script>
 </body>
 </html>

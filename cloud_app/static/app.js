@@ -194,8 +194,8 @@ function accountCards(rows) {
   }
   element.className = "account-grid";
   element.innerHTML = rows.map((account) => {
-    const label = account.status === "active" ? "운용 중" : account.status === "review_required" ? "상장 이탈 검토 필요" : "일시정지";
-    const control = account.status === "review_required"
+    const label = account.status === "active" ? "운용 중" : ["review_required", "configuration_required"].includes(account.status) ? "전략·보유 종목 검토 필요" : "일시정지";
+    const control = ["review_required", "configuration_required"].includes(account.status)
       ? '<span class="status-pill warn">REVIEW</span>'
       : `<button class="ghost compact account-toggle" data-id="${escapeHtml(account.id)}" data-status="${account.status === "active" ? "paused" : "active"}">${account.status === "active" ? "정지" : "재개"}</button>`;
     const positions = account.positions.slice(0, 12).map((position) => `<span class="chip">${escapeHtml(position.ticker)} ${pct(position.pnl_pct)}</span>`).join("") || '<span class="chip">첫 리밸런싱 대기</span>';
@@ -545,41 +545,9 @@ const profileController = window.MilkywayProfile.create({
     state.aiConnection = await api("/api/me/ai-connection");
     return state.aiConnection;
   },
-  onAiSave: async (connection) => {
-    state.aiConnection = await api("/api/me/ai-connection", {method: "PUT", body: JSON.stringify(connection)});
-    if (state.dashboard) {
-      state.dashboard.ai_connection = state.aiConnection;
-      state.dashboard.ai_enabled = state.aiConnection.connected;
-    }
-    $("#aiConnectBtn").classList.toggle("connected", state.aiConnection.connected);
-    const provider = state.aiConnection.providers?.find((item) => item.id === state.aiConnection.provider);
-    toast(`${provider?.label || state.aiConnection.provider} 연결을 저장했습니다`);
-  },
-  onAiDisconnect: async () => {
-    await api("/api/me/ai-connection", {method: "DELETE"});
-    state.aiConnection = await api("/api/me/ai-connection");
-    if (state.dashboard) {
-      state.dashboard.ai_connection = state.aiConnection;
-      state.dashboard.ai_enabled = false;
-    }
-    $("#aiConnectBtn").classList.remove("connected");
-    toast("AI 연결을 해제했습니다");
-  },
   onMarketDataLoad: async () => {
     state.marketDataConnection = await api("/api/me/market-data-connection");
     return state.marketDataConnection;
-  },
-  onMarketDataSave: async (connection) => {
-    state.marketDataConnection = await api("/api/me/market-data-connection", {method: "PUT", body: JSON.stringify(connection)});
-    if (state.dashboard) state.dashboard.market_data_connection = state.marketDataConnection;
-    const provider = state.marketDataConnection.providers?.find((item) => item.id === state.marketDataConnection.provider);
-    toast(`${provider?.label || "증권사 시세 API"} 인증을 확인하고 저장했습니다`);
-  },
-  onMarketDataDisconnect: async () => {
-    await api("/api/me/market-data-connection", {method: "DELETE"});
-    state.marketDataConnection = await api("/api/me/market-data-connection");
-    if (state.dashboard) state.dashboard.market_data_connection = state.marketDataConnection;
-    toast("증권사 시세 API 연결을 해제했습니다");
   },
   onSave: (preferences) => {
     state.preferences = preferences;
@@ -595,7 +563,7 @@ $("#aiConnectBtn").addEventListener("click", () => profileController.openSetting
 
 $("#aiForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (state.dashboard && !state.dashboard.ai_enabled) { toast("설정에서 사용할 AI를 먼저 연결해 주세요", true); profileController.openSettings("aiConnectionSettings"); return; }
+  if (state.dashboard && !state.dashboard.ai_enabled) { toast("동아리 공용 AI가 아직 준비되지 않았습니다", true); profileController.openSettings("aiConnectionSettings"); return; }
   const button = event.target.querySelector("button[type=submit]");
   button.disabled = true;
   button.querySelector("span").textContent = "AI 생성 중…";

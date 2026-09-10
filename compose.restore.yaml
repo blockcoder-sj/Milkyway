@@ -1,0 +1,36 @@
+name: milkyway-restore
+
+# Maintenance-only overlay. Run it from an isolated recovery host with a
+# short-lived restore role, its pgpass file, and the backup private key.
+services:
+  restore:
+    build: .
+    profiles: [maintenance]
+    restart: "no"
+    environment:
+      PGHOST: ${RESTORE_DB_HOST:?set RESTORE_DB_HOST}
+      PGPORT: ${RESTORE_DB_PORT:-5432}
+      PGDATABASE: ${RESTORE_DB_NAME:-quantclub}
+      PGUSER: ${RESTORE_DB_USER:?set RESTORE_DB_USER}
+      PGPASSFILE: /run/secrets/restore.pgpass
+      PGSSLMODE: verify-full
+      PGSSLROOTCERT: /run/secrets/postgres_tls_ca
+      RESTORE_CONFIRM: ${RESTORE_CONFIRM:?set RESTORE_CONFIRM=quantclub deliberately}
+    volumes:
+      - ./backups:/backups:ro
+      - ./deploy/restore.sh:/restore.sh:ro
+      - ./deploy/encrypted_backup.py:/backup/encrypted_backup.py:ro
+      - ${RESTORE_PGPASS_PATH:?set RESTORE_PGPASS_PATH}:/run/secrets/restore.pgpass:ro
+      - ${BACKUP_PRIVATE_KEY_PATH:?set BACKUP_PRIVATE_KEY_PATH}:/run/secrets/backup-private.pem:ro
+      - ${POSTGRES_TLS_CA_PATH:?set POSTGRES_TLS_CA_PATH}:/run/secrets/postgres_tls_ca:ro
+    entrypoint: [/bin/sh, /restore.sh]
+    read_only: true
+    tmpfs: [/tmp]
+    networks: [restore-network]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+networks:
+  restore-network:
+    name: ${RESTORE_NETWORK_NAME:?set RESTORE_NETWORK_NAME}
+    external: true

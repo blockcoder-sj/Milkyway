@@ -9,12 +9,17 @@ import socket
 import subprocess
 from pathlib import Path
 
-from price_data_pipeline import sha256_file
+from price_data_pipeline import (
+    price_file_path,
+    load_manifest_snapshot,
+    sha256_file,
+    validate_dataset_inventory,
+)
 
 from .config import get_settings
 from .credential_store import validate_credential_backend
 from .credential_broker_client import broker_preflight
-from .strategies import _load_certified_snapshots
+from .strategies import _load_certified_snapshots, _load_validation_report
 
 
 def run(
@@ -28,7 +33,7 @@ def run(
     checks["configuration"] = not errors
     if settings.credential_backend == "broker":
         try:
-            broker_preflight(settings, "paper" if service == "paper" else "app")
+            broker_preflight(settings, service if service in {"paper", "backtest"} else "app")
             checks["credential_broker"] = True
         except Exception as exc:
             checks["credential_broker"] = False
@@ -70,12 +75,21 @@ def run(
     manifest_path = settings.dataset_dir / "manifest.json"
     checks["dataset_manifest"] = manifest_path.exists()
     manifest = {}
+    manifest_sha256 = ""
     if manifest_path.exists():
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        try:
+            manifest, _manifest_bytes, manifest_sha256 = load_manifest_snapshot(
+                manifest_path
+            )
+            validate_dataset_inventory(settings.dataset_dir, manifest)
+        except (OSError, ValueError) as exc:
+            manifest = {}
+            errors.append(str(exc))
+            checks["dataset_manifest"] = False
         missing = []
         corrupt = []
         for ticker, metadata in manifest.get("prices", {}).items():
-            path = settings.dataset_dir / "prices" / "{}_data.pkl".format(ticker)
+            path = price_file_path(settings.dataset_dir / "prices", ticker)
             if not path.exists():
                 missing.append(ticker)
             elif sha256_file(path) != metadata["sha256"]:
@@ -89,10 +103,18 @@ def run(
     validation_path = settings.dataset_dir / "validation_report.json"
     checks["forward_data_gate"] = False
     if validation_path.exists():
-        validation = json.loads(validation_path.read_text(encoding="utf-8"))
+        validation = _load_validation_report(validation_path)
         checks["forward_data_gate"] = bool(
             validation.get("forward_strategy_data_gate_ready", False)
         )
+        if (
+            settings.production
+            and validation.get("approved_manifest_sha256") != manifest_sha256
+        ):
+            checks["forward_data_gate"] = False
+            errors.append(
+                "validation report was not independently promoted for this manifest"
+            )
         if not checks["forward_data_gate"]:
             errors.append(
                 "forward data gate has {} strategy candidate blockers".format(
@@ -137,7 +159,7 @@ def main() -> int:
     parser.add_argument("--check-database", action="store_true")
     parser.add_argument("--skip-docker", action="store_true")
     parser.add_argument(
-        "--service", choices=("app", "paper", "broker", "deployment"), default="app"
+        "--service", choices=("app", "paper", "backtest", "broker", "deployment"), default="app"
     )
     args = parser.parse_args()
     result = run(

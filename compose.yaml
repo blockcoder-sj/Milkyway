@@ -7,15 +7,15 @@ x-app: &app
     postgres:
       condition: service_healthy
   volumes:
-    - ./data_cache:/app/data_cache:ro
+    - ${PROMOTED_DATA_PATH:?set PROMOTED_DATA_PATH to a reviewed immutable generation}:/app/data_cache:ro
+    - ${POSTGRES_TLS_CA_PATH:?set POSTGRES_TLS_CA_PATH}:/run/secrets/postgres_tls_ca:ro
   security_opt: [no-new-privileges:true]
   cap_drop: [ALL]
   stop_grace_period: 45s
 
 x-runtime-environment: &runtime-environment
-  APP_ENV: ${APP_ENV:-production}
+  APP_ENV: production
   APP_NAME: ${APP_NAME:-Milkyway Quant Trading Lab}
-  DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
   DATASET_DIR: ${DATASET_DIR:-/app/data_cache/backtest_datasets/2026_equities_pit_20260824}
   SNAPSHOTS_GLOB: ${SNAPSHOTS_GLOB:-/app/data_cache/universe_snapshots/*.json}
   TERMINAL_EVENTS_PATH: ${TERMINAL_EVENTS_PATH:-/app/data_cache/universe_events/events.jsonl}
@@ -23,17 +23,73 @@ x-runtime-environment: &runtime-environment
   NEWS_FEED_PATH: ${NEWS_FEED_PATH:-/app/data_cache/news/news_feed.json}
   WORKER_STALE_SECONDS: ${WORKER_STALE_SECONDS:-90}
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  AUTHORITY_ENABLED: "true"
+  MEMBER_CREDENTIALS_ENABLED: "true"
+  SHARED_AI_ENABLED: "true"
+  LEGACY_CLUB_INVITE_ENABLED: "false"
+  QUOTE_INTERVAL_SECONDS: ${QUOTE_INTERVAL_SECONDS:-10}
+  SHARED_QUOTE_BATCH_SIZE: ${SHARED_QUOTE_BATCH_SIZE:-200}
+  SHARED_QUOTE_MAX_SYMBOLS_PER_TICK: ${SHARED_QUOTE_MAX_SYMBOLS_PER_TICK:-200}
+  QUOTE_MAX_CONCURRENT_REQUESTS: ${QUOTE_MAX_CONCURRENT_REQUESTS:-8}
+  SHARED_QUOTE_TICK_DEADLINE_SECONDS: ${SHARED_QUOTE_TICK_DEADLINE_SECONDS:-30}
+  QUOTE_MAX_AGE_SECONDS: ${QUOTE_MAX_AGE_SECONDS:-180}
 
 services:
+  security-preflight:
+    build: .
+    restart: "no"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-quantclub_migration}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD}
+      PAPER_DB_PASSWORD: ${PAPER_DB_PASSWORD:?set PAPER_DB_PASSWORD}
+      BACKTEST_DB_PASSWORD: ${BACKTEST_DB_PASSWORD:?set BACKTEST_DB_PASSWORD}
+      SCHEDULER_DB_PASSWORD: ${SCHEDULER_DB_PASSWORD:?set SCHEDULER_DB_PASSWORD}
+      BACKUP_DB_PASSWORD: ${BACKUP_DB_PASSWORD:?set BACKUP_DB_PASSWORD}
+      AUTHORITY_DB_PASSWORD: ${AUTHORITY_DB_PASSWORD:?set AUTHORITY_DB_PASSWORD}
+      AUTHORITY_DATABASE_URL: ${AUTHORITY_DATABASE_URL:?set AUTHORITY_DATABASE_URL}
+      APP_VM_PRIVATE_IP: ${APP_VM_PRIVATE_IP:?set APP_VM_PRIVATE_IP}
+      MIGRATION_DATABASE_URL: ${MIGRATION_DATABASE_URL:?set MIGRATION_DATABASE_URL}
+      APP_DATABASE_URL: ${APP_DATABASE_URL:?set APP_DATABASE_URL}
+      PAPER_DATABASE_URL: ${PAPER_DATABASE_URL:?set PAPER_DATABASE_URL}
+      BACKTEST_DATABASE_URL: ${BACKTEST_DATABASE_URL:?set BACKTEST_DATABASE_URL}
+      SCHEDULER_DATABASE_URL: ${SCHEDULER_DATABASE_URL:?set SCHEDULER_DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
+      CREDENTIAL_BROKER_APP_TOKEN: ${CREDENTIAL_BROKER_APP_TOKEN:?set CREDENTIAL_BROKER_APP_TOKEN}
+      CREDENTIAL_BROKER_PAPER_TOKEN: ${CREDENTIAL_BROKER_PAPER_TOKEN:?set CREDENTIAL_BROKER_PAPER_TOKEN}
+      CREDENTIAL_BROKER_BACKTEST_TOKEN: ${CREDENTIAL_BROKER_BACKTEST_TOKEN:?set CREDENTIAL_BROKER_BACKTEST_TOKEN}
+    command: [python, -m, cloud_app.deployment_secrets]
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
     restart: unless-stopped
+    depends_on:
+      security-preflight:
+        condition: service_completed_successfully
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-quantclub}
       POSTGRES_USER: ${POSTGRES_USER:-quantclub}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD}
+      PAPER_DB_PASSWORD: ${PAPER_DB_PASSWORD:?set PAPER_DB_PASSWORD}
+      BACKTEST_DB_PASSWORD: ${BACKTEST_DB_PASSWORD:?set BACKTEST_DB_PASSWORD}
+      SCHEDULER_DB_PASSWORD: ${SCHEDULER_DB_PASSWORD:?set SCHEDULER_DB_PASSWORD}
+      BACKUP_DB_PASSWORD: ${BACKUP_DB_PASSWORD:?set BACKUP_DB_PASSWORD}
+      AUTHORITY_DB_PASSWORD: ${AUTHORITY_DB_PASSWORD:?set AUTHORITY_DB_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./deploy/postgres/init-runtime-roles.sh:/docker-entrypoint-initdb.d/10-runtime-roles.sh:ro
+      - ./deploy/postgres/pg_hba.conf:/etc/postgresql/milkyway-pg_hba.conf:ro
+      - ${POSTGRES_TLS_CERT_PATH:?set POSTGRES_TLS_CERT_PATH}:/run/secrets/postgres_tls_cert:ro
+      - ${POSTGRES_TLS_KEY_PATH:?set POSTGRES_TLS_KEY_PATH}:/run/secrets/postgres_tls_key:ro
+    command: [postgres, -c, ssl=on, -c, ssl_min_protocol_version=TLSv1.3, -c, ssl_cert_file=/run/secrets/postgres_tls_cert, -c, ssl_key_file=/run/secrets/postgres_tls_key, -c, hba_file=/etc/postgresql/milkyway-pg_hba.conf]
+    ports:
+      - ${APP_VM_PRIVATE_IP:?set APP_VM_PRIVATE_IP}:5432:5432
     networks: [backend]
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -42,15 +98,42 @@ services:
       retries: 10
     security_opt: [no-new-privileges:true]
 
+  database-migrate:
+    build: .
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      AUTHORITY_ENABLED: "true"
+      DATABASE_URL: ${MIGRATION_DATABASE_URL:?set MIGRATION_DATABASE_URL}
+      MAX_STRATEGIES_PER_USER: ${MAX_STRATEGIES_PER_USER:-10}
+      MAX_ACCOUNTS_PER_USER: ${MAX_ACCOUNTS_PER_USER:-3}
+      MAX_BACKTESTS_PER_USER_DAY: ${MAX_BACKTESTS_PER_USER_DAY:-20}
+      MAX_OUTSTANDING_BACKTESTS_PER_USER: ${MAX_OUTSTANDING_BACKTESTS_PER_USER:-2}
+      MAX_OUTSTANDING_BACKTESTS_TOTAL: ${MAX_OUTSTANDING_BACKTESTS_TOTAL:-40}
+      MAX_BACKTEST_RESULT_BYTES: ${MAX_BACKTEST_RESULT_BYTES:-1048576}
+    volumes:
+      - ${POSTGRES_TLS_CA_PATH:?set POSTGRES_TLS_CA_PATH}:/run/secrets/postgres_tls_ca:ro
+    command: [python, -m, cloud_app.manage, initialize-database]
+    networks: [backend]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
   app:
     <<: *app
+    depends_on:
+      database-migrate:
+        condition: service_completed_successfully
     environment:
       <<: *runtime-environment
+      DATABASE_URL: ${APP_DATABASE_URL:?set APP_DATABASE_URL}
+      SERVICE_ROLE: app
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:?set ALLOWED_HOSTS}
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
       SESSION_HOURS: ${SESSION_HOURS:-12}
-      CLUB_INVITE_CODE: ${CLUB_INVITE_CODE:?set CLUB_INVITE_CODE}
       CREDENTIAL_BACKEND: broker
       CREDENTIAL_BROKER_URL: ${CREDENTIAL_BROKER_URL:?set CREDENTIAL_BROKER_URL}
       CREDENTIAL_BROKER_APP_TOKEN: ${CREDENTIAL_BROKER_APP_TOKEN:?set CREDENTIAL_BROKER_APP_TOKEN}
@@ -58,14 +141,32 @@ services:
       LOCAL_AI_MAX_CONCURRENT_REQUESTS: ${LOCAL_AI_MAX_CONCURRENT_REQUESTS:-4}
       QUOTE_PROVIDER: ${QUOTE_PROVIDER:-mock}
       MARKET_DATA_SHARING_ALLOWED: ${MARKET_DATA_SHARING_ALLOWED:-false}
+      KIS_ENVIRONMENT: ${KIS_ENVIRONMENT:-paper}
+      KIS_QUOTE_TRANSPORT: rest
       MAX_BACKTESTS_PER_USER_DAY: ${MAX_BACKTESTS_PER_USER_DAY:-20}
+      MAX_OUTSTANDING_BACKTESTS_PER_USER: ${MAX_OUTSTANDING_BACKTESTS_PER_USER:-2}
+      MAX_OUTSTANDING_BACKTESTS_TOTAL: ${MAX_OUTSTANDING_BACKTESTS_TOTAL:-40}
+      MAX_BACKTEST_RESULT_BYTES: ${MAX_BACKTEST_RESULT_BYTES:-1048576}
+      MAX_COMPLETED_BACKTESTS_PER_USER: ${MAX_COMPLETED_BACKTESTS_PER_USER:-50}
+      BACKTEST_RETENTION_DAYS: ${BACKTEST_RETENTION_DAYS:-30}
+      BACKTEST_TIMEOUT_SECONDS: ${BACKTEST_TIMEOUT_SECONDS:-300}
       MAX_STRATEGIES_PER_USER: ${MAX_STRATEGIES_PER_USER:-10}
       MAX_ACCOUNTS_PER_USER: ${MAX_ACCOUNTS_PER_USER:-3}
       MAX_USERS: ${MAX_USERS:-40}
       MAX_REQUEST_BODY_BYTES: ${MAX_REQUEST_BODY_BYTES:-16384}
+      MAX_REQUEST_BODY_MESSAGES: ${MAX_REQUEST_BODY_MESSAGES:-64}
+      REQUEST_BODY_READ_TIMEOUT_SECONDS: ${REQUEST_BODY_READ_TIMEOUT_SECONDS:-15}
       MAX_STREAMS_PER_USER: ${MAX_STREAMS_PER_USER:-2}
       MAX_STREAMS_TOTAL: ${MAX_STREAMS_TOTAL:-64}
-    command: [uvicorn, cloud_app.main:app, --host, 0.0.0.0, --port, "8000", --workers, "1", --proxy-headers, --forwarded-allow-ips, "172.30.250.2"]
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+      DATABASE_MAX_OVERFLOW: ${DATABASE_MAX_OVERFLOW:-5}
+      DATABASE_POOL_TIMEOUT_SECONDS: ${DATABASE_POOL_TIMEOUT_SECONDS:-10}
+      PASSWORD_MAX_CONCURRENT_REQUESTS: ${PASSWORD_MAX_CONCURRENT_REQUESTS:-4}
+      REGISTRATION_GLOBAL_ATTEMPTS: ${REGISTRATION_GLOBAL_ATTEMPTS:-20}
+      LOGIN_ACCOUNT_ATTEMPTS: ${LOGIN_ACCOUNT_ATTEMPTS:-10}
+      LOGIN_ACCOUNT_WINDOW_SECONDS: ${LOGIN_ACCOUNT_WINDOW_SECONDS:-600}
+      LOGIN_GLOBAL_ATTEMPTS: ${LOGIN_GLOBAL_ATTEMPTS:-400}
+    command: [uvicorn, cloud_app.main:app, --host, 0.0.0.0, --port, "8000", --workers, "1", --proxy-headers, --forwarded-allow-ips, "172.30.250.2", --limit-concurrency, "128", --backlog, "128", --timeout-keep-alive, "5"]
     networks:
       proxy:
         ipv4_address: 172.30.250.3
@@ -89,13 +190,21 @@ services:
     command: [python, -m, cloud_app.worker]
     environment:
       <<: *runtime-environment
+      DATABASE_URL: ${PAPER_DATABASE_URL:?set PAPER_DATABASE_URL}
+      SERVICE_ROLE: paper
       WORKER_ROLE: paper
       CREDENTIAL_BACKEND: broker
       CREDENTIAL_BROKER_URL: ${CREDENTIAL_BROKER_URL:?set CREDENTIAL_BROKER_URL}
       CREDENTIAL_BROKER_PAPER_TOKEN: ${CREDENTIAL_BROKER_PAPER_TOKEN:?set CREDENTIAL_BROKER_PAPER_TOKEN}
       QUOTE_PROVIDER: ${QUOTE_PROVIDER:-mock}
-      QUOTE_INTERVAL_SECONDS: ${QUOTE_INTERVAL_SECONDS:-30}
+      QUOTE_INTERVAL_SECONDS: ${QUOTE_INTERVAL_SECONDS:-10}
       MARKET_DATA_SHARING_ALLOWED: ${MARKET_DATA_SHARING_ALLOWED:-false}
+      KIS_ENVIRONMENT: ${KIS_ENVIRONMENT:-paper}
+      KIS_QUOTE_TRANSPORT: rest
+      SHARED_QUOTE_BATCH_SIZE: ${SHARED_QUOTE_BATCH_SIZE:-200}
+      SHARED_QUOTE_MAX_SYMBOLS_PER_TICK: ${SHARED_QUOTE_MAX_SYMBOLS_PER_TICK:-200}
+      SHARED_QUOTE_TICK_DEADLINE_SECONDS: ${SHARED_QUOTE_TICK_DEADLINE_SECONDS:-30}
+      QUOTE_MAX_AGE_SECONDS: ${QUOTE_MAX_AGE_SECONDS:-180}
     networks: [backend, outbound]
     read_only: true
     tmpfs: [/tmp]
@@ -110,8 +219,15 @@ services:
     command: [python, -m, cloud_app.worker]
     environment:
       <<: *runtime-environment
+      DATABASE_URL: ${BACKTEST_DATABASE_URL:?set BACKTEST_DATABASE_URL}
+      SERVICE_ROLE: backtest
+      CREDENTIAL_BACKEND: broker
+      CREDENTIAL_BROKER_URL: ${CREDENTIAL_BROKER_URL:?set CREDENTIAL_BROKER_URL}
+      CREDENTIAL_BROKER_BACKTEST_TOKEN: ${CREDENTIAL_BROKER_BACKTEST_TOKEN:?set CREDENTIAL_BROKER_BACKTEST_TOKEN}
       WORKER_ROLE: backtest
-    networks: [backend]
+      MAX_BACKTEST_RESULT_BYTES: ${MAX_BACKTEST_RESULT_BYTES:-1048576}
+      BACKTEST_TIMEOUT_SECONDS: ${BACKTEST_TIMEOUT_SECONDS:-300}
+    networks: [backend, outbound]
     read_only: true
     tmpfs: [/tmp]
     cpus: "2.0"
@@ -125,16 +241,42 @@ services:
     command: [python, -m, cloud_app.scheduler]
     environment:
       <<: *runtime-environment
+      DATABASE_URL: ${SCHEDULER_DATABASE_URL:?set SCHEDULER_DATABASE_URL}
+      SERVICE_ROLE: scheduler
     volumes:
-      - ./data_cache:/app/data_cache
+      - ${STAGING_DATA_PATH:?set STAGING_DATA_PATH}:/app/data_cache
+      - ${POSTGRES_TLS_CA_PATH:?set POSTGRES_TLS_CA_PATH}:/run/secrets/postgres_tls_ca:ro
     networks: [backend, outbound]
     read_only: true
     tmpfs: [/tmp]
     cpus: "2.0"
     mem_limit: 5g
 
+  data-promote:
+    build: .
+    profiles: [maintenance]
+    restart: "no"
+    command:
+      - python
+      - -m
+      - cloud_app.promote_data
+      - --staging-root
+      - /staging
+      - --published-root
+      - /published
+      - --confirm
+      - ${DATA_PROMOTION_CONFIRM:-NOT_REVIEWED}
+    volumes:
+      - ${STAGING_DATA_PATH:?set STAGING_DATA_PATH}:/staging:ro
+      - ${PROMOTED_DATA_ROOT:?set PROMOTED_DATA_ROOT}:/published
+    network_mode: none
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
   caddy:
-    image: caddy:2.8-alpine
+    image: caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
     restart: unless-stopped
     depends_on:
       app:
@@ -156,7 +298,7 @@ services:
     security_opt: [no-new-privileges:true]
 
   backup:
-    image: postgres:16-alpine
+    build: .
     restart: unless-stopped
     depends_on:
       postgres:
@@ -164,15 +306,21 @@ services:
     environment:
       PGHOST: postgres
       PGDATABASE: ${POSTGRES_DB:-quantclub}
-      PGUSER: ${POSTGRES_USER:-quantclub}
-      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      PGUSER: milkyway_backup
+      PGPASSWORD: ${BACKUP_DB_PASSWORD:?set BACKUP_DB_PASSWORD}
+      PGSSLMODE: verify-full
+      PGSSLROOTCERT: /run/secrets/postgres_tls_ca
     volumes:
       - ./backups:/backups
       - ./deploy/backup.sh:/backup/backup.sh:ro
       - ./deploy/backup-once.sh:/backup/backup-once.sh:ro
-      - ./deploy/restore.sh:/restore.sh:ro
+      - ./deploy/encrypted_backup.py:/backup/encrypted_backup.py:ro
+      - ${BACKUP_PUBLIC_KEY_PATH:?set BACKUP_PUBLIC_KEY_PATH}:/run/secrets/backup-public.pem:ro
+      - ${POSTGRES_TLS_CA_PATH:?set POSTGRES_TLS_CA_PATH}:/run/secrets/postgres_tls_ca:ro
     networks: [backend]
     entrypoint: [/bin/sh, /backup/backup.sh]
+    read_only: true
+    tmpfs: [/tmp]
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
 

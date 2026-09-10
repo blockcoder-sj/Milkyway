@@ -1,0 +1,74 @@
+name: milkyway-local
+
+x-local-environment: &local-environment
+  APP_ENV: development
+  APP_NAME: Milkyway Local Sandbox
+  PUBLIC_BASE_URL: http://localhost:8080
+  ALLOWED_HOSTS: localhost,127.0.0.1
+  DATABASE_URL: sqlite:////app/runtime/club.sqlite3
+  DATASET_DIR: /app/runtime/local-demo/backtest_datasets/local-demo
+  SNAPSHOTS_GLOB: /app/runtime/local-demo/universe_snapshots/*.json
+  TERMINAL_EVENTS_PATH: /app/runtime/local-demo/universe_events/events.jsonl
+  LOCAL_DEMO_DATA: "true"
+  CREDENTIAL_BACKEND: local
+  MEMBER_CREDENTIALS_ENABLED: "false"
+  SHARED_AI_ENABLED: "false"
+  QUOTE_PROVIDER: mock
+  KIS_ENVIRONMENT: paper
+
+x-local-service: &local-service
+  build: .
+  init: true
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  tmpfs: [/tmp]
+  volumes:
+    - local-runtime:/app/runtime
+  environment: *local-environment
+
+services:
+  init-local-data:
+    <<: *local-service
+    restart: "no"
+    command: [python, -m, cloud_app.local_demo, --output-root, /app/runtime/local-demo]
+
+  app:
+    <<: *local-service
+    restart: unless-stopped
+    depends_on:
+      init-local-data:
+        condition: service_completed_successfully
+    command: [uvicorn, cloud_app.main:app, --host, 0.0.0.0, --port, "8000", --workers, "1"]
+    ports:
+      - 127.0.0.1:8080:8000
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  backtest-worker:
+    <<: *local-service
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      <<: *local-environment
+      WORKER_ROLE: backtest
+    command: [python, -m, cloud_app.worker]
+
+  paper-worker:
+    <<: *local-service
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      <<: *local-environment
+      WORKER_ROLE: paper
+    command: [python, -m, cloud_app.worker]
+
+volumes:
+  local-runtime:
