@@ -260,3 +260,17 @@ substituted for these gates.
 - After that, deploy the real two-VM/Vault/IAM/Audit topology and collect the
   exact allow/deny/Audit evidence above. Only a fresh sealed whole-repository
   scan plus all real gates can reconsider the **NO-GO** decision.
+# Personal exercise scope — 2026-09-26
+
+The user explicitly requested a separate single-owner local paper-trading
+installation, implemented in `compose.personal.yaml`. Its credentials stay on
+the member's trusted PC, with a local encryption root and loopback-only web
+access. It does not claim the independent cloud KMS boundary. Public deployment
+and collecting members' keys on a shared server remain NO-GO under the gates in
+this document. The older "real member credentials" prohibition concerns that
+shared deployment, not the newly requested per-owner local installation.
+
+No real brokerage credentials were entered, no brokerage orders were sent, and
+no real OCI gate or whole-repository security scan is claimed by the local
+functional/fault-injection tests. Current local verification is documented in
+`docs/Milkyway_검수보고서.md`.

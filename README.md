@@ -1,5 +1,62 @@
 # Milkyway
 
+개인 PC에서 미국 주식 전략을 만들고, 본인 증권사 시세로 가상 매매 기록을 쌓는 도구입니다.
+**증권사에 매매 주문을 보내지 않습니다.** 주가는 한국투자증권(KIS)·토스증권 API에서
+조회하고 체결·현금·보유 수량은 이 PC의 로컬 원장에 저장합니다.
+
+## 학회원 개인용 빠른 시작
+
+Docker Desktop(Windows/macOS) 또는 Docker Engine + Compose(Linux)를 실행하고,
+저장소를 내려받습니다. Git 대신 GitHub의 **Code → Download ZIP**도 가능합니다.
+비공개 저장소라면 먼저 저장소 접근 권한이 필요합니다.
+
+```bash
+git clone https://github.com/blockcoder-sj/Milkyway.git
+cd Milkyway
+docker compose -f compose.personal.yaml up -d --build
+```
+
+1. <http://localhost:8080>에서 계정을 만듭니다. 이 설치의 가입 코드는 `local-club`이며 계정은 1개입니다.
+2. 프로필에서 본인 KIS App Key/Secret 또는 토스 Client ID/Secret을 연결합니다. AI 키는 필요 없습니다.
+3. 전략 편집기에서 미국 주식 티커·팩터·필터·보유 수·주기를 정하고 저장합니다.
+4. 일봉 자동 준비가 끝나면 탐색용 백테스트를 실행하고 페이퍼 계좌를 만듭니다.
+5. 미국 정규장에 PC와 Docker를 켜 둡니다. 화면의 운영 상태·계좌별 대기 사유·최근 시세를 확인합니다.
+
+[처음부터 따라 하는 사용설명서·문제 해결](docs/Milkyway_초보자_사용설명서.md) ·
+[검증 범위와 남은 실환경 확인](docs/Milkyway_검수보고서.md)
+
+- 전략별 티커는 최대 20개, 활성 계좌 전체의 서로 다른 티커도 최대 20개입니다.
+- 일봉은 Yahoo에서 자동 갱신하고, 실시간성 가격은 **본인 증권사 REST 시세 조회**를 사용합니다.
+  15초 간격으로 조회를 시도하며 KIS 모의 환경은 5종목씩 순환합니다. 전체 20종목은 통상
+  약 1~2분에 갱신됩니다. 거래소 원시 tick 스트림이 아니며 시세 지연 여부는 계정 권한에 따릅니다.
+- 개인 선택 종목의 백테스트는 탐색용입니다. 과거 전체 상장 종목을 인증한 무편향 성과로 표시하지 않습니다.
+- 기록은 재시작 후 유지되고 개인용 백테스트 결과를 자동 삭제하지 않습니다. 전체 기록을 내보낼 수 있습니다.
+- 6시간마다 별도 Docker 볼륨에 백업합니다. 다른 디스크에도 복사해야 PC/디스크 고장에 대비할 수 있습니다.
+
+```bash
+# 정상 중지: 기록 유지
+docker compose -f compose.personal.yaml stop
+# 재개
+docker compose -f compose.personal.yaml up -d
+# 진단
+docker compose -f compose.personal.yaml exec app python -m cloud_app.local_ops doctor
+# 즉시 백업 + PC로 복사
+docker compose -f compose.personal.yaml exec backup python -m cloud_app.local_ops backup
+docker compose -f compose.personal.yaml cp backup:/app/backups ./backups
+```
+
+백업에는 암호화된 자격증명과 복호화 키가 함께 포함되므로 개인 파일로 보관합니다.
+복원·포트 충돌·비밀번호 분실·API 연결 실패는 사용설명서의 절차를 따릅니다.
+**Docker 볼륨을 지우거나 `down -v`를 실행하면 기록이 삭제됩니다.**
+브라우저를 닫아도 실행은 계속되지만 PC 절전·종료·Docker 중지는 거래를 멈춥니다.
+재연결 후 정상 처리하며, 꺼져 있던 시간의 실시간 체결을 소급하여 만들지는 않습니다.
+
+개인용 구성은 `127.0.0.1`에만 열립니다. 공유 컴퓨터·포트 포워딩·공개 서버용 구성이 아닙니다.
+중앙 서버 배포 자체가 불가능한 것은 아니지만, 사용자 인증·키 격리·운영 보안이 필요한 별도 설계입니다.
+아래 기존 클라우드 구성의 보안 검증과 운영 gate는 그대로 유지합니다.
+
+## 기존 클라우드 구성
+
 Milkyway Quant Trading Lab은 퀀트 동아리 회원이 자연어 전략을 안전한 전략 규격으로
 변환하고, 공통 체결 엔진으로 백테스트한 뒤 페이퍼 계좌에서 운용할 수 있는 웹 플랫폼이다.
 
@@ -22,7 +79,7 @@ broker가 검증하고 OCI KMS 암호문으로 저장하며, 앱·worker는 원�
 대체하지 않는다. TradingView Widget은 화면 표시용이며 페이퍼 엔진 입력으로 추출하지 않는다.
 REST 현재가 polling을 사용하며 WebSocket 체결 스트림이나 실거래 주문은 지원하지 않는다.
 
-**공개 배포·실제 회원 키 입력은 현재 NO-GO다.** 로컬 테스트는 실제 두 VM의 KMS allow/deny,
+**공개 서버 배포와 그 서버에 회원 키를 모으는 운영은 현재 NO-GO다.** 로컬 테스트는 실제 두 VM의 KMS allow/deny,
 Vault secret release와 OCI Audit 검증을 대신하지 않는다. 현재 증거와 남은 gate는
 [SECURITY_REMEDIATION_STATUS.md](SECURITY_REMEDIATION_STATUS.md)를 확인한다.
 
@@ -55,25 +112,15 @@ production은 공개 앱 VM과 broker VM을 분리하고 PostgreSQL TLS, 역할�
 [CLOUD_DEPLOYMENT.md](CLOUD_DEPLOYMENT.md)의 **DB → broker → 앱·worker** 순서를 따른다.
 기존 env·DB·runtime·Docker 볼륨을 덮어쓰거나 초기화하지 않는다.
 
-### 개인 PC 로컬 실행
-
-GitHub에서 내려받은 각 사본은 서로 완전히 독립적으로 실행된다. Docker Desktop(또는 Docker
-Engine과 Compose plugin)만 설치한 뒤 다음 명령을 실행한다.
+### API 없이 화면·백테스트를 살펴보는 합성 데이터 모드
 
 ```bash
-git clone https://github.com/blockcoder-sj/Milkyway.git
-cd Milkyway
-docker compose -f compose.local.yaml up --build
+docker compose -f compose.local.yaml up -d --build
 ```
 
-브라우저에서 <http://localhost:8080>을 연다. 첫 실행은 세 개의 합성 종목과 약 1년치의
-결정론적 OHLCV 데이터를 로컬 Docker 볼륨에 생성한다. 앱·백테스트 worker·페이퍼 worker가
-함께 실행되므로 계정 생성, 전략 저장, 탐색용 백테스트와 mock 페이퍼 계좌 흐름을 확인할 수
-있다. 이 데이터는 실제 시세가 아니며 strict/PIT 백테스트, 투자 판단, 성과 주장에 사용할 수
-없다. 로컬 기본 구성은 실행 중 API 키, 증권사 연결, OCI 및 외부 네트워크 호출을 사용하지 않는다.
-
-중지는 `docker compose -f compose.local.yaml down`으로 한다. 로컬 데이터까지 처음 상태로
-지우려는 경우에만 `docker compose -f compose.local.yaml down -v`를 사용한다.
+이 별도 모드는 ALPHA/BETA/GAMMA 합성 일봉을 사용하는 탐색용 백테스트 연습이다.
+실제 시세 수신과 실시간 페이퍼 운용은 앞의 개인용 구성으로 실행한다.
+합성 데이터는 PIT 인증 데이터가 아니며 실제 투자 성과가 아니다.
 
 실제 인증된 데이터셋으로 연구하려면 별도 `data_cache/`를 준비하고 아래의 개발 실행 경로를
 사용한다. `data_cache/`, `runtime/`, `.env`와 개인 키 파일은 Git에 포함하지 않는다.

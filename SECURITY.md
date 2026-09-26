@@ -55,3 +55,17 @@ API 키, 세션, 개인정보와 재현 코드는 공개 이슈에 게시하지 
 데이터 무결성, 공급망·배포·백업을 포함한다. 공급자 자체 취약점과 단일 리전 장애 등
 외부 인프라는 별도 운영 검증 대상이다. 공급자의 허용 범위는 프로그램의 기술적 격리만으로
 입증되지 않으며 실제 서비스 사용 조건에 맞춰 확인한다.
+# Personal local installation scope (2026-09-26)
+
+`compose.personal.yaml` is a single-owner, loopback-only installation explicitly
+requested for the club exercise. Each member keeps their own credentials and
+ledger on their own trusted PC. Local AES-GCM keys and session secrets persist
+in its private runtime volume; this is not an independent KMS trust boundary.
+The app uses quote-only KIS/Toss clients and never places brokerage orders.
+Backups include both encrypted credential rows and local decryption roots and
+must be treated as private secrets. Do not upload them to GitHub or share them.
+
+This local mode cannot run as `APP_ENV=production`, expose a non-loopback origin,
+or silently substitute mock/shared quotes. It is not approval for a public or
+multi-tenant service. All cloud/OCI scan, IAM, Vault and Audit requirements below
+still apply to public deployment; local tests cannot satisfy those gates.

@@ -24,6 +24,7 @@ from price_data_pipeline import (
     MAX_PRICE_FILE_BYTES,
     MAX_DATASET_ROWS,
     MAX_DATASET_UNCOMPRESSED_BYTES,
+    build_eligibility_mask,
     build_strategy_eligibility_mask,
     assert_manifest_generation,
     load_price_dataset,
@@ -97,9 +98,16 @@ class StrategySpec(StrictSpecModel):
     schema_version: Literal[1] = 1
     name: str = Field(min_length=2, max_length=100)
     description: str = Field(default="", max_length=1000)
+    symbols: list[str] = Field(default_factory=list, max_length=20)
     factors: list[FactorSpec] = Field(min_length=1, max_length=5)
     filters: FilterSpec = Field(default_factory=FilterSpec)
     portfolio: PortfolioSpec = Field(default_factory=PortfolioSpec)
+
+    @field_validator("symbols")
+    @classmethod
+    def validate_symbols(cls, values):
+        from .personal_data import normalize_symbols
+        return normalize_symbols(values, maximum=20)
 
     @field_validator("name", "description")
     @classmethod
@@ -115,6 +123,7 @@ class StrategySpec(StrictSpecModel):
 
 class DatasetBundle:
     def __init__(self, settings: Settings):
+        settings = _capture_personal_settings(settings)
         self.settings = settings
         self.manifest_path = settings.dataset_dir / "manifest.json"
         self.manifest, _manifest_bytes, manifest_sha256 = load_manifest_snapshot(
@@ -176,6 +185,7 @@ class DatasetSummary:
     """Small manifest-only view used by the web process and readiness checks."""
 
     def __init__(self, settings: Settings):
+        settings = _capture_personal_settings(settings)
         self.settings = settings
         self.manifest_path = settings.dataset_dir / "manifest.json"
         self.manifest, _manifest_bytes, manifest_sha256 = load_manifest_snapshot(
@@ -295,13 +305,13 @@ class DashboardDataset(DatasetSummary):
 
 _bundle_lock = threading.Lock()
 _bundle: DatasetBundle | None = None
-_bundle_mtime: tuple[int, int, int] | None = None
+_bundle_mtime: tuple | None = None
 _summary_lock = threading.Lock()
 _summary: DatasetSummary | None = None
-_summary_mtime: tuple[int, int, int] | None = None
+_summary_mtime: tuple | None = None
 _dashboard_lock = threading.Lock()
 _dashboard: DashboardDataset | None = None
-_dashboard_mtime: tuple[int, int, int] | None = None
+_dashboard_mtime: tuple | None = None
 
 
 def _load_certified_snapshots(pattern: str) -> list[dict]:
@@ -332,7 +342,7 @@ def _load_certified_snapshots(pattern: str) -> list[dict]:
     return [by_date[key] for key in sorted(by_date)]
 
 
-def _load_local_demo_snapshots(pattern: str) -> list[dict]:
+def _load_local_demo_snapshots(pattern: str, *, kind="local_demo_synthetic") -> list[dict]:
     """Load only explicitly marked synthetic snapshots for the local demo."""
 
     snapshots = []
@@ -346,19 +356,28 @@ def _load_local_demo_snapshots(pattern: str) -> list[dict]:
             )
         except (SnapshotAggregateBudgetExceeded, ValueError, OSError, json.JSONDecodeError):
             continue
-        if snapshot.get("snapshot_type") == "local_demo_synthetic":
+        if snapshot.get("snapshot_type") == kind and not snapshot.get("certification_eligible", False):
             snapshots.append(snapshot)
     return snapshots
 
 
 def _snapshots_for_settings(settings: Settings) -> list[dict]:
+    if getattr(settings, "personal_local_mode", False) and not settings.production:
+        return _load_local_demo_snapshots(settings.snapshots_glob, kind="personal_selected_universe")
     snapshots = _load_certified_snapshots(settings.snapshots_glob)
     if not snapshots and settings.local_demo_data and not settings.production:
         return _load_local_demo_snapshots(settings.snapshots_glob)
     return snapshots
 
 
-def _dataset_mtime(settings: Settings) -> tuple[int, int, int]:
+def _capture_personal_settings(settings):
+    if getattr(settings, "personal_local_mode", False):
+        from .personal_data import resolve_personal_settings
+        return resolve_personal_settings(settings)
+    return settings
+
+
+def _dataset_mtime(settings: Settings) -> tuple:
     manifest = settings.dataset_dir / "manifest.json"
     validation = settings.dataset_dir / "validation_report.json"
     snapshot_mtime = max(
@@ -372,6 +391,8 @@ def _dataset_mtime(settings: Settings) -> tuple[int, int, int]:
         default=0,
     )
     return (
+        str(settings.dataset_dir), settings.production, settings.local_demo_data,
+        getattr(settings, "personal_local_mode", False),
         manifest.stat().st_mtime_ns,
         validation.stat().st_mtime_ns if validation.exists() else 0,
         snapshot_mtime,
@@ -381,6 +402,7 @@ def _dataset_mtime(settings: Settings) -> tuple[int, int, int]:
 def get_dataset_summary(settings: Settings | None = None) -> DatasetSummary:
     global _summary, _summary_mtime
     settings = settings or get_settings()
+    settings = _capture_personal_settings(settings)
     current_mtime = _dataset_mtime(settings)
     with _summary_lock:
         if _summary is None or _summary_mtime != current_mtime:
@@ -392,6 +414,7 @@ def get_dataset_summary(settings: Settings | None = None) -> DatasetSummary:
 def get_dashboard_dataset(settings: Settings | None = None) -> DashboardDataset:
     global _dashboard, _dashboard_mtime
     settings = settings or get_settings()
+    settings = _capture_personal_settings(settings)
     current_mtime = _dataset_mtime(settings)
     with _dashboard_lock:
         if _dashboard is None or _dashboard_mtime != current_mtime:
@@ -403,6 +426,7 @@ def get_dashboard_dataset(settings: Settings | None = None) -> DashboardDataset:
 def get_dataset_bundle(settings: Settings | None = None) -> DatasetBundle:
     global _bundle, _bundle_mtime
     settings = settings or get_settings()
+    settings = _capture_personal_settings(settings)
     current_mtime = _dataset_mtime(settings)
     with _bundle_lock:
         if _bundle is None or _bundle_mtime != current_mtime:
@@ -416,7 +440,10 @@ def _rsi(close: pd.DataFrame, lookback: int) -> pd.DataFrame:
     gain = change.clip(lower=0).rolling(lookback, min_periods=lookback).mean()
     loss = -change.clip(upper=0).rolling(lookback, min_periods=lookback).mean()
     rs = gain / loss.replace(0, np.nan)
-    return (100 - 100 / (1 + rs) - 50) / 50
+    rsi = 100 - 100 / (1 + rs)
+    rsi = rsi.mask((loss == 0) & (gain > 0), 100)
+    rsi = rsi.mask((loss == 0) & (gain == 0), 50)
+    return (rsi - 50) / 50
 
 
 def raw_factor(kind: FactorKind, lookback: int, panels: dict[str, pd.DataFrame]) -> pd.DataFrame:
@@ -440,10 +467,16 @@ def raw_factor(kind: FactorKind, lookback: int, panels: dict[str, pd.DataFrame])
 
 
 def compile_raw_scores(spec: StrategySpec, bundle: DatasetBundle) -> pd.DataFrame:
-    combined = pd.DataFrame(0.0, index=bundle.index, columns=bundle.panels["Close"].columns)
+    panels = bundle.panels
+    if spec.symbols:
+        # Ranking must be within this strategy's universe, not other members'
+        # or strategies' cached symbols.
+        columns = [symbol for symbol in spec.symbols if symbol in panels["Close"].columns]
+        panels = {name: frame.reindex(columns=columns) for name, frame in panels.items()}
+    combined = pd.DataFrame(0.0, index=bundle.index, columns=panels["Close"].columns)
     valid_weight = pd.DataFrame(0.0, index=combined.index, columns=combined.columns)
     for factor in spec.factors:
-        values = raw_factor(factor.kind, factor.lookback, bundle.panels)
+        values = raw_factor(factor.kind, factor.lookback, panels)
         ranked = values.rank(axis=1, pct=True, method="average")
         weight = float(factor.weight)
         combined = combined.add(ranked.fillna(0.0) * weight, fill_value=0.0)
@@ -458,15 +491,34 @@ def eligibility_mask(
     *,
     delay_for_next_open: bool = True,
 ) -> pd.DataFrame:
-    mask = build_strategy_eligibility_mask(
-        bundle.data,
-        bundle.snapshots,
-        bundle.index,
-        min_history=spec.filters.history_days,
-        min_average_volume=spec.filters.min_average_volume,
-        min_price=spec.filters.min_price,
-        pre_snapshot_policy="none" if bias_mode == "strict" else "first",
-    )
+    settings = getattr(bundle, "settings", None)
+    personal = bool(getattr(settings, "personal_local_mode", False) and not settings.production)
+    synthetic = bool(getattr(settings, "local_demo_data", False) and not settings.production)
+    exploratory_local = bias_mode == "exploratory" and (personal or synthetic)
+    if exploratory_local:
+        expected_kind = "personal_selected_universe" if personal else "local_demo_synthetic"
+        if any(snapshot.get("snapshot_type") != expected_kind for snapshot in bundle.snapshots):
+            raise ValueError("unexpected local membership source")
+        membership = build_eligibility_mask(
+            bundle.snapshots, bundle.index, sorted(bundle.data),
+            pre_snapshot_policy="first", allow_uncertified_snapshots=True,
+        )
+        close, volume = bundle.panels["Close"], bundle.panels["Volume"]
+        history = close.notna().rolling(spec.filters.history_days, min_periods=spec.filters.history_days).sum()
+        average_volume = volume.rolling(spec.filters.history_days, min_periods=spec.filters.history_days).mean()
+        mask = membership & ((history >= spec.filters.history_days) & (average_volume >= spec.filters.min_average_volume) & (close >= spec.filters.min_price)).fillna(False)
+    else:
+        mask = build_strategy_eligibility_mask(
+            bundle.data,
+            bundle.snapshots,
+            bundle.index,
+            min_history=spec.filters.history_days,
+            min_average_volume=spec.filters.min_average_volume,
+            min_price=spec.filters.min_price,
+            pre_snapshot_policy="none" if bias_mode == "strict" else "first",
+        )
+    if spec.symbols:
+        mask = mask.reindex(columns=spec.symbols, fill_value=False)
     # A D-open fill can only use listing/liquidity/price facts completed by
     # D-1. The live selector is called after D close for the next session and
     # therefore explicitly opts out of this additional row shift.
@@ -475,14 +527,31 @@ def eligibility_mask(
     return mask
 
 
-def latest_candidates(spec: StrategySpec, bundle: DatasetBundle, limit: int | None = None) -> list[str]:
+def latest_candidates(spec: StrategySpec, bundle: DatasetBundle, limit: int | None = None, *, now=None) -> list[str]:
     """Live selection uses the latest completed close without an extra shift."""
+    settings = getattr(bundle, "settings", None)
+    personal = bool(getattr(settings, "personal_local_mode", False) and not settings.production)
+    if personal:
+        from .personal_data import EASTERN, last_completed_session
+        if not spec.symbols:
+            raise ValueError("personal strategies require explicit symbols")
+        current = now or dt.datetime.now(dt.timezone.utc)
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=dt.timezone.utc)
+        if any(bundle.manifest["prices"].get(symbol, {}).get("action_checked_on") != current.astimezone(EASTERN).date().isoformat() for symbol in spec.symbols):
+            raise ValueError("당일 기업행사 확인을 위한 일봉 갱신을 기다리고 있습니다.")
+        required = last_completed_session(now)
+        for symbol in spec.symbols:
+            if symbol not in bundle.data or bundle.data[symbol].index.max().date() != required:
+                raise ValueError("{} history is missing, incomplete or stale for {}".format(symbol, required))
     raw = compile_raw_scores(spec, bundle)
-    mask = eligibility_mask(spec, bundle, "strict", delay_for_next_open=False)
+    mask = eligibility_mask(spec, bundle, "exploratory" if personal else "strict", delay_for_next_open=False)
     valid_rows = mask.any(axis=1) & raw.notna().any(axis=1)
     if not valid_rows.any():
         return []
     date = valid_rows[valid_rows].index[-1]
+    if personal and date.date() != required:
+        return []
     scores = raw.loc[date].where(mask.loc[date]).dropna().sort_values(ascending=False)
     return [str(item) for item in scores.head(limit or spec.portfolio.max_positions).index]
 
@@ -497,6 +566,9 @@ def run_strategy_backtest(
 ) -> dict:
     settings = settings or get_settings()
     bundle = get_dataset_bundle(settings)
+    personal = bool(getattr(settings, "personal_local_mode", False) and not settings.production)
+    if personal and (not spec.symbols or any(symbol not in bundle.data for symbol in spec.symbols)):
+        raise ValueError("전략 종목의 과거 일봉을 준비한 뒤 다시 시도해 주세요.")
     if bias_mode == "strict" and not bundle.forward_data_gate_ready:
         raise ValueError(
             "strict PIT backtest is blocked until the latest daily data quality gate passes"
@@ -509,9 +581,12 @@ def run_strategy_backtest(
     events = []
     if settings.terminal_events_path.exists():
         events = effective_verified_events(load_events(settings.terminal_events_path), through=end)
+    selected_count = len(spec.symbols) if spec.symbols else bundle.symbol_count
+    local_selected = personal or (settings.local_demo_data and not settings.production)
+    effective_positions = min(spec.portfolio.max_positions, selected_count) if local_selected else spec.portfolio.max_positions
     config = {
         "capital": spec.portfolio.initial_cash,
-        "max_positions": spec.portfolio.max_positions,
+        "max_positions": effective_positions,
         "sector_cap_pct": 1.0,
         "cost_per_side": spec.portfolio.cost_per_side,
         "position_stop_pct": spec.portfolio.stop_loss_pct,
@@ -525,7 +600,7 @@ def run_strategy_backtest(
         "missing_price_policy": "raise",
         "fractional_shares": True,
         "dynamic_stop_enabled": False,
-        "min_signal_count": max(2, spec.portfolio.max_positions),
+        "min_signal_count": effective_positions if local_selected else max(2, spec.portfolio.max_positions),
     }
     result = run_backtest(
         scores,
@@ -542,7 +617,7 @@ def run_strategy_backtest(
     )
     curve = result["equity_curve"]
     certification_eligible = (
-        bias_mode == "strict" and start >= bundle.first_certified_execution_date
+        not local_selected and bias_mode == "strict" and start >= bundle.first_certified_execution_date
     )
     caveat = None
     if not certification_eligible:
@@ -550,6 +625,10 @@ def run_strategy_backtest(
             "첫 인증 스냅샷 다음 거래일({}) 이전은 현재 생존 종목을 소급한 탐색용 결과로, "
             "생존편향 없는 성과로 인용할 수 없습니다."
         ).format(bundle.first_certified_execution_date)
+        if personal:
+            caveat = "직접 선택한 현재 종목의 Yahoo 일봉을 사용한 탐색 결과입니다. 과거 상장 종목 전체를 반영한 PIT 성과가 아니며, 조정 주가와 실제 가상 체결 가격은 다를 수 있습니다."
+        elif settings.local_demo_data:
+            caveat = "합성 가격을 이용한 기능 실습 결과이며 실제 시장 성과가 아닙니다."
     return {
         "schema_version": 1,
         "strategy": spec.model_dump(mode="json"),
@@ -573,15 +652,19 @@ def run_strategy_backtest(
             {"date": date.date().isoformat(), "value": round(float(value), 4)}
             for date, value in curve.items()
         ],
-        "trades": result["trade_log"][-500:],
+        "trades": result["trade_log"] if personal else result["trade_log"][-500:],
     }
 
 
-def strategy_code_preview(spec: StrategySpec) -> str:
+def strategy_code_preview(spec: StrategySpec, settings: Settings | None = None) -> str:
+    settings = settings or get_settings()
+    selected_universe = bool(getattr(settings, "personal_local_mode", False) and not settings.production and spec.symbols)
     lines = [
         "# Safe strategy DSL preview; execution always uses backtest_core.run_backtest",
         "score = 0",
     ]
+    if selected_universe:
+        lines.insert(1, "selected_symbols = {}  # user-selected current universe".format(repr(spec.symbols)))
     for factor in spec.factors:
         lines.append(
             "score += {weight:g} * factor('{kind}', lookback={lookback}).rank(pct=True)".format(
@@ -591,7 +674,7 @@ def strategy_code_preview(spec: StrategySpec) -> str:
     lines.extend(
         [
             "score = score.shift(1)  # no same-close lookahead",
-            "eligible = pit_membership & trailing_liquidity_filter(",
+            "eligible = {} & trailing_liquidity_filter(".format("selected_symbols" if selected_universe else "pit_membership"),
             "    history_days={}, min_price={}, min_average_volume={})".format(
                 spec.filters.history_days,
                 spec.filters.min_price,

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import os
 import re
+import secrets
 import stat
+import tempfile
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -96,7 +98,7 @@ def _secret(name: str) -> str:
     if not source:
         return direct
     path = Path(source)
-    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
     try:
         metadata = os.fstat(descriptor)
         if not stat.S_ISREG(metadata.st_mode):
@@ -123,7 +125,53 @@ def member_ai_credentials_enabled(settings) -> bool:
     return bool(
         settings.member_credentials_enabled
         and not getattr(settings, "shared_ai_enabled", False)
+        and not getattr(settings, "personal_local_mode", False)
     )
+
+
+def _session_secret() -> str:
+    configured = _secret("SESSION_SECRET")
+    if configured or not _bool("PERSONAL_LOCAL_MODE"):
+        return configured or "dev-only-change-me"
+    return persistent_local_secret(ROOT / "runtime/.session_secret")
+
+
+def persistent_local_secret(path: Path) -> str:
+    # Every install has durable local keys, shared by all its containers.
+    # Publish a fully written file atomically; simultaneous first starts cannot
+    # read a half-written key or accidentally replace another process's key.
+    root = path.parent
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(root, 0o700)
+    if not path.exists():
+        descriptor, temporary = tempfile.mkstemp(prefix=".secret-new-", dir=root)
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                handle.write(secrets.token_urlsafe(48))
+                handle.flush()
+                os.fsync(handle.fileno())
+            try:
+                os.link(temporary, path)
+            except FileExistsError:
+                pass
+        finally:
+            os.unlink(temporary)
+    # Publish the directory entry durably before a caller can commit data
+    # encrypted/signed with this key. This also covers a concurrent creator.
+    directory = os.open(root, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
+    with os.fdopen(descriptor, "r", encoding="utf-8") as handle:
+        metadata = os.fstat(handle.fileno())
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_mode & 0o077 or not 32 <= metadata.st_size <= 4096:
+            raise RuntimeError("Local key must be an owner-only regular file")
+        value = handle.read(4097).strip()
+    if len(value) < 32 or len(value) > 4096:
+        raise RuntimeError("Local key is invalid; restore its backup")
+    return value
 
 
 def _configured_provider_secret(name: str) -> str:
@@ -222,6 +270,7 @@ class Settings:
     oci_broker_api_secret_secret_id: str = ""
     authority_enabled: bool = False
     credential_broker_backtest_token: str = ""
+    personal_local_mode: bool = False
 
     @property
     def production(self) -> bool:
@@ -238,8 +287,29 @@ class Settings:
         }:
             raise ValueError("unknown service validation scope: {}".format(service))
         errors: list[str] = []
-        if service != "broker" and not self.dataset_dir.joinpath("manifest.json").exists():
+        if service != "broker" and not self.personal_local_mode and not self.dataset_dir.joinpath("manifest.json").exists():
             errors.append("DATASET_DIR/manifest.json is missing")
+        if self.personal_local_mode:
+            if self.max_users != 1:
+                errors.append("Personal mode is single-owner; MAX_USERS must be 1")
+            if _weak_secret(self.session_secret, 32):
+                errors.append("Personal mode requires its per-installation session secret")
+            if (ROOT / "runtime/RESTORE_IN_PROGRESS").exists():
+                errors.append("A restore was interrupted; complete recovery before starting services")
+            if self.production:
+                errors.append("PERSONAL_LOCAL_MODE is allowed only in development")
+            if self.local_demo_data or self.quote_provider != "member":
+                errors.append("Personal mode requires member quotes and cannot use demo data")
+            if not self.member_credentials_enabled or self.credential_backend != "local":
+                errors.append("Personal mode requires local member credentials")
+            if self.authority_enabled or self.shared_ai_enabled:
+                errors.append("Personal mode does not use shared cloud services")
+            if not self.allowed_hosts or any(host not in {"localhost", "127.0.0.1", "[::1]", "testserver"} for host in self.allowed_hosts):
+                errors.append("Personal mode must use loopback hosts only")
+            if urlsplit(self.public_base_url).hostname not in {"localhost", "127.0.0.1", "::1"}:
+                errors.append("Personal mode PUBLIC_BASE_URL must be loopback")
+            if not self.database_url.startswith("sqlite:"):
+                errors.append("Personal mode requires its local SQLite database")
         if self.production and self.local_demo_data:
             errors.append("LOCAL_DEMO_DATA is allowed only in development")
         if self.production:
@@ -464,8 +534,8 @@ class Settings:
                 errors.append("session, invite, database, and broker secrets must be independent")
         elif self.credential_backend not in {"local", "oci-kms", "broker", "shared"}:
             errors.append("CREDENTIAL_BACKEND must be local, oci-kms, broker, or shared")
-        if service in {"paper", "broker", "deployment"} and self.quote_provider not in {"mock", "kis"}:
-            errors.append("QUOTE_PROVIDER must be mock or kis")
+        if service in {"paper", "broker", "deployment"} and self.quote_provider not in ({"member"} if self.personal_local_mode else {"mock", "kis"}):
+            errors.append("QUOTE_PROVIDER must be mock or kis (member only in personal mode)")
         if (
             service in {"paper", "broker", "deployment"}
             and self.quote_provider == "kis"
@@ -540,7 +610,7 @@ def get_settings() -> Settings:
         app_name=os.getenv("APP_NAME", "Milkyway Quant Trading Lab"),
         public_base_url=os.getenv("PUBLIC_BASE_URL", "http://localhost:8080").rstrip("/"),
         database_url=os.getenv("DATABASE_URL", "sqlite:///runtime/club.sqlite3"),
-        session_secret=os.getenv("SESSION_SECRET", "dev-only-change-me"),
+        session_secret=_session_secret(),
         session_hours=_int("SESSION_HOURS", 12),
         invite_code=os.getenv("CLUB_INVITE_CODE", "local-club"),
         legacy_invite_enabled=_bool(
@@ -615,7 +685,7 @@ def get_settings() -> Settings:
         backtest_timeout_seconds=max(30, _int("BACKTEST_TIMEOUT_SECONDS", 300)),
         max_strategies_per_user=max(1, _int("MAX_STRATEGIES_PER_USER", 10)),
         max_accounts_per_user=max(1, _int("MAX_ACCOUNTS_PER_USER", 3)),
-        max_users=max(1, _int("MAX_USERS", 40)),
+        max_users=max(1, _int("MAX_USERS", 1 if _bool("PERSONAL_LOCAL_MODE") else 40)),
         max_request_body_bytes=max(1024, _int("MAX_REQUEST_BODY_BYTES", 16 * 1024)),
         max_request_body_messages=max(2, _int("MAX_REQUEST_BODY_MESSAGES", 64)),
         request_body_read_timeout_seconds=max(
@@ -649,4 +719,5 @@ def get_settings() -> Settings:
             60.0, max(1.0, _float("SHARED_QUOTE_TICK_DEADLINE_SECONDS", 30.0))
         ),
         quote_max_age_seconds=max(30, _int("QUOTE_MAX_AGE_SECONDS", 180)),
+        personal_local_mode=_bool("PERSONAL_LOCAL_MODE", False),
     )

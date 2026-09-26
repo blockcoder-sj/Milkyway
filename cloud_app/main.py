@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+import csv
 import datetime as dt
 import hashlib
 import hmac
 import ipaddress
 import json
+import io
 import logging
 import re
 import threading
 import time
+import tempfile
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +27,8 @@ from sqlalchemy import delete, func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.background import BackgroundTask
+from fastapi.encoders import jsonable_encoder
 
 from .ai import AiProviderError, generate_strategy, local_ai_ready
 from .ai_credentials import (
@@ -59,6 +64,7 @@ from .database import (
     Invitation,
     PaperAccount,
     PaperFill,
+    PaperPosition,
     RuntimeHeartbeat,
     SessionLocal,
     Strategy,
@@ -72,7 +78,7 @@ from .database import (
 )
 from .dashboard_views import completed_session_freshness, market_overview, news_feed, sector_heatmap
 from .http_security import RequestBodyLimitMiddleware
-from .paper import account_snapshot
+from .paper import account_snapshot, regular_market_open
 from .market_data_credentials import (
     MarketDataProviderError,
     credential_hint as market_credential_hint,
@@ -591,7 +597,8 @@ def startup() -> None:
     if _broker_enabled():
         broker_preflight(settings, "app")
     _migrate_legacy_credentials()
-    get_dataset_summary(settings)
+    if not settings.personal_local_mode:
+        get_dataset_summary(settings)
 
 
 @app.middleware("http")
@@ -622,6 +629,30 @@ def live():
     return {"status": "ok"}
 
 
+@app.get("/api/config")
+def public_config():
+    return {"personal_local_mode": settings.personal_local_mode,
+            "local_demo_data": settings.local_demo_data,
+            "quote_interval_seconds": settings.quote_interval_seconds}
+
+
+@app.get("/health/startup")
+def startup_ready(session: Session = Depends(get_db)):
+    session.execute(text("SELECT 1"))
+    return {"status": "ready", "scope": "web_and_database"}
+
+
+def _worker_payload(session: Session, component: str) -> dict:
+    row = session.get(RuntimeHeartbeat, component)
+    observed = row.observed_at if row else None
+    if observed is not None and observed.tzinfo is None:
+        observed = observed.replace(tzinfo=dt.timezone.utc)
+    return {"instance_id": row.instance_id if row else None,
+            "observed_at": observed, "detail": row.detail if row else "not started",
+            "error": bool(row and row.detail.startswith("error=")),
+            "alive": bool(observed and observed >= utcnow() - dt.timedelta(seconds=settings.worker_stale_seconds))}
+
+
 @app.get("/health/ready")
 def ready(session: Session = Depends(get_db)):
     details = {
@@ -634,9 +665,15 @@ def ready(session: Session = Depends(get_db)):
     try:
         session.execute(text("SELECT 1"))
         details["database"] = True
-        summary = get_dataset_summary(settings)
-        details["dataset"] = summary.symbol_count > 0
-        details["data_gate"] = summary.forward_data_gate_ready
+        if settings.personal_local_mode:
+            from .personal_data import personal_data_status
+            data = personal_data_status(settings)
+            details["dataset"] = bool(data.get("ready"))
+            details["data_gate"] = bool(data.get("ready") and not data.get("stale"))
+        else:
+            summary = get_dataset_summary(settings)
+            details["dataset"] = summary.symbol_count > 0
+            details["data_gate"] = summary.forward_data_gate_ready
         heartbeat = session.get(RuntimeHeartbeat, "paper-worker")
         if heartbeat:
             observed = heartbeat.observed_at
@@ -649,8 +686,16 @@ def ready(session: Session = Depends(get_db)):
     # The deterministic local dataset intentionally has no point-in-time data
     # certification. It is nevertheless a ready development sandbox; strict
     # backtests remain unavailable because ``data_gate`` stays false.
-    ok = details["database"] and details["dataset"] and (
-        details["data_gate"] or settings.local_demo_data
+    details["backtest_worker"] = _worker_payload(session, "backtest-worker")["alive"]
+    details["personal_data_worker"] = (not settings.personal_local_mode or _worker_payload(session, "personal-data")["alive"])
+    # Local Compose depends on /health/startup; it can therefore require its
+    # independently running workers here without creating a dependency cycle.
+    # Keep the separately governed cloud readiness contract unchanged.
+    workers_ok = not (settings.personal_local_mode or settings.local_demo_data) or (
+        details["worker"] and details["backtest_worker"] and details["personal_data_worker"]
+    )
+    ok = details["database"] and workers_ok and (
+        settings.personal_local_mode or (details["dataset"] and (details["data_gate"] or settings.local_demo_data))
     )
     return JSONResponse({"status": "ready" if ok else "not_ready", "components": details}, status_code=200 if ok else 503)
 
@@ -1237,7 +1282,21 @@ def list_strategies(user: User = Depends(current_user), session: Session = Depen
 
 
 def _save_strategy(session: Session, user: User, spec: StrategySpec, prompt: str) -> Strategy:
+    if spec.symbols and not settings.personal_local_mode:
+        raise HTTPException(status_code=422, detail="직접 종목 지정은 개인 로컬 모드에서만 지원합니다")
+    if settings.personal_local_mode:
+        if not spec.symbols:
+            raise HTTPException(status_code=422, detail="개인 전략의 미국 주식 티커를 1~20개 입력해 주세요")
+        if spec.portfolio.max_positions > len(spec.symbols):
+            raise HTTPException(status_code=422, detail="최대 보유 종목 수는 선택한 티커 수 이하여야 합니다")
     with quota_allocation(session, "strategies", user.id):
+        if settings.personal_local_mode:
+            existing = session.scalars(select(Strategy).where(Strategy.user_id == user.id)).all()
+            universe = set(spec.symbols)
+            for saved in existing:
+                universe.update(StrategySpec.model_validate_json(saved.spec_json).symbols)
+            if len(universe) > 100:
+                raise HTTPException(status_code=409, detail="이 PC의 전체 전략 티커는 최대 100개까지 저장할 수 있습니다")
         count = session.scalar(select(func.count()).select_from(Strategy).where(Strategy.user_id == user.id))
         if int(count or 0) >= settings.max_strategies_per_user:
             raise HTTPException(status_code=409, detail="사용자별 전략 수 한도를 초과했습니다")
@@ -1345,7 +1404,12 @@ def create_backtest(body: BacktestBody, user: User = Depends(csrf_guard), sessio
         raise HTTPException(status_code=422, detail="시작일은 종료일보다 늦을 수 없습니다")
     if (body.end_date - body.start_date).days > 370:
         raise HTTPException(status_code=422, detail="현재 클럽 데이터셋은 최대 1년 구간만 허용합니다")
-    summary = get_dataset_summary(settings)
+    if settings.personal_local_mode and body.bias_mode != "exploratory":
+        raise HTTPException(status_code=422, detail="개인 선택 종목 백테스트는 탐색용(exploratory)으로 실행해 주세요")
+    try:
+        summary = get_dataset_summary(settings)
+    except (ValueError, FileNotFoundError, OSError):
+        raise HTTPException(status_code=409, detail="전략 가격 이력을 준비 중입니다. 데이터 상태를 확인하고 잠시 후 다시 실행해 주세요")
     first_execution = dt.date.fromisoformat(summary.first_certified_execution_date)
     if body.bias_mode == "strict" and body.start_date < first_execution:
         raise HTTPException(
@@ -1410,10 +1474,12 @@ def create_backtest(body: BacktestBody, user: User = Depends(csrf_guard), sessio
 
 
 @app.get("/api/backtests")
-def list_backtests(user: User = Depends(current_user), session: Session = Depends(get_db)):
+def list_backtests(user: User = Depends(current_user), session: Session = Depends(get_db), limit: int = 50, offset: int = 0):
+    if not 1 <= limit <= 100 or offset < 0:
+        raise HTTPException(status_code=422, detail="limit은 1~100, offset은 0 이상이어야 합니다")
     rows = session.scalars(
         select(BacktestJob).where(BacktestJob.user_id == user.id)
-        .order_by(BacktestJob.created_at.desc()).limit(50)
+        .order_by(BacktestJob.created_at.desc(), BacktestJob.id.desc()).offset(offset).limit(limit)
     ).all()
     return [
         {
@@ -1469,6 +1535,21 @@ def _ensure_shared_quote_capacity(
         )
 
 
+def _ensure_personal_quote_capacity(session: Session, user_id: str, spec: StrategySpec, *, account_id: str | None = None) -> None:
+    if not settings.personal_local_mode:
+        return
+    symbols = set(spec.symbols)
+    if account_id:
+        symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account_id)).all())
+    active = session.scalars(select(PaperAccount).where(
+        PaperAccount.user_id == user_id, PaperAccount.status == "active")).all()
+    for account in active:
+        symbols.update(StrategySpec.model_validate_json(account.strategy.spec_json).symbols)
+        symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
+    if len(symbols) > 20:
+        raise HTTPException(status_code=409, detail="활성 계좌 전체의 종목 합계는 20개까지입니다. 다른 계좌를 일시정지한 뒤 다시 시도하세요")
+
+
 @app.post("/api/accounts", status_code=201)
 def create_account(body: AccountBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
     strategy = _owned_strategy(session, user, body.strategy_id)
@@ -1483,6 +1564,7 @@ def create_account(body: AccountBody, user: User = Depends(csrf_guard), session:
             _ensure_shared_quote_capacity(
                 session, additional_positions=spec.portfolio.max_positions
             )
+            _ensure_personal_quote_capacity(session, user.id, spec)
             row = PaperAccount(
                 user_id=user.id,
                 strategy_id=strategy.id,
@@ -1528,13 +1610,16 @@ def update_account(
             _ensure_shared_quote_capacity(
                 session, additional_positions=spec.portfolio.max_positions
             )
+            _ensure_personal_quote_capacity(session, user.id, spec, account_id=row.id)
         row.status = body.status
         session.commit()
     return account_snapshot(session, row)
 
 
 @app.get("/api/accounts/{account_id}/history")
-def account_history(account_id: str, user: User = Depends(current_user), session: Session = Depends(get_db)):
+def account_history(account_id: str, user: User = Depends(current_user), session: Session = Depends(get_db), point_offset: int = 0, fill_offset: int = 0, point_limit: int = 3000, fill_limit: int = 300):
+    if min(point_offset, fill_offset) < 0 or not 1 <= point_limit <= 3000 or not 1 <= fill_limit <= 1000:
+        raise HTTPException(status_code=422, detail="기록 페이지 범위가 올바르지 않습니다")
     account = session.scalar(
         select(PaperAccount).where(PaperAccount.id == account_id, PaperAccount.user_id == user.id)
     )
@@ -1542,14 +1627,17 @@ def account_history(account_id: str, user: User = Depends(current_user), session
         raise HTTPException(status_code=404, detail="계좌를 찾을 수 없습니다")
     points = session.scalars(
         select(EquityPoint).where(EquityPoint.account_id == account.id)
-        .order_by(EquityPoint.observed_at).limit(3000)
+        .order_by(EquityPoint.observed_at.desc(), EquityPoint.id.desc()).offset(point_offset).limit(point_limit)
     ).all()
     fills = session.scalars(
         select(PaperFill).where(PaperFill.account_id == account.id)
-        .order_by(PaperFill.executed_at.desc()).limit(300)
+        .order_by(PaperFill.executed_at.desc(), PaperFill.id.desc()).offset(fill_offset).limit(fill_limit)
     ).all()
     return {
-        "equity": [{"at": row.observed_at, "value": row.equity} for row in points],
+        "equity": [{"at": row.observed_at, "value": row.equity} for row in reversed(points)],
+        "pagination": {"point_offset": point_offset, "fill_offset": fill_offset,
+                       "point_total": session.scalar(select(func.count()).select_from(EquityPoint).where(EquityPoint.account_id == account.id)),
+                       "fill_total": session.scalar(select(func.count()).select_from(PaperFill).where(PaperFill.account_id == account.id))},
         "fills": [
             {
                 "ticker": row.ticker, "side": row.side, "shares": row.shares,
@@ -1561,8 +1649,154 @@ def account_history(account_id: str, user: User = Depends(current_user), session
     }
 
 
+def _download_response(handle, filename: str, media_type: str):
+    handle.seek(0)
+    def chunks():
+        while True:
+            value = handle.read(64 * 1024)
+            if not value:
+                break
+            yield value
+    return StreamingResponse(chunks(), media_type=media_type,
+        headers={"Content-Disposition": 'attachment; filename="{}"'.format(filename)},
+        background=BackgroundTask(handle.close))
+
+
+@app.get("/api/accounts/{account_id}/export")
+def export_account(account_id: str, kind: str = "fills", user: User = Depends(current_user), session: Session = Depends(get_db)):
+    account = session.scalar(select(PaperAccount).where(PaperAccount.id == account_id, PaperAccount.user_id == user.id))
+    if account is None:
+        raise HTTPException(status_code=404, detail="계좌를 찾을 수 없습니다")
+    if kind not in {"fills", "equity"}:
+        raise HTTPException(status_code=422, detail="kind는 fills 또는 equity입니다")
+    _rate_limit("export:" + user.id, 10, 60)
+    handle = tempfile.SpooledTemporaryFile(max_size=1024 * 1024, mode="w+b")
+    try:
+        handle.write(b"\xef\xbb\xbf")
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        columns = (["executed_at", "ticker", "side", "shares", "price", "fee", "reason", "id"] if kind == "fills"
+                   else ["observed_at", "equity", "cash", "id"])
+        model = PaperFill if kind == "fills" else EquityPoint
+        when = model.executed_at if kind == "fills" else model.observed_at
+        writer.writerow(columns)
+        handle.write(buffer.getvalue().encode("utf-8"))
+        for row in session.scalars(select(model).where(model.account_id == account.id).order_by(when, model.id).execution_options(yield_per=500)):
+            buffer.seek(0); buffer.truncate(0)
+            values = [getattr(row, column) for column in columns]
+            writer.writerow([("'" + value if isinstance(value, str) and value[:1] in {"=", "+", "-", "@"} else value) for value in values])
+            handle.write(buffer.getvalue().encode("utf-8"))
+        return _download_response(handle, "milkyway-{}-{}.csv".format(account.id, kind), "text/csv; charset=utf-8")
+    except BaseException:
+        handle.close()
+        raise
+
+
+@app.get("/api/backtests/export")
+def export_backtests(user: User = Depends(current_user), session: Session = Depends(get_db)):
+    _rate_limit("export:" + user.id, 10, 60)
+    handle = tempfile.SpooledTemporaryFile(max_size=1024 * 1024, mode="w+b")
+    try:
+        handle.write(b"[")
+        separator = b""
+        for row in session.scalars(select(BacktestJob).where(BacktestJob.user_id == user.id).order_by(BacktestJob.created_at, BacktestJob.id).execution_options(yield_per=20)):
+            payload = {column: getattr(row, column) for column in ("id", "strategy_id", "status", "bias_mode", "start_date", "end_date", "error", "created_at", "finished_at")}
+            payload["result"] = json.loads(row.result_json) if row.result_json else None
+            payload["strategy_spec"] = json.loads(row.strategy.spec_json)
+            handle.write(separator + json.dumps(jsonable_encoder(payload), ensure_ascii=False, allow_nan=False).encode("utf-8"))
+            separator = b",\n"
+        handle.write(b"]")
+        return _download_response(handle, "milkyway-backtests.json", "application/json")
+    except BaseException:
+        handle.close()
+        raise
+
+
+def _personal_dashboard(user: User, session: Session) -> dict:
+    from .personal_data import personal_data_status
+    accounts = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user.id).order_by(PaperAccount.created_at)).all()
+    required_symbols = set()
+    for account in accounts:
+        if account.status == "active":
+            required_symbols.update(StrategySpec.model_validate_json(account.strategy.spec_json).symbols)
+            required_symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
+    data = personal_data_status(settings, symbols=sorted(required_symbols) if required_symbols else None)
+    snapshots = [account_snapshot(session, row) for row in accounts]
+    connection = session.get(MarketDataConnection, user.id)
+    worker = _worker_payload(session, "paper-worker")
+    data_worker = _worker_payload(session, "personal-data")
+    backtest_worker = _worker_payload(session, "backtest-worker")
+    quotes = session.scalars(select(MemberQuote).where(MemberQuote.user_id == user.id).order_by(MemberQuote.ticker)).all()
+    now = utcnow()
+    def aware(value):
+        return value if value.tzinfo else value.replace(tzinfo=dt.timezone.utc)
+    market = [{"id": row.ticker, "label": row.ticker, "symbol": row.ticker,
+               "value": row.price, "source": row.source, "observed_at": aware(row.observed_at),
+               "status": "live" if dt.timedelta(0) <= now - aware(row.observed_at) <= dt.timedelta(seconds=settings.quote_max_age_seconds) else "stale",
+               "is_realtime": dt.timedelta(0) <= now - aware(row.observed_at) <= dt.timedelta(seconds=settings.quote_max_age_seconds)} for row in quotes]
+    last_quote = max((row["observed_at"] for row in market), default=None)
+    active = [row for row in accounts if row.status == "active"]
+    open_now = regular_market_open()
+    if not worker["alive"] or not backtest_worker["alive"] or not data_worker["alive"]:
+        state, message = "worker_offline", "실행 프로세스를 시작하거나 재시작해 주세요. doctor 명령으로 상태를 확인할 수 있습니다."
+    elif worker["error"]:
+        state, message = "worker_error", "가상 체결 처리 중 오류가 발생했습니다. 원장은 보존되며 자동 재시도합니다. 반복되면 doctor와 로그를 확인하세요."
+    elif connection is None:
+        state, message = "credentials_required", "프로필에서 본인의 증권사 시세 API를 연결해 주세요."
+    elif not active:
+        state, message = "account_required", "전략을 저장하고 페이퍼 계좌를 만들어 활성화해 주세요."
+    elif not data.get("ready") or data.get("stale") or not data.get("action_ready", True):
+        state, message = "waiting_data", "일봉 데이터를 준비 중입니다. 이전 기록은 유지되며 데이터가 준비되면 자동으로 재개합니다."
+    elif not open_now:
+        state, message = "market_closed", "미국 정규장 대기 중입니다. 장이 열리면 시세 조회를 자동으로 재개합니다."
+    elif not required_symbols.issubset({row["symbol"] for row in market if row["is_realtime"]}):
+        state, message = "waiting_quotes", "새 증권사 시세를 기다리는 중입니다. 키·환경·네트워크·시세 이용 권한을 확인해 주세요."
+    elif any(row.get("execution_status") not in {None, "active", "ready", "rebalanced", "market_closed"} for row in snapshots if row["status"] == "active"):
+        state, message = "account_waiting", "시세 연결 중입니다. 계좌별 실행 상태에서 체결 대기 사유를 확인해 주세요."
+    else:
+        state, message = "running", "개인 시세를 수신 중입니다. 전략 일정에 따라 로컬 가상 원장에 체결합니다."
+    first, last = None, data.get("latest_session")
+    fingerprint = str(data.get("generation") or "")[:16]
+    try:
+        summary = get_dataset_summary(settings)
+        first, last = summary.first_completed_session, summary.last_completed_session
+    except (ValueError, OSError, FileNotFoundError):
+        pass
+    empty_heatmap = {"status": "selected_universe", "market": "us", "cells": [], "coverage_pct": 0, "as_of": last}
+    return {
+        "personal_local_mode": True, "local_demo_data": False,
+        "operational": {"status": state, "message": message, "market_open": open_now, "last_quote_at": last_quote},
+        "personal_data": {**data, "status": "ready" if data.get("ready") and not data.get("stale") else "waiting_data",
+                          "message": data.get("error") or "선택 종목 일봉 자동 갱신", "last_completed_session": last,
+                          "symbol_count": len(data.get("symbols", []))},
+        "market": market, "market_groups": {"us": market, "kr": []},
+        "sector_heatmap": empty_heatmap, "sector_heatmaps": {"us": empty_heatmap, "kr": empty_heatmap},
+        "news": [], "accounts": snapshots,
+        "data": {"first_completed_session": first, "last_completed_session": last,
+                 "symbol_count": len(data.get("symbols", [])), "fresh": bool(data.get("ready") and not data.get("stale")),
+                 "first_certified_snapshot": None, "first_certified_execution_date": None,
+                 "forward_data_gate_ready": False, "strategy_candidate_data_blockers": 0,
+                 "fingerprint": fingerprint, "trading_session_lag": 1 if data.get("stale") else 0,
+                 "calendar_age_days": None},
+        "worker": worker, "workers": {"paper": worker, "backtest": backtest_worker, "data": data_worker,
+                                       "backup": _worker_payload(session, "local-backup")},
+        "ai_enabled": False, "ai_connection": {"connected": False, "configured": False, "management": "manual_builder", "providers": []},
+        "market_data_connection": _market_data_connection_payload(connection), "quote_provider": "member",
+    }
+
+
+@app.get("/health/trading")
+def trading_ready(user: User = Depends(current_user), session: Session = Depends(get_db)):
+    if not settings.personal_local_mode:
+        return ready(session)
+    payload = _personal_dashboard(user, session)["operational"]
+    return JSONResponse(jsonable_encoder(payload), status_code=200 if payload["status"] in {"running", "market_closed"} else 503)
+
+
 @app.get("/api/dashboard")
 def dashboard(user: User = Depends(current_user), session: Session = Depends(get_db)):
+    if settings.personal_local_mode:
+        return _personal_dashboard(user, session)
     if not member_ai_credentials_enabled(settings):
         # Authentication performed DB reads, but no writes are pending. Release
         # the checkout before a bounded broker status probe, then lazily acquire
@@ -1602,6 +1836,8 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
     if ai_connection_payload is None:
         ai_connection_payload = _ai_connection_payload(ai_connection)
     return {
+        "personal_local_mode": False,
+        "local_demo_data": settings.local_demo_data,
         "market": [row for rows in market_groups.values() for row in rows],
         "market_groups": market_groups,
         "sector_heatmap": us_sector_heatmap,

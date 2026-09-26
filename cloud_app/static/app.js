@@ -1,4 +1,4 @@
-const state = {csrf: "", me: null, dashboard: null, aiConnection: null, marketDataConnection: null, strategies: [], backtests: [], marketCountry: "us", sectorCountry: "us", workspace: "market", stream: null, preferences: window.MilkywayProfile.loadPreferences()};
+const state = {config: {}, refreshPromise: null, lastRefresh: null, csrf: "", me: null, dashboard: null, aiConnection: null, marketDataConnection: null, strategies: [], backtests: [], backtestOffset: 0, backtestPage: [], marketCountry: "us", sectorCountry: "us", workspace: "market", stream: null, preferences: window.MilkywayProfile.loadPreferences()};
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const money = (value) => new Intl.NumberFormat("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0}).format(value || 0);
@@ -52,11 +52,18 @@ function toast(message, error = false) {
 async function api(path, options = {}) {
   const headers = {"Content-Type": "application/json", ...(options.headers || {})};
   if (state.csrf && options.method && options.method !== "GET") headers["X-CSRF-Token"] = state.csrf;
-  const response = await fetch(path, {credentials: "same-origin", ...options, headers});
+  let response;
+  try { response = await fetch(path, {credentials: "same-origin", ...options, headers}); }
+  catch { throw new Error("서버에 연결할 수 없습니다. Docker가 실행 중인지 확인해 주세요. 저장 요청 중이었다면 새로고침 후 기록을 먼저 확인하고 재시도하세요."); }
   if (response.status === 204) return null;
   let body = {};
   try { body = await response.json(); } catch {}
-  if (!response.ok) throw new Error(typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail || body));
+  if (!response.ok) {
+    if (response.status === 401) throw new Error("로그인이 만료되었습니다. 다시 로그인해 주세요. 저장된 기록은 유지됩니다.");
+    if (response.status === 429) throw new Error(typeof body.detail === "string" ? body.detail : "요청 한도에 도달했습니다. 잠시 기다린 뒤 다시 시도해 주세요.");
+    const detail = Array.isArray(body.detail) ? body.detail.map((item) => `${(item.loc || []).filter((value) => value !== "body").join(".")}: ${item.msg}`).join("\n") : body.detail;
+    throw new Error(typeof detail === "string" ? detail : `요청을 처리하지 못했습니다 (HTTP ${response.status}). 사용설명서의 문제 해결을 확인하세요.`);
+  }
   return body;
 }
 
@@ -70,7 +77,7 @@ function authTab(name) {
 function formObject(form) { return Object.fromEntries(new FormData(form).entries()); }
 
 function sourceLabel(row) {
-  if (row.status === "live") return "실시간";
+  if (row.status === "live") return window.MilkywayPersonal.isPersonal() ? "최근 수신" : "실시간";
   if (row.status === "completed_close") return "완료 종가";
   if (row.status === "stale") return "갱신 지연";
   return "연결 대기";
@@ -87,6 +94,14 @@ function renderMarketRows(target, rows) {
 }
 
 function marketCards(groups) {
+  if (window.MilkywayPersonal.isPersonal()) {
+    const rows = groups?.us || state.dashboard?.market || [];
+    renderMarketRows("#marketCards", rows);
+    $("#marketCards").classList.toggle("empty-state", !rows.length);
+    if (!rows.length) $("#marketCards").textContent = "활성 계좌를 만들고 미국 정규장이 열리면 내 전략 종목의 시세가 표시됩니다.";
+    $("#marketUpdated").textContent = `미국 주식 · ${rows.filter((row) => row.is_realtime).length}/${rows.length}종목 최근 수신`;
+    return;
+  }
   const selected = MARKET_SELECTION[state.marketCountry] || MARKET_SELECTION.us;
   const indices = (groups?.indices || []).filter((row) => selected.indices.has(row.id));
   const futures = (groups?.futures || []).filter((row) => selected.futures.has(row.id));
@@ -151,7 +166,7 @@ function showLanding() {
   $("#authView").classList.add("hidden");
   $("#appView").classList.add("hidden");
   $("#landingView").classList.remove("hidden");
-  $("#landingAction").textContent = state.me ? "상세보기" : "시작하기";
+  $("#landingAction").textContent = state.me ? "대시보드 열기" : "시작하기";
   $$('[data-authenticated-only]').forEach((element) => element.classList.toggle("hidden", !state.me));
   history.replaceState(null, "", "#landing");
   document.documentElement.classList.add("scroll-instant");
@@ -160,7 +175,7 @@ function showLanding() {
 }
 
 function applyMarketPreference(country) {
-  const selected = MARKET_SELECTION[country] && SECTOR_SELECTION[country] ? country : "us";
+  const selected = !window.MilkywayPersonal.isPersonal() && MARKET_SELECTION[country] && SECTOR_SELECTION[country] ? country : "us";
   state.marketCountry = selected;
   state.sectorCountry = selected;
   if (state.dashboard) {
@@ -180,12 +195,13 @@ async function showDashboard(workspace = "market") {
   openWorkspace(["market", "strategy"].includes(workspace) ? workspace : "market", true);
   if (!state.stream) {
     state.stream = new EventSource("/api/stream");
-    state.stream.addEventListener("heartbeat", () => refresh().catch(() => {}));
+    state.stream.addEventListener("heartbeat", () => refresh().catch(showRefreshError));
+    state.stream.addEventListener("error", () => { $("#connectionError").textContent = "상태 연결을 다시 시도하고 있습니다. 30초마다 서버 상태를 별도로 확인합니다."; });
   }
 }
 
 function accountCards(rows) {
-  $("#accountCount").textContent = `${rows.length} / 3 ACCOUNTS`;
+  $("#accountCount").textContent = `${rows.length}개 계좌`;
   const element = $("#accountCards");
   if (!rows.length) {
     element.className = "account-grid empty-state";
@@ -194,14 +210,15 @@ function accountCards(rows) {
   }
   element.className = "account-grid";
   element.innerHTML = rows.map((account) => {
-    const label = account.status === "active" ? "운용 중" : ["review_required", "configuration_required"].includes(account.status) ? "전략·보유 종목 검토 필요" : "일시정지";
+    const label = account.status === "active" ? "운용 허용 · 상태 확인 필요" : ["review_required", "configuration_required"].includes(account.status) ? "전략·보유 종목 검토 필요" : "일시정지";
     const control = ["review_required", "configuration_required"].includes(account.status)
       ? '<span class="status-pill warn">REVIEW</span>'
       : `<button class="ghost compact account-toggle" data-id="${escapeHtml(account.id)}" data-status="${account.status === "active" ? "paused" : "active"}">${account.status === "active" ? "정지" : "재개"}</button>`;
-    const positions = account.positions.slice(0, 12).map((position) => `<span class="chip">${escapeHtml(position.ticker)} ${pct(position.pnl_pct)}</span>`).join("") || '<span class="chip">첫 리밸런싱 대기</span>';
-    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div>${control}</div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div></div>`;
+    const positions = account.positions.map((position) => `<span class="chip">${escapeHtml(position.ticker)} ${pct(position.pnl_pct)}</span>`).join("") || '<span class="chip">첫 리밸런싱 대기</span>';
+    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div>${control}</div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div><p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button></div>`;
   }).join("");
   $$('.account-toggle').forEach((button) => button.addEventListener("click", () => toggleAccount(button.dataset.id, button.dataset.status)));
+  $$('.account-history-open').forEach((button) => button.addEventListener("click", () => openAccountHistory(button.dataset.id)));
 }
 
 async function toggleAccount(id, status) {
@@ -212,7 +229,31 @@ async function toggleAccount(id, status) {
   } catch (error) { toast(error.message, true); }
 }
 
+async function openAccountHistory(id) {
+  const account = state.dashboard.accounts.find((row) => row.id === id);
+  const dialog = $("#accountHistoryDialog");
+  $("#accountHistoryTitle").textContent = `${account?.name || "계좌"} · 체결·자산 기록`;
+  $("#accountHistoryBody").textContent = "최근 기록을 불러오고 있습니다…";
+  if (!dialog.open) dialog.showModal();
+  try {
+    const history = await api(`/api/accounts/${encodeURIComponent(id)}/history`);
+    const points = history.equity || [];
+    const fills = history.fills || [];
+    const encodedId = encodeURIComponent(id);
+    $("#accountHistoryBody").innerHTML = `<div class="history-actions"><a class="ghost compact" href="/api/accounts/${encodedId}/export?kind=fills" download>전체 체결 CSV 저장</a><a class="ghost compact" href="/api/accounts/${encodedId}/export?kind=equity" download>전체 자산 CSV 저장</a></div>
+      <h4>최근 자산 추이</h4>${points.length > 1 ? equityChart(points, "페이퍼 계좌 자산 곡선") : '<p class="fineprint">자산 기록은 시세 평가 후 쌓입니다. 아직 그래프를 그릴 기록이 충분하지 않습니다.</p>'}
+      <p class="fineprint">${points.length ? `${shortTime(points[0].at)} ~ ${shortTime(points.at(-1).at)} · 최근 ${points.length.toLocaleString()}개 관측` : "아직 자산 관측 기록이 없습니다."}</p>
+      <h4>최근 가상 체결 (${fills.length.toLocaleString()}건)</h4>
+      ${fills.length ? `<div class="history-table-wrap"><table class="history-table"><thead><tr><th>체결 시각</th><th>종목</th><th>매매</th><th>수량</th><th>가격 (USD)</th><th>비용 (USD)</th><th>사유</th></tr></thead><tbody>${fills.map((fill) => `<tr><td>${shortTime(fill.executed_at)}</td><td>${escapeHtml(fill.ticker)}</td><td>${escapeHtml(fill.side)}</td><td>${number(fill.shares)}</td><td>${number(fill.price)}</td><td>${number(fill.fee)}</td><td>${escapeHtml(fill.reason)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="fineprint">아직 체결이 없습니다. 활성 계좌, 최신 일봉·시세, 미국 정규장 및 리밸런싱 시각을 운용 상태에서 확인하세요.</p>'}`;
+  } catch (error) { $("#accountHistoryBody").textContent = error.message; }
+}
+
 function dataFacts(data) {
+  if (window.MilkywayPersonal.isPersonal()) {
+    const personal = state.dashboard.personal_data || {};
+    $("#dataFacts").innerHTML = `<dt>선정 범위</dt><dd>내 전략에 입력한 종목</dd><dt>일봉 출처</dt><dd>Yahoo · 자동 준비·갱신</dd><dt>준비 상태</dt><dd>${escapeHtml(personal.message || personal.status || "전략 저장 후 준비")}</dd><dt>완료 세션</dt><dd>${escapeHtml(personal.last_completed_session || data.last_completed_session || "준비 중")}</dd><dt>성과 판정</dt><dd>탐색용 · 생존편향 있음</dd>`;
+    return;
+  }
   const lag = Number(data.trading_session_lag || 0);
   const freshnessLabel = lag ? `${lag}세션 지연` : "최신 완료 세션";
   $("#dataFacts").innerHTML = `
@@ -236,8 +277,8 @@ function renderStrategies() {
   element.innerHTML = state.strategies.map((strategy) => `
     <div class="strategy">
       <div class="strategy-head"><div><h4>${escapeHtml(strategy.name)}</h4><p>${escapeHtml(strategy.description)}</p></div></div>
-      <div class="factor-row">${strategy.spec.factors.map((factor) => `<span class="badge">${escapeHtml(factor.kind)} ${Number(factor.lookback)}d × ${Number(factor.weight)}</span>`).join("")}<span class="badge amber">${Number(strategy.spec.portfolio.max_positions)}종목 · ${Number(strategy.spec.portfolio.rebalance_days)}일</span></div>
-      <details class="code-preview"><summary>AI 생성 코드 규격 보기</summary><pre>${escapeHtml(strategy.code_preview)}</pre></details>
+      <p>${escapeHtml((strategy.spec.symbols || []).join(", "))}</p><div class="factor-row">${strategy.spec.factors.map((factor) => `<span class="badge">${escapeHtml(factor.kind)} ${Number(factor.lookback)}d × ${Number(factor.weight)}</span>`).join("")}<span class="badge amber">${Number(strategy.spec.portfolio.max_positions)}종목 · ${Number(strategy.spec.portfolio.rebalance_days)}일</span></div>
+      <details class="code-preview"><summary>저장된 전략 규격 보기</summary><pre>${escapeHtml(strategy.code_preview)}</pre></details>
       <div class="strategy-actions"><button class="ghost run-backtest" data-id="${escapeHtml(strategy.id)}">백테스트</button><button class="ghost new-account" data-id="${escapeHtml(strategy.id)}">페이퍼 계좌</button></div>
     </div>`).join("");
   $$('.run-backtest').forEach((button) => button.addEventListener("click", () => openBacktest(button.dataset.id)));
@@ -256,10 +297,10 @@ function chartGeometry(points, width = 620, height = 200) {
   return {line, area: `${line} L${width},${height} L0,${height} Z`, min, max};
 }
 
-function equityChart(points) {
+function equityChart(points, label = "백테스트 자산 곡선") {
   const geometry = chartGeometry(points);
   if (!geometry) return "";
-  return `<svg class="equity-chart" viewBox="0 0 620 200" preserveAspectRatio="none" role="img" aria-label="백테스트 자산 곡선">
+  return `<svg class="equity-chart" viewBox="0 0 620 200" preserveAspectRatio="none" role="img" aria-label="${escapeHtml(label)}">
     <defs><linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c4a7ff" stop-opacity=".32"/><stop offset="1" stop-color="#c4a7ff" stop-opacity="0"/></linearGradient></defs>
     <line class="grid-line" x1="0" y1="50" x2="620" y2="50"/><line class="grid-line" x1="0" y1="100" x2="620" y2="100"/><line class="grid-line" x1="0" y1="150" x2="620" y2="150"/>
     <path class="area" d="${geometry.area}"/><path class="line" d="${geometry.line}"/>
@@ -302,12 +343,28 @@ function renderBacktests() {
     return;
   }
   element.className = "backtest-list";
-  element.innerHTML = state.backtests.map((job) => {
+  const page = state.backtestOffset ? state.backtestPage : state.backtests;
+  element.innerHTML = page.map((job) => {
     const result = job.result;
     const metrics = result?.metrics;
     return `<div class="backtest"><div class="backtest-head"><div><h4>${escapeHtml(job.strategy_name)}</h4><p>${escapeHtml(job.start_date)} → ${escapeHtml(job.end_date)} · ${escapeHtml(job.bias_mode)}</p></div><span class="status-pill ${job.status === "completed" ? "ok" : job.status === "failed" ? "warn" : ""}">${escapeHtml(job.status)} ${Number(job.progress)}%</span></div>${result?.caveat ? `<p class="notice">${escapeHtml(result.caveat)}</p>` : ""}${metrics ? `<div class="result-grid"><div class="mini-metric"><span>RETURN</span><strong>${pct(metrics.return_pct)}</strong></div><div class="mini-metric"><span>SHARPE</span><strong>${Number(metrics.sharpe).toFixed(2)}</strong></div><div class="mini-metric"><span>MDD</span><strong>${pct(metrics.mdd_pct)}</strong></div><div class="mini-metric"><span>TRADES</span><strong>${Number(metrics.trade_count)}</strong></div></div>${sparkline(result.equity_curve)}` : ""}${job.error ? `<p class="error">${escapeHtml(job.error)}</p>` : ""}</div>`;
   }).join("");
+  element.insertAdjacentHTML("beforeend", `<div class="history-actions"><button id="newerBacktests" class="ghost" type="button" ${state.backtestOffset ? "" : "disabled"}>새로운 기록</button><span class="fineprint">${state.backtestOffset + 1}~${state.backtestOffset + page.length}번째</span><button id="olderBacktests" class="ghost" type="button" ${page.length < 50 ? "disabled" : ""}>이전 기록</button></div>`);
+  $("#newerBacktests").addEventListener("click", () => loadBacktestPage(Math.max(0, state.backtestOffset - 50)));
+  $("#olderBacktests").addEventListener("click", () => loadBacktestPage(state.backtestOffset + 50));
   featuredBacktest();
+}
+
+async function loadBacktestPage(offset) {
+  $("#olderBacktests").disabled = true;
+  $("#newerBacktests").disabled = true;
+  try {
+    const page = await api(`/api/backtests?limit=50&offset=${offset}`);
+    if (!page.length && offset) { toast("이전 기록이 더 없습니다"); return; }
+    state.backtestOffset = offset;
+    state.backtestPage = page;
+  } catch (error) { toast(error.message, true); }
+  finally { renderBacktests(); }
 }
 
 function renderHeatmap(data) {
@@ -342,7 +399,7 @@ function renderNews(data) {
   element.innerHTML = data.items.slice(0, 7).map((item, index) => `<a class="news-item" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"><span class="news-index">${String(index + 1).padStart(2, "0")}</span><div><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.source)} · ${shortTime(item.published_at)}</p></div><span class="news-arrow">↗</span></a>`).join("");
 }
 
-async function refresh() {
+async function loadDashboard() {
   const [dashboard, strategies, backtests] = await Promise.all([api("/api/dashboard"), api("/api/strategies"), api("/api/backtests")]);
   state.dashboard = dashboard;
   state.aiConnection = dashboard.ai_connection;
@@ -357,31 +414,53 @@ async function refresh() {
   renderStrategies();
   renderBacktests();
 
-  const worker = $("#workerStatus");
-  const workerFresh = dashboard.worker.observed_at && Date.now() - new Date(dashboard.worker.observed_at).getTime() < 120000;
-  worker.textContent = workerFresh ? "WORKER ONLINE" : "WORKER CHECK";
-  worker.className = `status-pill ${workerFresh ? "ok" : "warn"}`;
+  window.MilkywayPersonal.renderStatus(dashboard);
+  $("#connectionError").textContent = "";
+  state.lastRefresh = Date.now();
   $("#aiConnectBtn").classList.toggle("connected", dashboard.ai_enabled);
   $("#aiConnectBtn").setAttribute("aria-label", dashboard.ai_enabled ? "AI 연결 설정 열기, 연결됨" : "AI 연결 설정 열기");
   profileController.render();
 
 }
 
+function showRefreshError(error) {
+  $("#connectionError").textContent = error.message + (state.lastRefresh ? ` 마지막 정상 조회: ${new Date(state.lastRefresh).toLocaleString("ko-KR")}. 화면의 값이 최신이 아닐 수 있습니다.` : "");
+  $("#workerStatus").textContent = "서버 연결 확인 필요";
+  $("#workerStatus").className = "status-pill warn";
+}
+
+function refresh() {
+  if (state.refreshPromise) return state.refreshPromise;
+  state.refreshPromise = loadDashboard().finally(() => { state.refreshPromise = null; });
+  return state.refreshPromise;
+}
+
 async function enterApp(me = null) {
+  state.config = await api("/api/config");
   state.me = me || await api("/api/auth/me");
   state.csrf = state.me.csrf;
   profileController.render();
-  showLanding();
+  await showDashboard(state.config.personal_local_mode || state.config.local_demo_data ? "strategy" : "market");
 }
 
 function openBacktest(id) {
   const form = $("#backtestForm");
   form.strategy_id.value = id;
   const data = state.dashboard.data;
-  const hasStrict = data.forward_data_gate_ready && data.first_certified_execution_date <= data.last_completed_session;
+  const hasStrict = !window.MilkywayPersonal.isPersonal() && !window.MilkywayPersonal.isDemo() && data.forward_data_gate_ready && data.first_certified_execution_date <= data.last_completed_session;
+  form.bias_mode.querySelector('option[value="strict"]').disabled = !hasStrict;
   form.bias_mode.value = hasStrict ? "strict" : "exploratory";
-  form.start_date.value = hasStrict ? data.first_certified_execution_date : ["2026-01-02", data.first_completed_session].sort().reverse()[0];
-  form.end_date.value = data.last_completed_session;
+  const today = new Date().toISOString().slice(0, 10);
+  const fallbackStart = `${new Date().getFullYear()}-01-02`;
+  const strategy = state.strategies.find((row) => row.id === id);
+  const warmupDays = Math.max(strategy?.spec?.filters?.history_days || 60, ...((strategy?.spec?.factors || []).map((factor) => factor.lookback + 1)));
+  const firstDate = new Date(`${data.first_completed_session || fallbackStart}T00:00:00Z`);
+  firstDate.setUTCDate(firstDate.getUTCDate() + Math.ceil(warmupDays * 7 / 5) + 10);
+  const earliestWindow = new Date(`${data.last_completed_session || today}T00:00:00Z`);
+  earliestWindow.setUTCDate(earliestWindow.getUTCDate() - 365);
+  const exploratoryStart = new Date(Math.max(firstDate.getTime(), earliestWindow.getTime())).toISOString().slice(0, 10);
+  form.start_date.value = hasStrict ? data.first_certified_execution_date : exploratoryStart < (data.last_completed_session || today) ? exploratoryStart : data.first_completed_session || fallbackStart;
+  form.end_date.value = data.last_completed_session || today;
   if (!hasStrict) toast("정식 PIT 체결 구간이 아직 준비되지 않아 탐색용 모드로 열었습니다");
   $("#backtestDialog").showModal();
 }
@@ -533,12 +612,12 @@ $("#registerForm").addEventListener("submit", async (event) => {
 
 $("#landingAction").addEventListener("click", () => {
   if (!state.me) { showAuth(); return; }
-  $("#about").scrollIntoView({behavior: "smooth", block: "start"});
+  showDashboard(state.config.personal_local_mode || state.config.local_demo_data ? "strategy" : "market").catch(showRefreshError);
 });
 
 const profileController = window.MilkywayProfile.create({
   getUser: () => state.me,
-  getPreferences: () => state.preferences,
+  getPreferences: () => window.MilkywayPersonal.isPersonal() ? {default_market: "us"} : state.preferences,
   getAiConnection: () => state.aiConnection,
   getMarketDataConnection: () => state.marketDataConnection,
   onAiLoad: async () => {
@@ -558,6 +637,8 @@ const profileController = window.MilkywayProfile.create({
   onError: (error) => toast(error.message || "요청을 처리하지 못했습니다", true),
 });
 profileController.bind();
+window.MilkywayPersonal.initialize({api, refresh, toast, getState: () => state});
+$("#openQuoteSettings").addEventListener("click", () => profileController.openSettings("marketDataConnectionSettings"));
 
 $("#aiConnectBtn").addEventListener("click", () => profileController.openSettings("aiConnectionSettings"));
 
@@ -574,19 +655,43 @@ $("#aiForm").addEventListener("submit", async (event) => {
 
 $("#backtestForm").addEventListener("submit", async (event) => {
   event.preventDefault();
+  const button = event.target.querySelector("button[type=submit]");
+  button.disabled = true;
   try { await api("/api/backtests", {method: "POST", body: JSON.stringify(formObject(event.target))}); $("#backtestDialog").close(); toast("백테스트를 작업 큐에 추가했습니다"); await refresh(); }
   catch (error) { toast(error.message, true); }
+  finally { button.disabled = false; }
 });
 
 $("#accountForm").addEventListener("submit", async (event) => {
   event.preventDefault();
+  const button = event.target.querySelector("button[type=submit]");
+  button.disabled = true;
   try { await api("/api/accounts", {method: "POST", body: JSON.stringify(formObject(event.target))}); $("#accountDialog").close(); toast("페이퍼 계좌를 만들었습니다"); await refresh(); }
   catch (error) { toast(error.message, true); }
+  finally { button.disabled = false; }
 });
 
 $("#refreshBtn").addEventListener("click", () => refresh().catch((error) => toast(error.message, true)));
 
+setInterval(() => {
+  if (state.me && !$("#appView").classList.contains("hidden")) refresh().catch(showRefreshError);
+}, 30000);
+
+api("/api/config").then((config) => {
+  state.config = config;
+  if (config.personal_local_mode || config.local_demo_data) {
+    const label = $("#registerForm input[name=invite_code]").closest("label");
+    label.firstChild.textContent = "로컬 설치 코드 (기본값: local-club)";
+    $("#registerForm input[name=invite_code]").value = "local-club";
+    $("#about .about-intro > p").textContent = "내 PC에서 규칙으로 전략을 만들고, 백테스트와 페이퍼 트레이딩을 진행합니다. 실제 증권사 주문은 보내지 않습니다.";
+    $("#profileMenu [data-profile-menu-action=settings] small").textContent = "증권사 시세 연결";
+  }
+}).catch(() => {});
+
 startMarketBackdrop();
 api("/api/auth/me")
   .then((data) => { state.csrf = data.csrf; return enterApp(data); })
-  .catch(() => { if (location.hash === "#login") showAuth(); });
+  .catch((error) => {
+    if (state.me) showRefreshError(error);
+    else if (location.hash === "#login") showAuth();
+  });
