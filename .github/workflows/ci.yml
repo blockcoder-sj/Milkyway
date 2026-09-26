@@ -81,3 +81,7 @@ jobs:
         run: docker build --tag milkyway:ci .
       - name: Verify PostgreSQL backup and security boundaries
         run: python3 tests/run_postgres_checks.py --image milkyway:ci
+      - name: Verify packaged personal install and crash recovery
+        run: python3 tests/run_personal_checks.py --image milkyway:ci --output /tmp/milkyway-personal-checks
+      - name: Verify frontend behavior in Node
+        run: python3 -m unittest discover -s tests -p test_personal_frontend.py -v

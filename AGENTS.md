@@ -1,5 +1,14 @@
 # Milkyway project instructions
 
+## Single-owner local exercise
+
+- `compose.personal.yaml` is explicitly authorized for a member's own trusted
+  PC, with loopback-only access and local credential custody. It is separate
+  from public multi-tenant deployment and does not claim OCI/KMS isolation.
+- Preserve personal runtime and backup volumes. Never substitute mock quotes
+  for a failed member feed or describe accelerated tests as a real week of
+  uninterrupted brokerage operation.
+
 ## Security remediation handoff
 
 - Before continuing security, deployment, credential, OCI, KMS, backup, or

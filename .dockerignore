@@ -1,7 +1,6 @@
 .git
 .codex
 .agents
-.github
 .DS_Store
 .venv
 __pycache__

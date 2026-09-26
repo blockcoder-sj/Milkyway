@@ -12,7 +12,7 @@ import threading
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 
 from sqlalchemy import delete, select, update
@@ -32,6 +32,9 @@ from .database import (
     bind_runtime_context,
     Lease,
     MarketDataConnection,
+    MemberQuote,
+    PaperAccount,
+    Strategy,
     RuntimeHeartbeat,
     SessionLocal,
     WorkCursor,
@@ -44,6 +47,8 @@ from .kis_quotes import KisCredentials
 from .market_data_credentials import decrypt_market_credential
 from .paper import (
     apply_terminal_events,
+    apply_personal_corporate_actions,
+    guard_personal_price_discontinuities,
     collect_holding_watchlist_ordered,
     collect_watchlist,
     collect_watchlist_ordered,
@@ -51,6 +56,7 @@ from .paper import (
     make_quote_provider,
     mark_and_stop_accounts,
     QuoteProvider,
+    QuoteValue,
     rebalance_due_accounts,
     regular_market_open,
     store_member_quotes,
@@ -58,6 +64,7 @@ from .paper import (
     TossQuoteProvider,
 )
 from .strategies import StrategySpec, run_strategy_backtest
+from .provider_process import ProviderProcess
 from .toss_quotes import TossCredentials
 
 
@@ -72,6 +79,50 @@ _member_provider_lock = threading.Lock()
 _member_retry_after: dict[str, float] = {}
 _MEMBER_QUOTE_WORKERS = 8
 _MEMBER_RETRY_SECONDS = 60.0
+_personal_quote_client = None
+
+
+def _personal_quote_execute(payload, configuration):
+    """Runs only in the killable child, retaining OAuth between polls."""
+    global _personal_quote_client
+    if _personal_quote_client is None:
+        if configuration["provider"] == "kis":
+            _personal_quote_client = KisQuoteProvider(KisCredentials(
+                api_key=configuration["key"], api_secret=configuration["secret"],
+                paper=configuration["environment"] == "paper"), source="kis_member")
+        else:
+            _personal_quote_client = TossQuoteProvider(TossCredentials(
+                client_id=configuration["key"], client_secret=configuration["secret"]), source="toss_member")
+    # The parent hard deadline also bounds slow response bodies and socket stalls.
+    return [{**value.__dict__, "observed_at": value.observed_at.isoformat()}
+            for value in _personal_quote_client.fetch(payload["tickers"])]
+
+
+class PersonalQuoteProvider(QuoteProvider):
+    def __init__(self, configuration, timeout_seconds):
+        self.configuration = configuration
+        self.timeout_seconds = timeout_seconds
+        self.runner = ProviderProcess(_personal_quote_execute)
+
+    def fetch(self, tickers):
+        wanted = sorted(set(tickers))
+        if len(wanted) > 20:
+            raise ValueError("개인 시세 조회는 활성 계좌 전체에서 최대 20개 종목입니다")
+        values = self.runner.run({"tickers": wanted}, self.configuration,
+                                 deadline=time.monotonic() + self.timeout_seconds)
+        return [QuoteValue(**{**value, "observed_at": dt.datetime.fromisoformat(value["observed_at"])})
+                for value in values]
+
+    def close(self):
+        self.runner.close()
+
+
+def _discard_member_provider(user_id):
+    with _member_provider_lock:
+        cached = _member_provider_cache.pop(user_id, None)
+    if cached is not None and isinstance(cached[1], PersonalQuoteProvider):
+        cached[1].close()
+
 
 
 class PaperTickDeadlineExceeded(RuntimeError):
@@ -293,6 +344,8 @@ def claim_backtest(session) -> BacktestJob | None:
 
 
 def _prune_backtest_results(session, user_id: str, settings) -> None:
+    if getattr(settings, "personal_local_mode", False):
+        return  # Personal records are retained until their owner explicitly deletes them.
     cutoff = utcnow() - dt.timedelta(days=settings.backtest_retention_days)
     session.execute(
         delete(BacktestJob).where(
@@ -341,6 +394,36 @@ def _backtest_deadline(seconds: int):
         signal.signal(signal.SIGALRM, previous)
 
 
+@contextmanager
+def _backtest_liveness(job_id: str, *, interval_seconds: float = 15.0):
+    """Keep the independent backtest service observable during bounded CPU work."""
+    stopped = threading.Event()
+
+    def publish():
+        progress_session = SessionLocal()
+        try:
+            heartbeat(progress_session, "backtest-worker", "running job=" + job_id)
+            progress_session.commit()
+        except Exception:
+            progress_session.rollback()
+            logger.warning("backtest progress heartbeat failed", exc_info=True)
+        finally:
+            progress_session.close()
+
+    def maintain():
+        while not stopped.wait(interval_seconds):
+            publish()
+
+    publish()
+    thread = threading.Thread(target=maintain, name="backtest-heartbeat", daemon=True)
+    thread.start()
+    try:
+        yield
+    finally:
+        stopped.set()
+        thread.join(timeout=6.0)
+
+
 def process_one_backtest() -> bool:
     session = SessionLocal()
     work = None
@@ -363,7 +446,11 @@ def process_one_backtest() -> bool:
         # Computation can last minutes. Release the DB transaction and later
         # re-enter through the same live claim before persisting the result.
         session.rollback()
-        with _backtest_deadline(runtime_settings.backtest_timeout_seconds):
+        liveness = _backtest_liveness(job_id) if getattr(runtime_settings, "personal_local_mode", False) else nullcontext()
+        with liveness, _backtest_deadline(runtime_settings.backtest_timeout_seconds):
+            if getattr(runtime_settings, "personal_local_mode", False):
+                from .personal_data import refresh_personal_data
+                refresh_personal_data(spec.symbols, runtime_settings)
             result = run_strategy_backtest(spec, **arguments)
         encoded_result = json.dumps(
             result, ensure_ascii=False, default=str, separators=(",", ":")
@@ -445,7 +532,15 @@ def _member_provider(connection: MemberFeedConfig, settings) -> QuoteProvider:
         environment=connection.environment,
         label="App Secret",
     )
-    if connection.provider == "kis":
+    if getattr(settings, "personal_local_mode", False):
+        if connection.provider not in {"kis", "toss"}:
+            raise RuntimeError("unsupported member quote provider")
+        provider = PersonalQuoteProvider(
+            {"provider": connection.provider, "environment": connection.environment,
+             "key": api_key, "secret": api_secret},
+            max(1.0, min(22.0, float(getattr(settings, "shared_quote_tick_deadline_seconds", 30.0)) - 5.0)),
+        )
+    elif connection.provider == "kis":
         provider = KisQuoteProvider(
             KisCredentials(
                 api_key=api_key,
@@ -466,6 +561,8 @@ def _member_provider(connection: MemberFeedConfig, settings) -> QuoteProvider:
         if existing is not None and existing[0] == version:
             return existing[1]
         _member_provider_cache[connection.user_id] = (version, provider)
+    if cached is not None and isinstance(cached[1], PersonalQuoteProvider):
+        cached[1].close()
     return provider
 
 
@@ -516,9 +613,10 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
     connections = session.scalars(select(MarketDataConnection)).all()
     active_users = {connection.user_id for connection in connections}
     with _member_provider_lock:
-        for stale_user in set(_member_provider_cache) - active_users:
-            _member_provider_cache.pop(stale_user, None)
-            _member_retry_after.pop(stale_user, None)
+        stale_users = set(_member_provider_cache) - active_users
+    for stale_user in stale_users:
+        _discard_member_provider(stale_user)
+        _member_retry_after.pop(stale_user, None)
     tasks: list[tuple[MemberFeedConfig, tuple[str, ...]]] = []
     now = time.monotonic()
     for connection in connections:
@@ -526,13 +624,22 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
             continue
         watchlist = tuple(sorted(collect_watchlist(session, user_id=connection.user_id)))
         if watchlist:
+            if getattr(settings, "personal_local_mode", False) and connection.provider == "kis" and connection.environment == "paper":
+                # KIS sandbox permits about two requests/second and a first
+                # ticker may require three exchange probes. Persist the cursor
+                # before I/O, servicing all <=20 admitted symbols in <=4 ticks.
+                watchlist = _rotating_work_slice(session, "personal-kis:" + connection.user_id, watchlist, 5)
             tasks.append((_member_feed_config(connection), watchlist))
     if not tasks:
         return 0, 0
 
+    if getattr(settings, "personal_local_mode", False):
+        session.commit()
+    attempted_symbols = {connection.user_id: watchlist for connection, watchlist in tasks}
     quote_count = 0
     error_count = 0
     fetched_quotes: list[tuple[MemberFeedConfig, str, list]] = []
+    failed_users: set[str] = set()
     last_progress = time.monotonic()
     with ThreadPoolExecutor(max_workers=min(_MEMBER_QUOTE_WORKERS, len(tasks))) as executor:
         futures = {
@@ -549,8 +656,12 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
                 fetched_quotes.append((connection, returned_user_id, values))
             except Exception as exc:
                 error_count += 1
-                with _member_provider_lock:
-                    _member_provider_cache.pop(user_id, None)
+                failed_users.add(user_id)
+                if getattr(settings, "personal_local_mode", False):
+                    # Invalidate attempted symbols on failure. Unrequested
+                    # symbols retain their explicitly age-bounded cached marks.
+                    fetched_quotes.append((connection, user_id, []))
+                _discard_member_provider(user_id)
                 _member_retry_after[user_id] = time.monotonic() + _MEMBER_RETRY_SECONDS
                 logger.error(
                     "member quote collection failed user=%s error=%s",
@@ -571,16 +682,19 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
             .execution_options(populate_existing=True)
         )
         if current is None or _member_feed_version(current) != _member_feed_version(connection):
-            with _member_provider_lock:
-                _member_provider_cache.pop(user_id, None)
+            _discard_member_provider(user_id)
             _member_retry_after.pop(user_id, None)
             logger.info("member quotes discarded after connection change user=%s", user_id)
             continue
+        if getattr(settings, "personal_local_mode", False):
+            session.execute(delete(MemberQuote).where(MemberQuote.user_id == user_id,
+                MemberQuote.ticker.in_(attempted_symbols[user_id])))
         quote_count += store_member_quotes(session, user_id, values)
         # Hold the connection-row lock through this write/transaction so a
         # concurrent replace/delete purges these rows after we commit.
         session.flush()
-        _member_retry_after.pop(user_id, None)
+        if user_id not in failed_users:
+            _member_retry_after.pop(user_id, None)
     return quote_count, error_count
 
 
@@ -600,6 +714,7 @@ def run_paper_tick(provider, settings=None) -> None:
             # Publish the lease before network I/O so another worker cannot start
             # the same paper tick while this one is collecting member quotes.
             session.commit()
+            personal_actions = apply_personal_corporate_actions(session, settings)
             terminal = apply_terminal_events(session)
             quote_count = 0
             member_quote_count = 0
@@ -630,6 +745,7 @@ def run_paper_tick(provider, settings=None) -> None:
                 session.flush()
                 # Keep the next-open contract aligned with backtest_core: rebalance
                 # first, then apply the intraday stop to post-rebalance holdings.
+                guard_personal_price_discontinuities(session, settings)
                 rebalance_count = rebalance_due_accounts(session)
                 stop_count = mark_and_stop_accounts(session)
             heartbeat(
@@ -650,9 +766,15 @@ def run_paper_tick(provider, settings=None) -> None:
         session.invalidate()
         logger.critical("paper tick hard deadline exceeded; terminating worker")
         raise
-    except Exception:
+    except Exception as exc:
         session.rollback()
         logger.exception("paper tick failed")
+        try:
+            heartbeat(session, "paper-worker", "error={} 자동 재시도 대기".format(type(exc).__name__))
+            session.commit()
+        except Exception:
+            session.rollback()
+            logger.exception("paper failure heartbeat could not be saved")
     finally:
         session.close()
 
@@ -716,21 +838,67 @@ def _apply_authorized_paper_work(settings, work):
         _finish_authorized_paper_work(settings, work)
 
 
+def refresh_personal_history(settings) -> None:
+    """History networking is isolated from the quote/stop worker and DB locks."""
+    from .personal_data import refresh_personal_data
+    session = SessionLocal()
+    try:
+        if not acquire_lease(session, "personal-data", 120):
+            session.rollback()
+            return
+        symbols = set()
+        invalid = 0
+        for encoded in session.scalars(select(Strategy.spec_json)).all():
+            try:
+                symbols.update(StrategySpec.model_validate_json(encoded).symbols)
+            except ValueError:
+                invalid += 1
+        # Preserve split/action monitoring for held symbols after a strategy edit.
+        symbols.update(collect_holding_watchlist_ordered(session))
+        heartbeat(session, "personal-data", "refreshing {} symbols".format(len(symbols)))
+        session.commit()
+        if symbols:
+            status = refresh_personal_data(sorted(symbols), settings)
+            detail = "ready={} latest={} missing={} stale={} invalid_strategies={}".format(
+                status.get("ready", False), status.get("latest_session", ""),
+                len(status.get("missing_symbols", [])), len(status.get("stale_symbols", [])), invalid)
+        else:
+            detail = "waiting for a saved strategy"
+        heartbeat(session, "personal-data", detail)
+        session.commit()
+    except Exception as exc:
+        session.rollback()
+        logger.exception("personal history refresh failed")
+        try:
+            heartbeat(session, "personal-data", "error={} 자동 재시도 대기".format(type(exc).__name__))
+            session.commit()
+        except Exception:
+            session.rollback()
+    finally:
+        session.close()
+
+
 def main() -> int:
     settings = get_settings()
     role = os.getenv("WORKER_ROLE", "all").strip().lower()
-    if role not in {"all", "backtest", "paper"}:
-        raise SystemExit("WORKER_ROLE must be all, backtest or paper")
+    if role not in {"all", "backtest", "paper", "personal-data"}:
+        raise SystemExit("WORKER_ROLE must be all, backtest, paper or personal-data")
+    if role == "personal-data" and not getattr(settings, "personal_local_mode", False):
+        raise SystemExit("personal-data worker requires PERSONAL_LOCAL_MODE")
     if settings.production and role == "all":
         raise SystemExit(
             "production requires separate paper and backtest workers for quote liveness"
         )
-    errors = settings.startup_errors(role if role != "all" else "deployment")
+    errors = settings.startup_errors(role if role not in {"all", "personal-data"} else "deployment")
     if errors:
         raise SystemExit("Startup configuration failed:\n- " + "\n- ".join(errors))
     prepare_runtime_database()
     if settings.credential_backend == "broker":
         broker_preflight(settings, "paper" if role == "all" else role)
+    if role == "personal-data":
+        while True:
+            refresh_personal_history(settings)
+            time.sleep(60.0)
     provider = None
     if role in {"all", "paper"}:
         provider = (

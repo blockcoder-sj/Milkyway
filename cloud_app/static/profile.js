@@ -19,6 +19,10 @@
 
     function renderAiConnection() {
       const connection = getAiConnection?.() || {connected: false, providers: []};
+      if (window.MilkywayPersonal?.isPersonal()) {
+        $("#aiConnectionSettings").classList.add("hidden");
+        return;
+      }
       const status = $("#aiConnectionStatus");
       status.textContent = connection.connected ? "사용 가능" : "운영자 설정 필요";
       status.className = `status-pill ${connection.connected ? "ok" : "warn"}`;
@@ -31,6 +35,7 @@
 
     function renderMarketDataConnection() {
       const connection = getMarketDataConnection?.() || {connected: false, providers: []};
+      if (window.MilkywayPersonal?.renderConnection(connection)) return;
       const status = $("#marketDataConnectionStatus");
       let manage = $("#marketDataManageLink");
       if (!manage) {

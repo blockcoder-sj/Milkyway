@@ -71,6 +71,7 @@ class KisQuoteClient:
         self.deadline_monotonic = deadline_monotonic
         self.max_provider_calls = max_provider_calls
         self.provider_calls = 0
+        self._next_quote_monotonic = 0.0
 
     def _consume_provider_call(self) -> None:
         if (
@@ -162,8 +163,21 @@ class KisQuoteClient:
             "Content-Type": "application/json; charset=utf-8",
         }
 
+    def _pace_quote_request(self) -> None:
+        # The official sample uses 0.5 s for virtual trading and 0.05 s for
+        # production. Pace exchange fallbacks and auth retries, not just tickers.
+        interval = 0.5 if self.credentials.paper else 0.05
+        now = time.monotonic()
+        wait = max(0.0, self._next_quote_monotonic - now)
+        if self.deadline_monotonic is not None and now + wait >= self.deadline_monotonic:
+            raise KisWorkBudgetExceeded("KIS pacing would exceed the request deadline")
+        if wait:
+            time.sleep(wait)
+        self._next_quote_monotonic = time.monotonic() + interval
+
     def _request_quote(self, ticker: str, exchange_code: str) -> dict | None:
         headers = self._headers()
+        self._pace_quote_request()
         self._consume_provider_call()
         response = self.session.get(
             self.base_url + "/uapi/overseas-price/v1/quotations/price",

@@ -1,0 +1,103 @@
+name: milkyway-personal
+
+x-environment: &environment
+  APP_ENV: development
+  APP_NAME: Milkyway Personal Paper
+  PERSONAL_LOCAL_MODE: "true"
+  PUBLIC_BASE_URL: http://localhost:${MILKYWAY_PORT:-8080}
+  ALLOWED_HOSTS: localhost,127.0.0.1
+  DATABASE_URL: sqlite:////app/runtime/club.sqlite3
+  DATASET_DIR: /app/runtime/personal-data
+  SNAPSHOTS_GLOB: /app/runtime/personal-snapshots/*.json
+  TERMINAL_EVENTS_PATH: /app/runtime/personal-events/events.jsonl
+  LOCAL_DEMO_DATA: "false"
+  CREDENTIAL_BACKEND: local
+  MEMBER_CREDENTIALS_ENABLED: "true"
+  SHARED_AI_ENABLED: "false"
+  QUOTE_PROVIDER: member
+  QUOTE_INTERVAL_SECONDS: "15"
+  QUOTE_MAX_AGE_SECONDS: "180"
+  SHARED_QUOTE_TICK_DEADLINE_SECONDS: "45"
+  WORKER_STALE_SECONDS: "150"
+  MAX_USERS: "1"
+  MAX_ACCOUNTS_PER_USER: "5"
+  MAX_STRATEGIES_PER_USER: "30"
+  MAX_BACKTESTS_PER_USER_DAY: "100"
+  MAX_BACKTEST_RESULT_BYTES: "8388608"
+  KIS_ENVIRONMENT: paper
+
+x-service: &service
+  build: .
+  image: milkyway-personal:local
+  init: true
+  restart: unless-stopped
+  stop_grace_period: 30s
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  read_only: true
+  tmpfs: [/tmp]
+  volumes:
+    - personal-runtime:/app/runtime
+  environment: *environment
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  app:
+    <<: *service
+    command: [uvicorn, cloud_app.main:app, --host, 0.0.0.0, --port, "8000", --workers, "1"]
+    ports:
+      - 127.0.0.1:${MILKYWAY_PORT:-8080}:8000
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/startup', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  paper-worker:
+    <<: *service
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      <<: *environment
+      WORKER_ROLE: paper
+    command: [python, -m, cloud_app.worker]
+
+  backtest-worker:
+    <<: *service
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      <<: *environment
+      WORKER_ROLE: backtest
+    command: [python, -m, cloud_app.worker]
+
+  personal-data:
+    <<: *service
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      <<: *environment
+      WORKER_ROLE: personal-data
+    command: [python, -m, cloud_app.worker]
+
+  backup:
+    <<: *service
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
+      - personal-runtime:/app/runtime
+      - personal-backups:/app/backups
+    command: [python, -m, cloud_app.local_ops, backup-loop]
+
+volumes:
+  personal-runtime:
+  personal-backups:

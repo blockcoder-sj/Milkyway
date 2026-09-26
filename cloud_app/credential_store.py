@@ -16,7 +16,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.fernet import Fernet
 
-from .config import ROOT, Settings, get_settings
+from .config import ROOT, Settings, get_settings, persistent_local_secret
 
 
 OCI_KMS_PREFIX = "v3:oci-kms:"
@@ -59,27 +59,7 @@ def _master_secret(settings: Settings, purpose: str) -> str:
         variable = "AI_CREDENTIAL_SECRET" if purpose == "ai" else "MARKET_CREDENTIAL_SECRET"
         raise RuntimeError("{} is required in production".format(variable))
     path = Path(ROOT) / "runtime/.{}_credential_secret".format(purpose)
-    try:
-        value = path.read_text(encoding="utf-8").strip()
-        if len(value) >= 32:
-            os.chmod(path.parent, 0o700)
-            os.chmod(path, 0o600)
-            return value
-    except FileNotFoundError:
-        pass
-    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    os.chmod(path.parent, 0o700)
-    value = secrets.token_urlsafe(48)
-    try:
-        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            handle.write(value)
-        return value
-    except FileExistsError:
-        existing = path.read_text(encoding="utf-8").strip()
-        if len(existing) < 32:
-            raise RuntimeError("Local credential secret is invalid")
-        return existing
+    return persistent_local_secret(path)
 
 
 def _legacy_fernet(settings: Settings | None = None) -> Fernet:

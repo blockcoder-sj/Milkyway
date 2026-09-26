@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070512">
   <title>Milkyway | Quant Trading Lab</title>
   <link rel="icon" type="image/png" href="/static/assets/milkyway-symbol-white-v2.png">
-  <link rel="stylesheet" href="/static/styles.css?v=20260828-10">
+  <link rel="stylesheet" href="/static/styles.css?v=20260926-1">
 </head>
 <body>
   <canvas id="marketBackdrop" aria-hidden="true"></canvas>
@@ -70,6 +70,13 @@
         <div class="header-actions"><span id="workerStatus" class="status-pill">Worker 확인 중</span><button class="profile-trigger" type="button" data-open-profile aria-label="프로필 메뉴 열기" aria-haspopup="menu" aria-expanded="false"><span data-profile-avatar>M</span></button></div>
       </header>
 
+      <section id="operationPanel" class="panel operation-panel" aria-live="polite">
+        <div class="section-head"><h3>운용 상태</h3><button id="openQuoteSettings" class="ghost compact" type="button">증권사 연결 설정</button></div>
+        <p id="operationMessage">서버 상태를 확인하고 있습니다.</p>
+        <dl id="operationFacts"></dl>
+        <p id="connectionError" class="error" role="alert"></p>
+      </section>
+
       <section id="market" class="market-section hidden" data-workspace-page="market">
         <div class="market-board panel">
           <div class="section-head market-head">
@@ -89,7 +96,7 @@
       </section>
 
       <section id="strategyLab" class="strategy-workbench hidden" data-workspace-page="strategy">
-        <article class="panel strategy-builder">
+        <article class="panel strategy-builder" id="strategyBuilder">
           <div class="section-head"><div><p class="eyebrow">AI STRATEGY BUILDER</p><h3>전략 코드 생성</h3></div><button id="aiConnectBtn" class="ghost compact ai-connect-button" type="button"><span aria-hidden="true"></span>AI 연결</button></div>
           <p class="section-copy">아이디어를 평문으로 적으면 AI가 허용된 전략 규격으로 바꾸고, 실행 전 검증합니다.</p>
           <form id="aiForm" class="stack">
@@ -105,7 +112,7 @@
             </div>
             <button class="primary action-button" type="submit"><span>전략 생성 및 검증</span><b>↗</b></button>
           </form>
-          <div class="safety-row"><span>01 안전한 DSL 변환</span><span>02 미래참조 검사</span><span>03 공통 체결 엔진</span></div>
+          <div class="safety-row"><span>01 허용된 전략 규격</span><span>02 미래참조 검사</span><span>03 공통 체결 엔진</span></div>
         </article>
         <article class="panel result-feature">
           <div class="section-head"><div><p class="eyebrow">LATEST BACKTEST</p><h3>백테스트 결과</h3></div><button id="refreshBtn" class="ghost compact">새로고침</button></div>
@@ -145,7 +152,7 @@
       </section>
 
       <section class="panel history-panel hidden" data-workspace-page="strategy">
-        <div class="section-head"><div><p class="eyebrow">BACKTEST HISTORY</p><h3>실행 기록</h3></div></div>
+        <div class="section-head"><div><p class="eyebrow">BACKTEST HISTORY</p><h3>실행 기록</h3></div><a href="/api/backtests/export" download class="ghost compact">전체 기록 JSON 저장</a></div>
         <div id="backtestList" class="backtest-list empty-state">실행 기록이 없습니다.</div>
       </section>
     </section>
@@ -177,6 +184,11 @@
       <button class="primary" type="submit">계좌 만들기</button>
     </form>
   </dialog>
+  <dialog id="accountHistoryDialog" class="history-dialog">
+    <div class="section-head"><h3 id="accountHistoryTitle">페이퍼 계좌 기록</h3><button type="button" class="icon-btn" data-close aria-label="닫기">×</button></div>
+    <p class="fineprint">화면은 최근 기록을 보여 줍니다. CSV에는 전체 기록이 포함됩니다. 평가액은 마지막으로 받은 가격 기준입니다.</p>
+    <div id="accountHistoryBody" aria-live="polite"></div>
+  </dialog>
   <dialog id="profileDialog" class="profile-dialog">
     <div class="section-head"><div><p class="eyebrow">MY MILKYWAY</p><h3 id="profileDialogTitle">내 프로필</h3></div><button type="button" class="icon-btn" data-close aria-label="닫기">×</button></div>
     <div class="profile-summary"><span class="profile-avatar-large" data-profile-avatar>M</span><div><strong data-profile-name>사용자</strong><small data-profile-email></small></div></div>
@@ -206,7 +218,8 @@
     </section>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/profile.js?v=20260904-13" defer></script>
-  <script src="/static/app.js?v=20260904-13" defer></script>
+  <script src="/static/personal.js?v=20260926-1" defer></script>
+  <script src="/static/profile.js?v=20260926-1" defer></script>
+  <script src="/static/app.js?v=20260926-1" defer></script>
 </body>
 </html>
