@@ -1563,8 +1563,8 @@ def _ensure_personal_quote_capacity(session: Session, user_id: str, spec: Strate
         raise HTTPException(status_code=409, detail="활성 계좌 전체의 종목 합계는 20개까지입니다. 다른 계좌를 일시정지한 뒤 다시 시도하세요")
 
 
-@app.post("/api/accounts", status_code=201)
-def create_account(body: AccountBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+@contextmanager
+def _account_creation(body, user, session):
     strategy = _owned_strategy(session, user, body.strategy_id)
     spec = StrategySpec.model_validate_json(strategy.spec_json)
     with quota_allocation(session, "accounts", "global"):
@@ -1586,7 +1586,16 @@ def create_account(body: AccountBody, user: User = Depends(csrf_guard), session:
                 cash=spec.portfolio.initial_cash,
             )
             session.add(row)
+            session.flush()
+            yield row
             session.commit()
+
+
+
+@app.post("/api/accounts", status_code=201)
+def create_account(body: AccountBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+    with _account_creation(body, user, session) as row:
+        pass
     return account_snapshot(session, row)
 
 

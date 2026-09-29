@@ -7,13 +7,15 @@ import json
 from typing import Literal
 
 from fastapi import Depends, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, update
 
 from . import research_ai
-from .database import BacktestJob, Strategy, quota_allocation, utcnow
-from .research_models import ResearchSession, ResearchTurn, ResearchVersion
+from .database import BacktestJob, PaperAccount, Strategy, quota_allocation, utcnow
+from .research_models import ResearchDeployment, ResearchExperiment, ResearchSession, ResearchTurn, ResearchVersion
 from .strategies import StrategySpec
+from .research_experiments import DeployBody, ExperimentBody, enqueue_experiment, experiment_evidence, experiment_payload
 
 
 class SessionBody(BaseModel):
@@ -70,7 +72,7 @@ def turn_payload(row):
             "usage": json.loads(row.usage_json) if row.usage_json else None,
             "strategy_id": row.strategy_id, "error": row.error,
             "approval": {"request_digest": row.request_digest, "model": request["model"],
-                         "max_calls": 1, "max_output_tokens": request["max_output_tokens"],
+                         "reasoning": request.get("reasoning", {}).get("effort", "none"), "max_calls": 1, "max_output_tokens": request["max_output_tokens"],
                          "input_characters": len(request["instructions"]) + len(request["input"]),
                          "expires_at": aware(row.created_at) + dt.timedelta(minutes=15),
                          "request": request if row.status == "awaiting_approval" else None}}
@@ -98,7 +100,8 @@ def session_payload(db, room, main):
                                  **main._strategy_payload(strategy)})
     return {"id": room.id, "title": room.title, "objective": room.objective,
             "selected_strategy_id": room.selected_strategy_id, "created_at": room.created_at,
-            "turns": [turn_payload(row) for row in rows], "versions": version_rows}
+            "turns": [turn_payload(row) for row in rows], "versions": version_rows,
+            **experiment_evidence(db, room)}
 
 
 def install(app):
@@ -157,12 +160,12 @@ def install(app):
             context = {"objective": room.objective, "user_message": body.prompt.strip(),
                        "selected_strategy": json.loads(selected.spec_json) if selected else None,
                        "recent_history": [{"user": row.prompt, "assistant": json.loads(row.response_json)["reply"]} for row in reversed(history)],
-                       "evidence": evidence_context(db, room)}
+                       "evidence": {"backtests": evidence_context(db, room), **experiment_evidence(db, room)}}
             try:
                 config = research_ai.local_configuration(main.settings)
                 while True:
                     try:
-                        request = research_ai.make_request(config.model, context)
+                        request = research_ai.make_request(config.model, context, config.reasoning)
                         break
                     except ValueError:
                         if not context["recent_history"]:
@@ -212,7 +215,7 @@ def install(app):
         if not config.key:
             raise HTTPException(409, ".env의 OPENAI_API_KEY를 설정하고 앱을 다시 실행해 주세요")
         request = json.loads(row.request_json)
-        if config.model != request["model"]:
+        if config.model != request["model"] or config.reasoning != request.get("reasoning", {}).get("effort", "none"):
             raise HTTPException(409, "모델 설정이 변경됐습니다. 기존 요청을 취소하고 다시 작성해 주세요")
         main._rate_limit("research-ai:" + user.id, 20, 3600)
         claimed = db.execute(update(ResearchTurn).where(ResearchTurn.id == row.id, ResearchTurn.status == "awaiting_approval")
@@ -258,3 +261,52 @@ def install(app):
             room.selected_strategy_id = strategy_id
             db.commit()
         return session_payload(db, room, main)
+
+    @app.post("/api/research/sessions/{session_id}/experiments", status_code=201, **options)
+    def experiment(session_id: str, body: ExperimentBody, user=Depends(main.csrf_guard), db=Depends(main.get_db)):
+        room = owned_session(db, user, session_id)
+        return enqueue_experiment(db, user, room, body, main.settings, {v.strategy_id for v in versions(db, room)})
+
+    @app.post("/api/research/sessions/{session_id}/deploy", status_code=201, **options)
+    def deploy(session_id: str, body: DeployBody, user=Depends(main.csrf_guard), db=Depends(main.get_db)):
+        room = owned_session(db, user, session_id)
+        with quota_allocation(db, "research", user.id):
+            existing = db.scalar(select(ResearchDeployment).where(ResearchDeployment.session_id == room.id,
+                ResearchDeployment.request_id == body.request_id))
+            if existing:
+                account = db.get(PaperAccount, existing.account_id)
+                if existing.strategy_id != body.strategy_id or account.name != body.name.strip():
+                    raise HTTPException(409, "같은 요청 ID의 계좌 설정이 다릅니다")
+                return main.account_snapshot(db, account)
+            if body.strategy_id not in {v.strategy_id for v in versions(db, room)}:
+                raise HTTPException(404, "이 연구의 전략 버전이 아닙니다")
+            experiments = db.scalars(select(ResearchExperiment).where(ResearchExperiment.session_id == room.id)).all()
+            verified = any(p["status"] == "completed" and any(c["strategy_id"] == body.strategy_id and
+                (c.get("validation", {}).get("metrics") or {}).get("trade_count", 0) > 0 for c in p["candidates"])
+                for p in (experiment_payload(db, e) for e in experiments))
+            if not verified:
+                raise HTTPException(409, "이 버전의 개발·검증 비교를 완료하고 검증 구간 거래 결과를 확인하세요")
+            with main._account_creation(main.AccountBody(strategy_id=body.strategy_id, name=body.name), user, db) as account:
+                db.add(ResearchDeployment(session_id=room.id, strategy_id=body.strategy_id,
+                    account_id=account.id, request_id=body.request_id))
+            return main.account_snapshot(db, account)
+
+    @app.get("/api/research/sessions/{session_id}/export/{strategy_id}", **options)
+    def export(session_id: str, strategy_id: str, user=Depends(main.current_user), db=Depends(main.get_db)):
+        room = owned_session(db, user, session_id)
+        if strategy_id not in {v.strategy_id for v in versions(db, room)}:
+            raise HTTPException(404, "이 연구의 전략 버전이 아닙니다")
+        strategy = main._owned_strategy(db, user, strategy_id)
+        spec = StrategySpec.model_validate_json(strategy.spec_json)
+        code = """# Run from the Milkyway repository: python strategy.py YYYY-MM-DD YYYY-MM-DD
+# This file uses the same validated strategy engine as the application.
+import json
+import sys
+from cloud_app.strategies import StrategySpec, run_strategy_backtest
+SPEC = StrategySpec.model_validate_json(%r)
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        raise SystemExit("Usage: python strategy.py START END")
+    print(json.dumps(run_strategy_backtest(SPEC, start=sys.argv[1], end=sys.argv[2], bias_mode="exploratory"), default=str, ensure_ascii=False))
+""" % spec.model_dump_json()
+        return Response(code, media_type="text/x-python", headers={"Content-Disposition": 'attachment; filename="milkyway-strategy.py"'})

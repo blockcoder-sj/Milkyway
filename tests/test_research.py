@@ -32,9 +32,10 @@ class ResearchTests(unittest.TestCase):
         self.other = User(email="other@example.test", display_name="Other", password_hash="unused")
         self.db.add_all([self.user, self.other]); self.db.commit()
         self.settings = replace(main.settings, personal_local_mode=True, app_env="development", authority_enabled=False,
-            shared_ai_enabled=False, credential_backend="local", quote_provider="member", dataset_dir=self.root / "data")
+            shared_ai_enabled=False, credential_backend="local", quote_provider="member", dataset_dir=self.root / "data", terminal_events_path=self.root / "events.jsonl",
+            max_outstanding_backtests_per_user=8)
         self.patches = [patch.object(main, "settings", self.settings), patch.object(research_ai, "ROOT", self.root),
-                        patch.dict(os.environ, {"OPENAI_API_KEY": "", "OPENAI_MODEL": ""})]
+                        patch.dict(os.environ, {"OPENAI_API_KEY": "", "OPENAI_MODEL": "", "OPENAI_REASONING_EFFORT": ""})]
         for item in self.patches: item.start()
         self.actor = self.user
         def database():
@@ -74,7 +75,7 @@ class ResearchTests(unittest.TestCase):
             json={"approved": True, "request_digest": turn["approval"]["request_digest"]})
 
     def key(self):
-        (self.root / ".env").write_text("OPENAI_API_KEY=synthetic-test-key-never-valid\nOPENAI_MODEL=gpt-6-sol\n")
+        (self.root / ".env").write_text("OPENAI_API_KEY=synthetic-test-key-never-valid\nOPENAI_MODEL=gpt-5.4-mini\n")
 
     def test_preview_status_and_cancel_never_call_provider(self):
         turn = self.prepare()
@@ -165,6 +166,92 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(result["turns"][0]["status"], "failed")
         self.approve(turn); self.provider.assert_not_called()
 
+    def build_experiment(self, candidates=1):
+        from cloud_app import personal_data
+        from tests.test_personal_data import NOW, write_outcome
+        self.key()
+        ids = [self.approve(self.prepare()).json()["strategy_id"] for _ in range(candidates)]
+        with patch.object(personal_data._history_process, "run", side_effect=write_outcome):
+            personal_data.refresh_personal_data(["AAPL", "MSFT"], self.settings, now=NOW)
+        body = {"request_id": "experiment-001", "strategy_ids": ids, "start_date": "2026-03-02",
+                "split_date": "2026-06-01", "end_date": "2026-09-24", "objective": "sharpe"}
+        path = f'/api/research/sessions/{self.room["id"]}/experiments'
+        response = self.client.post(path, json=body)
+        self.assertEqual(response.status_code, 201, response.text)
+        return body, path, response.json()
+
+    def run_jobs(self, count):
+        from contextlib import nullcontext
+        from cloud_app import worker
+        with patch.object(worker, "SessionLocal", self.factory), patch.object(worker, "get_settings", return_value=self.settings), \
+             patch.object(worker, "_backtest_liveness", return_value=nullcontext()), \
+             patch.object(worker, "_backtest_deadline", return_value=nullcontext()), \
+             patch("cloud_app.personal_data.refresh_personal_data", side_effect=AssertionError("Must use captured data")):
+            for _ in range(count): self.assertTrue(worker.process_one_backtest())
+
+    def test_complete_experiment_export_deploy_and_followup(self):
+        import ast
+        from cloud_app.database import BacktestJob, PaperAccount, PaperFill
+        body, path, experiment = self.build_experiment(2)
+        self.assertEqual(self.client.post(path, json=body).json()["id"], experiment["id"])
+        self.assertEqual(len(self.db.scalars(select(BacktestJob)).all()), 4)
+        strategy_id = body["strategy_ids"][0]
+        deploy_path = f'/api/research/sessions/{self.room["id"]}/deploy'
+        deploy = {"strategy_id": strategy_id, "request_id": "deploy-0001", "name": "My paper"}
+        self.assertEqual(self.client.post(deploy_path, json=deploy).status_code, 409)
+        self.run_jobs(4)
+        room = self.client.get(f'/api/research/sessions/{self.room["id"]}').json()
+        comparison = room["experiments"][0]
+        self.assertEqual(comparison["status"], "completed", comparison)
+        self.assertIn(comparison["development_leader"], body["strategy_ids"])
+        self.assertTrue(all(c["validation"]["metrics"]["trade_count"] > 0 for c in comparison["candidates"]))
+        code = self.client.get(f'/api/research/sessions/{self.room["id"]}/export/{strategy_id}')
+        self.assertEqual(code.status_code, 200)
+        ast.parse(code.text)
+        response = self.client.post(deploy_path, json=deploy)
+        self.assertEqual(response.status_code, 201, response.text)
+        account_id = response.json()["id"]
+        self.assertEqual(self.client.post(deploy_path, json=deploy).json()["id"], account_id)
+        self.assertEqual(len(self.db.scalars(select(PaperAccount)).all()), 1)
+        self.db.add(PaperFill(account_id=account_id, ticker="AAPL", side="buy", shares=1, price=100,
+                             fee=.3, reason="rebalance", dedupe_key="synthetic-research-fill")); self.db.commit()
+        self.client.post(f'/api/research/sessions/{self.room["id"]}/select/{body["strategy_ids"][1]}')
+        turn = self.prepare("검증 결과와 최근 체결을 설명해줘")
+        evidence = json.loads(turn["approval"]["request"]["input"])["evidence"]
+        self.assertEqual(evidence["paper"][0]["recent_fills"][0]["symbol"], "AAPL")
+        self.assertEqual(evidence["paper"][0]["strategy_id"], strategy_id)
+        self.assertEqual(self.db.get(PaperAccount, account_id).strategy_id, strategy_id)
+        self.assertEqual(self.provider.call_count, 2)  # Evidence and paper execution make no AI call.
+        self.actor = self.other
+        self.assertEqual(self.client.post(path, json=body).status_code, 404)
+        self.assertEqual(self.client.post(deploy_path, json=deploy).status_code, 404)
+        self.assertEqual(self.client.get(f'/api/research/sessions/{self.room["id"]}/export/{strategy_id}').status_code, 404)
+
+    def test_experiment_guards_and_data_tampering(self):
+        body, path, experiment = self.build_experiment()
+        self.assertEqual(self.client.post(path, json=dict(body, objective="return_pct")).status_code, 409)
+        for changes in ({"strategy_ids": ["foreign"]}, {"split_date": "2026-03-01"},
+                        {"strategy_ids": body["strategy_ids"] * 2}):
+            self.assertEqual(self.client.post(path, json=dict(body, request_id="invalid-0001", **changes)).status_code, 422)
+        with patch.object(main, "settings", replace(self.settings, max_outstanding_backtests_per_user=2)):
+            self.assertEqual(self.client.post(path, json=dict(body, request_id="quota-000001")).status_code, 429)
+        from cloud_app.research_models import ResearchExperiment
+        row = self.db.get(ResearchExperiment, experiment["id"])
+        row.fingerprint = "0" * 64; self.db.commit()
+        self.run_jobs(2)
+        room = self.client.get(f'/api/research/sessions/{self.room["id"]}').json()
+        self.assertEqual(room["experiments"][0]["status"], "failed")
+        self.assertIsNone(room["experiments"][0]["development_leader"])
+
+    def test_lowest_reasoning_is_previewed_and_approved_exactly(self):
+        self.key(); turn = self.prepare()
+        self.assertEqual(turn["approval"]["model"], "gpt-5.4-mini")
+        self.assertEqual(turn["approval"]["reasoning"], "none")
+        self.assertEqual(turn["approval"]["request"]["reasoning"], {"effort": "none"})
+        with patch.dict(os.environ, {"OPENAI_REASONING_EFFORT": "low"}):
+            self.assertEqual(self.approve(turn).status_code, 409)
+        self.provider.assert_not_called()
+
 
 class ProviderContractTests(unittest.TestCase):
     def test_single_request_contract_and_rejection_do_not_retry(self):
@@ -176,7 +263,7 @@ class ProviderContractTests(unittest.TestCase):
                     {"type": "output_text", "text": '{"reply":"어떤 종목을 사용할까요?","strategy":null}'}]}], "usage": {}})
             client = httpx.Client(transport=httpx.MockTransport(handle))
             with patch.object(research_ai.httpx, "Client", return_value=client):
-                request = research_ai.make_request("gpt-6-sol", {"user_message": "가설"})
+                request = research_ai.make_request("gpt-5.4-mini", {"user_message": "가설"})
                 if status == 200:
                     self.assertIsNone(research_ai._execute(request, {"key": "synthetic"})["reply"]["strategy"])
                 else:

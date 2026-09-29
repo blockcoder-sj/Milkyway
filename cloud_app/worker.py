@@ -443,15 +443,31 @@ def process_one_backtest() -> bool:
         logger.info("backtest started job=%s", job_id)
         spec = StrategySpec.model_validate_json(job.strategy.spec_json)
         arguments = {"start": job.start_date.isoformat(), "end": job.end_date.isoformat(), "bias_mode": job.bias_mode}
+        experiment = None
+        if getattr(runtime_settings, "personal_local_mode", False):
+            from .research_models import ResearchRun, ResearchExperiment
+            from sqlalchemy import inspect
+            # Older isolated worker fixtures may not install the local research tables.
+            if inspect(session.get_bind()).has_table(ResearchRun.__tablename__):
+                run = session.get(ResearchRun, job_id)
+                if run:
+                    from types import SimpleNamespace
+                    captured = session.get(ResearchExperiment, run.experiment_id)
+                    experiment = SimpleNamespace(generation=captured.generation, fingerprint=captured.fingerprint,
+                                                 terminal_events=captured.terminal_events)
         # Computation can last minutes. Release the DB transaction and later
         # re-enter through the same live claim before persisting the result.
         session.rollback()
         liveness = _backtest_liveness(job_id) if getattr(runtime_settings, "personal_local_mode", False) else nullcontext()
         with liveness, _backtest_deadline(runtime_settings.backtest_timeout_seconds):
-            if getattr(runtime_settings, "personal_local_mode", False):
-                from .personal_data import refresh_personal_data
-                refresh_personal_data(spec.symbols, runtime_settings)
-            result = run_strategy_backtest(spec, **arguments)
+            if experiment:
+                from .research_experiments import run_pinned_backtest
+                result = run_pinned_backtest(spec, arguments, experiment, runtime_settings)
+            else:
+                if getattr(runtime_settings, "personal_local_mode", False):
+                    from .personal_data import refresh_personal_data
+                    refresh_personal_data(spec.symbols, runtime_settings)
+                result = run_strategy_backtest(spec, **arguments)
         encoded_result = json.dumps(
             result, ensure_ascii=False, default=str, separators=(",", ":")
         )

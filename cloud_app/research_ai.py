@@ -62,6 +62,7 @@ You cannot call APIs, run code, change an account or spend beyond this single re
 class LocalAI:
     model: str
     key: str = field(repr=False)
+    reasoning: str = "none"
 
 
 def local_configuration(settings) -> LocalAI:
@@ -77,18 +78,21 @@ def local_configuration(settings) -> LocalAI:
     except (OSError, ValueError, UnicodeError):
         raise ValueError(".env 파일을 읽을 수 없습니다. 파일 형식과 권한을 확인하세요") from None
     key = (os.getenv("OPENAI_API_KEY") or values.get("OPENAI_API_KEY") or "").strip()
-    model = (os.getenv("OPENAI_MODEL") or values.get("OPENAI_MODEL") or "gpt-6-sol").strip()
+    model = (os.getenv("OPENAI_MODEL") or values.get("OPENAI_MODEL") or "gpt-5.4-mini").strip()
     validate_provider_model("openai", model)
     if key:
         validate_api_key(key)
-    return LocalAI(model, key)
+    reasoning = (os.getenv("OPENAI_REASONING_EFFORT") or values.get("OPENAI_REASONING_EFFORT") or "none").strip()
+    if reasoning not in {"none", "low", "medium", "high", "xhigh"}:
+        raise ValueError("OPENAI_REASONING_EFFORT 설정을 확인하세요")
+    return LocalAI(model, key, reasoning)
 
 
 def configuration_status(settings):
     try:
         config = local_configuration(settings)
         return {"configured": bool(config.key), "connected": False, "available": bool(config.key),
-                "provider": "openai", "model": config.model, "management": "local_env",
+                "provider": "openai", "model": config.model, "reasoning": config.reasoning, "management": "local_env",
                 "approval_required": True, "provider_verified": False, "providers": [],
                 "max_output_tokens": OUTPUT_LIMIT, "max_calls_per_approval": 1}
     except ValueError as exc:
@@ -96,11 +100,11 @@ def configuration_status(settings):
                 "management": "local_env", "approval_required": True, "providers": [], "error": str(exc)}
 
 
-def make_request(model, context):
+def make_request(model, context, reasoning="none"):
     request = {"model": model, "instructions": SYSTEM + "\nJSON schema:\n" + json.dumps(ResearchReply.model_json_schema()),
                "input": json.dumps(context, ensure_ascii=False, allow_nan=False),
                "max_output_tokens": OUTPUT_LIMIT, "text": {"format": {"type": "json_object"}},
-               "store": False}
+               "reasoning": {"effort": reasoning}, "store": False}
     if len(json.dumps(request, ensure_ascii=True).encode()) > INPUT_LIMIT:
         raise ValueError("이번 대화의 자료가 너무 큽니다. 새 연구를 시작하거나 비교 후보를 줄여 주세요")
     return request
