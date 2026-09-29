@@ -29,7 +29,7 @@ import json
 from cloud_app.main import app
 from cloud_app.credential_broker import app as broker
 print(json.dumps({
-    "public": [[r.path, sorted(getattr(r, "methods", []) or [])] for r in app.routes],
+    "public": [[path, [method.upper()]] for path, methods in app.openapi()["paths"].items() for method in methods],
     "broker": [r.path for r in broker.routes],
 }))
 '''

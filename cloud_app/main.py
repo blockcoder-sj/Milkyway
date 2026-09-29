@@ -1922,4 +1922,18 @@ def validation_error(_request: Request, exc: ValidationError):
 
 
 from .research_routes import install as install_research_routes
-install_research_routes(app)
+from .research_ports import ResearchServices
+install_research_routes(
+    app,
+    services=ResearchServices(
+        get_settings=lambda: settings,
+        rate_limit=_rate_limit,
+        strategy_creation=_strategy_creation,
+        account_creation=lambda strategy_id, name, user, session: _account_creation(
+            AccountBody(strategy_id=strategy_id, name=name), user, session),
+        strategy_payload=_strategy_payload,
+        account_snapshot=account_snapshot,
+        owned_strategy=_owned_strategy,
+    ),
+    current_user=current_user, csrf_guard=csrf_guard, get_db=get_db,
+)

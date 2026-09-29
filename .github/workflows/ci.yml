@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - codex/ai-research-workflow
   pull_request:
 
 permissions:
@@ -83,5 +84,9 @@ jobs:
         run: python3 tests/run_postgres_checks.py --image milkyway:ci
       - name: Verify packaged personal install and crash recovery
         run: python3 tests/run_personal_checks.py --image milkyway:ci --output /tmp/milkyway-personal-checks
+      - name: Verify native personal startup and recovery
+        run: docker run --rm --network none -e APP_ENV=development -e DATABASE_URL=sqlite:///:memory: milkyway:ci python -m tests.run_native_personal_checks
       - name: Verify frontend behavior in Node
-        run: python3 -m unittest discover -s tests -p test_personal_frontend.py -v
+        run: |
+          python3 -m unittest discover -s tests -p test_personal_frontend.py -v
+          python3 -m unittest discover -s tests -p test_research_boundaries.py -v

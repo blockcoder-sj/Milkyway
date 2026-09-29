@@ -1,0 +1,19 @@
+"""Validated HTTP inputs for personal research."""
+
+from typing import Literal
+from pydantic import BaseModel, Field
+
+
+class SessionBody(BaseModel):
+    title: str = Field(min_length=1, max_length=100)
+    objective: str = Field(default="", max_length=2000)
+
+
+class MessageBody(BaseModel):
+    prompt: str = Field(min_length=1, max_length=4000)
+    request_id: str = Field(pattern="^[a-zA-Z0-9_-]{8,64}$")
+
+
+class ApprovalBody(BaseModel):
+    request_digest: str = Field(pattern="^[a-f0-9]{64}$")
+    approved: Literal[True]

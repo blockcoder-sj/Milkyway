@@ -806,7 +806,7 @@ import json
 from cloud_app.main import app as public_app
 from cloud_app.credential_broker import app as broker_app
 print(json.dumps({
-    "public": [[route.path, sorted(getattr(route, "methods", []) or [])] for route in public_app.routes],
+    "public": [[path, [method.upper()]] for path, methods in public_app.openapi()["paths"].items() for method in methods],
     "broker": [route.path for route in broker_app.routes],
 }))
 """
@@ -2626,13 +2626,15 @@ class PaperLedgerTests(unittest.TestCase):
             )
         )
         self.session.commit()
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory() as directory, patch(
+            "cloud_app.paper.utcnow", return_value=dt.datetime(2026, 9, 29, 15, tzinfo=dt.timezone.utc)
+        ):
             path = Path(directory) / "events.jsonl"
             append_event(
                 path,
                 {
                     "ticker": "EXIT",
-                    "effective_date": dt.date.today().isoformat(),
+                    "effective_date": "2026-09-29",
                     "event_type": "exchange_exit",
                     "status": "unresolved",
                 },
@@ -2650,7 +2652,7 @@ class PaperLedgerTests(unittest.TestCase):
                 path,
                 {
                     "ticker": "EXIT",
-                    "effective_date": dt.date.today().isoformat(),
+                    "effective_date": "2026-09-29",
                     "event_type": "liquidation",
                     "status": "verified",
                     "cash_per_share": 4.0,
