@@ -505,6 +505,9 @@ def acquire_transaction_lock(session, scope: str, owner: str) -> None:
 
 def initialize_database() -> None:
     Base.metadata.create_all(engine)
+    if settings.personal_local_mode and not settings.production:
+        from .research_models import ResearchBase
+        ResearchBase.metadata.create_all(engine)
     _secure_sqlite_files()
     with engine.begin() as connection:
         connection.execute(text("SELECT 1"))

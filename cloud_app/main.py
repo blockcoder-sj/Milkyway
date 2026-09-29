@@ -16,6 +16,7 @@ import threading
 import time
 import tempfile
 from collections import defaultdict, deque
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -944,6 +945,9 @@ def _ai_connection_payload(row: AiConnection | None) -> dict:
 
 @app.get("/api/me/ai-connection")
 def get_ai_connection(user: User = Depends(current_user), session: Session = Depends(get_db)):
+    if settings.personal_local_mode:
+        from .research_ai import configuration_status
+        return configuration_status(settings)
     row = session.get(AiConnection, user.id) if member_ai_credentials_enabled(settings) else None
     return _ai_connection_payload(row)
 
@@ -1281,7 +1285,8 @@ def list_strategies(user: User = Depends(current_user), session: Session = Depen
     return [_strategy_payload(row) for row in rows]
 
 
-def _save_strategy(session: Session, user: User, spec: StrategySpec, prompt: str) -> Strategy:
+@contextmanager
+def _strategy_creation(session: Session, user: User, spec: StrategySpec, prompt: str):
     if spec.symbols and not settings.personal_local_mode:
         raise HTTPException(status_code=422, detail="직접 종목 지정은 개인 로컬 모드에서만 지원합니다")
     if settings.personal_local_mode:
@@ -1308,12 +1313,20 @@ def _save_strategy(session: Session, user: User, spec: StrategySpec, prompt: str
             spec_json=spec.model_dump_json(),
         )
         session.add(row)
+        session.flush()
+        yield row
         session.commit()
-    return row
+
+
+def _save_strategy(session: Session, user: User, spec: StrategySpec, prompt: str) -> Strategy:
+    with _strategy_creation(session, user, spec, prompt) as row:
+        return row
 
 
 @app.post("/api/strategies/generate", status_code=201)
 def ai_strategy(body: PromptBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db), request: Request = None):
+    if settings.personal_local_mode:
+        raise HTTPException(409, "연구 채팅에서 요청 내용을 확인하고 AI 호출을 승인해 주세요")
     member_ai = member_ai_credentials_enabled(settings)
     connection = (
         session.get(AiConnection, user.id)
@@ -1714,6 +1727,8 @@ def export_backtests(user: User = Depends(current_user), session: Session = Depe
 
 def _personal_dashboard(user: User, session: Session) -> dict:
     from .personal_data import personal_data_status
+    from .research_ai import configuration_status
+    ai_status = configuration_status(settings)
     accounts = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user.id).order_by(PaperAccount.created_at)).all()
     required_symbols = set()
     for account in accounts:
@@ -1780,7 +1795,7 @@ def _personal_dashboard(user: User, session: Session) -> dict:
                  "calendar_age_days": None},
         "worker": worker, "workers": {"paper": worker, "backtest": backtest_worker, "data": data_worker,
                                        "backup": _worker_payload(session, "local-backup")},
-        "ai_enabled": False, "ai_connection": {"connected": False, "configured": False, "management": "manual_builder", "providers": []},
+        "ai_enabled": ai_status["available"], "ai_connection": ai_status,
         "market_data_connection": _market_data_connection_payload(connection), "quote_provider": "member",
     }
 
@@ -1895,3 +1910,7 @@ async def stream(request: Request, principal: StreamPrincipal = Depends(stream_p
 @app.exception_handler(ValidationError)
 def validation_error(_request: Request, exc: ValidationError):
     return JSONResponse(status_code=422, content={"detail": exc.errors(include_url=False)})
+
+
+from .research_routes import install as install_research_routes
+install_research_routes(app)

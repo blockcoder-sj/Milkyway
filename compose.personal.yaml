@@ -48,6 +48,10 @@ x-service: &service
 services:
   app:
     <<: *service
+    environment:
+      <<: *environment
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-sol}
     command: [uvicorn, cloud_app.main:app, --host, 0.0.0.0, --port, "8000", --workers, "1"]
     ports:
       - 127.0.0.1:${MILKYWAY_PORT:-8080}:8000
