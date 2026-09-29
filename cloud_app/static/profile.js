@@ -20,7 +20,11 @@
     function renderAiConnection() {
       const connection = getAiConnection?.() || {connected: false, providers: []};
       if (window.MilkywayPersonal?.isPersonal()) {
-        $("#aiConnectionSettings").classList.add("hidden");
+        $("#aiConnectionSettings").classList.remove("hidden");
+        $("#aiConnectionSettings h4").textContent = "내 AI 연구 설정";
+        $("#aiConnectionStatus").textContent = connection.configured ? "키 설정됨 · 호출 미확인" : "키 입력 필요";
+        $("#aiConnectionSummary").textContent = `Milkyway/.env의 OPENAI_API_KEY에 키를 입력하고 앱을 재시작하세요. 모델 ${connection.model || "gpt-5.4-mini"}, 추론 ${connection.reasoning || "none"}. 연구 대화에서 요청마다 승인한 경우에만 호출합니다.`;
+        $("#aiConnectionSettings .settings-billing-note").textContent = "자동매매는 저장된 규칙으로 실행되며 AI를 자동 호출하지 않습니다.";
         return;
       }
       const status = $("#aiConnectionStatus");

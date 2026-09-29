@@ -420,6 +420,7 @@ async function loadDashboard() {
   $("#aiConnectBtn").classList.toggle("connected", dashboard.ai_enabled);
   $("#aiConnectBtn").setAttribute("aria-label", dashboard.ai_enabled ? "AI 연결 설정 열기, 연결됨" : "AI 연결 설정 열기");
   profileController.render();
+  await window.MilkywayResearch.refresh();
 
 }
 
@@ -638,6 +639,7 @@ const profileController = window.MilkywayProfile.create({
 });
 profileController.bind();
 window.MilkywayPersonal.initialize({api, refresh, toast, getState: () => state});
+window.MilkywayResearch.initialize({api, refresh, toast, getState: () => state, openAccountHistory});
 $("#openQuoteSettings").addEventListener("click", () => profileController.openSettings("marketDataConnectionSettings"));
 
 $("#aiConnectBtn").addEventListener("click", () => profileController.openSettings("aiConnectionSettings"));
@@ -684,7 +686,7 @@ api("/api/config").then((config) => {
     label.firstChild.textContent = "로컬 설치 코드 (기본값: local-club)";
     $("#registerForm input[name=invite_code]").value = "local-club";
     $("#about .about-intro > p").textContent = "내 PC에서 규칙으로 전략을 만들고, 백테스트와 페이퍼 트레이딩을 진행합니다. 실제 증권사 주문은 보내지 않습니다.";
-    $("#profileMenu [data-profile-menu-action=settings] small").textContent = "증권사 시세 연결";
+    $("#profileMenu [data-profile-menu-action=settings] small").textContent = "AI 연구 · 증권사 시세 연결";
   }
 }).catch(() => {});
 

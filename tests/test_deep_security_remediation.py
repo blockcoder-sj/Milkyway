@@ -249,12 +249,14 @@ class DatabaseStateRegressionTests(unittest.TestCase):
     def test_all_quota_allocations_use_one_transaction_scoped_guard(self):
         for function in (
             main_module.register,
-            main_module._save_strategy,
+            main_module._strategy_creation,
             main_module.create_backtest,
-            main_module.create_account,
+            main_module._account_creation,
         ):
             self.assertIn("quota_allocation", inspect.getsource(function), function.__name__)
 
+        self.assertIn("_strategy_creation", inspect.getsource(main_module._save_strategy))
+        self.assertIn("_account_creation", inspect.getsource(main_module.create_account))
         quota_allocation = getattr(main_module, "quota_allocation", None)
         self.assertIsNotNone(quota_allocation)
         fake_session = MagicMock()

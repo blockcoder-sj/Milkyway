@@ -25,12 +25,12 @@ Actual OpenAI/brokerage calls require separate user approval and are not part of
 the offline test suite.
 
 M2 implemented. Experiments capture an immutable history generation and terminal
- events, enqueue separate development/validation runs, rank on development only,
- and expose result/fill evidence to the next approved turn. Paper creation pins an
- immutable version and deduplicates repeated requests. Python exports use the
- existing validated execution engine. 49 research/personal API/paper tests pass;
- synthetic prices are fed through the real backtest worker. Review found and fixed
- empty terminal-event handling. No external AI/broker calls were made.
+events, enqueue separate development/validation runs, rank on development only,
+and expose result/fill evidence to the next approved turn. Paper creation pins an
+immutable version and deduplicates repeated requests. Python exports use the
+existing validated execution engine. 49 research/personal API/paper tests pass;
+synthetic prices are fed through the real backtest worker. Review found and fixed
+empty terminal-event handling. No external AI/broker calls were made.
 
 The default model is now `gpt-5.4-mini` with `reasoning.effort=none`. Both appear
 in the exact request preview; changing either invalidates a pending approval.
@@ -39,3 +39,27 @@ Local folders were consolidated on 2026-09-29. `Milkyway-local-ready` was a link
 Git worktree, not a separate product. The latest branch is now the ordinary
 `Milkyway` checkout. Previous local changes and Git metadata are retained outside
 this checkout in `../output/backups/`; runtime volumes were not changed.
+
+M3 implemented. The Korean personal research panel includes sessions, request
+preview and explicit paid-call approval, durable chat, version/rule/code views,
+comparison selection, split-window results and paper-account history. The local
+AI settings are visible without credential probes. The guide documents the single
+folder, `.env`, supported strategy grammar, costs/approval and remaining live gates.
+
+Verification on 2026-09-29:
+- Full existing + research suite: **273 tests passed** (Python 3.12).
+- Python compilation, JavaScript syntax and `git diff --check`: passed.
+- Personal Compose configuration parsed with an empty env file: passed.
+- Headless Chrome against a temporary SQLite/history fixture: preview, reload of
+  awaiting approval, synthetic approved response, version creation, selected-version
+  paper creation, history dialog, comparison objective and mobile layout: passed.
+- Desktop 1440px and mobile 390px screenshots inspected; no browser errors or
+  horizontal page overflow. Browser testing found and fixed disabled-select values
+  being omitted by FormData. A fixture-only runner prevents approvals against a real app.
+- Updated old test fixtures/source contracts for the new personal-mode setting and
+  the shared transaction context managers; quota lock checks remain asserted.
+
+Limits: Docker runtime/image integration was not rerun (daemon unavailable); static
+Compose validation and the real local ASGI app/browser path were checked. No real
+OpenAI or brokerage calls, live model-quality evaluation or continuous market-hours
+paper run was performed. The existing public deployment NO-GO is unchanged.

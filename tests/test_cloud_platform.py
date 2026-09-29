@@ -1784,6 +1784,7 @@ print(json.dumps({
         )
         session.commit()
         local_settings = SimpleNamespace(
+            personal_local_mode=False,
             member_credentials_enabled=True,
             local_ai_enabled=True,
             local_ai_base_url="http://ai:8080/v1",
