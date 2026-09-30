@@ -5,7 +5,10 @@
   const names = {momentum:"모멘텀",mean_reversion:"평균 회귀",low_volatility:"낮은 변동성",moving_average:"이동평균",volume_momentum:"거래량 모멘텀",rsi:"RSI"};
   function create() {
     let version = null, dirty = false, requestId = null;
-    const field = (name, label, value, min, max, step = "any") => `<label>${esc(label)}<input name="${name}" type="number" value="${esc(value)}" min="${min}" max="${max}" step="${step}" required></label>`;
+    const field = (name, label, value, min, max, step = "any") => {
+      const grouped = ["initial_cash","min_average_volume"].includes(name);
+      return `<label><span>${esc(label)}</span><input name="${name}" type="${grouped?'text':'number'}" ${grouped?'inputmode="decimal"':''} value="${esc(grouped?window.MilkywayFormat.number(value,20):value)}" min="${min}" max="${max}" step="${step}" required></label>`;
+    };
     function render(room, busy) {
       const next = room?.versions.find(item => item.id === room.selected_strategy_id);
       const blocked = busy || Boolean(room?.turns.some(turn => ["awaiting_approval","running"].includes(turn.status)));
@@ -41,7 +44,7 @@
     function read() {
       if (!version) throw new Error("먼저 대화에서 전략 버전을 만들어 주세요");
       const values = new FormData($("#researchTuningForm"));
-      const number = name => { const value = Number(values.get(name)); if (!Number.isFinite(value)) throw new Error("조정할 숫자를 확인하세요"); return value; };
+      const number = name => { const value = window.MilkywayFormat.parse(values.get(name)); if (!Number.isFinite(value)) throw new Error("조정할 숫자를 확인하세요"); return value; };
       requestId ||= crypto.randomUUID();
       return {id:version.id, body:{request_id:requestId,
         portfolio:{initial_cash:number("initial_cash"),investment_fraction:number("investment_pct")/100,

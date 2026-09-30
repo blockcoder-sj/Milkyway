@@ -5,7 +5,7 @@
   const movingAverages=window.MilkywayMarketChart.MOVING_AVERAGES;
   const esc=value=>window.MilkywayResearchView.escape(value);
   const fmt=(value,digits=2)=>Number.isFinite(value)?new Intl.NumberFormat('ko-KR',{maximumFractionDigits:digits}).format(value):'—';
-  const cap=value=>Number.isFinite(value)?new Intl.NumberFormat('ko-KR',{notation:'compact',maximumFractionDigits:2}).format(value):'—';
+  const cap=value=>fmt(value,0);
   const time=value=>value?new Date(value).toLocaleString('ko-KR'):'수신 대기';
   const date=value=>value.toISOString().slice(0,10);
   const safeUrl=value=>{try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password?url.href:null;}catch{return null;}};
@@ -14,7 +14,7 @@
   function mount(){
     const panel=document.createElement('section');panel.id='marketDetail';panel.className='panel market-detail-page hidden';panel.dataset.workspacePage='detail';
     panel.innerHTML=`<button id="detailBack" class="ghost compact">← 시장으로</button><div class="detail-heading"><div><p id="detailCategory" class="eyebrow"></p><h2 id="detailTitle">시장 상세</h2><p id="detailIntro"></p></div><div id="detailQuote"></div></div><div id="detailFacts" class="detail-metrics"></div><p id="detailError" class="error" role="alert"></p>
-      <nav class="detail-jumps" aria-label="상세 정보 목차"><a href="#detailChartSection">차트</a><a href="#detailCompaniesSection">기업·비중</a><a href="#detailNewsSection">뉴스</a><a href="#detailSourcesSection">출처 모음</a></nav>
+      <nav class="detail-jumps" aria-label="상세 정보 목차"><a href="#detailChartSection">차트</a><a id="detailCompaniesJump" href="#detailCompaniesSection">구성·산출</a><a href="#detailNewsSection">뉴스</a><a href="#detailSourcesSection">출처 모음</a></nav>
       <section id="detailChartSection"><div class="detail-chart-heading"><h3>가격 차트</h3><button id="detailExpand" class="ghost compact">크게 보기 ↗</button></div><div id="detailChartHome"><div id="detailChartView" class="market-terminal">
         <div class="terminal-toolbar"><div id="detailPeriodButtons" class="chart-periods" role="group" aria-label="차트 기간">${[['1','1개월'],['3','3개월'],['6','6개월'],['12','1년'],['36','3년']].map(([value,label])=>`<button type="button" data-chart-period="${value}" aria-pressed="${value==='3'}">${label}</button>`).join('')}</div><label class="chart-interval">봉 주기<select id="detailInterval"><option value="day">일봉</option><option value="week">주봉</option><option value="month">월봉</option></select></label></div>
         <div class="terminal-series"><label>차트 자료<select id="detailSeries"><option value="history">표시 지수·시세</option></select></label><details id="detailChartSettings"><summary>설정</summary><div id="detailChartControls" class="detail-chart-controls">
@@ -30,9 +30,10 @@
       </div></div><div id="detailMetrics" class="detail-metrics"></div><div id="detailChartMethod"></div><details><summary>최근 봉의 수치 보기</summary><div id="detailPriceTable" class="research-table"></div></details></section>
       <dialog id="detailChartDialog" aria-labelledby="detailDialogTitle"><header class="detail-dialog-heading"><h3 id="detailDialogTitle">가격 차트</h3><button id="detailCollapse" class="ghost compact" autofocus>닫기 · Esc</button></header><div id="detailChartDialogSlot"></div></dialog>
       <section id="detailCompaniesSection"><h3 id="detailCompaniesTitle">주요 기업과 비중</h3><p id="detailCompanyNote" class="fineprint"></p><div id="detailCompanies"></div><div id="detailMarketShare"></div></section>
-      <section id="detailNewsSection"><h3>관련 뉴스</h3><p class="fineprint">지정 언론사의 최근 14일 보도를 발표 시각 순서로 표시합니다. 기사 제목과 원문 링크를 제공합니다.</p><div id="detailNews"></div></section>
-      <section id="detailSourcesSection"><h3>출처 모음</h3><p class="fineprint">시세·기업·뉴스는 수집 시점, 사업 점유율은 발표 기준일을 따릅니다. 원자료를 확인하고 수치의 범위를 비교하세요.</p><div id="detailSources"></div></section>`;
+      <section id="detailNewsSection"><h3>관련 뉴스</h3><p class="fineprint">지정 언론사의 최근 30일 보도를 최신 순으로 표시합니다. 한 페이지에 8건씩 제공하며 뒤로 갈수록 이전 보도가 나옵니다. 검색 피드가 제공한 기사 제목과 원문 링크를 수집하므로 모든 보도를 포함하지 않을 수 있습니다.</p><div id="detailNews"></div></section>
+      <section id="detailSourcesSection"><details class="detail-sources-toggle"><summary id="detailSourceCount">출처 모음</summary><p class="fineprint">시세·기업·뉴스는 수집 시점, 사업 점유율은 발표 기준일을 따릅니다. 원자료를 확인하고 수치의 범위를 비교하세요.</p><div id="detailSources"></div></details></section>`;
     $('#market').after(panel);
+    window.MilkywayMarketDirectory.initialize();
     chart=window.MilkywayMarketChart.create($('#detailChart'),$('#detailChartTooltip'),$('#detailChartLegend'));
     $('#detailBack').addEventListener('click',()=>{closeChart();identity=null;++epoch;hooks.openWorkspace('market');});
     $('#detailSeries').addEventListener('change',()=>{range();draw();});
@@ -120,12 +121,13 @@
     const row=overview?.items.find(item=>item.id===identity);
     if(!row)return;
     const digits=row.group==='fx'?(row.unit==='USD'?4:row.unit==='JPY'?3:2):2;
-    methods.replace($('#detailQuote'),`<strong>${fmt(row.value,digits)} <small>${esc(row.unit)}</small></strong><span>${fmt(row.change_pct)}% <small>전일 대비</small></span><small>${esc(row.source)} · ${row.is_realtime?'실시간 수신':esc(row.status==='stale'?'갱신 지연':'기준 시각 확인')}</small><small>기준 ${esc(time(row.observed_at))}</small>${methods.quote(row)}`);
+    methods.replace($('#detailQuote'),`<strong>${fmt(row.value,digits)} <small>${esc(row.unit)}</small></strong><span>${fmt(row.change_pct)}% <small>전일 대비</small></span><small>${esc(row.source)} · ${row.is_realtime?'실시간 수신':esc(row.status==='stale'?'갱신 지연':'기준 시각 확인')}</small><small>기준 ${esc(time(row.observed_at))}</small>${row.fallback_reason?`<small>${esc(row.fallback_reason)}</small>`:''}${row.error?`<small class="error">${esc(row.error)}</small>`:''}<details class="market-detail"><summary>지표 정보</summary><dl><dt>전일 기준값</dt><dd>${fmt(row.previous_close,digits)}</dd><dt>당일 범위</dt><dd>${fmt(row.day_low,digits)} ~ ${fmt(row.day_high,digits)}</dd><dt>52주 범위</dt><dd>${fmt(row.year_low,digits)} ~ ${fmt(row.year_high,digits)}</dd></dl><p>수집 ${esc(time(row.fetched_at))}</p></details>${methods.quote(row)}`);
   }
   function render(){
-    const context=data.context, companies=data.companies.rows.slice(0,8),news=data.news.rows.slice(0,8);
+    const context=data.context, companies=data.companies.rows;
     $('#detailCategory').textContent=({indices:'MARKET INDEX',sectors:'SECTOR RESEARCH',fx:'CURRENCIES',futures:'FUTURES',commodities:'COMMODITIES'})[data.group]||'MARKET';
     $('#detailTitle').textContent=data.label;$('#detailIntro').textContent=context.intro;
+    $('#detailCompaniesJump').textContent=data.group==='sectors'?'기업·비중':'구성·산출';
     $('#detailFacts').innerHTML=context.facts.map(fact=>`<div><small>${esc(fact.label)}</small><p>${esc(fact.value)}</p></div>`).join('');
     const series=$('#detailSeries'),previous=series.value,initialized=series.dataset.identity===identity;
     series.innerHTML=`<option value="history">${esc(data.label)} · ${data.history.rows.length}개 일봉</option>`+(context.related_chart?`<option value="related_history">관련 ETF · ${esc(context.related_chart.label)}</option>`:'');
@@ -133,13 +135,9 @@
     quote(hooks.getState().dashboard?.market_overview);
     $('#detailCompaniesTitle').textContent=data.group==='sectors'?'주요 기업과 비중':data.group==='fx'?'통화정책 원문':data.group==='indices'?'구성·산출 원문':'계약 명세와 거래소';
     $('#detailCompanyNote').textContent=(context.companies_note||'이 항목의 공식 구성·관련 정보는 아래 산출기관 원문에서 확인할 수 있습니다.')+(companies.length?` 수집 ${time(data.companies.fetched_at)}${data.companies.stale?' · 갱신 지연':''}`:'');
-    $('#detailCompanies').innerHTML=companies.length?`<p class="fineprint">비중 = 이 표의 기업 시총 ÷ 표시 기업 시총 합계. 제품·매출 시장점유율이나 공식 지수 비중과는 다릅니다.</p><div class="research-table"><table><thead><tr><th>기업</th><th>시가총액</th><th>표시 기업 내 비중</th><th>출처</th></tr></thead><tbody>${companies.map(row=>`<tr><td>${esc(row.name)}<small>${esc(row.symbol)}</small></td><td>${cap(row.market_cap)} ${esc(row.currency)}</td><td>${fmt(row.displayed_share_pct)}%${methods.company(row,companies)}${Number.isFinite(row.displayed_share_pct)?`<div class="detail-share-bar"><i style="width:${Math.min(100,Math.max(0,row.displayed_share_pct))}%"></i></div>`:''}</td><td>${link(row.source,row.url)}</td></tr>`).join('')}</tbody></table></div>`:data.group==='sectors'?'<p class="fineprint">기업 수치 수신 대기 · 출처 모음에서 원자료를 확인하세요.</p>':context.sources.filter(row=>row.kind!=='시세').map(row=>`<p>${link(row.label,row.url)}</p>`).join('');
+    window.MilkywayMarketDirectory.render(data);
     const shares=context.market_share||[];
     $('#detailMarketShare').innerHTML=shares.length?shares.map(share=>`<article class="detail-share-fact"><h4>${esc(share.title)}</h4><p>${esc(share.period)} · 발표 ${esc(share.published_at)} · 확인 ${esc(share.checked_at)}</p><p>${esc(share.scope)}</p><div class="detail-watchpoints">${share.values.map(row=>`<span>${esc(row.name)} <strong>${fmt(row.value)}%</strong></span>`).join('')}</div>${methods.help('published-share',['발표기관이 공표한 비율을 그대로 옮긴 값입니다. 앱에서 재계산하지 않습니다.','파운드리 사업 매출을 기준으로 한 점유율입니다. 개별 매출 원자료와 전체 분모는 앱에 저장되어 있지 않아 여기서 수치를 재현할 수 없습니다. 발표기관 원문의 조사 범위·산식을 확인하세요.'])}${link(share.provider+' 원자료',share.url)}</article>`).join(''):data.group==='sectors'?'<p class="fineprint">사업별 실제 시장점유율은 비교 범위·기준일을 확인한 자료가 있을 때만 제공합니다. 현재 이 업종의 검증된 수치는 등록되지 않았습니다.</p>':'';
-    $('#detailNews').innerHTML=`<p class="fineprint">수집 ${esc(time(data.news.fetched_at))} · 최근 14일 · ${esc(data.news.source||'Google News · 지정 언론사')}${data.news.stale?' · 갱신 지연':''}</p>`+(news.length?news.map(item=>`<article class="detail-news-item">${link(item.title,item.url)}<small>${esc(item.publisher)} · ${esc(time(item.published_at))}</small></article>`).join(''):'<p class="fineprint">현재 출처·기간 조건을 충족하는 관련 보도가 없습니다.</p>');
-    const sources=[...context.sources,...companies.map(row=>({label:row.name+' · '+row.source,url:row.url,kind:'기업'})),...shares.map(row=>({label:row.provider+' · '+row.title,url:row.url,kind:'시장점유율'})),...news.map(row=>({label:row.publisher+' · '+row.title,url:row.url,kind:'보도'}))];
-    const unique=[...new Map(sources.map(row=>[row.url,row])).values()];
-    $('#detailSources').innerHTML=unique.map(row=>`<p><small>${esc(row.kind)}</small> ${link(row.label,row.url)}</p>`).join('');
     range();draw();
   }
   async function refresh(){

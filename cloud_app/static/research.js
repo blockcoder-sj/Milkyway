@@ -6,7 +6,7 @@
   let busy = false, loading = false, epoch = 0, startingNew = false;
   let messageId = null, experimentId = null, deployId = null;
 
-  function render() { view.render(room, busy); tuning.render(room, busy); $("#researchSessions").value = room?.id || ""; }
+  function render() { view.render(room, busy); tuning.render(room, busy); $("#researchSessions").value = room?.id || ""; $("#researchRename").disabled = !room || busy; }
   function error(e) { $("#researchError").textContent = e.message; }
   function resetRequests() { messageId = experimentId = deployId = null; }
   function sessionOptions(rows) {
@@ -46,6 +46,32 @@
     }
   }
   function bindForms() {
+    let renameId = null;
+    $('#researchRename').addEventListener('click', () => {
+      if (!room || busy) return;
+      renameId = room.id;
+      $('#researchRenameForm').elements.title.value = room.title;
+      $('#researchRenameError').textContent = '';
+      $('#researchRenameDialog').showModal();
+      $('#researchRenameForm').elements.title.focus();
+    });
+    $('#researchRenameCancel').addEventListener('click', () => $('#researchRenameDialog').close());
+    $('#researchRenameForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const title = event.target.elements.title.value.trim(), actor = owner;
+      if (!title) { $('#researchRenameError').textContent = '대화 이름을 입력해 주세요'; return; }
+      const button = event.target.querySelector('button[type=submit]');
+      button.disabled = true;
+      try {
+        const renamed = await api.rename(renameId, title);
+        if (owner !== actor || room?.id !== renamed.id) return;
+        room.title = renamed.title;
+        sessionOptions(await api.sessions());
+        $('#researchRenameDialog').close();
+        hooks.toast('대화 이름을 변경했습니다');
+      } catch (e) { $('#researchRenameError').textContent = e.message; }
+      finally { button.disabled = false; }
+    });
     $("#researchStart").addEventListener("click", () => act(async () => {
       tuning.requireSaved();
       startingNew = true; room = null; tuning.reset(); resetRequests();
@@ -148,7 +174,13 @@
     else {
       const turn = room.turns.find(item => item.id === id);
       if (!turn) return;
-      if (action === "approve") await api.approve(id, turn.approval.request_digest);
+      if (action === "approve") {
+        const digest=turn.approval.request_digest;
+        turn.status="running";view.invalidate();render();
+        $("#researchTurns").setAttribute("aria-busy","true");
+        try { await api.approve(id,digest); }
+        finally { $("#researchTurns").setAttribute("aria-busy","false"); }
+      }
       else if (action === "cancel") await api.cancel(id);
       else return;
     }

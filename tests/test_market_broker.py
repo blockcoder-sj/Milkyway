@@ -87,6 +87,17 @@ class BrokerDisplayTests(unittest.TestCase):
         broker.project_broker(row,{'provider':'toss','items':{'usdkrw':obs}},NOW+dt.timedelta(seconds=6))
         self.assertEqual(row['value'],1350)
 
+    def test_toss_fx_honors_its_validity_window_and_fresh_collection(self):
+        row={'id':'usdkrw','value':1350,'source':'Yahoo Finance'}
+        obs=Observation(value=1400,observed_at=NOW-dt.timedelta(seconds=159),fetched_at=NOW-dt.timedelta(seconds=40),regular_end=NOW+dt.timedelta(seconds=100)).model_dump(mode='json')
+        broker.project_broker(row,{'provider':'toss','items':{'usdkrw':obs}},NOW)
+        self.assertEqual(row['value'],1400)
+        self.assertEqual(row['source'],'토스증권')
+        self.assertEqual(row['status'],'reference')
+        row={'id':'usdkrw','value':1350,'source':'Yahoo Finance'}
+        broker.project_broker(row,{'provider':'toss','items':{'usdkrw':obs}},NOW+dt.timedelta(seconds=51))
+        self.assertEqual(row['value'],1350)  # An old fetch cannot stay active just because validUntil is future.
+
     def test_cache_is_scoped_to_current_owner_and_credential_revision(self):
         with tempfile.TemporaryDirectory() as temp:
             settings=SimpleNamespace(personal_local_mode=True,production=False,credential_backend='local',dataset_dir=Path(temp)/'data')

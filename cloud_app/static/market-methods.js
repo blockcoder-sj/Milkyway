@@ -1,7 +1,7 @@
 /* Formula text mirrors the actual display transformations; no market interpretation. */
 (() => {
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const num=value=>Number.isFinite(value)?String(value):'미수신';
+  const num=value=>Number.isFinite(value)?window.MilkywayFormat.number(value,20):'미수신';
   function help(id,paragraphs,label='계산 방법'){
     return `<details class="metric-method" data-method-id="${esc(id)}"><summary>${esc(label)}</summary>${paragraphs.map(p=>`<p>${esc(p)}</p>`).join('')}</details>`;
   }
@@ -46,7 +46,7 @@
     const total=rows.reduce((sum,item)=>sum+(item.market_cap||0),0);
     return help('company-'+row.symbol,[
       `표시 기업 내 비중 = 기업 시가총액 ÷ 표에 표시한 기업 시가총액 합계 × 100. ${num(row.market_cap)} ÷ ${num(total)} × 100. 같은 통화의 표시 기업만 분모에 포함합니다. 하나라도 시총이 누락되면 비중 계산을 보류합니다.`,
-      '시가총액은 공급자가 공표한 값입니다. 앱이 주가와 발행주식 수를 별도로 곱해 재계산하지 않습니다. Npay의 조·억 표기는 각각 10¹²·10⁸을 곱해 KRW로 변환합니다. 축약 시총과 비중은 화면에서 반올림합니다.',
+      '시가총액은 공급자가 공표한 값입니다. 앱이 주가와 발행주식 수를 별도로 곱해 재계산하지 않습니다. Npay의 조·억 표기는 각각 10¹²·10⁸을 곱해 KRW로 변환합니다. 시총과 비중은 화면 표시 자릿수로 반올림합니다.',
       '이 표의 표본 내 시총 비중입니다. 제품·매출 시장점유율이나 공식 지수 구성 비중이 아닙니다.'
     ]);
   }

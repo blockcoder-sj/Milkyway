@@ -2,8 +2,8 @@ const state = {config: {}, refreshPromise: null, lastRefresh: null, csrf: "", me
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const money = (value) => new Intl.NumberFormat("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0}).format(value || 0);
-const number = (value) => value == null ? "—" : new Intl.NumberFormat("en-US", {maximumFractionDigits: 2}).format(value);
-const pct = (value) => `${Number(value || 0) >= 0 ? "+" : ""}${Number(value || 0).toFixed(2)}%`;
+const number = (value) => window.MilkywayFormat.number(value);
+const pct = (value) => `${Number(value || 0) >= 0 ? "+" : ""}${window.MilkywayFormat.number(Number(value || 0), 2, 2)}%`;
 
 const MARKET_SELECTION = {
   us: {
@@ -57,7 +57,7 @@ async function api(path, options = {}) {
   catch { throw new Error("서버에 연결할 수 없습니다. Docker가 실행 중인지 확인해 주세요. 저장 요청 중이었다면 새로고침 후 기록을 먼저 확인하고 재시도하세요."); }
   if (response.status === 204) return null;
   let body = {};
-  try { body = await response.json(); } catch {}
+  try { body = await response.json(); } catch { throw new Error("서버 응답을 읽지 못했습니다. 실행한 요청은 자동으로 다시 보내지 않습니다. 기록을 새로고침해 상태를 확인하세요."); }
   if (!response.ok) {
     if (response.status === 401) throw new Error(state.config.local_auto_login
       ? "로컬 세션이 만료되었습니다. 새로고침하면 자동으로 다시 연결됩니다. 저장된 기록은 유지됩니다."
@@ -169,7 +169,7 @@ function showLanding() {
   $("#authView").classList.add("hidden");
   $("#appView").classList.add("hidden");
   $("#landingView").classList.remove("hidden");
-  $("#landingAction").textContent = state.me ? "대시보드 열기" : "시작하기";
+  $("#landingAction").textContent = "시작하기";
   $$('[data-authenticated-only]').forEach((element) => element.classList.toggle("hidden", !state.me));
   history.replaceState(null, "", "#landing");
   document.documentElement.classList.add("scroll-instant");

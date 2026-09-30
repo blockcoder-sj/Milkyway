@@ -15,6 +15,11 @@ class MessageBody(BaseModel):
     request_id: str = Field(pattern="^[a-zA-Z0-9_-]{8,64}$")
 
 
+class RenameSessionBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str = Field(min_length=1, max_length=100)
+
+
 class ApprovalBody(BaseModel):
     request_digest: str = Field(pattern="^[a-f0-9]{64}$")
     approved: Literal[True]

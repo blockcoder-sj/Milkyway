@@ -16,6 +16,7 @@ function element(id){
  return elements.get(id);
 }
 const ctx=vm.createContext({window:{},document:{querySelector:element},Intl,Date,Number});
+vm.runInContext(fs.readFileSync(require('node:path').join(require('node:path').dirname(process.argv[1]),'format.js'),'utf8'),ctx);
 vm.runInContext(fs.readFileSync(require('node:path').join(require('node:path').dirname(process.argv[1]),'market-methods.js'),'utf8'),ctx);
 vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),ctx);
 const row={id:'one',label:'<img src=x onerror=alert(1)>',symbol:'^GSPC',group:'indices',market:'us',
@@ -42,7 +43,10 @@ assert.equal(element('#marketCards').innerHTML,'unchanged DOM');
 element('#marketCards').querySelectorAll=selector=>selector.includes('data-market-id')?[{dataset:{marketId:'one'}}]:[];
 row.value=101;
 ctx.window.MilkywayMarket.renderMarket(overview,'us');
-assert(element('#marketCards').innerHTML.includes('data-market-id="one" open'));
+assert(element('#marketCards').innerHTML.includes('101'));
+assert(!element('#marketCards').innerHTML.includes('계산 방법'));
+assert(!element('#marketCards').innerHTML.includes('Yahoo Finance'));
+assert(!element('#marketCards').innerHTML.includes('market-observed'));
 ctx.window.MilkywayMarket.renderMarket(overview,'kr');
 assert(element('#marketCards').innerHTML.includes('KOSPI'));
 ctx.window.MilkywayMarket.renderSectors(overview,'us','desc');
@@ -50,7 +54,7 @@ html=element('#sectorHeatmap').innerHTML;
 assert(html.indexOf('Top Sector')<html.indexOf('Bottom Sector'));
 assert(html.indexOf('Bottom Sector')<html.indexOf('Missing Sector'));
 assert(!html.includes('Korean Sector'));assert(!html.includes('NaN'));assert(!html.includes('Infinity'));
-assert(html.includes('수신 실패'));assert(html.includes('계산 방법'));assert(html.includes('data-chart-expand'));
+assert(html.includes('갱신 확인 필요'));assert(!html.includes('계산 방법'));assert(html.includes('data-chart-expand'));
 ctx.window.MilkywayMarket.renderSectors(overview,'us','asc');
 html=element('#sectorHeatmap').innerHTML;
 assert(html.indexOf('Bottom Sector')<html.indexOf('Top Sector'));

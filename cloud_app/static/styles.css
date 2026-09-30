@@ -118,40 +118,6 @@ dialog{width:min(470px,calc(100% - 32px));border:1px solid var(--line-strong);bo
 @media(max-width:850px){.sector-index-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.personal-mode .heatmap-controls{flex-wrap:wrap}}
 @media(max-width:480px){.sector-index-grid{grid-template-columns:1fr}.personal-mode .market-strip{grid-template-columns:1fr}.personal-mode .market-controls{align-items:flex-start;flex-direction:column}.personal-mode .heatmap-controls{width:100%;justify-content:flex-start}.personal-mode .source-note{white-space:normal}}
 
-/* Personal research workflow */
-.research-panel { margin-bottom:24px; }
-.research-toolbar,.research-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
-.research-columns { margin-top:24px; }
-.research-panel h4 { margin:24px 0 12px; }
-.research-turns { max-height:650px; overflow:auto; margin-bottom:18px; }
-.research-turn,.research-version,.research-comparison { border:1px solid var(--border, #363044); border-radius:12px; padding:16px; margin:12px 0; }
-.research-turn p { white-space:pre-wrap; overflow-wrap:anywhere; }
-.research-panel small { display:block; }
-.research-panel pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:300px; overflow:auto; font-size:12px; }
-.research-approval { background:rgba(150,112,220,.12); border-radius:8px; padding:14px; margin-top:14px; }
-.research-approval button { margin-top:12px; }
-.research-panel details { margin:12px 0; }
-.research-panel input[type=checkbox] { width:auto; display:inline; }
-.research-table { overflow-x:auto; }
-.research-table table { width:100%; border-collapse:collapse; }
-.research-table th,.research-table td { text-align:left; padding:12px 8px; border-bottom:1px solid var(--border,#363044); }
-@media(max-width:900px) { .research-toolbar,.research-columns { grid-template-columns:1fr; } }
-
-.research-version label { display:flex; align-items:center; gap:8px; }
-.research-version input[type=checkbox] { flex:0 0 18px; height:18px; }
-#researchDeploy { max-width:650px; }
-.research-columns > div { min-width:0; }
-/* Conversational strategy workspace */
-.research-columns{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start}
-.research-inspector{padding:0 20px 20px;background:rgba(137,109,197,.045);border:1px solid var(--line);border-radius:16px}
-.research-turn{border:0;padding:0}.research-user{margin-left:10%;background:rgba(150,112,220,.12);padding:16px;border-radius:16px 16px 4px 16px}
-.research-assistant{padding:18px 0;line-height:1.8}.research-assistant:empty{display:none}
-.research-turns{min-height:140px;max-height:650px;scroll-behavior:smooth}.research-turns>.fineprint{padding:24px 18px;border:1px dashed var(--line);border-radius:12px;line-height:1.9}
-#researchMessage textarea{min-height:128px;resize:vertical}#researchTuningFields{border:0;margin:0;padding:0;min-width:0}
-.research-tune-actions{display:flex;gap:8px;flex-wrap:wrap}.research-workflow{border-top:1px solid var(--line);padding-top:18px}
-.research-panel summary{cursor:pointer;color:var(--violet);font-size:13px}.research-panel fieldset:disabled{opacity:.65}
-@media(max-width:1100px){.research-columns{grid-template-columns:1fr}.research-turns{max-height:520px}}
-
 [hidden]{display:none!important}
 /* Market research detail pages */
 .market-detail-link{color:inherit;text-decoration:none}.market-detail-link:hover{color:var(--violet);text-decoration:underline}
@@ -166,3 +132,11 @@ dialog{width:min(470px,calc(100% - 32px));border:1px solid var(--line-strong);bo
 @media(max-width:600px){.detail-metrics strong{font-size:17px}.detail-heading h2{font-size:26px}}
 .metric-method{font-size:12px;font-weight:400;line-height:1.8;margin-top:10px;text-align:left;max-width:100%;overflow-wrap:anywhere}.metric-method summary{cursor:pointer;color:#c9b6f1}.metric-method p{font-size:12px;color:var(--muted);margin:8px 0}.detail-metrics .metric-method p{max-width:100%}
 .market-chart-link{display:block;cursor:zoom-in;border-radius:8px}.market-chart-link:hover{background:rgba(150,112,220,.08)}
+
+/* Compact overview cards reserve most of their height for the intraday chart. */
+.personal-mode .market-card[data-market-card]{padding:16px 16px 10px;min-width:0;display:flex;flex-direction:column;gap:0}
+.market-card[data-market-card] .market-card-top{min-height:34px;gap:8px;align-items:flex-start}.market-card[data-market-card] .market-card-top strong{font-size:13px;line-height:1.4;min-width:0}.market-card[data-market-card] .market-card-top small{font-size:10px;flex:0 0 auto}
+.market-card[data-market-card] .market-price-line{display:flex;flex-wrap:nowrap;gap:6px;margin-top:5px}.personal-mode .market-card[data-market-card] .market-value{margin:0;font-size:clamp(18px,1.4vw,23px);letter-spacing:-.03em;white-space:nowrap}.market-card[data-market-card] .market-change{font-size:12px;white-space:nowrap}.market-card[data-market-card] .market-delta{margin-top:3px;font-size:10px}.market-card[data-market-card] .market-chart-link{margin-top:auto}.market-card[data-market-card] .market-spark{height:96px;margin:6px 0 0}.market-spark .spark-line{fill:none;stroke:currentColor;stroke-width:1.5;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}.market-spark .spark-grid{fill:none;stroke:currentColor;stroke-opacity:.12;stroke-width:.5;vector-effect:non-scaling-stroke}.market-card[data-market-card] .market-chart-empty{height:96px}.market-stale-note{font-size:10px;color:#efbc80;margin-top:4px}.personal-mode .sector-index-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.detail-pagination{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin:20px 0 0}.detail-pagination button{min-width:36px;padding:8px 10px}.detail-pagination button[aria-current=page]{background:#48325f;color:#fff;border-color:#9c7ccb}.detail-sources-toggle>summary{cursor:pointer;font-size:18px;font-weight:700;color:var(--text);padding:8px 0}.company-list-tools{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:16px 0}.company-list-tools input{width:min(420px,100%)}.company-list-tools span{font-size:12px;color:var(--muted)}.company-open{color:var(--violet);font-weight:650}.company-table-row{cursor:pointer}.company-table-row:hover{background:rgba(150,112,220,.07)}
+@media(max-width:1200px){.personal-mode .sector-index-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:850px){.personal-mode .sector-index-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.personal-mode .sector-index-grid{grid-template-columns:1fr}}
+
+.personal-mode .futures-strip .market-card[data-market-card]{align-items:stretch}.personal-mode .futures-strip .market-card[data-market-card] .market-card-top{justify-content:space-between;display:flex}.personal-mode .futures-strip .market-card[data-market-card] .market-price-line{justify-content:space-between}

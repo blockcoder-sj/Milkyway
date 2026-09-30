@@ -67,6 +67,15 @@ def require_idle(db, room):
 
 def turn_payload(row):
     request = json.loads(row.request_json)
+    error, diagnostic = row.error, None
+    if error:
+        try:
+            value = json.loads(error)
+            if isinstance(value,dict) and value.get("code") in research_ai.ERROR_MESSAGES and isinstance(value.get("detail"),str):
+                error = value["detail"]
+                diagnostic = {key:value.get(key) for key in ("code","request_id","http_status","elapsed_ms")}
+        except (ValueError,TypeError):
+            pass
     return {
         "id": row.id,
         "status": row.status,
@@ -75,7 +84,8 @@ def turn_payload(row):
         "response": json.loads(row.response_json) if row.response_json else None,
         "usage": json.loads(row.usage_json) if row.usage_json else None,
         "strategy_id": row.strategy_id,
-        "error": row.error,
+        "error": error,
+        "diagnostic": diagnostic,
         "approval": {
             "request_digest": row.request_digest,
             "model": request["model"],

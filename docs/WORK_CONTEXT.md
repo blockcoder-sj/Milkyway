@@ -110,3 +110,49 @@
 `docs/STRATEGY_CHAT.md`, `docs/AI_CHAT_EVALUATION.md`,
 `docs/MARKET_DASHBOARD.md`, `docs/MARKET_DETAILS.md`,
 `docs/LOCAL_MAINTENANCE_20260930.md`.
+
+## 2026-10-01 — milestone 1: presentation, directory, news and AI failure handling
+
+- Landing uses `시작하기`. US sector names use English GICS names. Market cards
+  contain name, price/change and a larger intraday line; calculation, source,
+  timestamps and range disclosures moved to detail. Preserve provider separation.
+- Shared grouped number formatter/parser accepts `100,000` inputs without changing
+  stored values. Chat uses black background, borders, aligned equal columns and
+  compact operation facts. Saved research title can be renamed (owner + CSRF scoped),
+  preserving turns, versions and pending approval digests.
+- Companies: Yahoo screen pages (100 per request, 4 concurrent, upper bound 1,000
+  per sector); Korean business examples expanded from 4 to 9–20 per group. These
+  are not certified current S&P/KRX constituents. Tables search and paginate 8 rows;
+  weights use the entire received universe, independently of page/search.
+- News: four time windows over 30 days, up to 400 collected headlines per instrument,
+  8 per page, timestamp ordered, allowlisted publishers including NYT/BBC/CNN/
+  Al Jazeera. Retain still-current previous headlines on partial failures. Collection
+  is limited by Google News indexing; it does not guarantee every published article.
+  Sources collection is collapsible. No full article/paywall content is collected.
+- AI: one approved request still means one provider attempt. Keep gpt-5.4-mini,
+  reasoning none and 4,000 output tokens. Response read timeout 150s / process
+  deadline 180s; show running immediately. Distinguish timeout/network/provider/
+  refusal/incomplete/output-limit/JSON/schema/universe errors. Store bounded safe
+  request ID/status/elapsed time and known usage; never raw provider messages or keys.
+- Existing 5 paid evaluation calls remain the only calls used. All were consumed.
+  No new AI call was made during this milestone. An asynchronous question is pending
+  asking for ONE new paid regression call with a concrete 3-ticker momentum prompt.
+  Do not call unless the user explicitly approves it; no automatic retries/harness.
+- Toss connection now verified. Read-only AAPL check returned one quote at
+  2026-09-30T16:02:11Z (337.55 USD); exchange-rate cache also collected real Toss
+  data. Fixed FX freshness: allow the provider's <=5min observation window while
+  requiring a fetch <=90s old and validUntil still in the future. Active paper
+  accounts are absent; do not claim a live paper fill/continuous run.
+- Verification: full suite 351 tests passed (430.465s, includes cold dependency
+  loading); focused suite 65 passed (3.573s); additional list/news suite 19 passed
+  (0.251s). AST/JS syntax and diff whitespace checks passed. Direct source review
+  covered owner/CSRF, approval replay, error redaction, source URL/XML handling and
+  bounded external I/O. CodeRabbit was not used. This is scoped review for local
+  personal use, not the pending managed whole-repository security/OCI gates.
+- Docker image rebuilt and existing 7 services recreated without deleting volumes;
+  Chrome confirmed compact market cards and research borders/alignment. Cache-only
+  detail JSON with 494 companies + 108 news: 30 samples median 10.35ms/p95 17.62ms.
+- Next milestone in progress: company detail/relationship graph, source-backed
+  product/business notes, public company data worker and regression tests. All
+  current and latest user requests remain active; do not report the whole task done
+  before this milestone, review, push and visible browser proof are complete.

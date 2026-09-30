@@ -5,7 +5,7 @@ from fastapi.responses import Response
 from . import research_ai
 from .research_experiments import DeployBody, ExperimentBody
 from .research_ports import ResearchServices
-from .research_schemas import ApprovalBody, MessageBody, SessionBody, AdjustmentBody
+from .research_schemas import ApprovalBody, MessageBody, SessionBody, AdjustmentBody, RenameSessionBody
 from .research_service import ResearchService
 
 
@@ -38,6 +38,10 @@ def install(app, *, services: ResearchServices, current_user, csrf_guard, get_db
     @router.get("/sessions/{session_id}")
     def get_session(session_id: str, service=Depends(reader)):
         return service.get_session(session_id)
+
+    @router.patch("/sessions/{session_id}")
+    def rename_session(session_id: str, body: RenameSessionBody, service=Depends(writer)):
+        return service.rename_session(session_id, body)
 
     @router.post("/sessions/{session_id}/messages", status_code=201)
     def prepare(session_id: str, body: MessageBody, service=Depends(writer)):

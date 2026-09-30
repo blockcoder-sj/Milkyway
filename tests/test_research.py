@@ -333,6 +333,37 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(room["experiments"][0]["status"], "failed")
         self.assertIsNone(room["experiments"][0]["development_leader"])
 
+    def test_rename_preserves_history_and_approval_and_is_owner_scoped(self):
+        turn=self.prepare()
+        path=f'/api/research/sessions/{self.room["id"]}'
+        before=self.client.get(path).json()
+        renamed=self.client.patch(path,json={"title":"  추세 가설 연구  "})
+        self.assertEqual(renamed.status_code,200)
+        after=self.client.get(path).json()
+        self.assertEqual(after['title'],'추세 가설 연구')
+        self.assertEqual(before['turns'],after['turns'])
+        self.assertEqual(before['versions'],after['versions'])
+        self.provider.assert_not_called()
+        for title in ['   ','x'*101]:
+            self.assertEqual(self.client.patch(path,json={'title':title}).status_code,422)
+        self.actor=self.other
+        self.assertEqual(self.client.patch(path,json={'title':'외부'}).status_code,404)
+        self.actor=self.user
+        self.key()
+        self.assertEqual(self.approve(turn).json()['status'],'completed')
+
+    def test_failed_response_keeps_safe_diagnostic_usage_and_cannot_replay(self):
+        self.key();turn=self.prepare()
+        self.provider.side_effect=None
+        self.provider.return_value={'error':{'code':'output_limit','detail':'출력 한도 초과','request_id':'req_123','http_status':200,'elapsed_ms':1234},'usage':{'input_tokens':100,'output_tokens':4000}}
+        failed=self.approve(turn).json()
+        self.assertEqual(failed['status'],'failed')
+        self.assertEqual(failed['diagnostic']['code'],'output_limit')
+        self.assertEqual(failed['usage']['output_tokens'],4000)
+        self.assertEqual(failed['error'],'출력 한도 초과')
+        self.assertEqual(self.approve(turn).json()['status'],'failed')
+        self.assertEqual(self.provider.call_count,1)
+
     def test_lowest_reasoning_is_previewed_and_approved_exactly(self):
         self.key(); turn = self.prepare()
         self.assertEqual(turn["approval"]["model"], "gpt-5.4-mini")
@@ -357,10 +388,37 @@ class ProviderContractTests(unittest.TestCase):
                 if status == 200:
                     self.assertIsNone(research_ai._execute(request, {"key": "synthetic"})["reply"]["strategy"])
                 else:
-                    with self.assertRaises(HTTPException): research_ai._execute(request, {"key": "synthetic"})
+                    self.assertEqual(research_ai._execute(request, {"key": "synthetic"})["error"]["code"], "provider")
             self.assertEqual(len(calls), 1)
             self.assertFalse(calls[0]["store"])
             self.assertEqual(calls[0]["max_output_tokens"], 4000)
+
+    def test_failures_are_specific_bounded_and_never_echo_provider_secrets(self):
+        cases=[
+            (200,{'status':'incomplete','incomplete_details':{'reason':'max_output_tokens'},'usage':{'output_tokens':4000}},'output_limit'),
+            (200,{'status':'completed','output':[{'content':[{'type':'refusal','refusal':'synthetic-secret'}]}]},'refusal'),
+            (200,{'status':'completed','output':[]},'empty'),
+            (200,{'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':'bad synthetic-secret'}]}]},'json'),
+            (200,{'status':'completed','output':[{'type':'message','content':[{'type':'output_text','text':'{"reply":"ok","strategy":{"name":"x","portfolio":{"max_positions":100}}}'}]}]},'schema'),
+            (401,{'error':{'message':'synthetic-secret','code':'invalid_api_key'}},'provider')]
+        for status,payload,code in cases:
+            with self.subTest(code=code):
+                calls=[]
+                def handle(request):
+                    calls.append(request)
+                    return httpx.Response(status,json=payload,headers={'x-request-id':'req_safe123'})
+                with patch.object(research_ai.httpx,'Client',return_value=httpx.Client(transport=httpx.MockTransport(handle))):
+                    result=research_ai._execute({}, {'key':'synthetic-key'})
+                self.assertEqual(result['error']['code'],code)
+                self.assertEqual(result['error']['request_id'],'req_safe123')
+                self.assertNotIn('synthetic-secret',json.dumps(result))
+                self.assertEqual(len(calls),1)
+        for error,code in [(httpx.ReadTimeout('synthetic-secret'),'timeout'),(httpx.ConnectError('synthetic-secret'),'network')]:
+            def handle(request):raise error
+            with patch.object(research_ai.httpx,'Client',return_value=httpx.Client(transport=httpx.MockTransport(handle))):
+                result=research_ai._execute({}, {'key':'synthetic-key'})
+            self.assertEqual(result['error']['code'],code)
+            self.assertNotIn('synthetic-secret',json.dumps(result))
 
 
 if __name__ == "__main__":

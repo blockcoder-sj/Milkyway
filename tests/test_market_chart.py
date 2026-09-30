@@ -46,7 +46,7 @@ assert.equal(chart.draw(rows,{start:'2026-01-01',end:'2026-01-02'}),null);
     def test_calculation_explanations_escape_inputs_and_preserve_expansion(self):
         script=r'''
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const ctx=vm.createContext({window:{},Intl,Number});vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),ctx);
+const ctx=vm.createContext({window:{},Intl,Number});vm.runInContext(fs.readFileSync(require('node:path').join(require('node:path').dirname(process.argv[1]),'format.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),ctx);
 const api=ctx.window.MilkywayMarketMethods;
 const html=api.quote({id:'<img>',source:'<script>',value:110,previous_close:100});
 assert(html.includes('&lt;script&gt;'));assert(!html.includes('<script>'));assert(html.includes('110 ÷ 100'));

@@ -4,6 +4,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -13,7 +14,7 @@ from dotenv import dotenv_values
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from .ai import _openai_text, _safe_provider_error
+from .ai import _openai_text
 from .ai_credentials import validate_api_key, validate_provider_model
 from .bounded_io import read_bounded_file, read_httpx_json
 from .config import ROOT
@@ -22,7 +23,7 @@ from .strategies import StrategySpec
 
 OUTPUT_LIMIT = 4000
 INPUT_LIMIT = 48_000
-CALL_TIMEOUT = 120
+CALL_TIMEOUT = 180
 
 
 class ResearchReply(BaseModel):
@@ -35,6 +36,8 @@ class ResearchReply(BaseModel):
 
 SYSTEM = """You are a Korean-speaking quantitative strategy research collaborator.
 Discuss the hypothesis, ask concrete clarification questions, and explain tradeoffs.
+Keep the reply concise (normally under 1200 Korean characters). Avoid repeating the
+same caveats in reply, limitations and next_steps. Keep a full valid strategy when needed.
 Explain saved rules in plain Korean. Do not expose internal field names such as
 selected_strategy or evidence in user-facing prose. The percentage stop is measured
 from the current weighted average purchase price, NOT a trailing stop from the peak.
@@ -171,32 +174,68 @@ def provider_rejection(status, payload):
                          (f", {parameter}" if parameter else "") + "). 자동 재시도하지 않았습니다")
 
 
+ERROR_MESSAGES = {
+    "timeout": "OpenAI 응답 대기 시간이 초과되었습니다. 과금 여부는 공급자 기록에서 확인해 주세요",
+    "network": "OpenAI 네트워크 연결이 중단되었습니다",
+    "provider": "OpenAI가 요청을 거절했습니다",
+    "incomplete": "OpenAI 응답이 완료되지 않았습니다",
+    "output_limit": "출력 토큰 한도에 도달해 응답이 중단되었습니다. 가설이나 조정 내용을 더 짧게 나눠 주세요",
+    "refusal": "OpenAI가 이 요청에 대한 응답을 제공하지 않았습니다",
+    "empty": "OpenAI가 완료 상태를 보냈지만 응답 본문이 비어 있습니다",
+    "json": "AI 응답의 JSON 형식을 검증하지 못했습니다",
+    "schema": "AI 응답이 전략 형식·숫자 범위를 충족하지 못했습니다",
+    "universe": "AI가 제안한 종목 목록과 최대 보유 수가 맞지 않습니다",
+    "interrupted": "AI 실행이 중단되어 완료 여부를 확인하지 못했습니다",
+}
+
+
+def safe_usage(payload):
+    usage=payload.get('usage') if isinstance(payload,dict) else None
+    usage=usage if isinstance(usage,dict) else {}
+    return {key:value for key in ('input_tokens','output_tokens','total_tokens')
+            if isinstance((value:=usage.get(key)),int) and not isinstance(value,bool) and 0<=value<=10_000_000}
+
+
 def _execute(request, configuration):
+    started=time.monotonic();request_id=None;http_status=None;payload={}
+    def fail(code, detail=None):
+        return {"error":{"code":code,"detail":(detail or ERROR_MESSAGES[code])+". 자동 재시도하지 않았습니다",
+                         "request_id":request_id,"http_status":http_status,
+                         "elapsed_ms":round((time.monotonic()-started)*1000)},"usage":safe_usage(payload)}
     try:
-        with httpx.Client(timeout=httpx.Timeout(90, connect=10), trust_env=False, follow_redirects=False) as client:
+        with httpx.Client(timeout=httpx.Timeout(150, connect=10), trust_env=False, follow_redirects=False) as client:
             with client.stream("POST", "https://api.openai.com/v1/responses",
                                headers={"Authorization": "Bearer " + configuration["key"]}, json=request) as response:
-                if response.status_code >= 400:
-                    error_payload = read_httpx_json(response, maximum_bytes=16 * 1024)
-                    raise provider_rejection(response.status_code, error_payload)
-                response.raise_for_status()
-                payload = read_httpx_json(response, maximum_bytes=256 * 1024)
-        if payload.get("status") != "completed":
-            raise HTTPException(502, "AI 응답이 완료되지 않았습니다. 자동 재시도하지 않았습니다")
-        reply = ResearchReply.model_validate_json(_openai_text(payload))
-        if reply.strategy and (not reply.strategy.symbols or reply.strategy.portfolio.max_positions > len(reply.strategy.symbols)):
-            raise ValueError("invalid personal universe")
-        usage = payload.get("usage") or {}
-        return {"reply": reply.model_dump(mode="json"),
-                "usage": {key: int(usage.get(key, 0)) for key in ("input_tokens", "output_tokens", "total_tokens")}}
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(502, str(_safe_provider_error(exc, "openai"))) from None
-    except httpx.RequestError:
-        raise HTTPException(502, "OpenAI 네트워크 연결이 중단되었습니다. 자동 재시도하지 않았습니다") from None
-    except ValidationError:
-        raise HTTPException(502, "AI 응답이 전략 형식·숫자 범위를 충족하지 못했습니다. 자동 재시도하지 않았습니다") from None
-    except (ValueError, KeyError, TypeError):
-        raise HTTPException(502, "AI 응답의 JSON 또는 종목·보유 수를 검증하지 못했습니다. 자동 재시도하지 않았습니다") from None
+                http_status=response.status_code
+                identifier=response.headers.get('x-request-id','')
+                request_id=identifier if re.fullmatch(r'[A-Za-z0-9_-]{1,128}',identifier) else None
+                if http_status>=400 or 300<=http_status<400:
+                    try: payload=read_httpx_json(response,maximum_bytes=16*1024)
+                    except (ValueError,TypeError): payload={}
+                    detail=provider_rejection(http_status,payload).detail
+                    return fail('provider',detail.removesuffix('. 자동 재시도하지 않았습니다'))
+                payload=read_httpx_json(response,maximum_bytes=256*1024)
+        if not isinstance(payload,dict):return fail('json')
+        if payload.get('status')!='completed':
+            incomplete=payload.get('incomplete_details') or {}
+            return fail('output_limit' if isinstance(incomplete,dict) and incomplete.get('reason')=='max_output_tokens' else 'incomplete')
+        output=payload.get('output') or []
+        if not isinstance(output,list):return fail('json')
+        if any(isinstance(row,dict) and isinstance(row.get('content'),list) and any(isinstance(item,dict) and item.get('type')=='refusal' for item in row['content']) for row in output):
+            return fail('refusal')
+        try: text=_openai_text(payload)
+        except ValueError: return fail('empty')
+        if not isinstance(text,str) or not text.strip():return fail('empty')
+        try: raw=json.loads(text)
+        except (ValueError,TypeError):return fail('json')
+        try: reply=ResearchReply.model_validate(raw)
+        except ValidationError:return fail('schema')
+        if reply.strategy and (not reply.strategy.symbols or reply.strategy.portfolio.max_positions>len(reply.strategy.symbols)):
+            return fail('universe')
+        return {"reply":reply.model_dump(mode='json'),"usage":safe_usage(payload)}
+    except httpx.TimeoutException:return fail('timeout')
+    except httpx.RequestError:return fail('network')
+    except (ValueError,KeyError,TypeError,AttributeError):return fail('json')
 
 
 def invoke_approved(request, key):
@@ -206,6 +245,6 @@ def invoke_approved(request, key):
     except ProviderOperationError as exc:
         raise HTTPException(exc.status_code, exc.detail) from None
     except (TimeoutError, OSError, RuntimeError):
-        raise HTTPException(503, "AI 요청이 중단되었습니다. 과금 여부는 공급자 기록에서 확인하세요. 자동 재시도하지 않습니다") from None
+        return {"error":{"code":"interrupted","detail":ERROR_MESSAGES['interrupted']+". 과금 여부는 공급자 기록에서 확인하세요. 자동 재시도하지 않습니다","request_id":None,"http_status":None,"elapsed_ms":None},"usage":{}}
     finally:
         runner.close()

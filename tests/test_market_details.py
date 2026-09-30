@@ -1,5 +1,6 @@
 """Market detail contracts, using synthetic public responses only."""
 import datetime as dt
+import email.utils
 import tempfile
 import json
 from pathlib import Path
@@ -72,6 +73,21 @@ class MarketDetailTests(unittest.TestCase):
             {'symbol':'CCC','marketCap':9000,'currency':'KRW'}]}]}}
         result=feed.parse_us_companies(payload,NOW)
         self.assertEqual([row['displayed_share_pct'] for row in result['rows']],[25,75])
+
+    def test_company_screen_keeps_more_than_eight_and_bounds_input(self):
+        quotes=[{'symbol':f'C{i}','shortName':f'Company {i}','marketCap':100,'currency':'USD'} for i in range(100)]
+        result=feed.parse_us_companies({'finance':{'result':[{'quotes':quotes}]}},NOW)
+        self.assertEqual(len(result['rows']),100)
+        self.assertAlmostEqual(sum(row['displayed_share_pct'] for row in result['rows']),100)
+        with self.assertRaises(ValueError):feed.parse_us_companies({'finance':{'result':[{'quotes':quotes*11}]}},NOW)
+
+    def test_monthly_news_retains_older_articles_sorts_and_deduplicates(self):
+        rows=[{'url':f'https://news.google.com/rss/articles/{day}','title':'Headline','publisher':'BBC','published_at':(NOW-dt.timedelta(days=day)).isoformat()} for day in [20,1,31,8,29]]
+        result=feed.merge_news(rows+[rows[0]],NOW)
+        self.assertEqual([row['url'].rsplit('/',1)[1] for row in result],['1','8','20','29'])
+        self.assertTrue({'nytimes.com','bbc.com','cnn.com','aljazeera.com'}.issubset(feed.ENGLISH_NEWS_HOSTS))
+        xml=b'<rss><channel><item><title>BBC report</title><source url="https://www.bbc.com">BBC</source><link>https://news.google.com/rss/articles/month</link><pubDate>'+email.utils.format_datetime(NOW-dt.timedelta(days=25)).encode()+b'</pubDate></item></channel></rss>'
+        self.assertEqual(len(feed.parse_news_rss(xml,NOW,feed.ENGLISH_NEWS_HOSTS)),1)
 
     def test_korean_market_cap_units_and_partial_snapshot(self):
         self.assertEqual(feed.parse_kr_cap('1,572조 6,489억'),1572648900000000)

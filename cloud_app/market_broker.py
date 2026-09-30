@@ -89,8 +89,9 @@ def project_broker(row, broker, now):
         age = (now - observation.observed_at).total_seconds()
         fetched_age = (now - observation.fetched_at).total_seconds()
         limit = 30 if provider == 'kis' else 90 if row['id'] == 'usdkrw' else 60
+        observation_limit = 300 if provider == 'toss' and row['id'] == 'usdkrw' else limit
         expired_fx = row['id'] == 'usdkrw' and (observation.regular_end is None or now >= observation.regular_end)
-        if expired_fx or not -30 <= age <= limit or not -30 <= fetched_age <= limit:
+        if expired_fx or not -30 <= age <= observation_limit or not -30 <= fetched_age <= limit:
             raise ValueError('Broker quote stale')
         row.update(observation.model_dump(mode='json'))
         row.update(change=None, change_pct=None, error=None, source='한국투자증권' if provider == 'kis' else '토스증권',

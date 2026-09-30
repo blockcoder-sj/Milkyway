@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, AwareDatetime
 from .bounded_io import read_bounded_json
 from .market_catalog import BY_ID
 from .market_detail_catalog import context_for
-from .market_detail_feed import collect_detail
+from .market_detail_feed import collect_detail, merge_news
 from .market_service import _write_cache
 from .provider_process import ProviderProcess
 
@@ -84,7 +84,7 @@ def cache_path(settings,identity):
 
 def read_cache(settings,identity):
     try:
-        value=read_bounded_json(cache_path(settings,identity),maximum_bytes=512*1024)
+        value=read_bounded_json(cache_path(settings,identity),maximum_bytes=2*1024*1024)
         return DetailCache.model_validate(value)
     except (OSError,ValueError,TypeError):
         return DetailCache()
@@ -93,12 +93,14 @@ def read_cache(settings,identity):
 def refresh_detail(settings,identity):
     old=read_cache(settings,identity).model_dump(mode='json')
     try:
-        result=_provider.run({'id':identity},{},deadline=time.monotonic()+25)
+        result=_provider.run({'id':identity},{},deadline=time.monotonic()+60)
     except (RuntimeError,TimeoutError,ValueError,OSError):
         result={}
     for key in ('history','companies','news','related_history'):
         part=result.get(key,{})
         if 'rows' in part:
+            if key == 'news':
+                part['rows']=merge_news(old[key]['rows']+part['rows'],dt.datetime.now(UTC))
             old[key]=part
         else:
             old[key]['error']='원자료 수신·검증에 실패했습니다. 이전 자료가 있다면 유지합니다.'
@@ -116,6 +118,7 @@ def detail_snapshot(settings,identity,now=None):
     for key in ('history','companies','news','related_history'):
         part=getattr(cache,key)
         result[key]['stale']=bool(part.error) or part.fetched_at is None or part.fetched_at.tzinfo is None or not -120<=(now-part.fetched_at).total_seconds()<=REFRESH_SECONDS*2
+    result['news']['rows']=merge_news(result['news']['rows'],now)
     from .market_detail_feed import years_ago
     earliest=years_ago(now).date().isoformat()
     for key in ('history','related_history'):

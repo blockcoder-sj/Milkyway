@@ -9,7 +9,8 @@
   const isDemo = () => Boolean(hooks?.getState().config?.local_demo_data || hooks?.getState().dashboard?.local_demo_data);
 
   function numberField(name, label, value, min, max, step = 1) {
-    return `<label>${label}<input name="${name}" type="number" value="${value}" min="${min}" max="${max}" step="${step}" required></label>`;
+    const grouped = ["initial_cash", "min_average_volume"].includes(name);
+    return `<label><span>${label}</span><input name="${name}" type="${grouped ? "text" : "number"}" ${grouped ? 'inputmode="decimal"' : ""} value="${grouped ? window.MilkywayFormat.number(value,20) : value}" min="${min}" max="${max}" step="${step}" required></label>`;
   }
   function addFactor(kind = "momentum", lookback = 20, weight = 1) {
     const container = $("#manualFactors");
@@ -72,9 +73,15 @@
     if (isPersonal() && (symbols.length < 1 || symbols.length > 20 || symbols.some((symbol) => !/^[A-Z][A-Z0-9.-]{0,14}$/.test(symbol)))) { error.textContent = "미국 주식 종목 코드를 1~20개 입력해 주세요. 예: AAPL, MSFT"; return; }
     if (isPersonal() && Number(value.max_positions) > symbols.length) { error.textContent = "최대 보유 종목 수를 입력한 종목 수 이하로 설정해 주세요."; return; }
     if (!selectedFactors.some((factor) => factor.weight !== 0)) { error.textContent = "하나 이상의 선정 기준 가중치를 0이 아닌 값으로 설정해 주세요."; return; }
+    let cash, volume;
+    try {
+      cash = window.MilkywayFormat.parse(value.initial_cash);
+      volume = window.MilkywayFormat.parse(value.min_average_volume);
+      if (cash < 1000 || cash > 10000000 || volume < 0 || volume > 1000000000) throw new Error("자금 또는 거래량이 허용 범위를 벗어났습니다");
+    } catch (failure) { error.textContent = failure.message; return; }
     const spec = {schema_version: 1, name: value.name.trim(), description: value.description.trim(), factors: selectedFactors,
-      filters: {min_price: Number(value.min_price), min_average_volume: Number(value.min_average_volume), history_days: Number(value.history_days)},
-      portfolio: {initial_cash: Number(value.initial_cash), max_positions: Number(value.max_positions), rebalance_days: Number(value.rebalance_days), cost_per_side: Number(value.cost_pct) / 100, stop_loss_pct: value.no_stop ? null : Number(value.stop_loss) / 100}};
+      filters: {min_price: Number(value.min_price), min_average_volume: volume, history_days: Number(value.history_days)},
+      portfolio: {initial_cash: cash, max_positions: Number(value.max_positions), rebalance_days: Number(value.rebalance_days), cost_per_side: Number(value.cost_pct) / 100, stop_loss_pct: value.no_stop ? null : Number(value.stop_loss) / 100}};
     if (isPersonal()) spec.symbols = symbols;
     button.disabled = true;
     button.textContent = "전략 저장 중…";
@@ -208,7 +215,7 @@
     if (isPersonal()) facts.push(["과거 일봉", data.message || data.status || "전략 저장 후 자동 준비"], ["수신 방식", `REST 주기 조회 · ${Number(hooks.getState().config?.quote_interval_seconds || 15)}초 주기 · 종목별 수신 간격·공급자 지연은 다를 수 있음`]);
     const backup = dashboard.workers?.backup;
     if (isPersonal() && backup) facts.push(["백업", `${backup.alive ? "프로세스 응답" : "프로세스 응답 없음 · 확인 필요"} · ${backup.detail || "시작 대기"}`]);
-    $("#operationFacts").innerHTML = facts.map(([label, value]) => `<dt>${escape(label)}</dt><dd>${escape(value)}</dd>`).join("");
+    $("#operationFacts").innerHTML = facts.map(([label, value]) => `<div class="operation-fact"><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join("");
     $("#openQuoteSettings").classList.toggle("hidden", !isPersonal() && dashboard.market_data_connection?.usage_scope !== "personal_paper_only");
     renderBuilder();
   }

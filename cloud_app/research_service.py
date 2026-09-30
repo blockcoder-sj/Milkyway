@@ -83,6 +83,15 @@ class ResearchService:
         expire_interrupted(self.db, room)
         return session_payload(self.db, room, self.services.strategy_payload)
 
+    def rename_session(self, session_id: str, body):
+        room = owned_session(self.db, self.user, session_id)
+        title = body.title.strip()
+        if not title:
+            raise HTTPException(422, "대화 이름을 입력해 주세요")
+        room.title = title
+        self.db.commit()
+        return {"id": room.id, "title": room.title}
+
     def prepare(self, session_id: str, body: MessageBody):
         room = owned_session(self.db, self.user, session_id)
         expire_interrupted(self.db, room)
@@ -202,6 +211,14 @@ class ResearchService:
             return turn_payload(row)
         try:
             result = research_ai.invoke_approved(request, config.key)
+            if result.get("error"):
+                self.db.refresh(row)
+                if row.status == "running":
+                    row.status, row.finished_at = "failed", utcnow()
+                    row.error = json.dumps(result["error"], ensure_ascii=False)
+                    row.usage_json = json.dumps(result.get("usage", {}))
+                    self.db.commit()
+                return turn_payload(row)
             reply = research_ai.ResearchReply.model_validate(result["reply"])
             with quota_allocation(self.db, "research", self.user.id):
                 self.db.refresh(row)

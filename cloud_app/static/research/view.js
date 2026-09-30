@@ -10,7 +10,7 @@
   });
   const status = value => escape(labels[value] || value);
   const metric = (values, key, suffix = "") => Number.isFinite(values?.[key])
-    ? `${values[key].toFixed(2)}${suffix}` : "—";
+    ? `${window.MilkywayFormat.number(values[key],2,2)}${suffix}` : "—";
   const empty = text => `<p class="fineprint">${escape(text)}</p>`;
 
   function approval(turn) {
@@ -19,8 +19,8 @@
     return `<div class="research-approval">
       <strong>이 요청의 API 사용 승인</strong>
       <p>${escape(value.model)} · 추론 ${escape(value.reasoning)}<br>
-        최대 1회 호출 · 출력 최대 ${escape(value.max_output_tokens)}토큰<br>
-        전송 자료 ${escape(value.input_characters)}자 · 승인 유효 시간 15분</p>
+        최대 1회 호출 · 출력 최대 ${window.MilkywayFormat.number(value.max_output_tokens,0)}토큰<br>
+        전송 자료 ${window.MilkywayFormat.number(value.input_characters,0)}자 · 승인 유효 시간 15분</p>
       <p>가설, 최근 대화, 선택 전략과 실험·페이퍼 기록이 OpenAI에 전송됩니다. 실제 사용량에 따라 요금이 부과됩니다.</p>
       <details><summary>전송 내용 전체 보기</summary><pre>${escape(JSON.stringify(value.request, null, 2))}</pre></details>
       <button class="primary" data-research-action="approve" data-id="${escape(turn.id)}">이번 요청 1회 유료 호출 승인</button>
@@ -35,12 +35,13 @@
   }
   function renderTurn(turn) {
     const usage = turn.usage
-      ? `<small>사용 토큰: 입력 ${escape(turn.usage.input_tokens ?? "—")} / 출력 ${escape(turn.usage.output_tokens ?? "—")}</small>` : "";
+      ? `<small>사용 토큰: 입력 ${window.MilkywayFormat.number(turn.usage.input_tokens,0)} / 출력 ${window.MilkywayFormat.number(turn.usage.output_tokens,0)}</small>` : "";
     const running = turn.status === "running"
       ? "<p>응답을 기다리고 있습니다. 연결이 끊겨도 자동으로 재호출하지 않습니다.</p>" : "";
     return `<article class="research-turn"><div class="research-user"><strong>나 · ${status(turn.status)}</strong>
       <p>${escape(turn.prompt)}</p></div><div class="research-assistant">${responseBody(turn)}
       ${turn.error ? `<p class="error">${escape(turn.error)}</p>` : ""}
+      ${turn.diagnostic?`<details><summary>오류 상세</summary><p>분류: ${escape(turn.diagnostic.code)}${turn.diagnostic.http_status?' · HTTP '+escape(turn.diagnostic.http_status):''}${Number.isFinite(turn.diagnostic.elapsed_ms)?' · '+window.MilkywayFormat.number(turn.diagnostic.elapsed_ms/1000)+'초':''}</p>${turn.diagnostic.request_id?`<p>OpenAI 요청 ID: ${escape(turn.diagnostic.request_id)}</p>`:''}</details>`:''}
       ${usage}${running}${approval(turn)}</div></article>`;
   }
   function renderVersion(version, room, selected, blocked) {
@@ -62,7 +63,7 @@
       <td>v${escape(version?.number ?? "?")} ${leader} / ${segment === "development" ? "개발" : "검증"}</td>
       <td>${status(run.status)}${run.error ? `<small>${escape(run.error)}</small>` : ""}</td>
       <td>${metric(run.metrics, "return_pct", "%")}</td><td>${metric(run.metrics, "sharpe")}</td>
-      <td>${metric(run.metrics, "mdd_pct", "%")}</td><td>${escape(run.metrics?.trade_count ?? "—")}</td>
+      <td>${metric(run.metrics, "mdd_pct", "%")}</td><td>${window.MilkywayFormat.number(run.metrics?.trade_count,0)}</td>
     </tr>`;
   }
   function comparison(experiment, room) {
@@ -84,7 +85,7 @@
     function render(room, busy) {
       $("#researchRoom").hidden = false;
       room ||= {id:"",selected_strategy_id:null,turns:[],versions:[],experiments:[],paper:[]};
-      const snapshot = JSON.stringify(room);
+      const snapshot = JSON.stringify([room,busy]);
       if (snapshot === rendered) return;
       rendered = snapshot;
       const selected = [...document.querySelectorAll("[data-candidate]:checked")].map(input => input.value);

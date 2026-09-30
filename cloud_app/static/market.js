@@ -13,45 +13,33 @@
     return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("ko-KR", {month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"});
   }
   function sparkline(values) {
-    const points = (Array.isArray(values) ? values : []).filter(finite).slice(-400);
-    if (points.length < 2) return '<div class="market-chart-empty">장중 차트 준비 중</div>';
-    const low = Math.min(...points), span = Math.max(...points) - low || 1;
-    const coordinates = points.map((value,index) => `${(index/(points.length-1)*180).toFixed(2)},${(36-(value-low)/span*30).toFixed(2)}`).join(" ");
-    return `<svg class="market-spark" viewBox="0 0 180 42" role="img" aria-label="최근 세션 장중 흐름"><polyline points="${coordinates}"/></svg>`;
+    const points = (Array.isArray(values) ? values : []).slice(-400), valid=points.filter(finite);
+    if (valid.length < 2) return '<div class="market-chart-empty">장중 차트 준비 중</div>';
+    const low = Math.min(...valid), high=Math.max(...valid), span=high-low || Math.max(Math.abs(low)*0.0001,0.01);
+    let connected=false;
+    const path=points.map((value,index)=>{
+      if(!finite(value)){connected=false;return '';}
+      const command=connected?'L':'M';connected=true;
+      return `${command}${(index/(points.length-1)*300).toFixed(2)},${(78-(value-low)/span*66).toFixed(2)}`;
+    }).join(' ');
+    return `<svg class="market-spark" viewBox="0 0 300 90" preserveAspectRatio="none" role="img" aria-label="최근 세션 장중 흐름 · 가격 범위에 맞춘 눈금"><path class="spark-grid" d="M0 12H300 M0 45H300 M0 78H300"/><path class="spark-line" d="${path}"/></svg>`;
   }
-  function sourceLink(row) {
-    if (row.source === "한국투자증권") return "https://apiportal.koreainvestment.com/";
-    if (row.source === "토스증권") return "https://developers.tossinvest.com/docs/market-data";
-    return `https://finance.yahoo.com/quote/${encodeURIComponent(String(row.symbol || ""))}/`;
-  }
-  function card(row, sector = false, open = false) {
-    const status = statuses[row.status] || "확인 필요";
+  function card(row, sector = false) {
     const stale = row.status === "stale" || row.status === "unavailable";
     const format = value => number(value, row.group === "fx" && row.unit === "USD" ? 4 : row.group === "fx" && row.unit === "JPY" ? 3 : 2);
     return `<article class="market-card ${sector ? "sector-index-card" : ""} ${stale ? "market-stale" : ""}" data-market-card="${escape(row.id)}">
-      <div class="market-card-top"><strong><a class="market-detail-link" data-market-detail="${escape(row.id)}" href="#detail/${encodeURIComponent(row.id)}">${escape(row.label)} ↗</a></strong><small>${escape(row.unit)}</small></div>
+      <div class="market-card-top"><strong><a class="market-detail-link" data-market-detail="${escape(row.id)}" href="#detail/${encodeURIComponent(row.id)}">${escape(row.label)}</a></strong><small>${escape(row.unit)}</small></div>
       <div class="market-price-line"><span class="market-value">${format(row.value)}</span><b class="market-change ${direction(row.change_pct)}">${change(row.change_pct)}</b></div>
       <div class="market-delta">전일 대비 ${finite(row.change) && row.change > 0 ? "+" : ""}${format(row.change)} ${escape(row.unit === "%" ? "%p" : row.unit)}</div>
       <a class="market-chart-link" data-market-detail="${escape(row.id)}" data-chart-expand href="#detail/${encodeURIComponent(row.id)}" aria-label="${escape(row.label)} 차트 크게 보기">${sparkline(row.sparkline)}</a>
-      ${window.MilkywayMarketMethods.quote(row)}
-      <p class="market-quote-state">${escape(row.source || "Yahoo Finance")} · ${status}</p><time class="market-observed">기준 ${time(row.observed_at)}</time>
-      <details class="market-detail" data-market-id="${escape(row.id)}"${open ? " open" : ""}><summary>${sector ? "섹터 정보" : "지표 정보"}</summary>
-        <p>${escape(row.description)}</p><dl><dt>전일 기준값</dt><dd>${format(row.previous_close)}</dd>
-        <dt>당일 범위</dt><dd>${format(row.day_low)} ~ ${format(row.day_high)}</dd>
-        <dt>52주 범위</dt><dd>${format(row.year_low)} ~ ${format(row.year_high)}</dd></dl>
-        <p>수집 ${time(row.fetched_at)} · ${escape(row.symbol)}</p>
-        ${row.fallback_reason ? `<p>${escape(row.fallback_reason)}</p>` : ""}
-        ${row.error ? `<p class="error">${escape(row.error)}</p>` : ""}
-        <a href="${sourceLink(row)}" target="_blank" rel="noopener noreferrer">${escape(row.source || "Yahoo Finance")} 원본 ↗</a>
-      </details></article>`;
+      ${stale?'<small class="market-stale-note">갱신 확인 필요</small>':''}</article>`;
   }
   const renderedCards = new WeakMap();
   function renderCards(selector, rows, sector = false) {
     const target = $(selector);
     const signature = JSON.stringify(rows);
     if (renderedCards.get(target) === signature) return;
-    const expanded = new Set(Array.from(target.querySelectorAll("details[open][data-market-id]"), detail => detail.dataset.marketId));
-    window.MilkywayMarketMethods.replace(target,rows.map(row => card(row, sector, expanded.has(row.id))).join(""));
+    window.MilkywayMarketMethods.replace(target,rows.map(row => card(row, sector)).join(""));
     renderedCards.set(target, signature);
   }
   function renderMarket(overview, country) {

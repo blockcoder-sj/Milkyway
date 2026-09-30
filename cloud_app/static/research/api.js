@@ -9,6 +9,7 @@
       sessions: () => api("/api/research/sessions"),
       session: id => api(sessionPath(id)),
       createSession: body => api("/api/research/sessions", post(body)),
+      rename: (id, title) => api(sessionPath(id), {method: 'PATCH', body: JSON.stringify({title})}),
       prepare: (id, body) => api(`${sessionPath(id)}/messages`, post(body)),
       compare: (id, body) => api(`${sessionPath(id)}/experiments`, post(body)),
       deploy: (id, body) => api(`${sessionPath(id)}/deploy`, post(body)),
