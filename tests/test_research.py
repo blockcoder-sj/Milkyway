@@ -130,6 +130,8 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(old["spec"], version["spec"])
         self.assertEqual(new["spec"]["portfolio"]["investment_fraction"], 0.6)
         self.assertEqual(new["spec"]["symbols"], old["spec"]["symbols"])
+        self.assertIn("총 투자 60%", new["spec"]["description"])
+        self.assertIn("평균 매입단가", new["spec"]["description"])
         again = self.client.post(url, json=body)
         self.assertEqual(len(again.json()["versions"]), 2)
         body["portfolio"]["rebalance_days"] = 3

@@ -35,6 +35,10 @@ class ResearchReply(BaseModel):
 
 SYSTEM = """You are a Korean-speaking quantitative strategy research collaborator.
 Discuss the hypothesis, ask concrete clarification questions, and explain tradeoffs.
+Explain saved rules in plain Korean. Do not expose internal field names such as
+selected_strategy or evidence in user-facing prose. The percentage stop is measured
+from the current weighted average purchase price, NOT a trailing stop from the peak.
+Price gaps and delayed quotes can cause a larger realized loss than that percentage.
 Help develop an incomplete idea through an ongoing conversation, rather than forcing
 a choice from predefined templates. Clarify the investment rationale, target universe,
 entry/exit logic, sizing, rebalance timing and risks. Ask at most three useful questions

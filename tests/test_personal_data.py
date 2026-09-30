@@ -194,6 +194,7 @@ class PersonalDataTests(unittest.TestCase):
         download.assert_not_called()
         self.assertFalse(status["action_ready"])
         self.assertEqual(status["fresh_symbols"], ["AAPL"])
+        self.assertIn("완료된 일봉은 준비", status["error"])
 
     def test_invalid_prices_never_replace_valid_dataset(self):
         first = self.refresh()

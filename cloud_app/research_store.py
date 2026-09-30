@@ -82,7 +82,7 @@ def turn_payload(row):
             "reasoning": request.get("reasoning", {}).get("effort", "none"),
             "max_calls": 1,
             "max_output_tokens": request["max_output_tokens"],
-            "input_characters": len(request["instructions"]) + len(request["input"]),
+            "input_characters": len(json.dumps(request, ensure_ascii=False)),
             "expires_at": aware(row.created_at) + dt.timedelta(minutes=15),
             "request": request if row.status == "awaiting_approval" else None,
         },

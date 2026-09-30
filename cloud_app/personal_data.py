@@ -170,6 +170,8 @@ def personal_data_status(settings, *, symbols=None, now=None) -> dict:
             result["error"] = attempt["error"]
     except (OSError, ValueError, TypeError):
         pass
+    if result["fresh_symbols"] and not result["stale_symbols"] and not result["missing_symbols"] and result["missing_action_symbols"]:
+        result["error"] = "완료된 일봉은 준비됐습니다. 오늘의 분할·배당 확인은 개장 후 재시도하며, 확인 전 신규 페이퍼 체결은 대기합니다."
     return result
 
 

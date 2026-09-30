@@ -20,7 +20,7 @@
       if (!version) return;
       const spec = version.spec, p = spec.portfolio, f = spec.filters;
       $("#researchTuneSummary").textContent = `v${version.number} · ${spec.name} · ${spec.symbols.join(", ")}`;
-      $("#researchTuneDescription").textContent = spec.description || "대화에서 가설과 진입·청산 규칙을 구체화하세요.";
+      $("#researchTuneDescription").textContent = `현재 저장 규칙: 총 투자 ${(p.investment_fraction ?? 1)*100}%, 종목당 상한 ${(p.max_position_fraction ?? 1)*100}%, 최대 ${p.max_positions}종목, ${p.rebalance_days}달력일마다 재평가. 손절은 ${p.stop_loss_pct === null ? '사용 안 함' : '평균 매입단가 대비 '+Math.abs(p.stop_loss_pct*100)+'% 하락 기준'}입니다. 시세 공백·지연 시 손실이 더 커질 수 있습니다.`;
       $("#researchTuningFields").innerHTML = `<div class="manual-grid">
         ${field("initial_cash","시작 자금 (USD)",p.initial_cash,1000,10000000)}
         ${field("investment_pct","전체 투자 비중 (%)",(p.investment_fraction ?? 1)*100,5,100)}

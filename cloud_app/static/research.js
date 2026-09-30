@@ -183,7 +183,7 @@
       if (token !== epoch || busy || hooks.getState().me?.id !== actor) return;
       room = nextRoom;
       sessionOptions(rows);
-      $("#researchConfig").textContent = `${config.model || "gpt-5.4-mini"} · 추론 ${config.reasoning || "none"} · ${config.configured ? "키 설정됨 (실제 호출 미확인)" : "Milkyway/.env에 OPENAI_API_KEY를 입력하고 앱을 재시작하세요"} · 호출마다 별도 승인. 자동매매 실행에는 AI 호출료가 들지 않습니다.`;
+      $("#researchConfig").textContent = `${config.model || "gpt-5.4-mini"} · 추론 ${config.reasoning || "none"} · ${config.configured ? "키 설정됨" : "Milkyway/.env에 OPENAI_API_KEY를 입력하고 앱을 재시작하세요"} · 호출마다 별도 승인. 자동매매 실행에는 AI 호출료가 들지 않습니다.`;
       render();
     } catch (e) {
       if (token === epoch) error(e);

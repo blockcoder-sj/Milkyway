@@ -42,6 +42,16 @@ def adjust_version(services, db, user, session_id, strategy_id, body):
             raise HTTPException(422, "조정한 전략 설정을 확인하세요") from None
         if spec == original:
             raise HTTPException(422, "설정을 변경한 뒤 새 버전으로 저장하세요")
+        # Old AI prose can contain numbers that are now obsolete. Describe the
+        # new executable settings deterministically, without another paid call.
+        p = spec.portfolio
+        stop = "손절 미사용" if p.stop_loss_pct is None else f"평균 매입단가 대비 {abs(p.stop_loss_pct)*100:g}% 손절"
+        spec.description = (
+            f"직접 조정한 전략: {', '.join(spec.symbols[:6])}{' 등' if len(spec.symbols)>6 else ''} 중 최대 {p.max_positions}종목. "
+            f"총 투자 {p.investment_fraction*100:g}%, 종목당 상한 {p.max_position_fraction*100:g}%, "
+            f"{p.rebalance_days}달력일마다 재평가. {stop}, 편도 비용 {p.cost_per_side*100:g}%. "
+            "신호·필터와 세부 규칙은 저장 규격을 확인하세요. 성과는 별도 검증이 필요합니다."
+        )
         with services.strategy_creation(db, user, spec, "대화 전략의 운용 설정 직접 조정") as strategy:
             db.add(ResearchVersion(session_id=room.id, strategy_id=strategy.id,
                                    parent_strategy_id=strategy_id, number=len(version_rows) + 1))
