@@ -65,6 +65,7 @@ class DetailPart(BaseModel,Generic[TRow]):
     error:str|None=Field(default=None,max_length=300)
     source:str|None=Field(default=None,max_length=80)
     quality:HistoryQuality|None=None
+    selection_version:int=Field(default=1,ge=1,le=10)
 
 
 class DetailCache(BaseModel):
@@ -100,7 +101,8 @@ def refresh_detail(settings,identity):
         part=result.get(key,{})
         if 'rows' in part:
             if key == 'news':
-                part['rows']=merge_news(old[key]['rows']+part['rows'],dt.datetime.now(UTC))
+                prior=old[key]['rows'] if old[key].get('selection_version',1)==part.get('selection_version',1) else []
+                part['rows']=merge_news(prior+part['rows'],dt.datetime.now(UTC))
             old[key]=part
         else:
             old[key]['error']='원자료 수신·검증에 실패했습니다. 이전 자료가 있다면 유지합니다.'

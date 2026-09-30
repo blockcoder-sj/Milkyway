@@ -73,6 +73,20 @@ class PersonalApiTests(unittest.TestCase):
         with patch.object(main,'settings',replace(self.settings,personal_local_mode=False)):
             with self.assertRaises(HTTPException):main.personal_market_detail('sp500',self.user)
 
+    def test_company_routes_read_cache_and_queue_public_work_with_csrf(self):
+        from cloud_app import company_worker
+        with patch.object(company_worker._provider, 'run') as external:
+            payload = main.personal_company_detail('kr_13', '005930.KS', self.user)
+            self.assertEqual(payload['symbol'], '005930.KS')
+            queued = main.personal_company_refresh('kr_13', '005930.KS', self.user)
+            self.assertEqual(queued['status'], 'queued')
+            external.assert_not_called()
+        routes = {route.path: route for route in main.app.routes if hasattr(route, 'dependant')}
+        refresh = routes['/api/company-details/{sector_id}/{symbol}/refresh']
+        self.assertIn(main.csrf_guard, [dep.call for dep in refresh.dependant.dependencies])
+        with patch.object(main, 'settings', replace(self.settings, personal_local_mode=False)):
+            with self.assertRaises(HTTPException): main.personal_company_detail('kr_13', '005930.KS', self.user)
+
     def test_new_install_dashboard_works_before_history_or_keys(self):
         payload=main.dashboard(self.user,self.session)
         self.assertTrue(payload["personal_local_mode"])

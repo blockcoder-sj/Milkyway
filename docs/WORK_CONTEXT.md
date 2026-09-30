@@ -174,3 +174,71 @@
   Fresh read-only review found no blocking defect, verified upstream wheel hashes
   and offline OCI token/proxy TLS compatibility. Packaged Linux checks remain for
   CI. This is not a whole-repository deep scan or public OCI clearance.
+
+## 2026-10-01 — milestone 2: company encyclopedia, relationships and final review
+
+This section supersedes older descriptions of the local service count, company
+navigation and remaining implementation. Confirm current Git/runtime state when
+resuming; no paid AI regression approval has arrived.
+
+- Sector companies now open a company page by name or by clicking the row. It
+  combines products/services, business composition, operating inputs, verified
+  market-share facts, sourced subsidiaries/parents/owners/suppliers/customers/
+  partners/competitors, annual SEC figures and filings. Every item has provenance;
+  publicly editable encyclopedia material is clearly distinguished from primary
+  sources. Missing market shares or relationships are not guessed.
+- Relationship SVG supports mouse/keyboard selection, type filters, 8 nodes per
+  page and a source/date panel. Registered public companies link to their own
+  page. Products paginate 8/page; same-sector exploration has up to 80 peers.
+  TSM has a curated technology classification when absent from Yahoo screening;
+  it has no invented market cap or index membership. Quote share explanation uses
+  the full received universe, independent of visible pages.
+- Modules separate schemas, source notes, bounded public fetchers, cache/queue,
+  independent worker and UI. Company GET never calls external providers. POST
+  requires login/CSRF and a listed symbol, 60/hour; queue max 200, cooldown 5min,
+  provider process deadline 75s. Fixed HTTPS hosts, no redirects/environment
+  proxies, bounded bodies/typed arrays, exact ticker/CIK matching. Wrong-company
+  cache is rejected; interrupted/partial collections preserve available old data.
+- 16 source-backed business profiles cover all 11 US sector categories and key
+  Korean technology companies. Wider companies obtain Wikidata/Wikipedia context,
+  WiseReport KR business composition or SEC submissions/US GAAP USD annual data.
+  This does not certify completeness of every company's market share or business
+  relationship. IFRS/nonUSD and KR public filing figures are not standardized.
+  Architecture and maintenance: `docs/COMPANY_DATA.md`.
+- Actual public probes: AAPL products 26 / relations 24 / financials 6 / filings 8;
+  Samsung products 5 / facts 13 / relations 22, no collection errors; Adobe
+  products 27 / relations 4 / financials 6 / filings 8, no errors. SEC failures and
+  ticker search handling were corrected. A Duke encyclopedia probe later succeeded;
+  temporary partial failures remain explicitly reported rather than fabricated.
+- Found oversized Google publisher queries could include unrelated indexed-body
+  stories. Split into <=6 publishers per request and apply explicit headline
+  keyword scope. Selection version 3 replaces obsolete selection caches. Actual
+  Technology refresh: 495 companies, 243 recent headlines, 5.56s, no news error;
+  publisher labels include BBC/CNN/Al Jazeera/Reuters/AP/FT/WSJ/CNBC and others.
+  Four date windows, max 400 retained headlines, 8/page, descending timestamps.
+  Google indexing/headline keyword limits mean not every published article is covered.
+- Performance: 30 real cached company projections improved median 94.07→17.20ms,
+  p95 123.35→27.44ms by resolving registered relations first and searching the
+  current sector before other caches. Public collection is outside HTTP/trading.
+- Verification: full 382 tests passed in 34.675s; company/personal focused 39 passed;
+  Python/JS syntax and whitespace checks passed. Network-disabled Linux/Python3.11
+  process integration passed 7 stages, including real auth/CSRF/queue/company worker,
+  restart/replay, backtests/paper, crash recovery and backups, all synthetic providers.
+  One host-native cold-start check exceeded its 25s startup limit with an empty app
+  log; it is not counted as a pass. Packaged native integration passed instead.
+- Chrome verified row navigation, company cross-links, filters, paginated companies
+  and news, sources open/close, saved-title rename and restoration, black chat and
+  aligned grouped inputs. Final local image recreated all 8 services without deleting
+  user volumes; app healthy and worker heartbeats current. `company-data` added.
+- Direct code/security review covered auth/CSRF, traversal, wrong-identity admission,
+  bounded I/O, URL and HTML/SVG escaping, epoch/owner navigation races, failure data
+  retention and no coupling to AI/orders. This is scoped local review, not a whole
+  deep audit or the unperformed OCI/public deployment gates. CodeRabbit was not used.
+- Security dependency commit 4851d28 is pushed. GitHub run 36750257840 passed both
+  verification and packaged PostgreSQL/personal/native/frontend integration jobs.
+  Final encyclopedia changes are being committed/pushed; verify the latest run before
+  declaring GitHub verification complete.
+- AI reliability fixes are implemented, but the proposed ONE new live call remains
+  awaiting the user's explicit approval. No new paid call or AI evaluation harness
+  was used. Existing 5-call evaluation remains 3 success / 2 failure. Real continuous
+  paper operation is not claimed; no active user paper accounts were created.

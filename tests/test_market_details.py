@@ -89,6 +89,38 @@ class MarketDetailTests(unittest.TestCase):
         xml=b'<rss><channel><item><title>BBC report</title><source url="https://www.bbc.com">BBC</source><link>https://news.google.com/rss/articles/month</link><pubDate>'+email.utils.format_datetime(NOW-dt.timedelta(days=25)).encode()+b'</pubDate></item></channel></rss>'
         self.assertEqual(len(feed.parse_news_rss(xml,NOW,feed.ENGLISH_NEWS_HOSTS)),1)
 
+    def test_news_query_bounds_publisher_groups_in_each_time_window(self):
+        from unittest.mock import MagicMock
+        calls=[]
+        response=MagicMock()
+        session=MagicMock();session.__enter__.return_value=session
+        def capture(url,**kwargs):
+            calls.append(kwargs['params']['q']);return response
+        session.get.side_effect=capture
+        with patch.object(feed,'FixedSession',return_value=session),patch.object(feed,'read_requests_bytes',return_value=b'<rss><channel/></rss>'):
+            result=feed.news(BY_ID['us_45'])
+        self.assertEqual(len(calls),4*((len(feed.ENGLISH_NEWS_HOSTS)+5)//6))
+        self.assertTrue(all(q.count('site:')<=6 and 'after:' in q and 'before:' in q and 'Nvidia' in q for q in calls))
+        self.assertEqual(result['selection_version'],3)
+
+    def test_title_scope_rejects_unrelated_indexed_body_matches(self):
+        query=context_for('us_45')['news_query']
+        self.assertTrue(feed.news_title_matches('Nvidia and Micron chip production',query,'us_45'))
+        self.assertTrue(feed.news_title_matches('HPE raises AI guidance',query,'us_45'))
+        self.assertFalse(feed.news_title_matches('Pilot stabs pilot on flight',query,'us_45'))
+        self.assertFalse(feed.news_title_matches('Moderna downgraded by Citi',query,'us_45'))
+        self.assertFalse(feed.news_title_matches('Mexico peso carry traders flee',query,'us_45'))
+        self.assertTrue(feed.news_title_matches('원/달러 환율 변화',context_for('usdkrw')['news_query'],'usdkrw'))
+
+    def test_changed_news_selection_does_not_retain_obsolete_query_results(self):
+        with tempfile.TemporaryDirectory() as temp:
+            settings=SimpleNamespace(personal_local_mode=True,production=False,dataset_dir=Path(temp)/'data')
+            old=dict(title='Old selection',publisher='BBC',url='https://news.google.com/rss/articles/old',published_at=dt.datetime.now(dt.timezone.utc).isoformat())
+            _write_cache(service.cache_path(settings,'us_45'),{'news':{'rows':[old],'selection_version':1}})
+            with patch.object(service._provider,'run',return_value={'news':{'rows':[],'selection_version':2,'fetched_at':NOW.isoformat()}}):service.refresh_detail(settings,'us_45')
+            result=service.read_cache(settings,'us_45')
+            self.assertEqual(result.news.rows,[]);self.assertEqual(result.news.selection_version,2)
+
     def test_korean_market_cap_units_and_partial_snapshot(self):
         self.assertEqual(feed.parse_kr_cap('1,572조 6,489억'),1572648900000000)
         self.assertEqual(feed.parse_kr_cap('983억'),98300000000)

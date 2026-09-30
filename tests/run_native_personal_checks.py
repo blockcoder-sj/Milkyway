@@ -68,19 +68,24 @@ def run():
     try:
         start("app")
         wait_for("native app startup", lambda: client.request("/health/startup")[0] == 200, timeout=25)
-        for role in ("paper", "backtest", "personal-data"):
+        for role in ("paper", "backtest", "personal-data", "company-data"):
             start(role)
         wait_for("native workers", lambda: client.request("/health/ready")[0] == 200, timeout=25)
         assert client.request("/api/research/sessions")[0] == 401
+        assert client.request("/api/company-details/kr_13/005930.KS")[0] == 401
         registration = client.expect(201, "/api/auth/register", "POST", {
             "email": EMAIL, "password": PASSWORD, "display_name": "Offline process check", "invite_code": INVITE})
         client.csrf = registration["csrf"]
-        for asset in ("/", "/static/research.js", "/static/research/api.js", "/static/research/view.js", "/static/research/panel.js"):
+        for asset in ("/", "/static/research.js", "/static/research/api.js", "/static/research/view.js", "/static/research/panel.js", "/static/company-page.js", "/static/company.css"):
             client.expect(200, asset, raw=True)
         record("real_startup_workers_authentication_and_assets")
         client.csrf = "wrong"
         assert client.request("/api/research/sessions", "POST", {"title": "Denied"})[0] == 403
+        assert client.request("/api/company-details/kr_13/005930.KS/refresh", "POST")[0] == 403
         client.csrf = registration["csrf"]
+        client.expect(202, "/api/company-details/kr_13/005930.KS/refresh", "POST")
+        wait_for("queued company worker", lambda: client.request("/api/company-details/kr_13/005930.KS")[1].get("description") == "Synthetic offline company collection", timeout=15)
+        record("company_auth_csrf_queue_and_separate_worker")
         room = client.expect(201, "/api/research/sessions", "POST", {"title": "Offline native check"})
         path = "/api/research/sessions/" + room["id"]
         turn = client.expect(201, path + "/messages", "POST", {"request_id": "native-request-1", "prompt": "AAPL MSFT momentum"})

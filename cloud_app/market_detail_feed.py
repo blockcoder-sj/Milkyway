@@ -18,6 +18,7 @@ ENGLISH_NEWS_HOSTS = {'reuters.com','bloomberg.com','apnews.com','ft.com','wsj.c
 KOREAN_NEWS_HOSTS = {'yna.co.kr','yonhapnewstv.co.kr','hankyung.com','mk.co.kr','reuters.com','kbs.co.kr','news.kbs.co.kr','newsis.com','news1.kr','chosun.com','donga.com','edaily.co.kr','sedaily.com','etnews.com','sbs.co.kr','imbc.com'}
 NEWS_LIMIT = 400
 NEWS_DAYS = 30
+NEWS_SELECTION_VERSION = 3
 COMPANY_PAGE_SIZE = 100
 COMPANY_LIMIT = 1000
 
@@ -228,12 +229,39 @@ def merge_news(rows, now):
     return unique[:NEWS_LIMIT]
 
 
+def news_title_matches(title,query,identity):
+    """A headline scope check; indexed article-body matches alone are insufficient."""
+    extras={
+        'us_45':['tech','AI','OpenAI','Anthropic','chip','chips','cloud','GPU','Micron','HPE','quantum'],
+        'us_10':['energy','petroleum','OPEC','refinery','Exxon','Chevron'],
+        'us_15':['metals','copper','steel','lithium','aluminium','Linde'],
+        'us_20':['industrial','logistics','airlines','Boeing','Caterpillar'],
+        'us_25':['automotive','Tesla','Amazon','Ford','retailer'],
+        'us_30':['food','beverage','Walmart','Costco','Coca-Cola','Pepsi'],
+        'us_35':['healthcare','medical','FDA','Moderna','Pfizer','Eli Lilly'],
+        'us_40':['bank','insurance','JPMorgan','Goldman Sachs','Morgan Stanley'],
+        'us_50':['telecom','media','Netflix','Alphabet','Meta','Disney'],
+        'us_55':['utilities','electricity','Duke Energy','NextEra'],
+        'us_60':['real estate','property','Prologis','REITs'],
+    }
+    clauses=re.split(r'\s+OR\s+',query)
+    terms=[(re.findall(r'"([^"]+)"',clause) or [clause.strip().split()[0]])[0] for clause in clauses]
+    for term in terms+extras.get(identity,[]):
+        if term.isascii():
+            parts=re.findall(r'[A-Za-z0-9]+',term)
+            pattern=r'(?<![A-Za-z0-9])'+r'[^A-Za-z0-9]*'.join(map(re.escape,parts))+r'(?![A-Za-z0-9])'
+            if parts and re.search(pattern,title,re.IGNORECASE):return True
+        elif re.sub(r'\W','',term.casefold()) in re.sub(r'\W','',title.casefold()):return True
+    return False
+
+
 def news(instrument):
     context=context_for(instrument.id); now=dt.datetime.now(UTC)
     korean=context.get('news_locale')=='ko'
     hosts=KOREAN_NEWS_HOSTS if korean else ENGLISH_NEWS_HOSTS
-    sites=' OR '.join('site:'+host for host in sorted(hosts))
-    def window(index):
+    groups=[sorted(hosts)[start:start+6] for start in range(0,len(hosts),6)]
+    def window(index,publishers):
+        sites=' OR '.join('site:'+host for host in publishers)
         start=(now-dt.timedelta(days=min(NEWS_DAYS,(index+1)*8))).date()
         end=(now-dt.timedelta(days=index*8)).date()+dt.timedelta(days=1)
         with FixedSession() as session:
@@ -247,15 +275,17 @@ def news(instrument):
             finally:
                 response.close()
     rows=[]; failures=0
-    # Separate time windows keep older articles visible despite Google's per-feed cap.
+    # Keep publisher expressions small: oversized Google queries can return a
+    # generic publisher feed. Time windows preserve older indexed headlines.
     with ThreadPoolExecutor(max_workers=4) as pool:
-        futures=[pool.submit(window,index) for index in range(4)]
+        futures=[pool.submit(window,index,publishers) for index in range(4) for publishers in groups]
         for future in futures:
             try: rows.extend(future.result())
             except Exception: failures+=1
-    if failures==4: raise ValueError('No news window received')
-    return {'rows':merge_news(rows,now),'fetched_at':now.isoformat(),'source':'Google News · 지정 언론사',
-            'error':'일부 기간의 뉴스 수집 실패 · 이전 수집 기사와 함께 표시' if failures else None}
+    if failures==len(futures): raise ValueError('No news window received')
+    return {'rows':merge_news([row for row in rows if news_title_matches(row['title'],context['news_query'],instrument.id)],now),'fetched_at':now.isoformat(),'source':'Google News · 지정 언론사 · 제목 키워드',
+            'selection_version':NEWS_SELECTION_VERSION,
+            'error':'일부 기간·언론사의 뉴스 수집 실패 · 수신된 기사만 표시' if failures else None}
 
 
 def related_history(instrument):

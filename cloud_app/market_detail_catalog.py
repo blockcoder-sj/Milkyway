@@ -203,6 +203,19 @@ NEWS_QUERIES = {
     'usdjpy':'yen dollar', 'eurusd':'euro dollar', 'gold':'gold price', 'oil':'WTI oil price',
     'sp500_future':'"S&P 500" futures', 'nasdaq_future':'"Nasdaq" futures',
 }
+SECTOR_NEWS_QUERIES = {
+    'us_10':'oil OR gas OR "energy stocks"',
+    'us_15':'mining OR chemicals OR "materials stocks"',
+    'us_20':'manufacturing OR aerospace OR "industrial stocks"',
+    'us_25':'retail OR automakers OR "consumer discretionary"',
+    'us_30':'"food companies" OR "beverage companies" OR "consumer staples"',
+    'us_35':'pharmaceutical OR biotech OR "healthcare stocks"',
+    'us_40':'"bank stocks" OR insurers OR "financial services"',
+    'us_45':'semiconductor OR software OR "technology stocks" OR Nvidia OR Apple OR Microsoft',
+    'us_50':'telecom OR "media companies" OR "social media"',
+    'us_55':'"electric utilities" OR "power companies" OR "utility stocks"',
+    'us_60':'REIT OR "commercial real estate" OR "property companies"',
+}
 INDEX_METHODS = {
     'sp500':'유동주식 시가총액 가중 · 미국 대형주', 'dow':'주가 가중 · 주요 30개 기업',
     'nasdaq':'시가총액 가중 · 나스닥 상장 종목', 'nasdaq100':'수정 시가총액 가중 · 주요 비금융 기업',
@@ -257,7 +270,7 @@ def context_for(identity):
     if identity in NEWS_QUERIES:
         result['news_query']=NEWS_QUERIES[identity]
     if identity in US_SECTORS:
-        result['news_query']=US_SECTORS[identity][0].replace('-', ' ')+' sector stocks'
+        result['news_query']=SECTOR_NEWS_QUERIES[identity]
     result['facts']=[{'label':'표시 단위','value':instrument.unit},
         {'label':'식별 기호','value':instrument.symbol},
         {'label':'과거 시세','value':'최대 3년 · 제공되는 구간만 표시'}]

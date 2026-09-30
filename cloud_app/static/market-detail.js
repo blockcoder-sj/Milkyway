@@ -30,7 +30,7 @@
       </div></div><div id="detailMetrics" class="detail-metrics"></div><div id="detailChartMethod"></div><details><summary>최근 봉의 수치 보기</summary><div id="detailPriceTable" class="research-table"></div></details></section>
       <dialog id="detailChartDialog" aria-labelledby="detailDialogTitle"><header class="detail-dialog-heading"><h3 id="detailDialogTitle">가격 차트</h3><button id="detailCollapse" class="ghost compact" autofocus>닫기 · Esc</button></header><div id="detailChartDialogSlot"></div></dialog>
       <section id="detailCompaniesSection"><h3 id="detailCompaniesTitle">주요 기업과 비중</h3><p id="detailCompanyNote" class="fineprint"></p><div id="detailCompanies"></div><div id="detailMarketShare"></div></section>
-      <section id="detailNewsSection"><h3>관련 뉴스</h3><p class="fineprint">지정 언론사의 최근 30일 보도를 최신 순으로 표시합니다. 한 페이지에 8건씩 제공하며 뒤로 갈수록 이전 보도가 나옵니다. 검색 피드가 제공한 기사 제목과 원문 링크를 수집하므로 모든 보도를 포함하지 않을 수 있습니다.</p><div id="detailNews"></div></section>
+      <section id="detailNewsSection"><h3>관련 뉴스</h3><p class="fineprint">제목의 관련 키워드 조건을 통과한 지정 언론사의 최근 30일 보도를 최신 순으로 표시합니다. 한 페이지에 8건씩 제공하며 뒤로 갈수록 이전 보도가 나옵니다. 기사 제목과 원문 링크를 모으며, 검색에 잡히지 않거나 제목 조건에 맞지 않는 보도는 포함되지 않을 수 있습니다.</p><div id="detailNews"></div></section>
       <section id="detailSourcesSection"><details class="detail-sources-toggle"><summary id="detailSourceCount">출처 모음</summary><p class="fineprint">시세·기업·뉴스는 수집 시점, 사업 점유율은 발표 기준일을 따릅니다. 원자료를 확인하고 수치의 범위를 비교하세요.</p><div id="detailSources"></div></details></section>`;
     $('#market').after(panel);
     window.MilkywayMarketDirectory.initialize();
@@ -53,7 +53,7 @@
       if(selection&&!selection.isCollapsed&&card.contains(selection.anchorNode))return;
       event.preventDefault();open(card.dataset.marketCard);
     });
-    addEventListener('popstate',()=>{const match=location.hash.match(/^#detail\/([a-z0-9_]+)$/);if(match)open(match[1],false);else if(identity){closeChart();identity=null;++epoch;hooks.openWorkspace(location.hash==='#strategy'?'strategy':'market',false);}});
+
     $('#detailExpand').addEventListener('click',expandChart);
     $('#detailChart').addEventListener('click',expandChart);
     $('#detailChart').addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();expandChart();}});
@@ -133,7 +133,7 @@
     series.innerHTML=`<option value="history">${esc(data.label)} · ${data.history.rows.length}개 일봉</option>`+(context.related_chart?`<option value="related_history">관련 ETF · ${esc(context.related_chart.label)}</option>`:'');
     series.value=initialized?previous:(data.history.rows.length<2&&data.related_history?.rows.length?'related_history':'history');series.dataset.identity=identity;
     quote(hooks.getState().dashboard?.market_overview);
-    $('#detailCompaniesTitle').textContent=data.group==='sectors'?'주요 기업과 비중':data.group==='fx'?'통화정책 원문':data.group==='indices'?'구성·산출 원문':'계약 명세와 거래소';
+    $('#detailCompaniesTitle').textContent=data.group==='sectors'?'섹터 기업 백과':data.group==='fx'?'통화정책 원문':data.group==='indices'?'구성·산출 원문':'계약 명세와 거래소';
     $('#detailCompanyNote').textContent=(context.companies_note||'이 항목의 공식 구성·관련 정보는 아래 산출기관 원문에서 확인할 수 있습니다.')+(companies.length?` 수집 ${time(data.companies.fetched_at)}${data.companies.stale?' · 갱신 지연':''}`:'');
     window.MilkywayMarketDirectory.render(data);
     const shares=context.market_share||[];
@@ -161,5 +161,5 @@
     $('#detailPeriod').value='3';$('#detailSeries').dataset.identity='';
     await refresh();if(expanded&&identity===id)expandChart();
   }
-  window.MilkywayMarketDetail=Object.freeze({initialize(options){hooks=options;mount();setInterval(()=>{if(!document.hidden)refresh();},15000);},open,quote});
+  window.MilkywayMarketDetail=Object.freeze({leave(){closeChart();identity=null;++epoch;},initialize(options){hooks=options;mount();setInterval(()=>{if(!document.hidden)refresh();},15000);},open,quote});
 })();

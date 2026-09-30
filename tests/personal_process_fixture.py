@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 def run():
     parser = argparse.ArgumentParser()
-    parser.add_argument("role", choices=("app", "paper", "backtest", "personal-data", "seed"))
+    parser.add_argument("role", choices=("app", "paper", "backtest", "personal-data", "company-data", "seed"))
     parser.add_argument("root", type=Path)
     parser.add_argument("--port", type=int, default=8768)
     args = parser.parse_args()
@@ -63,6 +63,15 @@ def run():
         elif args.role == "seed":
             result = personal_data.refresh_personal_data(["AAPL", "MSFT"], config.get_settings())
             assert result["ready"], result
+        elif args.role == "company-data":
+            from cloud_app import company_worker
+            from cloud_app.company_schemas import CompanyKnowledge
+            from cloud_app.database import utcnow
+            def synthetic_company(payload, configuration, deadline):
+                return CompanyKnowledge(symbol=payload["symbol"], name=payload["name"],
+                    description="Synthetic offline company collection", fetched_at=utcnow()).model_dump(mode="json")
+            with patch.object(company_worker._provider, "run", side_effect=synthetic_company):
+                company_worker.main()
         else:
             os.environ["WORKER_ROLE"] = args.role
             from cloud_app.worker import main

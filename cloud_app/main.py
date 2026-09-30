@@ -1770,6 +1770,19 @@ def personal_market_detail(instrument_id: str, user: User = Depends(current_user
     return detail_snapshot(settings, instrument_id)
 
 
+@app.get("/api/company-details/{sector_id}/{symbol}")
+def personal_company_detail(sector_id: str, symbol: str, user: User = Depends(current_user)):
+    from .company_service import company_snapshot
+    return company_snapshot(settings, sector_id, symbol)
+
+
+@app.post("/api/company-details/{sector_id}/{symbol}/refresh", status_code=202)
+def personal_company_refresh(sector_id: str, symbol: str, user: User = Depends(csrf_guard)):
+    from .company_service import enqueue_company
+    _rate_limit("company-research:" + user.id, 60, 3600)
+    return enqueue_company(settings, sector_id, symbol)
+
+
 @app.get("/api/market-overview")
 def personal_market_snapshot(user: User = Depends(current_user), session: Session = Depends(get_db)):
     if not settings.personal_local_mode or settings.production:
