@@ -1,5 +1,12 @@
 # Milkyway project instructions
 
+## Resume context
+
+- Read `docs/WORK_CONTEXT.md` when resuming this project. It records the latest
+  completed work, verification evidence, user preferences, and remaining limits.
+- Treat runtime observations as dated evidence; confirm current Git/runtime state
+  before claiming that those observations still hold. Never store secrets there.
+
 ## Single-owner local exercise
 
 - `compose.personal.yaml` is explicitly authorized for a member's own trusted
