@@ -48,6 +48,24 @@ class MarketDetailTests(unittest.TestCase):
         value=history_payload();value['chart']['result'][0]['timestamp']=[NOW.timestamp()]*1201
         with self.assertRaises(ValueError):feed.parse_history(value,BY_ID['sp500'],NOW)
 
+    def test_history_keeps_valid_close_when_ohlc_or_volume_is_invalid(self):
+        payload=history_payload();columns=payload['chart']['result'][0]['indicators']['quote'][0]
+        columns['high'][1]=5;columns['volume'][1]='bad';columns['close'][2]=None
+        result=feed.parse_history(payload,BY_ID['sp500'],NOW)
+        self.assertEqual(result['rows'][0]['close'],11)
+        self.assertIsNone(result['rows'][0]['high']);self.assertIsNone(result['rows'][0]['open'])
+        self.assertIsNone(result['rows'][0]['volume'])
+        self.assertEqual(result['quality'],dict(received=4,outside_range=2,invalid_close=1,close_only=1,duplicates=0,accepted=1))
+        typed=service.DetailCache.model_validate({'history':result})
+        self.assertEqual(typed.history.quality.close_only,1)
+        self.assertIsNone(typed.history.rows[0].high)
+
+    def test_history_reports_duplicate_dates(self):
+        payload=history_payload();row=payload['chart']['result'][0]
+        row['timestamp'][2]=row['timestamp'][1]
+        result=feed.parse_history(payload,BY_ID['sp500'],NOW)
+        self.assertEqual(len(result['rows']),1);self.assertEqual(result['quality']['duplicates'],1)
+
     def test_companies_share_is_limited_to_same_currency_and_sample(self):
         payload={'finance':{'result':[{'quotes':[{'symbol':'AAA','shortName':'Alpha','marketCap':100,'currency':'USD'},
             {'symbol':'BBB','shortName':'Beta','marketCap':300,'currency':'USD'},

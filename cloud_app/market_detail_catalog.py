@@ -35,11 +35,11 @@ KR_TOPICS = {
     'kr_24': '증권 자본시장', 'kr_25': '보험 손해율',
 }
 INDEX_SOURCES = {
-    'sp500': ('S&P DJI · S&P 500', 'https://www.spglobal.com/spdji/en/indices/equity/sp-500/', '미국 대형주 지수. 유동주식 시가총액과 구성 종목 변경을 함께 확인하세요.'),
-    'dow': ('S&P DJI · Dow Jones', 'https://www.spglobal.com/spdji/en/indices/equity/dow-jones-industrial-average/', '30개 우량주를 주가 가중 방식으로 반영합니다. 시가총액 가중 지수와 움직임이 다를 수 있습니다.'),
-    'nasdaq': ('Nasdaq · Composite', 'https://indexes.nasdaq.com/Index/Overview/COMP', '나스닥 상장 종목을 폭넓게 포함하는 지수입니다. 기술주 노출과 업종 구성을 살펴보세요.'),
-    'nasdaq100': ('Nasdaq · Nasdaq-100', 'https://indexes.nasdaq.com/Index/Overview/NDX', '나스닥의 주요 비금융 기업을 반영합니다. 대형 종목 집중도와 정기 편입 변경을 확인하세요.'),
-    'russell2000': ('FTSE Russell · US Indexes', 'https://www.lseg.com/en/ftse-russell/indices/russell-us', '미국 소형주 시장을 살펴보는 지수입니다. 금융 비용과 경기 변화에 대한 민감도를 관찰하세요.'),
+    'sp500': ('S&P DJI · S&P 500', 'https://www.spglobal.com/spdji/en/indices/equity/sp-500/', '미국 대형주를 유동주식 시가총액 가중 방식으로 반영하는 지수입니다.'),
+    'dow': ('S&P DJI · Dow Jones', 'https://www.spglobal.com/spdji/en/indices/equity/dow-jones-industrial-average/', '주요 30개 기업을 주가 가중 방식으로 반영하는 지수입니다.'),
+    'nasdaq': ('Nasdaq · Composite', 'https://indexes.nasdaq.com/Index/Overview/COMP', '나스닥 상장 종목을 폭넓게 포함하는 시가총액 가중 지수입니다.'),
+    'nasdaq100': ('Nasdaq · Nasdaq-100', 'https://indexes.nasdaq.com/Index/Overview/NDX', '나스닥의 주요 비금융 기업을 수정 시가총액 가중 방식으로 반영합니다.'),
+    'russell2000': ('FTSE Russell · US Indexes', 'https://www.lseg.com/en/ftse-russell/indices/russell-us', '미국 소형주를 시가총액 가중 방식으로 반영하는 지수입니다.'),
     'vix': ('Cboe · VIX', 'https://www.cboe.com/tradable_products/vix/', 'S&P 500 옵션에 반영된 향후 약 30일의 기대 변동성입니다. 주가 수익률이나 방향 예측값이 아닙니다.'),
 }
 FUTURE_SOURCES = {

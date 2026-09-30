@@ -16,6 +16,7 @@ function element(id){
  return elements.get(id);
 }
 const ctx=vm.createContext({window:{},document:{querySelector:element},Intl,Date,Number});
+vm.runInContext(fs.readFileSync(require('node:path').join(require('node:path').dirname(process.argv[1]),'market-methods.js'),'utf8'),ctx);
 vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),ctx);
 const row={id:'one',label:'<img src=x onerror=alert(1)>',symbol:'^GSPC',group:'indices',market:'us',
  unit:'pt',description:'<script>bad</script>',value:100,previous_close:100,change:0,change_pct:0,
@@ -38,7 +39,7 @@ assert(element('#marketFx').innerHTML.includes('-0.0012 USD'));
 element('#marketCards').innerHTML = 'unchanged DOM';
 ctx.window.MilkywayMarket.renderMarket(overview,'us');
 assert.equal(element('#marketCards').innerHTML,'unchanged DOM');
-element('#marketCards').querySelectorAll=()=>[{dataset:{marketId:'one'}}];
+element('#marketCards').querySelectorAll=selector=>selector.includes('data-market-id')?[{dataset:{marketId:'one'}}]:[];
 row.value=101;
 ctx.window.MilkywayMarket.renderMarket(overview,'us');
 assert(element('#marketCards').innerHTML.includes('data-market-id="one" open'));
@@ -49,7 +50,7 @@ html=element('#sectorHeatmap').innerHTML;
 assert(html.indexOf('Top Sector')<html.indexOf('Bottom Sector'));
 assert(html.indexOf('Bottom Sector')<html.indexOf('Missing Sector'));
 assert(!html.includes('Korean Sector'));assert(!html.includes('NaN'));assert(!html.includes('Infinity'));
-assert(html.includes('수신 실패'));
+assert(html.includes('수신 실패'));assert(html.includes('계산 방법'));assert(html.includes('data-chart-expand'));
 ctx.window.MilkywayMarket.renderSectors(overview,'us','asc');
 html=element('#sectorHeatmap').innerHTML;
 assert(html.indexOf('Bottom Sector')<html.indexOf('Top Sector'));

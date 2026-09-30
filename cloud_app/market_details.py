@@ -19,9 +19,9 @@ _provider=ProviderProcess(collect_detail)
 class HistoryBar(BaseModel):
     model_config=ConfigDict(extra='forbid',allow_inf_nan=False)
     date:dt.date
-    open:float=Field(gt=0,le=1e16)
-    high:float=Field(gt=0,le=1e16)
-    low:float=Field(gt=0,le=1e16)
+    open:float|None=Field(default=None,gt=0,le=1e16)
+    high:float|None=Field(default=None,gt=0,le=1e16)
+    low:float|None=Field(default=None,gt=0,le=1e16)
     close:float=Field(gt=0,le=1e16)
     volume:float|None=Field(default=None,ge=0,le=1e16)
 
@@ -45,6 +45,16 @@ class NewsRow(BaseModel):
     published_at:AwareDatetime
 
 
+class HistoryQuality(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    received:int=Field(ge=0,le=1200)
+    outside_range:int=Field(ge=0,le=1200)
+    invalid_close:int=Field(ge=0,le=1200)
+    close_only:int=Field(ge=0,le=1200)
+    duplicates:int=Field(ge=0,le=1200)
+    accepted:int=Field(ge=0,le=1200)
+
+
 TRow=TypeVar('TRow')
 
 
@@ -54,6 +64,7 @@ class DetailPart(BaseModel,Generic[TRow]):
     fetched_at:AwareDatetime|None=None
     error:str|None=Field(default=None,max_length=300)
     source:str|None=Field(default=None,max_length=80)
+    quality:HistoryQuality|None=None
 
 
 class DetailCache(BaseModel):

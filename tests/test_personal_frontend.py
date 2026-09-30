@@ -102,6 +102,7 @@ const context = vm.createContext({
   fetch: async (path, options) => {calls.push([path, options]); return {status: 200, ok: true, json: async () => response};},
 });
 vm.runInContext(fs.readFileSync(root + "/personal.js", "utf8"), context);
+vm.runInContext(fs.readFileSync(root + "/market-methods.js", "utf8"), context);
 vm.runInContext(fs.readFileSync(root + "/market.js", "utf8"), context);
 let app = fs.readFileSync(root + "/app.js", "utf8").split("\n$$('[data-auth-tab]').forEach")[0];
 vm.runInContext(app, context);

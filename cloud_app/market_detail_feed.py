@@ -57,28 +57,40 @@ def parse_history(payload, instrument, now):
     if len(times)>1200:
         raise ValueError('Too many bars')
     columns=row['indicators']['quote'][0]
-    bars=[]
+    bars=[]; outside=0; rejected=0; close_only=0
     for index, stamp in enumerate(times):
         try:
             stamp=number(stamp)
             when=dt.datetime.fromtimestamp(stamp,UTC)
             if not years_ago(now)<=when<=now:
+                outside+=1
                 continue
-            values={name:number(columns[name][index])*instrument.multiplier for name in ('open','high','low','close')}
-            if values['high']<max(values['open'],values['close'],values['low']) or values['low']>min(values['open'],values['close']):
-                continue
+            close=number(number(columns['close'][index])*instrument.multiplier)
+            values={'open':None,'high':None,'low':None,'close':close}
+            try:
+                ohlc={name:number(number(columns[name][index])*instrument.multiplier) for name in ('open','high','low')}
+                if ohlc['high']<max(ohlc['open'],close,ohlc['low']) or ohlc['low']>min(ohlc['open'],close):
+                    raise ValueError('Inconsistent OHLC')
+                values.update(ohlc)
+            except (ValueError,TypeError,IndexError,KeyError):
+                close_only+=1
             volume=columns.get('volume',[])
-            volume=number(volume[index],positive=False) if index<len(volume) and volume[index] is not None else None
-            if volume is not None and volume<0:
+            try:
+                volume=number(volume[index],positive=False) if index<len(volume) and volume[index] is not None else None
+                if volume is not None and volume<0:volume=None
+            except (ValueError,TypeError,IndexError):
                 volume=None
             bars.append({'date':when.astimezone(zone).date().isoformat(),**values,'volume':volume})
-        except (ValueError,TypeError,IndexError,OverflowError,OSError):
-            continue
+        except (ValueError,TypeError,IndexError,KeyError,OverflowError,OSError):
+            rejected+=1
+    duplicate_count=len(bars)-len({bar['date'] for bar in bars})
     bars=list({bar['date']:bar for bar in bars}.values())
     bars.sort(key=lambda bar:bar['date'])
     if not bars:
         raise ValueError('No valid history')
-    return {'rows':bars,'fetched_at':now.isoformat(),'source':'Yahoo Finance','error':None}
+    return {'rows':bars,'fetched_at':now.isoformat(),'source':'Yahoo Finance','error':None,
+            'quality':{'received':len(times),'outside_range':outside,'invalid_close':rejected,
+                       'close_only':close_only,'duplicates':duplicate_count,'accepted':len(bars)}}
 
 
 def history(instrument):

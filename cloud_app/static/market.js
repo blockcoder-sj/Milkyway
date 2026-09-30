@@ -32,7 +32,8 @@
       <div class="market-card-top"><strong><a class="market-detail-link" data-market-detail="${escape(row.id)}" href="#detail/${encodeURIComponent(row.id)}">${escape(row.label)} ↗</a></strong><small>${escape(row.unit)}</small></div>
       <div class="market-price-line"><span class="market-value">${format(row.value)}</span><b class="market-change ${direction(row.change_pct)}">${change(row.change_pct)}</b></div>
       <div class="market-delta">전일 대비 ${finite(row.change) && row.change > 0 ? "+" : ""}${format(row.change)} ${escape(row.unit === "%" ? "%p" : row.unit)}</div>
-      ${sparkline(row.sparkline)}
+      <a class="market-chart-link" data-market-detail="${escape(row.id)}" data-chart-expand href="#detail/${encodeURIComponent(row.id)}" aria-label="${escape(row.label)} 차트 크게 보기">${sparkline(row.sparkline)}</a>
+      ${window.MilkywayMarketMethods.quote(row)}
       <p class="market-quote-state">${escape(row.source || "Yahoo Finance")} · ${status}</p><time class="market-observed">기준 ${time(row.observed_at)}</time>
       <details class="market-detail" data-market-id="${escape(row.id)}"${open ? " open" : ""}><summary>${sector ? "섹터 정보" : "지표 정보"}</summary>
         <p>${escape(row.description)}</p><dl><dt>전일 기준값</dt><dd>${format(row.previous_close)}</dd>
@@ -50,7 +51,7 @@
     const signature = JSON.stringify(rows);
     if (renderedCards.get(target) === signature) return;
     const expanded = new Set(Array.from(target.querySelectorAll("details[open][data-market-id]"), detail => detail.dataset.marketId));
-    target.innerHTML = rows.map(row => card(row, sector, expanded.has(row.id))).join("");
+    window.MilkywayMarketMethods.replace(target,rows.map(row => card(row, sector, expanded.has(row.id))).join(""));
     renderedCards.set(target, signature);
   }
   function renderMarket(overview, country) {
