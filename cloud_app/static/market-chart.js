@@ -57,7 +57,7 @@
       const row=visible[index];if(!row)return;
       tooltip.innerHTML=`<time>${row.date}</time>`+[['시',row.open],['고',row.high],['저',row.low],['종',row.close]]
         .map(([label,value])=>`<span>${label} <b>${fmt(value,digits)}</b></span>`).join('');
-      if(legend)legend.innerHTML=averages.map(ma=>`<span class="market-ma" data-ma="${ma.period}" style="color:${ma.color}"><i></i>MA ${ma.period} <b>${fmt(ma.values[index],digits)}</b></span>`).join('');
+      if(legend)legend.innerHTML=averages.map(ma=>`<span class="market-ma" data-ma="${ma.period}"><i></i>MA ${ma.period} <b>${fmt(ma.values[index],digits)}</b></span>`).join('');
     }
     function resetCursor(){
       crosshair?.setAttribute('visibility','hidden');

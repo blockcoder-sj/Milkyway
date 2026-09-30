@@ -15,3 +15,6 @@
 .detail-dialog-heading{padding:15px 20px;border-bottom:1px solid #253041}.detail-dialog-heading h3{margin:0;font-size:16px;font-weight:650}.detail-dialog-heading button{border-color:#344154;color:#adb9cd;background:transparent}
 #detailChartDialog .market-terminal{border:0;border-radius:0}#detailChartDialog #detailChart{height:max(300px,calc(100dvh - 310px));cursor:crosshair}.chart-dialog-open{overflow:hidden}
 @media(max-width:600px){.terminal-toolbar{padding:10px;gap:5px}.chart-periods{gap:1px}.chart-periods button{padding:6px 7px;font-size:11px}.chart-interval{font-size:0;gap:0}.chart-interval select{font-size:11px;padding:5px!important}.terminal-series{padding:10px}.chart-readout{padding:0 10px;gap:6px 10px;font-size:10px}.chart-ma-legend{padding:8px 10px;gap:7px 12px}.market-ma b{font-size:9px}.chart-footer,.chart-source{padding-left:10px;padding-right:10px}.detail-dialog-heading{padding:12px}.detail-dialog-heading h3{font-size:14px}#detailChartDialog{width:calc(100vw - 12px);max-height:calc(100dvh - 12px)}.detail-metrics>div{min-width:0}#detailChartDialog #detailChart{height:max(280px,calc(100dvh - 325px))}}
+
+/* Fixed classes keep legend colors compatible with the app CSP. */
+.market-ma[data-ma="5"]{color:#e5e9f2}.market-ma[data-ma="20"]{color:#f2c761}.market-ma[data-ma="60"]{color:#53cdb5}.market-ma[data-ma="120"]{color:#aa92ee}

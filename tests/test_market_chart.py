@@ -87,6 +87,9 @@ for(const match of svg.innerHTML.matchAll(/<polyline[^>]+points="([^"]+)"/g))for
  const y=Number(point.split(',')[1]);assert(y>=20&&y<=364);
 }
 assert(tooltip.innerHTML.includes(rows[149].date));assert(legend.innerHTML.includes('MA 120'));
+assert(!legend.innerHTML.includes('style='));
+const css=fs.readFileSync(require('node:path').join(require('node:path').dirname(process.argv[1]),'market-chart.css'),'utf8');
+for(const ma of api.MOVING_AVERAGES)assert(css.includes('.market-ma[data-ma=\"'+ma.period+'\"]{color:'+ma.color+'}'));
 handlers.pointermove({clientX:14+(610-14)/20*.5,clientY:150});
 assert.equal(cursor.visibility,'visible');assert(cursor.innerHTML.includes(rows[130].date));assert(tooltip.innerHTML.includes(rows[130].date));
 handlers.pointerleave();assert.equal(cursor.visibility,'hidden');assert(tooltip.innerHTML.includes(rows[149].date));
