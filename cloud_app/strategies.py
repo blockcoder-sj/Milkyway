@@ -92,6 +92,9 @@ class PortfolioSpec(StrictSpecModel):
     rebalance_days: int = Field(default=10, ge=1, le=30)
     cost_per_side: float = Field(default=0.003, ge=0, le=0.02)
     stop_loss_pct: float | None = Field(default=-0.05, ge=-0.50, le=-0.005)
+    investment_fraction: float = Field(default=1.0, ge=0.05, le=1.0)
+    max_position_fraction: float = Field(default=1.0, ge=0.01, le=1.0)
+    rebalance_weights: bool = False
 
 
 class StrategySpec(StrictSpecModel):
@@ -589,6 +592,9 @@ def run_strategy_backtest(
         "max_positions": effective_positions,
         "sector_cap_pct": 1.0,
         "cost_per_side": spec.portfolio.cost_per_side,
+        "investment_fraction": spec.portfolio.investment_fraction,
+        "max_position_fraction": spec.portfolio.max_position_fraction,
+        "rebalance_weights": spec.portfolio.rebalance_weights,
         "position_stop_pct": spec.portfolio.stop_loss_pct,
         "buffer_mult": 1.0,
         "inertia_bonus": 0.0,

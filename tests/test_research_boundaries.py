@@ -37,7 +37,7 @@ function element(key) {
 }
 const document={querySelector:element,querySelectorAll(){return []}},window={};
 const context=vm.createContext({window,document,console,encodeURIComponent,crypto:{randomUUID(){return 'unit-request-0001'}}});
-for(const file of ['research/api.js','research/view.js','research.js'])vm.runInContext(fs.readFileSync(root+'/'+file,'utf8'),context);
+for(const file of ['research/api.js','research/view.js','research/tuning.js','research.js'])vm.runInContext(fs.readFileSync(root+'/'+file,'utf8'),context);
 const payload='<img src=x onerror=alert(1)>', calls=[];
 const room={id:'room',selected_strategy_id:'v1',turns:[{id:'turn',status:'awaiting_approval',prompt:payload,
  approval:{model:'gpt-5.4-mini',reasoning:'none',max_output_tokens:4000,input_characters:20,request:{input:payload},request_digest:'a'.repeat(64)},

@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from market_calendar import get_market_hours, is_trading_day, prev_trading_day
+from portfolio_allocation import plan_allocation
 from terminal_events import effective_verified_events, load_events, unresolved_events
 
 from .config import Settings, get_settings
@@ -786,41 +787,19 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
                 account.id,
             )
             continue
-        equity = account.cash + sum(
-            position.shares * prices[ticker]
-            for ticker, position in positions.items()
-        )
-        target_value = equity / len(targets)
         date_key = et_now.date().isoformat()
-        old_symbols = set(positions)
-        target_symbols = set(targets)
-
-        # Canonical engine contract: retained holdings keep their quantities.
-        # Only removals are sold and only newly selected symbols are bought.
-        for ticker, position in list(positions.items()):
-            if ticker not in target_symbols:
-                key = "{}:{}:rebalance:{}:SELL".format(account.id, date_key, ticker)
-                fill_count += int(
-                    _fill(session, account, ticker, "SELL", position.shares, prices[ticker],
-                          spec.portfolio.cost_per_side, "rebalance", key)
-                )
-
-        new_targets = [ticker for ticker in targets if ticker not in old_symbols]
-        total_desired = target_value * len(new_targets)
-        if total_desired > 0:
-            affordable_gross = account.cash / (1 + spec.portfolio.cost_per_side)
-            scale = min(1.0, affordable_gross / total_desired)
-        else:
-            scale = 0.0
-        for ticker in new_targets:
-            price = prices[ticker]
-            desired = target_value * scale / price
-            if desired > 1e-7:
-                key = "{}:{}:rebalance:{}:BUY".format(account.id, date_key, ticker)
-                fill_count += int(
-                    _fill(session, account, ticker, "BUY", desired, price,
-                          spec.portfolio.cost_per_side, "rebalance", key)
-                )
+        orders = plan_allocation(
+            cash=account.cash, holdings={ticker: p.shares for ticker, p in positions.items()},
+            prices=prices, targets=targets, cost_per_side=spec.portfolio.cost_per_side,
+            investment_fraction=spec.portfolio.investment_fraction,
+            max_position_fraction=spec.portfolio.max_position_fraction,
+            rebalance_weights=spec.portfolio.rebalance_weights,
+        )
+        for order in orders:
+            key = "{}:{}:rebalance:{}:{}".format(account.id, date_key, order.ticker, order.side)
+            fill_count += int(_fill(session, account, order.ticker, order.side, order.shares,
+                                    prices[order.ticker], spec.portfolio.cost_per_side,
+                                    "rebalance", key))
         account.last_rebalanced_on = et_now.date()
         _execution_state(session, account, "active", "최근 리밸런싱 완료; 시세를 관찰 중입니다")
     return fill_count

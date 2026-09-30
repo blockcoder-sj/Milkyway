@@ -65,6 +65,29 @@ class PersonalPaperTests(unittest.TestCase):
     def bundle(self):
         return SimpleNamespace(index=pd.DatetimeIndex([self.clock.date()-dt.timedelta(days=1)]), forward_data_gate_ready=False)
 
+    def test_paper_allocation_reserves_cash_and_reweights_existing_positions(self):
+        self.spec.portfolio.max_positions = 2
+        self.spec.portfolio.investment_fraction = .6
+        self.spec.portfolio.max_position_fraction = .3
+        self.spec.portfolio.rebalance_weights = True
+        self.spec.portfolio.cost_per_side = 0
+        with self.sessions() as session:
+            session.get(Strategy,self.strategy).spec_json = self.spec.model_dump_json()
+            self.quotes(session); session.commit()
+            with patch('cloud_app.paper.get_dataset_bundle',side_effect=self.bundle), patch('cloud_app.paper.latest_candidates',return_value=['AAA','BBB']):
+                self.assertEqual(paper.rebalance_due_accounts(session),2)
+                session.commit()
+                self.assertAlmostEqual(session.get(PaperAccount,self.account).cash,40000)
+                self.clock += dt.timedelta(days=1)
+                paper.store_member_quotes(session,self.owner,[paper.QuoteValue('AAA',200,0,0,1,'kis_member',self.clock),paper.QuoteValue('BBB',100,0,0,1,'kis_member',self.clock)])
+                session.commit()
+                self.assertEqual(paper.rebalance_due_accounts(session),2)
+                session.commit()
+            positions={row.ticker:row.shares for row in session.scalars(select(PaperPosition)).all()}
+            self.assertAlmostEqual(positions['AAA']*200,39000)
+            self.assertAlmostEqual(positions['BBB']*100,39000)
+            self.assertAlmostEqual(session.get(PaperAccount,self.account).cash,52000)
+
     def test_member_provider_never_uses_synthetic_dataset(self):
         with patch('cloud_app.paper.get_dataset_bundle', side_effect=AssertionError('no fallback')):
             self.assertEqual(paper.make_quote_provider(self.settings).fetch(['AAA']), [])

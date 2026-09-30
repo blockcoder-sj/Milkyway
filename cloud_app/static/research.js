@@ -2,18 +2,19 @@
 (() => {
   const $ = selector => document.querySelector(selector);
   const esc = value => window.MilkywayResearchView.escape(value);
-  let hooks, api, view, room = null, owner = null;
-  let busy = false, loading = false, epoch = 0;
+  let hooks, api, view, tuning, room = null, owner = null;
+  let busy = false, loading = false, epoch = 0, startingNew = false;
   let messageId = null, experimentId = null, deployId = null;
 
-  function render() { view.render(room, busy); }
+  function render() { view.render(room, busy); tuning.render(room, busy); $("#researchSessions").value = room?.id || ""; }
   function error(e) { $("#researchError").textContent = e.message; }
   function resetRequests() { messageId = experimentId = deployId = null; }
   function sessionOptions(rows) {
     $("#researchSessions").innerHTML = rows.length
       ? rows.map(r => `<option value="${esc(r.id)}">${esc(r.title)}</option>`).join("")
-      : '<option value="">새 연구를 만들어 주세요</option>';
-    if (room) $("#researchSessions").value = room.id;
+      : '';
+    $("#researchSessions").innerHTML = '<option value="">새 대화</option>' + $("#researchSessions").innerHTML;
+    $("#researchSessions").value = room?.id || "";
   }
   async function reload() {
     if (!room) return;
@@ -32,6 +33,7 @@
     const controls = [...$("#researchPanel").querySelectorAll("button,select")];
     const disabled = controls.map(control => control.disabled);
     controls.forEach(control => { control.disabled = true; });
+    $("#researchTuningFields").disabled = true;
     try { await action(); }
     catch (e) {
       error(e);
@@ -44,11 +46,32 @@
     }
   }
   function bindForms() {
+    $("#researchStart").addEventListener("click", () => act(async () => {
+      tuning.requireSaved();
+      startingNew = true; room = null; tuning.reset(); resetRequests();
+      $("#researchMessage").reset(); $("#researchSessions").value = "";
+      view.invalidate(); render();
+    }));
+    $("#researchTuningForm").addEventListener("input", () => tuning.markDirty());
+    $("#researchTuneReset").addEventListener("click", () => { tuning.reset(); render(); });
+    $("#researchTuningForm").addEventListener("submit", event => {
+      event.preventDefault();
+      let adjustment;
+      try { adjustment = tuning.read(); } catch (e) { error(e); return; }
+      act(async () => {
+        room = await api.adjust(room.id, adjustment.id, adjustment.body);
+        tuning.reset(); view.invalidate(); render();
+        await hooks.refresh(); hooks.toast("운용 설정을 새 전략 버전으로 저장했습니다. AI 호출은 없습니다.");
+      });
+    });
     $("#researchRefresh").addEventListener("click", refresh);
     $("#researchSessions").addEventListener("change", event => {
       const id = event.target.value;
       act(async () => {
-        room = await api.session(id);
+        tuning.requireSaved();
+        room = id ? await api.session(id) : null;
+        startingNew = !id;
+        tuning.reset();
         resetRequests();
         $("#researchMessage").reset();
         view.invalidate();
@@ -59,7 +82,10 @@
       event.preventDefault();
       const body = Object.fromEntries(new FormData(event.target));
       act(async () => {
+        tuning.requireSaved();
         room = await api.createSession(body);
+        startingNew = false;
+        tuning.reset();
         resetRequests();
         event.target.reset();
         $("#researchMessage").reset();
@@ -72,6 +98,12 @@
       event.preventDefault();
       const prompt = event.target.elements.prompt.value;
       act(async () => {
+        tuning.requireSaved();
+        if (!room) {
+          room = await api.createSession({title:prompt.trim().slice(0,60) || "새 전략 대화",objective:""});
+          startingNew = false;
+          sessionOptions(await api.sessions());
+        }
         messageId ||= crypto.randomUUID();
         await api.prepare(room.id, {prompt, request_id: messageId});
         messageId = null;
@@ -112,7 +144,7 @@
   }
   async function handleAction(action, id) {
     if (action === "history") return hooks.openAccountHistory(id);
-    if (action === "select") await api.select(room.id, id);
+    if (action === "select") { tuning.requireSaved(); await api.select(room.id, id); tuning.reset(); }
     else {
       const turn = room.turns.find(item => item.id === id);
       if (!turn) return;
@@ -136,6 +168,8 @@
       owner = state.me.id;
       room = null;
       resetRequests();
+      tuning.reset();
+      startingNew = false;
       view.invalidate();
       render();
     }
@@ -144,7 +178,7 @@
     try {
       const config = await api.configuration();
       const rows = await api.sessions();
-      const id = room?.id || rows[0]?.id;
+      const id = room?.id || (!startingNew && rows[0]?.id);
       const nextRoom = id ? await api.session(id) : null;
       if (token !== epoch || busy || hooks.getState().me?.id !== actor) return;
       room = nextRoom;
@@ -161,6 +195,7 @@
       api = window.MilkywayResearchApi.create(hooks.api);
       view = window.MilkywayResearchView.create();
       window.MilkywayResearchPanel.mount();
+      tuning = window.MilkywayResearchTuning.create();
       bindForms();
     },
     refresh,

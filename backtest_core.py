@@ -32,6 +32,7 @@ from typing import Callable, Optional
 
 import numpy as np
 import pandas as pd
+from portfolio_allocation import plan_allocation
 
 
 CandidateFilter = Callable[[str, pd.DataFrame, pd.Timestamp, bool], bool]
@@ -348,15 +349,20 @@ def run_backtest(
         return float(cash + sum(quantity * mark_price(date, ticker)
                                 for ticker, quantity in shares.items()))
 
-    def sell(ticker: str, price: float, date, reason: str, equity_before: float) -> float:
+    def sell(ticker: str, price: float, date, reason: str, equity_before: float, quantity=None) -> float:
         nonlocal cash
-        quantity = shares.pop(ticker, 0.0)
+        held = shares.get(ticker, 0.0)
+        quantity = held if quantity is None else min(held, quantity)
         if quantity <= 0:
             return 0.0
+        if held - quantity <= 1e-9:
+            shares.pop(ticker, None)
+            entry_prices.pop(ticker, None)
+        else:
+            shares[ticker] = held - quantity
         gross = quantity * price
         fee = gross * cost
         cash += gross - fee
-        entry_prices.pop(ticker, None)
         record_fee(ticker, fee, equity_before)
         trade_log.append({
             "date": pd.Timestamp(date), "ticker": ticker, "side": "SELL",
@@ -365,35 +371,40 @@ def run_backtest(
         })
         return gross
 
-    def buy_many(tickers: list[str], date, target_value: float, equity_before: float) -> float:
+    def buy(ticker, quantity, price, date, equity_before, reason):
         nonlocal cash
-        valid = [(ticker, _number(fill_prices, date, ticker)) for ticker in tickers]
-        valid = [(ticker, price) for ticker, price in valid if np.isfinite(price)]
-        if not valid or cash <= 0:
-            return 0.0
-        total_desired = target_value * len(valid)
-        scale = min(1.0, (cash / (1 + cost)) / total_desired) if total_desired > 0 else 0.0
-        gross_total = 0.0
-        for ticker, price in valid:
-            gross = target_value * scale
-            quantity = gross / price
-            if not fractional:
-                quantity = float(np.floor(quantity))
-                gross = quantity * price
-            fee = gross * cost
-            if quantity <= 0 or gross + fee > cash + 1e-8:
-                continue
-            shares[ticker] = shares.get(ticker, 0.0) + quantity
-            entry_prices[ticker] = price
-            cash -= gross + fee
-            gross_total += gross
-            record_fee(ticker, fee, equity_before)
-            trade_log.append({
-                "date": pd.Timestamp(date), "ticker": ticker, "side": "BUY",
-                "shares": float(quantity), "price": float(price), "gross": float(gross),
-                "fee": float(fee), "reason": "new_target",
-            })
-        return gross_total
+        gross = quantity * price
+        fee = gross * cost
+        if quantity <= 0 or gross + fee > cash + 1e-8:
+            raise ValueError("Allocation exceeds available cash")
+        held = shares.get(ticker, 0.0)
+        entry_prices[ticker] = (entry_prices.get(ticker, price) * held + gross) / (held + quantity)
+        shares[ticker] = held + quantity
+        cash = max(0.0, cash - gross - fee)
+        record_fee(ticker, fee, equity_before)
+        trade_log.append({
+            "date": pd.Timestamp(date), "ticker": ticker, "side": "BUY",
+            "shares": float(quantity), "price": float(price), "gross": float(gross),
+            "fee": float(fee), "reason": reason,
+        })
+        return gross
+
+    def allocate(selected, date, equity_before):
+        prices = {ticker: _number(fill_prices, date, ticker) for ticker in set(shares) | set(selected)}
+        orders = plan_allocation(
+            cash=cash, holdings=shares, prices=prices, targets=selected, cost_per_side=cost,
+            investment_fraction=float(config.get("investment_fraction", 1)),
+            max_position_fraction=float(config.get("max_position_fraction", 1)),
+            rebalance_weights=bool(config.get("rebalance_weights", False)), fractional=fractional,
+        )
+        traded = 0.0
+        for order in orders:
+            if order.side == "SELL":
+                traded += sell(order.ticker, prices[order.ticker], date, order.reason,
+                               equity_before, order.shares)
+            else:
+                traded += buy(order.ticker, order.shares, prices[order.ticker], date, equity_before, order.reason)
+        return traded
 
     def apply_terminal_events(date, equity_before: float) -> None:
         """Settle events effective on or before this session without trading fees."""
@@ -545,14 +556,8 @@ def run_backtest(
                         quantity * _number(fill_prices, date, ticker)
                         for ticker, quantity in shares.items()
                     )
-                    old_set, new_set = set(shares), set(selected)
-                    traded = 0.0
-                    for ticker in [ticker for ticker in list(shares) if ticker not in new_set]:
-                        traded += sell(ticker, _number(fill_prices, date, ticker), date,
-                                       "removed_from_target", pre_trade_equity)
-                    target_value = pre_trade_equity / max(len(selected), 1)
-                    traded += buy_many([ticker for ticker in selected if ticker not in old_set],
-                                       date, target_value, pre_trade_equity)
+                    old_set = set(shares)
+                    traded = allocate(selected, date, pre_trade_equity)
                     if old_set and pre_trade_equity > 0:
                         turnover_sum += traded / (2 * pre_trade_equity)
 
@@ -581,14 +586,8 @@ def run_backtest(
                 min_targets = max(1, int(np.ceil(top_n * min_targets_pct))) if min_targets_pct else 1
                 if len(selected) >= min_targets:
                     pre_trade_equity = equity_at(date)
-                    old_set, new_set = set(shares), set(selected)
-                    traded = 0.0
-                    for ticker in [ticker for ticker in list(shares) if ticker not in new_set]:
-                        traded += sell(ticker, _number(fill_prices, date, ticker), date,
-                                       "removed_from_target", pre_trade_equity)
-                    target_value = pre_trade_equity / max(len(selected), 1)
-                    traded += buy_many([ticker for ticker in selected if ticker not in old_set],
-                                       date, target_value, pre_trade_equity)
+                    old_set = set(shares)
+                    traded = allocate(selected, date, pre_trade_equity)
                     if old_set and pre_trade_equity > 0:
                         turnover_sum += traded / (2 * pre_trade_equity)
 

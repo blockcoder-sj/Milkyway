@@ -34,7 +34,7 @@
     } else {
       const section = document.createElement("section");
       section.id = "manualBuilder";
-      section.innerHTML = `<div class="section-head"><div><p class="eyebrow">MY STRATEGY</p><h3>내 규칙으로 전략 만들기</h3></div></div>
+      section.innerHTML = `<details><summary>직접 규칙 입력 (선택)</summary><div class="section-head"><div><p class="eyebrow">MY STRATEGY</p><h3>내 규칙으로 전략 만들기</h3></div></div>
         <p class="section-copy">AI 키 없이 직접 설정합니다. 점수가 높은 종목을 선정하고, 완료된 전일 데이터로 판단합니다.</p>
         <form id="manualStrategyForm" class="stack">
           <label>전략 이름<input name="name" minlength="2" maxlength="100" value="나의 20일 모멘텀" required></label>
@@ -45,7 +45,7 @@
           <details><summary>필터·거래비용 설정</summary><div class="manual-grid">${numberField("min_price", "최소 주가 (USD)", 5, 1, 1000, 0.01)}${numberField("min_average_volume", "최소 일평균 거래량", 200000, 0, 1000000000)}${numberField("history_days", "최소 가격 이력 (거래일)", 60, 20, 252)}${numberField("cost_pct", "편도 가상 거래비용 (%)", 0.3, 0, 2, 0.01)}</div><label class="consent-row"><input name="no_stop" type="checkbox">손절 사용 안 함</label></details>
           <label>설명 (선택)<textarea name="description" maxlength="1000" rows="2" placeholder="이 전략으로 확인하고 싶은 가설"></textarea></label>
           <p id="manualStrategyError" class="error" role="alert"></p><button class="primary" type="submit">전략 저장</button>
-        </form><hr class="builder-divider">`;
+        </form></details><hr class="builder-divider">`;
       $("#strategyBuilder").prepend(section);
       $("#addManualFactor").addEventListener("click", () => addFactor());
       addFactor();

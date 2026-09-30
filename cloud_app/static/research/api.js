@@ -12,6 +12,7 @@
       prepare: (id, body) => api(`${sessionPath(id)}/messages`, post(body)),
       compare: (id, body) => api(`${sessionPath(id)}/experiments`, post(body)),
       deploy: (id, body) => api(`${sessionPath(id)}/deploy`, post(body)),
+      adjust: (id, strategyId, body) => api(`${sessionPath(id)}/versions/${encodeURIComponent(strategyId)}/adjust`, post(body)),
       select: (id, strategyId) => api(`${sessionPath(id)}/select/${encodeURIComponent(strategyId)}`, post({})),
       cancel: id => api(`${turnPath(id)}/cancel`, post({})),
       approve: (id, digest) => api(`${turnPath(id)}/approve`, post({approved: true, request_digest: digest})),

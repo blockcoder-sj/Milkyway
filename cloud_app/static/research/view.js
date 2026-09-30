@@ -38,10 +38,10 @@
       ? `<small>사용 토큰: 입력 ${escape(turn.usage.input_tokens ?? "—")} / 출력 ${escape(turn.usage.output_tokens ?? "—")}</small>` : "";
     const running = turn.status === "running"
       ? "<p>응답을 기다리고 있습니다. 연결이 끊겨도 자동으로 재호출하지 않습니다.</p>" : "";
-    return `<article class="research-turn"><strong>나 · ${status(turn.status)}</strong>
-      <p>${escape(turn.prompt)}</p>${responseBody(turn)}
+    return `<article class="research-turn"><div class="research-user"><strong>나 · ${status(turn.status)}</strong>
+      <p>${escape(turn.prompt)}</p></div><div class="research-assistant">${responseBody(turn)}
       ${turn.error ? `<p class="error">${escape(turn.error)}</p>` : ""}
-      ${usage}${running}${approval(turn)}</article>`;
+      ${usage}${running}${approval(turn)}</div></article>`;
   }
   function renderVersion(version, room, selected, blocked) {
     const exportPath = `${window.MilkywayResearchApi.sessionPath(room.id)}/export/${encodeURIComponent(version.id)}`;
@@ -82,8 +82,8 @@
   function create() {
     let rendered = "";
     function render(room, busy) {
-      $("#researchRoom").hidden = !room;
-      if (!room) return;
+      $("#researchRoom").hidden = false;
+      room ||= {id:"",selected_strategy_id:null,turns:[],versions:[],experiments:[],paper:[]};
       const snapshot = JSON.stringify(room);
       if (snapshot === rendered) return;
       rendered = snapshot;
@@ -92,11 +92,11 @@
       const previousDeployment = deploy.value;
       const blocked = room.turns.some(turn => ["awaiting_approval", "running"].includes(turn.status));
       $("#researchTurns").innerHTML = room.turns.length ? room.turns.map(renderTurn).join("")
-        : empty("종목과 가설을 입력하면 대화를 시작할 수 있습니다.");
+        : empty("어떤 투자 아이디어를 실험해 보고 싶으세요? 아직 종목이나 규칙을 정하지 않았다면, 기대하는 효과부터 이야기해 주세요.");
       $("#researchMessage button").disabled = blocked || busy;
       $("#researchVersions").innerHTML = room.versions.length
-        ? room.versions.map(version => renderVersion(version, room, selected, blocked)).join("")
-        : empty("AI가 전략을 제안하면 검증된 버전이 저장됩니다.");
+        ? room.versions.map(version => renderVersion(version, room, selected, blocked || busy)).join("")
+        : empty("AI가 전략을 제안하면 실행 형식에 맞는 버전이 저장됩니다. 성과 검증은 별도로 진행하세요.");
       deploy.innerHTML = room.versions.map(version =>
         `<option value="${escape(version.id)}">v${escape(version.number)} · ${escape(version.name)}</option>`).join("");
       deploy.value = room.versions.some(version => version.id === previousDeployment)

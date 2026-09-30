@@ -77,6 +77,64 @@ class ResearchTests(unittest.TestCase):
     def key(self):
         (self.root / ".env").write_text("OPENAI_API_KEY=synthetic-test-key-never-valid\nOPENAI_MODEL=gpt-5.4-mini\n")
 
+    def adjustment_fixture(self):
+        self.key()
+        self.assertEqual(self.approve(self.prepare()).json()["status"], "completed")
+        room = self.client.get(f'/api/research/sessions/{self.room["id"]}').json()
+        version = room["versions"][0]
+        body = {key: version["spec"][key] for key in ("portfolio", "filters", "factors")}
+        body["request_id"] = "adjustment-001"
+        body["portfolio"] = {**body["portfolio"], "investment_fraction": 0.6, "max_position_fraction": 0.3, "rebalance_weights": True}
+        url = f'/api/research/sessions/{room["id"]}/versions/{version["id"]}/adjust'
+        self.provider.reset_mock()
+        return version, body, url
+
+    def test_adjustment_is_immutable_idempotent_and_never_calls_ai(self):
+        version, body, url = self.adjustment_fixture()
+        result = self.client.post(url, json=body)
+        self.assertEqual(result.status_code, 201, result.text)
+        room = result.json()
+        self.assertEqual(len(room["versions"]), 2)
+        old = next(item for item in room["versions"] if item["id"] == version["id"])
+        new = next(item for item in room["versions"] if item["id"] == room["selected_strategy_id"])
+        self.assertEqual(old["spec"], version["spec"])
+        self.assertEqual(new["spec"]["portfolio"]["investment_fraction"], 0.6)
+        self.assertEqual(new["spec"]["symbols"], old["spec"]["symbols"])
+        again = self.client.post(url, json=body)
+        self.assertEqual(len(again.json()["versions"]), 2)
+        body["portfolio"]["rebalance_days"] = 3
+        self.assertEqual(self.client.post(url, json=body).status_code, 409)
+        self.provider.assert_not_called()
+
+    def test_adjustment_rejects_pending_call_and_other_owner(self):
+        _, body, url = self.adjustment_fixture()
+        turn = self.prepare("비중 조정 논의")
+        self.assertEqual(self.client.post(url, json=body).status_code, 409)
+        self.client.post(f'/api/research/turns/{turn["id"]}/cancel')
+        self.actor = self.other
+        self.assertEqual(self.client.post(url, json=body).status_code, 404)
+        self.provider.assert_not_called()
+
+    def test_adjustment_rejects_stale_base_and_invalid_numbers(self):
+        _, body, url = self.adjustment_fixture()
+        self.assertEqual(self.client.post(url, json=body).status_code, 201)
+        body["request_id"] = "adjustment-002"
+        self.assertEqual(self.client.post(url, json=body).status_code, 409)
+        body["portfolio"]["investment_fraction"] = 1.1
+        self.assertEqual(self.client.post(url, json=body).status_code, 422)
+        self.provider.assert_not_called()
+
+    def test_adjustment_validates_symbol_count_and_nonzero_factors(self):
+        _, body, url = self.adjustment_fixture()
+        body["portfolio"]["max_positions"] = 3
+        self.assertEqual(self.client.post(url, json=body).status_code, 422)
+        body["portfolio"]["max_positions"] = 2
+        body["factors"][0]["weight"] = 0
+        self.assertEqual(self.client.post(url, json=body).status_code, 422)
+        room = self.client.get(f'/api/research/sessions/{self.room["id"]}').json()
+        self.assertEqual(len(room["versions"]), 1)
+        self.provider.assert_not_called()
+
     def test_preview_status_and_cancel_never_call_provider(self):
         turn = self.prepare()
         config = self.client.get("/api/research/config").json()

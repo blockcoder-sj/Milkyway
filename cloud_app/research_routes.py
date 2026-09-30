@@ -5,7 +5,7 @@ from fastapi.responses import Response
 from . import research_ai
 from .research_experiments import DeployBody, ExperimentBody
 from .research_ports import ResearchServices
-from .research_schemas import ApprovalBody, MessageBody, SessionBody
+from .research_schemas import ApprovalBody, MessageBody, SessionBody, AdjustmentBody
 from .research_service import ResearchService
 
 
@@ -58,6 +58,10 @@ def install(app, *, services: ResearchServices, current_user, csrf_guard, get_db
     @router.post("/sessions/{session_id}/experiments", status_code=201)
     def experiment(session_id: str, body: ExperimentBody, service=Depends(writer)):
         return service.experiment(session_id, body)
+
+    @router.post("/sessions/{session_id}/versions/{strategy_id}/adjust", status_code=201)
+    def adjust(session_id: str, strategy_id: str, body: AdjustmentBody, service=Depends(writer)):
+        return service.adjust(session_id, strategy_id, body)
 
     @router.post("/sessions/{session_id}/deploy", status_code=201)
     def deploy(session_id: str, body: DeployBody, service=Depends(writer)):

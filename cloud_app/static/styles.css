@@ -141,3 +141,13 @@ dialog{width:min(470px,calc(100% - 32px));border:1px solid var(--line-strong);bo
 .research-version input[type=checkbox] { flex:0 0 18px; height:18px; }
 #researchDeploy { max-width:650px; }
 .research-columns > div { min-width:0; }
+/* Conversational strategy workspace */
+.research-columns{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start}
+.research-inspector{padding:0 20px 20px;background:rgba(137,109,197,.045);border:1px solid var(--line);border-radius:16px}
+.research-turn{border:0;padding:0}.research-user{margin-left:10%;background:rgba(150,112,220,.12);padding:16px;border-radius:16px 16px 4px 16px}
+.research-assistant{padding:18px 0;line-height:1.8}.research-assistant:empty{display:none}
+.research-turns{min-height:140px;max-height:650px;scroll-behavior:smooth}.research-turns>.fineprint{padding:24px 18px;border:1px dashed var(--line);border-radius:12px;line-height:1.9}
+#researchMessage textarea{min-height:128px;resize:vertical}#researchTuningFields{border:0;margin:0;padding:0;min-width:0}
+.research-tune-actions{display:flex;gap:8px;flex-wrap:wrap}.research-workflow{border-top:1px solid var(--line);padding-top:18px}
+.research-panel summary{cursor:pointer;color:var(--violet);font-size:13px}.research-panel fieldset:disabled{opacity:.65}
+@media(max-width:1100px){.research-columns{grid-template-columns:1fr}.research-turns{max-height:520px}}

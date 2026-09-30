@@ -255,6 +255,10 @@ class ResearchService:
             self.db, self.user, room, body, self.settings, {v.strategy_id for v in versions(self.db, room)}
         )
 
+    def adjust(self, session_id: str, strategy_id: str, body):
+        from .research_adjustments import adjust_version
+        return adjust_version(self.services, self.db, self.user, session_id, strategy_id, body)
+
     def deploy(self, session_id: str, body: DeployBody):
         room = owned_session(self.db, self.user, session_id)
         with quota_allocation(self.db, "research", self.user.id):

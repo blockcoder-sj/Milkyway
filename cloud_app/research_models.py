@@ -69,6 +69,17 @@ class ResearchExperiment(ResearchBase):
     __table_args__ = (UniqueConstraint("session_id", "request_id"),)
 
 
+class ResearchAdjustment(ResearchBase):
+    __tablename__ = "research_adjustments"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
+    session_id: Mapped[str] = mapped_column(ForeignKey("research_sessions.id"), index=True)
+    request_id: Mapped[str] = mapped_column(String(64))
+    request_json: Mapped[str] = mapped_column(Text)
+    base_strategy_id: Mapped[str] = mapped_column(String(32))
+    strategy_id: Mapped[str] = mapped_column(String(32), unique=True)
+    __table_args__ = (UniqueConstraint("session_id", "request_id"),)
+
+
 class ResearchRun(ResearchBase):
     __tablename__ = "research_runs"
     job_id: Mapped[str] = mapped_column(String(32), primary_key=True)
