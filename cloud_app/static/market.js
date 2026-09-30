@@ -29,7 +29,7 @@
     const stale = row.status === "stale" || row.status === "unavailable";
     const format = value => number(value, row.group === "fx" && row.unit === "USD" ? 4 : row.group === "fx" && row.unit === "JPY" ? 3 : 2);
     return `<article class="market-card ${sector ? "sector-index-card" : ""} ${stale ? "market-stale" : ""}">
-      <div class="market-card-top"><strong>${escape(row.label)}</strong><small>${escape(row.unit)}</small></div>
+      <div class="market-card-top"><strong><a class="market-detail-link" data-market-detail="${escape(row.id)}" href="#detail/${encodeURIComponent(row.id)}">${escape(row.label)} ↗</a></strong><small>${escape(row.unit)}</small></div>
       <div class="market-price-line"><span class="market-value">${format(row.value)}</span><b class="market-change ${direction(row.change_pct)}">${change(row.change_pct)}</b></div>
       <div class="market-delta">전일 대비 ${finite(row.change) && row.change > 0 ? "+" : ""}${format(row.change)} ${escape(row.unit === "%" ? "%p" : row.unit)}</div>
       ${sparkline(row.sparkline)}

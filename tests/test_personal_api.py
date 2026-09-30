@@ -60,6 +60,19 @@ class PersonalApiTests(unittest.TestCase):
         for item in reversed(self.patches): item.stop()
         self.directory.cleanup()
 
+    def test_detail_route_only_reads_allowlisted_personal_cache(self):
+        from cloud_app.market_details import _provider
+        with patch.object(_provider,'run') as external:
+            payload=main.personal_market_detail('sp500',self.user)
+            self.assertEqual(payload['id'],'sp500')
+            self.assertEqual(payload['history']['rows'],[])
+            external.assert_not_called()
+        with self.assertRaises(HTTPException) as error:
+            main.personal_market_detail('unknown',self.user)
+        self.assertEqual(error.exception.status_code,404)
+        with patch.object(main,'settings',replace(self.settings,personal_local_mode=False)):
+            with self.assertRaises(HTTPException):main.personal_market_detail('sp500',self.user)
+
     def test_new_install_dashboard_works_before_history_or_keys(self):
         payload=main.dashboard(self.user,self.session)
         self.assertTrue(payload["personal_local_mode"])

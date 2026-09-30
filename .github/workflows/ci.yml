@@ -91,4 +91,5 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p test_personal_frontend.py -v
           python3 -m unittest discover -s tests -p test_market_frontend.py -v
+          python3 -m unittest discover -s tests -p test_market_chart.py -v
           python3 -m unittest discover -s tests -p test_research_boundaries.py -v

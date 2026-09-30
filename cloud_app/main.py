@@ -1761,6 +1761,15 @@ def _market_connection_identity(session, user):
     return identity(session.get(MarketDataConnection, user.id))
 
 
+@app.get("/api/market-details/{instrument_id}")
+def personal_market_detail(instrument_id: str, user: User = Depends(current_user)):
+    from .market_catalog import BY_ID
+    from .market_details import detail_snapshot
+    if not settings.personal_local_mode or settings.production or instrument_id not in BY_ID:
+        raise HTTPException(404, "시장 항목을 찾을 수 없습니다")
+    return detail_snapshot(settings, instrument_id)
+
+
 @app.get("/api/market-overview")
 def personal_market_snapshot(user: User = Depends(current_user), session: Session = Depends(get_db)):
     if not settings.personal_local_mode or settings.production:

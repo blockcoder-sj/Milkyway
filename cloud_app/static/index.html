@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070512">
   <title>Milkyway | Quant Trading Lab</title>
   <link rel="icon" type="image/png" href="/static/assets/milkyway-symbol-white-v2.png">
-  <link rel="stylesheet" href="/static/styles.css?v=20260930-5">
+  <link rel="stylesheet" href="/static/styles.css?v=20260930-6">
 </head>
 <body>
   <canvas id="marketBackdrop" aria-hidden="true"></canvas>
@@ -70,7 +70,7 @@
         <div class="header-actions"><span id="workerStatus" class="status-pill">Worker 확인 중</span><button class="profile-trigger" type="button" data-open-profile aria-label="프로필 메뉴 열기" aria-haspopup="menu" aria-expanded="false"><span data-profile-avatar>M</span></button></div>
       </header>
 
-      <section id="operationPanel" class="panel operation-panel" aria-live="polite">
+      <section id="operationPanel" class="panel operation-panel" data-workspace-page="strategy" aria-live="polite">
         <div class="section-head"><h3>운용 상태</h3><button id="openQuoteSettings" class="ghost compact" type="button">증권사 연결 설정</button></div>
         <p id="operationMessage">서버 상태를 확인하고 있습니다.</p>
         <dl id="operationFacts"></dl>
@@ -227,13 +227,15 @@
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="/static/personal.js?v=20260930-3" defer></script>
-  <script src="/static/market.js?v=20260930-4" defer></script>
+  <script src="/static/market.js?v=20260930-5" defer></script>
+  <script src="/static/market-chart.js?v=20260930-1" defer></script>
+  <script src="/static/market-detail.js?v=20260930-1" defer></script>
   <script src="/static/research/api.js?v=20260930-2" defer></script>
   <script src="/static/research/panel.js?v=20260930-2" defer></script>
   <script src="/static/research/view.js?v=20260930-2" defer></script>
   <script src="/static/research/tuning.js?v=20260930-1" defer></script>
-  <script src="/static/research.js?v=20260930-2" defer></script>
+  <script src="/static/research.js?v=30260930-2" defer></script>
   <script src="/static/profile.js?v=20260930-1" defer></script>
-  <script src="/static/app.js?v=20260930-3" defer></script>
+  <script src="/static/app.js?v=20260930-4" defer></script>
 </body>
 </html>

@@ -140,7 +140,7 @@ function selectSectorCountry(country) {
 }
 
 function openWorkspace(workspace, updateHash = true) {
-  if (!["market", "strategy"].includes(workspace)) return;
+  if (!["market", "strategy", "detail"].includes(workspace)) return;
   state.workspace = workspace;
   $$('[data-workspace-page]').forEach((section) => section.classList.toggle("hidden", section.dataset.workspacePage !== workspace));
   $$('[data-open-workspace]').forEach((link) => {
@@ -448,7 +448,10 @@ async function enterApp(me = null) {
   state.me = me || await api("/api/auth/me");
   state.csrf = state.me.csrf;
   profileController.render();
-  await showDashboard(state.config.personal_local_mode || state.config.local_demo_data ? "strategy" : "market");
+  const detail = location.hash.match(/^#detail\/([a-z0-9_]+)$/);
+  const requested = location.hash === "#market" ? "market" : location.hash === "#strategy" ? "strategy" : null;
+  await showDashboard(requested || (state.config.personal_local_mode || state.config.local_demo_data ? "strategy" : "market"));
+  if (detail && state.config.personal_local_mode) await window.MilkywayMarketDetail.open(detail[1]);
 }
 
 function openBacktest(id) {
@@ -648,6 +651,7 @@ const profileController = window.MilkywayProfile.create({
 });
 profileController.bind();
 window.MilkywayPersonal.initialize({api, refresh, toast, getState: () => state});
+window.MilkywayMarketDetail.initialize({api, openWorkspace, getState: () => state});
 window.MilkywayResearch.initialize({api, refresh, toast, getState: () => state, openAccountHistory});
 $("#openQuoteSettings").addEventListener("click", () => profileController.openSettings("marketDataConnectionSettings"));
 
@@ -691,13 +695,14 @@ setInterval(() => {
 let marketPolling = false;
 setInterval(async () => {
   if (marketPolling || !state.me || !state.dashboard || !state.config.personal_local_mode ||
-      state.workspace !== "market" || document.hidden || $("#appView").classList.contains("hidden")) return;
+      !["market", "detail"].includes(state.workspace) || document.hidden || $("#appView").classList.contains("hidden")) return;
   marketPolling = true;
   const owner = state.me.id;
   try {
     const overview = await api("/api/market-overview");
     if (state.me?.id === owner && state.dashboard) {
       state.dashboard.market_overview = overview;
+      window.MilkywayMarketDetail.quote(overview);
       window.MilkywayMarket.renderMarket(overview, state.marketCountry);
       window.MilkywayMarket.renderSectors(overview, state.sectorCountry, $("#sectorSort").value);
     }

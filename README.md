@@ -162,3 +162,8 @@ python3 tests/run_postgres_checks.py --image milkyway:test
 ```
 
 클라우드 배포와 데이터 준비 절차는 [CLOUD_DEPLOYMENT.md](CLOUD_DEPLOYMENT.md)를 참고한다.
+
+### 시장 상세 화면과 AI 평가
+
+- [지수·섹터·환율·선물 상세 화면과 출처](docs/MARKET_DETAILS.md)
+- [승인된 AI 대화 5회 평가 결과](docs/AI_CHAT_EVALUATION.md)
