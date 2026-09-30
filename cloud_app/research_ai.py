@@ -113,7 +113,7 @@ def configuration_status(settings):
 
 def make_request(model, context, reasoning="none"):
     request = {"model": model, "instructions": SYSTEM + "\nJSON schema:\n" + json.dumps(ResearchReply.model_json_schema()),
-               "input": json.dumps(context, ensure_ascii=False, allow_nan=False),
+               "input": json.dumps({**context, "output_format": "Return one JSON object matching the schema."}, ensure_ascii=False, allow_nan=False),
                "max_output_tokens": OUTPUT_LIMIT, "text": {"format": {"type": "json_object"}},
                "reasoning": {"effort": reasoning}, "store": False}
     if len(json.dumps(request, ensure_ascii=True).encode()) > INPUT_LIMIT:
@@ -121,11 +121,42 @@ def make_request(model, context, reasoning="none"):
     return request
 
 
+def provider_rejection(status, payload):
+    """Expose only known diagnostic fields, never a provider's arbitrary message."""
+    error = payload.get("error", {}) if isinstance(payload, dict) else {}
+    if not isinstance(error, dict):
+        error = {}
+    known_codes = {"invalid_request_error", "unsupported_parameter", "unsupported_value",
+                   "invalid_json_schema", "model_not_found", "insufficient_quota",
+                   "rate_limit_exceeded", "server_error", "invalid_api_key"}
+    known_params = {"model", "reasoning.effort", "text.format", "text.format.type",
+                    "text.format.schema", "input", "max_output_tokens", "instructions"}
+    code = error.get("code") or error.get("type")
+    code = code if isinstance(code, str) and code in known_codes else "unknown"
+    parameter = error.get("param")
+    parameter = parameter if isinstance(parameter, str) and parameter in known_params else None
+    if code == "insufficient_quota":
+        detail = "OpenAI API 잔액·결제 또는 사용 한도를 확인해 주세요"
+    elif status == 401:
+        detail = "OpenAI API 키 인증에 실패했습니다"
+    elif status in {403, 404}:
+        detail = "OpenAI 모델·프로젝트 사용 권한을 확인해 주세요"
+    elif status == 429:
+        detail = "OpenAI 요청 한도에 도달했습니다. 잠시 후 별도로 승인해 주세요"
+    else:
+        detail = "OpenAI 요청 설정 또는 공급자 상태를 확인해 주세요"
+    return HTTPException(502, f"{detail} (HTTP {status}, {code}" +
+                         (f", {parameter}" if parameter else "") + "). 자동 재시도하지 않았습니다")
+
+
 def _execute(request, configuration):
     try:
         with httpx.Client(timeout=httpx.Timeout(90, connect=10), trust_env=False, follow_redirects=False) as client:
             with client.stream("POST", "https://api.openai.com/v1/responses",
                                headers={"Authorization": "Bearer " + configuration["key"]}, json=request) as response:
+                if response.status_code >= 400:
+                    error_payload = read_httpx_json(response, maximum_bytes=16 * 1024)
+                    raise provider_rejection(response.status_code, error_payload)
                 response.raise_for_status()
                 payload = read_httpx_json(response, maximum_bytes=256 * 1024)
         if payload.get("status") != "completed":

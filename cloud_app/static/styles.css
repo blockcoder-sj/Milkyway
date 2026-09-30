@@ -151,3 +151,5 @@ dialog{width:min(470px,calc(100% - 32px));border:1px solid var(--line-strong);bo
 .research-tune-actions{display:flex;gap:8px;flex-wrap:wrap}.research-workflow{border-top:1px solid var(--line);padding-top:18px}
 .research-panel summary{cursor:pointer;color:var(--violet);font-size:13px}.research-panel fieldset:disabled{opacity:.65}
 @media(max-width:1100px){.research-columns{grid-template-columns:1fr}.research-turns{max-height:520px}}
+
+[hidden]{display:none!important}

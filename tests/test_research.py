@@ -77,6 +77,20 @@ class ResearchTests(unittest.TestCase):
     def key(self):
         (self.root / ".env").write_text("OPENAI_API_KEY=synthetic-test-key-never-valid\nOPENAI_MODEL=gpt-5.4-mini\n")
 
+    def test_json_mode_marker_is_in_input_not_only_instructions(self):
+        request = research_ai.make_request("gpt-5.4-mini", {"hypothesis":"simple"})
+        self.assertIn("JSON", json.loads(request["input"])["output_format"])
+
+    def test_provider_diagnostics_never_expose_raw_error_or_secrets(self):
+        error = research_ai.provider_rejection(400, {"error":{"code":"unsupported_value", "param":"text.format.type", "message":"synthetic-private-key"}})
+        self.assertIn("HTTP 400", error.detail)
+        self.assertIn("text.format.type", error.detail)
+        self.assertNotIn("synthetic-private-key", error.detail)
+        quota = research_ai.provider_rejection(429, {"error":{"code":"insufficient_quota"}})
+        self.assertIn("잔액", quota.detail)
+        bad = research_ai.provider_rejection(500, {"error":{"code":["secret"], "param":{"secret":True}}})
+        self.assertNotIn("secret", bad.detail)
+
     def adjustment_fixture(self):
         self.key()
         self.assertEqual(self.approve(self.prepare()).json()["status"], "completed")
