@@ -80,6 +80,7 @@ from .database import (
 from .dashboard_views import completed_session_freshness, market_overview, news_feed, sector_heatmap
 from .http_security import RequestBodyLimitMiddleware
 from .paper import account_snapshot, regular_market_open
+from .personal_auth import local_login_enabled, local_owner, require_local_request
 from .market_data_credentials import (
     MarketDataProviderError,
     credential_hint as market_credential_hint,
@@ -633,6 +634,7 @@ def live():
 @app.get("/api/config")
 def public_config():
     return {"personal_local_mode": settings.personal_local_mode,
+            "local_auto_login": local_login_enabled(settings),
             "local_demo_data": settings.local_demo_data,
             "quote_interval_seconds": settings.quote_interval_seconds}
 
@@ -699,6 +701,26 @@ def ready(session: Session = Depends(get_db)):
         settings.personal_local_mode or (details["dataset"] and (details["data_gate"] or settings.local_demo_data))
     )
     return JSONResponse({"status": "ready" if ok else "not_ready", "components": details}, status_code=200 if ok else 503)
+
+
+@app.post("/api/auth/local")
+def local_login(request: Request, response: Response, session: Session = Depends(get_db)):
+    require_local_request(request, settings)
+    # Serialize initial creation and session issuance across concurrent tabs.
+    with quota_allocation(session, "local-session", "global"):
+        user = local_owner(session)
+        try:
+            authenticated = _authenticate_request(request, session)
+        except HTTPException as exc:
+            if exc.status_code != 401:
+                raise
+            authenticated = None
+        if authenticated is not None and authenticated.id == user.id:
+            csrf = request.state.session_payload["csrf"]
+        else:
+            csrf = _set_session(response, user, session)
+        return {"id": user.id, "email": user.email, "display_name": user.display_name,
+                "role": user.role, "csrf": csrf}
 
 
 @app.post("/api/auth/register", status_code=201)

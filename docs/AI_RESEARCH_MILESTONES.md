@@ -63,3 +63,33 @@ Limits: Docker runtime/image integration was not rerun (daemon unavailable); sta
 Compose validation and the real local ASGI app/browser path were checked. No real
 OpenAI or brokerage calls, live model-quality evaluation or continuous market-hours
 paper run was performed. The existing public deployment NO-GO is unchanged.
+
+## M4 — Personal local entry without login (2026-09-30)
+
+The user requested skipping login for the personal installation. Opening the app
+now creates or reuses its single local owner and enters the strategy screen.
+Existing owner IDs, passwords, strategies, credentials and paper records are
+preserved. Multiple owners or an inactive owner fail closed instead of choosing
+an account. The personal profile hides the logout action.
+
+The bootstrap is confined to development personal mode with one local owner.
+It requires a loopback Host, matching Origin, same-origin Fetch Metadata when
+present, and a custom request header. Ordinary signed HttpOnly/SameSite sessions
+and CSRF checks remain in use. Creation shares the registration admission lock;
+concurrent tabs keep one owner and at most ten stored browser sessions. The
+new owner has no usable password. This installation intentionally trusts people
+using the PC and must remain bound to loopback.
+
+Direct review and verification:
+- **283 tests passed**, including seven new HTTP/session tests and one executable
+  JavaScript bootstrap test; no real AI/provider calls.
+- JavaScript syntax and `git diff --check` passed.
+- Local Docker image rebuilt and all five personal services started. Startup
+  health and SQLite integrity passed; all four worker heartbeats were alive.
+- Chrome at `http://127.0.0.1:8080/#strategy` visibly entered without account or
+  password input. The real UI reported the AI key configured, approval required,
+  and brokerage not yet connected. A static asset version bump fixed stale
+  browser JavaScript during this check.
+
+This supersedes the earlier local Docker/Chrome availability limitation. Real
+OpenAI requests, brokerage authentication, and market-hours fills remain untested.

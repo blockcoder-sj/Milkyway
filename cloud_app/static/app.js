@@ -59,7 +59,9 @@ async function api(path, options = {}) {
   let body = {};
   try { body = await response.json(); } catch {}
   if (!response.ok) {
-    if (response.status === 401) throw new Error("로그인이 만료되었습니다. 다시 로그인해 주세요. 저장된 기록은 유지됩니다.");
+    if (response.status === 401) throw new Error(state.config.local_auto_login
+      ? "로컬 세션이 만료되었습니다. 새로고침하면 자동으로 다시 연결됩니다. 저장된 기록은 유지됩니다."
+      : "로그인이 만료되었습니다. 다시 로그인해 주세요. 저장된 기록은 유지됩니다.");
     if (response.status === 429) throw new Error(typeof body.detail === "string" ? body.detail : "요청 한도에 도달했습니다. 잠시 기다린 뒤 다시 시도해 주세요.");
     const detail = Array.isArray(body.detail) ? body.detail.map((item) => `${(item.loc || []).filter((value) => value !== "body").join(".")}: ${item.msg}`).join("\n") : body.detail;
     throw new Error(typeof detail === "string" ? detail : `요청을 처리하지 못했습니다 (HTTP ${response.status}). 사용설명서의 문제 해결을 확인하세요.`);
@@ -612,6 +614,7 @@ $("#registerForm").addEventListener("submit", async (event) => {
 });
 
 $("#landingAction").addEventListener("click", () => {
+  if (!state.me && state.config.local_auto_login) { initializeApp().catch(showStartupError); return; }
   if (!state.me) { showAuth(); return; }
   showDashboard(state.config.personal_local_mode || state.config.local_demo_data ? "strategy" : "market").catch(showRefreshError);
 });
@@ -679,8 +682,10 @@ setInterval(() => {
   if (state.me && !$("#appView").classList.contains("hidden")) refresh().catch(showRefreshError);
 }, 30000);
 
-api("/api/config").then((config) => {
+async function initializeApp() {
+  const config = await api("/api/config");
   state.config = config;
+  $("#profileMenu [data-profile-menu-action=logout]").classList.toggle("hidden", Boolean(config.local_auto_login));
   if (config.personal_local_mode || config.local_demo_data) {
     const label = $("#registerForm input[name=invite_code]").closest("label");
     label.firstChild.textContent = "로컬 설치 코드 (기본값: local-club)";
@@ -688,12 +693,17 @@ api("/api/config").then((config) => {
     $("#about .about-intro > p").textContent = "내 PC에서 규칙으로 전략을 만들고, 백테스트와 페이퍼 트레이딩을 진행합니다. 실제 증권사 주문은 보내지 않습니다.";
     $("#profileMenu [data-profile-menu-action=settings] small").textContent = "AI 연구 · 증권사 시세 연결";
   }
-}).catch(() => {});
+  const me = config.local_auto_login
+    ? await api("/api/auth/local", {method: "POST", headers: {"X-Milkyway-Local": "1"}, body: "{}"})
+    : await api("/api/auth/me");
+  await enterApp(me);
+}
+
+function showStartupError(error) {
+  if (state.me) showRefreshError(error);
+  else if (state.config.local_auto_login) toast(error.message, true);
+  else if (location.hash === "#login") showAuth();
+}
 
 startMarketBackdrop();
-api("/api/auth/me")
-  .then((data) => { state.csrf = data.csrf; return enterApp(data); })
-  .catch((error) => {
-    if (state.me) showRefreshError(error);
-    else if (location.hash === "#login") showAuth();
-  });
+initializeApp().catch(showStartupError);

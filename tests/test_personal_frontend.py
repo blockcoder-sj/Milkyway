@@ -9,6 +9,43 @@ STATIC = ROOT / "cloud_app" / "static"
 
 
 class PersonalFrontendTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for UI checks")
+    def test_local_entry_uses_only_local_session_endpoint(self):
+        script = r'''
+const assert = require("node:assert/strict"), fs = require("node:fs"), vm = require("node:vm");
+const source = fs.readFileSync(process.argv[1] + "/app.js", "utf8");
+const start = source.indexOf("async function initializeApp()");
+const bootstrap = source.slice(start, source.indexOf("\nstartMarketBackdrop();", start));
+const elements = new Map(), calls = [];
+let config = {personal_local_mode:true, local_auto_login:true}, entered;
+function element(id) {
+ if (!elements.has(id)) elements.set(id, {textContent:"", value:"", firstChild:{textContent:""},
+   classList:{toggle(name, value){this[name] = value;}}, closest(){return this;}});
+ return elements.get(id);
+}
+const ctx = vm.createContext({state:{}, $:element, api:async(path, options)=>{
+ calls.push({path,options});
+ if(path === "/api/config") return config;
+ return {id:"owner", csrf:"synthetic-csrf"};
+}, enterApp:async(me)=>{entered=me;}});
+vm.runInContext(bootstrap, ctx);
+(async()=>{
+ await vm.runInContext("initializeApp()", ctx);
+ assert.deepEqual(calls.map(c=>c.path), ["/api/config","/api/auth/local"]);
+ assert.equal(calls[1].options.method,"POST");
+ assert.equal(calls[1].options.headers["X-Milkyway-Local"],"1");
+ assert.equal(entered.id,"owner");
+ assert.equal(element("#profileMenu [data-profile-menu-action=logout]").classList.hidden,true);
+ calls.length=0;config={personal_local_mode:false,local_auto_login:false};
+ await vm.runInContext("initializeApp()", ctx);
+ assert.deepEqual(calls.map(c=>c.path), ["/api/config","/api/auth/me"]);
+ assert.equal(element("#profileMenu [data-profile-menu-action=logout]").classList.hidden,false);
+})().catch(error=>{console.error(error);process.exitCode=1});
+'''
+        result = subprocess.run([shutil.which("node"), "-e", script, str(STATIC)],
+                                capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_credentials_are_confined_to_the_local_module(self):
         html = (STATIC / "index.html").read_text()
         profile = (STATIC / "profile.js").read_text()
