@@ -11,8 +11,8 @@ from .market_catalog import CATALOG
 from .market_feed import Observation, collect_market
 from .provider_process import ProviderProcess
 
-REFRESH_SECONDS = 300
-DEADLINE_SECONDS = 75
+REFRESH_SECONDS = 60
+DEADLINE_SECONDS = 45
 MAX_CACHE_BYTES = 2 * 1024 * 1024
 _provider = ProviderProcess(collect_market)
 UTC = dt.timezone.utc
@@ -80,10 +80,12 @@ def refresh_market(settings) -> dict:
     return cache
 
 
-def market_overview(settings, *, now=None) -> dict:
+def market_overview(settings, *, now=None, connection_identity=None) -> dict:
     now = now or dt.datetime.now(UTC)
     cache = read_cache(settings)
     stored = cache.get("items", {})
+    from .market_broker import read_cache as read_broker_cache, project_broker
+    broker = read_broker_cache(settings, connection_identity)
     rows = []
     for instrument in CATALOG:
         item = stored.get(instrument.id, {})
@@ -111,9 +113,10 @@ def market_overview(settings, *, now=None) -> dict:
             row["status"] = "stale" if stale else "completed_close" if closed else "delayed"
         except (ValueError, TypeError, AttributeError):
             row["status"] = "unavailable" if row["error"] else "awaiting_source"
+        project_broker(row, broker, now)
         rows.append(row)
-    return {"source": "Yahoo Finance", "refresh_seconds": REFRESH_SECONDS,
+    return {"source": "증권사 우선 · Yahoo Finance 보완", "refresh_seconds": REFRESH_SECONDS,
             "attempted_at": cache.get("attempted_at"), "items": rows,
             "available_count": sum(row["value"] is not None for row in rows),
             "total_count": len(rows),
-            "note": "개인용 참고 시세 · 5분마다 수집 · 공급자 지연 가능 · 페이퍼 체결에 사용하지 않음"}
+            "note": "증권사 지원 항목 우선 · KIS 실시간 수신 / 토스 지수 15초·환율 1분 조회 · 나머지는 Yahoo 1분 수집 · 페이퍼 체결과 별도"}

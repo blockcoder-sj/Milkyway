@@ -688,6 +688,23 @@ setInterval(() => {
   if (state.me && !$("#appView").classList.contains("hidden")) refresh().catch(showRefreshError);
 }, 30000);
 
+let marketPolling = false;
+setInterval(async () => {
+  if (marketPolling || !state.me || !state.dashboard || !state.config.personal_local_mode ||
+      state.workspace !== "market" || document.hidden || $("#appView").classList.contains("hidden")) return;
+  marketPolling = true;
+  const owner = state.me.id;
+  try {
+    const overview = await api("/api/market-overview");
+    if (state.me?.id === owner && state.dashboard) {
+      state.dashboard.market_overview = overview;
+      window.MilkywayMarket.renderMarket(overview, state.marketCountry);
+      window.MilkywayMarket.renderSectors(overview, state.sectorCountry, $("#sectorSort").value);
+    }
+  } catch { /* The last timestamp and age remain visible; normal refresh shows errors. */ }
+  finally { marketPolling = false; }
+}, 2000);
+
 async function initializeApp() {
   const config = await api("/api/config");
   state.config = config;

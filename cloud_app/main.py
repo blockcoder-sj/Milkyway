@@ -1756,6 +1756,19 @@ def export_backtests(user: User = Depends(current_user), session: Session = Depe
         raise
 
 
+def _market_connection_identity(session, user):
+    from .market_broker import identity
+    return identity(session.get(MarketDataConnection, user.id))
+
+
+@app.get("/api/market-overview")
+def personal_market_snapshot(user: User = Depends(current_user), session: Session = Depends(get_db)):
+    if not settings.personal_local_mode or settings.production:
+        raise HTTPException(404, "Not found")
+    from .market_service import market_overview as snapshot
+    return snapshot(settings, connection_identity=_market_connection_identity(session, user))
+
+
 def _personal_dashboard(user: User, session: Session) -> dict:
     from .personal_data import personal_data_status
     from .research_ai import configuration_status
@@ -1817,7 +1830,7 @@ def _personal_dashboard(user: User, session: Session) -> dict:
                           "message": data.get("error") or "선택 종목 일봉 자동 갱신", "last_completed_session": last,
                           "symbol_count": len(data.get("symbols", []))},
         "market": market, "market_groups": {"us": market, "kr": []},
-        "market_overview": personal_market_overview(settings),
+        "market_overview": personal_market_overview(settings, connection_identity=_market_connection_identity(session, user)),
         "sector_heatmap": empty_heatmap, "sector_heatmaps": {"us": empty_heatmap, "kr": empty_heatmap},
         "news": [], "accounts": snapshots,
         "data": {"first_completed_session": first, "last_completed_session": last,

@@ -27,3 +27,12 @@
   credential-key dynamic group and must be proven unable to use both keys.
 - Public deployment and real member credentials remain NO-GO until the sealed scan
   and every real OCI gate listed in `SECURITY_REMEDIATION_STATUS.md` pass.
+
+## Milestone completion checks
+
+- For every completed milestone, check functionality, performance, code quality,
+  and security before committing and pushing to GitHub. Record actual evidence
+  and remaining limitations; do not claim unperformed checks.
+- Review source directly. Never use CodeRabbit (including its CLI, API, plugins,
+  IDE extension, or GitHub review bot).
+- Actual AI provider calls require the user's explicit approval for that call.

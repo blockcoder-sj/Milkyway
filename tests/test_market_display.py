@@ -90,6 +90,8 @@ class MarketDisplayTests(unittest.TestCase):
             result = market_service.market_overview(self.settings, now=NOW)
         provider.assert_not_called()
         self.assertEqual(result["available_count"], 0)
+        self.assertEqual(result["refresh_seconds"], 60)
+        self.assertLess(market_service.DEADLINE_SECONDS, result["refresh_seconds"])
         self.assertEqual(len(result["items"]), 37)
         self.assertTrue(all(row["value"] is None for row in result["items"]))
 
