@@ -45,7 +45,9 @@ FUTURES = (
     Instrument("oil", "WTI 원유 선물", "CL=F", "global", "commodities", "WTI 최근월 선물 · 배럴당 달러", "USD"),
 )
 US_SECTORS = tuple(
-    Instrument("us_" + code, label, "^SP500-" + code, "us", "sectors", description)
+    # Yahoo lists the energy price index as ^GSPE; ^SP500-10 is unavailable.
+    Instrument("us_" + code, label, "^GSPE" if code == "10" else "^SP500-" + code,
+               "us", "sectors", description)
     for code, label, description in (
         ("10", "에너지", "S&P 500 에너지 · 석유·가스·에너지 장비 및 서비스"),
         ("15", "소재", "S&P 500 소재 · 화학·금속·건축자재·포장재"),

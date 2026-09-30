@@ -76,7 +76,7 @@ docker compose -f compose.personal.yaml up -d --build
 docker compose -f compose.personal.yaml ps
 ```
 
-`app`, `paper-worker`, `backtest-worker`, `personal-data`, `backup`이 실행되어야 합니다. `app`의 `healthy`는 웹 서버와 DB가 준비되었다는 뜻이며, 증권사 인증이나 실제 체결 성공까지 뜻하지는 않습니다.
+`app`, `paper-worker`, `backtest-worker`, `personal-data`, `market-data`, `backup`이 실행되어야 합니다. `app`의 `healthy`는 웹 서버와 DB가 준비되었다는 뜻이며, 증권사 인증이나 실제 체결 성공까지 뜻하지는 않습니다.
 
 브라우저에서 **http://localhost:8080** 을 엽니다. 다른 PC에서는 접속할 수 없도록 본인 PC에만 바인딩되어 있습니다.
 
@@ -85,6 +85,13 @@ docker compose -f compose.personal.yaml ps
 3. 브라우저를 다시 열거나 새로고침해도 같은 로컬 계정으로 연결합니다. 계정이 여러 개이거나 비활성 상태이면 자동으로 선택하지 않고 오류를 표시합니다.
 
 이 PC를 사용하는 사람은 비밀번호 없이 기록과 설정에 접근할 수 있습니다. 개인용 구성의 loopback 바인딩을 유지하고 공용 PC나 외부 공개 서버에서 사용하지 마세요.
+
+상단 `시장`에서는 한국·미국 주요 지수와 환율, 선물·원자재, 섹터 지수를 봅니다.
+증권사 연결 전에 사용할 수 있는 공개 참고 데이터이며 5분마다 갱신합니다.
+각 카드의 `지표 정보` 또는 `섹터 정보`를 펼치면 기준값·범위·수집 시각·원본 링크를
+확인합니다. 기준 시각이 오래되거나 수집이 실패하면 지연 표시가 붙습니다.
+`내 전략 종목 · 증권사 시세`가 실제 페이퍼 체결용 가격입니다.
+[시장 화면 항목과 데이터 의미](MARKET_DASHBOARD.md)
 
 `8080`을 다른 프로그램이 쓰고 있다면 프로젝트 폴더에 `.env` 파일을 만들고 아래 한 줄만 넣은 뒤 동일한 실행 명령을 다시 실행합니다. 이미 `.env`가 있다면 다른 설정을 지우지 말고 해당 항목만 추가·수정합니다.
 

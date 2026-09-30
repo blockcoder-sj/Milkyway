@@ -101,6 +101,7 @@ const context = vm.createContext({
   fetch: async (path, options) => {calls.push([path, options]); return {status: 200, ok: true, json: async () => response};},
 });
 vm.runInContext(fs.readFileSync(root + "/personal.js", "utf8"), context);
+vm.runInContext(fs.readFileSync(root + "/market.js", "utf8"), context);
 let app = fs.readFileSync(root + "/app.js", "utf8").split("\n$$('[data-auth-tab]').forEach")[0];
 vm.runInContext(app, context);
 vm.runInContext('window.MilkywayPersonal.initialize({getState: () => state});', context);
@@ -112,9 +113,9 @@ assert.equal(vm.runInContext('window.MilkywayPersonal.renderConnection({manageme
 assert.equal(elements.size, 0);
 vm.runInContext('state.dashboard = {accounts:[{id:"account-one", name:"내 계좌"}]};', context);
 vm.runInContext('marketCards({us:[{label:"<script>bad</script>", value:10, status:"live", source:"kis", observed_at:"2026-09-25T15:00:00Z", is_realtime:true}]});', context);
-assert.match(element("#marketCards").innerHTML, /&lt;script&gt;/);
-assert.doesNotMatch(element("#marketCards").innerHTML, /<script>/);
-assert.match(element("#marketUpdated").textContent, /1\/1/);
+assert.match(element("#watchlistCards").innerHTML, /&lt;script&gt;/);
+assert.doesNotMatch(element("#watchlistCards").innerHTML, /<script>/);
+assert.match(element("#watchlistUpdated").textContent, /1\/1/);
 Object.assign(element("#backtestForm"), {strategy_id: {}, bias_mode: {querySelector: () => ({})}, start_date: {}, end_date: {}});
 vm.runInContext('state.strategies = [{id:"strategy-one",spec:{filters:{history_days:60},factors:[{lookback:20}]}}]; state.dashboard.data = {first_completed_session:"2023-09-01",last_completed_session:"2026-09-25"}; openBacktest("strategy-one");', context);
 const start = new Date(element("#backtestForm").start_date.value);

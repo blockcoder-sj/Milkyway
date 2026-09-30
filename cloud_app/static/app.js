@@ -97,11 +97,12 @@ function renderMarketRows(target, rows) {
 
 function marketCards(groups) {
   if (window.MilkywayPersonal.isPersonal()) {
+    window.MilkywayMarket.renderMarket(state.dashboard?.market_overview, state.marketCountry);
     const rows = groups?.us || state.dashboard?.market || [];
-    renderMarketRows("#marketCards", rows);
-    $("#marketCards").classList.toggle("empty-state", !rows.length);
-    if (!rows.length) $("#marketCards").textContent = "활성 계좌를 만들고 미국 정규장이 열리면 내 전략 종목의 시세가 표시됩니다.";
-    $("#marketUpdated").textContent = `미국 주식 · ${rows.filter((row) => row.is_realtime).length}/${rows.length}종목 최근 수신`;
+    renderMarketRows("#watchlistCards", rows);
+    $("#watchlistCards").classList.toggle("empty-state", !rows.length);
+    if (!rows.length) $("#watchlistCards").textContent = "증권사 연결·활성 페이퍼 계좌·미국 정규장이 준비되면 내 전략 종목의 시세가 표시됩니다.";
+    $("#watchlistUpdated").textContent = `미국 주식 · ${rows.filter((row) => row.is_realtime).length}/${rows.length}종목 최근 수신`;
     return;
   }
   const selected = MARKET_SELECTION[state.marketCountry] || MARKET_SELECTION.us;
@@ -177,7 +178,7 @@ function showLanding() {
 }
 
 function applyMarketPreference(country) {
-  const selected = !window.MilkywayPersonal.isPersonal() && MARKET_SELECTION[country] && SECTOR_SELECTION[country] ? country : "us";
+  const selected = MARKET_SELECTION[country] && SECTOR_SELECTION[country] ? country : "us";
   state.marketCountry = selected;
   state.sectorCountry = selected;
   if (state.dashboard) {
@@ -370,6 +371,10 @@ async function loadBacktestPage(offset) {
 }
 
 function renderHeatmap(data) {
+  if (window.MilkywayPersonal.isPersonal()) {
+    window.MilkywayMarket.renderSectors(state.dashboard?.market_overview, state.sectorCountry, $("#sectorSort").value);
+    return;
+  }
   const element = $("#sectorHeatmap");
   const selected = SECTOR_SELECTION[state.sectorCountry] || SECTOR_SELECTION.us;
   $("#sectorHeatmapTitle").textContent = selected.title;
@@ -598,6 +603,7 @@ $$('[data-open-dashboard]').forEach((button) => button.addEventListener("click",
 $$('[data-prompt]').forEach((button) => button.addEventListener("click", () => { $("#strategyPrompt").value = button.dataset.prompt; $("#strategyPrompt").focus(); }));
 $$('[data-market-country]').forEach((button) => button.addEventListener("click", () => selectMarketCountry(button.dataset.marketCountry)));
 $$('[data-sector-country]').forEach((button) => button.addEventListener("click", () => selectSectorCountry(button.dataset.sectorCountry)));
+$("#sectorSort").addEventListener("change", () => selectSectorCountry(state.sectorCountry));
 $$('[data-open-workspace]').forEach((link) => link.addEventListener("click", (event) => { event.preventDefault(); openWorkspace(link.dataset.openWorkspace); }));
 $$('[data-close]').forEach((button) => button.addEventListener("click", () => button.closest("dialog").close()));
 
@@ -621,7 +627,7 @@ $("#landingAction").addEventListener("click", () => {
 
 const profileController = window.MilkywayProfile.create({
   getUser: () => state.me,
-  getPreferences: () => window.MilkywayPersonal.isPersonal() ? {default_market: "us"} : state.preferences,
+  getPreferences: () => state.preferences,
   getAiConnection: () => state.aiConnection,
   getMarketDataConnection: () => state.marketDataConnection,
   onAiLoad: async () => {

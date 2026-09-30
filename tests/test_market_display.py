@@ -48,6 +48,7 @@ class MarketDisplayTests(unittest.TestCase):
         self.assertEqual(len(CATALOG), 37)
         self.assertEqual(len({item.id for item in CATALOG}), 37)
         self.assertEqual(len(US_SECTORS), 11)
+        self.assertEqual(US_SECTORS[0].symbol, "^GSPE")
         self.assertEqual(len(KR_SECTORS), 8)
         self.assertEqual(len(FX), 5)
         self.assertTrue(all(item.group == "sectors" for item in US_SECTORS + KR_SECTORS))

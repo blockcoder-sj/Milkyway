@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070512">
   <title>Milkyway | Quant Trading Lab</title>
   <link rel="icon" type="image/png" href="/static/assets/milkyway-symbol-white-v2.png">
-  <link rel="stylesheet" href="/static/styles.css?v=20260930-1">
+  <link rel="stylesheet" href="/static/styles.css?v=20260930-3">
 </head>
 <body>
   <canvas id="marketBackdrop" aria-hidden="true"></canvas>
@@ -92,6 +92,13 @@
           <div id="marketCards" class="market-strip" aria-live="polite"></div>
           <div class="market-divider"><span id="leadingIndicatorLabel">미국 선행 지표</span></div>
           <div id="marketFutures" class="market-strip futures-strip"></div>
+          <div class="personal-market-extra">
+            <div class="market-divider"><span>주요 환율</span><small>참고 환율 · 실제 환전 적용 환율과 다를 수 있습니다</small></div>
+            <div id="marketFx" class="market-strip"></div>
+            <p id="marketFeedNote" class="fineprint"></p>
+            <div class="market-divider"><span>내 전략 종목 · 증권사 시세</span><small id="watchlistUpdated"></small></div>
+            <div id="watchlistCards" class="market-strip"></div>
+          </div>
         </div>
       </section>
 
@@ -130,6 +137,7 @@
                 <button class="market-country" type="button" role="tab" aria-selected="false" data-sector-country="kr">한국</button>
               </div>
               <span id="heatmapMeta" class="source-note">계산 중</span>
+              <label class="personal-market-extra sector-sort">정렬<select id="sectorSort"><option value="desc">상승률 높은 순</option><option value="asc">하락률 높은 순</option><option value="name">이름순</option></select></label>
             </div>
           </div>
           <div id="sectorHeatmap" class="heatmap empty-state">섹터 수익률을 계산하고 있습니다.</div>
@@ -218,12 +226,13 @@
     </section>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/static/personal.js?v=20260930-1" defer></script>
+  <script src="/static/personal.js?v=20260930-3" defer></script>
+  <script src="/static/market.js?v=20260930-3" defer></script>
   <script src="/static/research/api.js?v=20260930-1" defer></script>
   <script src="/static/research/panel.js?v=20260930-1" defer></script>
   <script src="/static/research/view.js?v=20260930-1" defer></script>
   <script src="/static/research.js?v=20260930-1" defer></script>
   <script src="/static/profile.js?v=20260930-1" defer></script>
-  <script src="/static/app.js?v=20260930-2" defer></script>
+  <script src="/static/app.js?v=20260930-3" defer></script>
 </body>
 </html>

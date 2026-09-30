@@ -186,9 +186,7 @@
   function renderStatus(dashboard) {
     document.body.classList.toggle("personal-mode", isPersonal());
     if (isPersonal()) {
-      $("#market .section-head h3").textContent = "내 전략 종목 시세";
-      $("#profileSettingsForm select").value = "us";
-      $("#profileSettingsForm option[value='kr']").disabled = true;
+      $("#market .section-head h3").textContent = "주요 지수·환율";
     }
     const operational = dashboard.operational || {};
     const worker = dashboard.worker || {};
