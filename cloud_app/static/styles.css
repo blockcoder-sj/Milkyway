@@ -155,6 +155,7 @@ dialog{width:min(470px,calc(100% - 32px));border:1px solid var(--line-strong);bo
 [hidden]{display:none!important}
 /* Market research detail pages */
 .market-detail-link{color:inherit;text-decoration:none}.market-detail-link:hover{color:var(--violet);text-decoration:underline}
+.market-card[data-market-card]{cursor:pointer}.market-card[data-market-card]:focus-within{border-color:var(--line-strong)}.market-card[data-market-card] details{cursor:auto}
 .market-detail-page{margin-bottom:32px}.detail-heading{display:flex;justify-content:space-between;gap:24px;align-items:start;margin:26px 0}.detail-heading h2{font-size:30px;margin:8px 0 14px}.detail-heading p{max-width:680px;color:var(--muted);line-height:1.8}
 #detailQuote{min-width:200px;text-align:right}#detailQuote strong{font-size:28px}#detailQuote span,#detailQuote small{display:block;margin-top:6px}#detailQuote strong small{display:inline;font-size:12px}
 .detail-jumps{display:flex;gap:12px;flex-wrap:wrap;padding:16px 0;border-block:1px solid var(--line)}.detail-jumps a{color:var(--violet);font-size:13px;padding:6px 12px;background:rgba(150,112,220,.08);border-radius:20px}

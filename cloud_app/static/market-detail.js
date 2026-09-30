@@ -41,7 +41,17 @@
     $('#detailPeriodButtons').addEventListener('click',event=>{const button=event.target.closest('[data-chart-period]');if(!button)return;$('#detailPeriod').value=button.dataset.chartPeriod;range();draw();});
     for(const id of ['detailInterval','detailStyle','detailScale',...movingAverages.map(ma=>'detailMA'+ma.period),'detailVolume'])$('#'+id).addEventListener('change',draw);
     panel.querySelectorAll('.detail-jumps a').forEach(anchor=>anchor.addEventListener('click',event=>{event.preventDefault();$(anchor.getAttribute('href')).scrollIntoView({behavior:'smooth'});}));
-    document.addEventListener('click',event=>{const anchor=event.target.closest('a[data-market-detail]');if(!anchor||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();open(anchor.dataset.marketDetail,true,anchor.hasAttribute('data-chart-expand'));});
+    document.addEventListener('click',event=>{
+      if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+      const anchor=event.target.closest('a[data-market-detail]');
+      if(anchor){event.preventDefault();open(anchor.dataset.marketDetail,true,anchor.hasAttribute('data-chart-expand'));return;}
+      const card=event.target.closest('[data-market-card]');
+      // Keep disclosures, source links and text selection usable inside the card.
+      if(!card||event.target.closest('a,button,input,select,textarea,label,details,[contenteditable]'))return;
+      const selection=window.getSelection();
+      if(selection&&!selection.isCollapsed&&card.contains(selection.anchorNode))return;
+      event.preventDefault();open(card.dataset.marketCard);
+    });
     addEventListener('popstate',()=>{const match=location.hash.match(/^#detail\/([a-z0-9_]+)$/);if(match)open(match[1],false);else if(identity){closeChart();identity=null;++epoch;hooks.openWorkspace(location.hash==='#strategy'?'strategy':'market',false);}});
     $('#detailExpand').addEventListener('click',expandChart);
     $('#detailChart').addEventListener('click',expandChart);
