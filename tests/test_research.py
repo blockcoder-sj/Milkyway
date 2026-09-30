@@ -77,6 +77,22 @@ class ResearchTests(unittest.TestCase):
     def key(self):
         (self.root / ".env").write_text("OPENAI_API_KEY=synthetic-test-key-never-valid\nOPENAI_MODEL=gpt-5.4-mini\n")
 
+    def test_structured_output_schema_requires_all_fields_and_forbids_extras(self):
+        request = research_ai.make_request("gpt-5.4-mini", {"hypothesis":"simple"})
+        format = request["text"]["format"]
+        self.assertEqual(format["type"], "json_schema")
+        self.assertTrue(format["strict"])
+        def check(node):
+            if isinstance(node, dict):
+                self.assertNotIn("default", node)
+                if node.get("type") == "object":
+                    self.assertFalse(node["additionalProperties"])
+                    self.assertEqual(set(node["required"]),set(node["properties"]))
+                for value in node.values(): check(value)
+            elif isinstance(node, list):
+                for value in node: check(value)
+        check(format["schema"])
+
     def test_json_mode_marker_is_in_input_not_only_instructions(self):
         request = research_ai.make_request("gpt-5.4-mini", {"hypothesis":"simple"})
         self.assertIn("JSON", json.loads(request["input"])["output_format"])

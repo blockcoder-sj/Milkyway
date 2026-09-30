@@ -11,7 +11,7 @@ from pathlib import Path
 import httpx
 from dotenv import dotenv_values
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .ai import _openai_text, _safe_provider_error
 from .ai_credentials import validate_api_key, validate_provider_model
@@ -111,10 +111,28 @@ def configuration_status(settings):
                 "management": "local_env", "approval_required": True, "providers": [], "error": str(exc)}
 
 
+def strict_reply_schema():
+    schema = ResearchReply.model_json_schema()
+    def visit(node):
+        if isinstance(node, dict):
+            node.pop("default", None)
+            if node.get("type") == "object":
+                node["additionalProperties"] = False
+                node["required"] = list(node.get("properties", {}))
+            for value in node.values():
+                visit(value)
+        elif isinstance(node, list):
+            for value in node:
+                visit(value)
+    visit(schema)
+    return schema
+
+
 def make_request(model, context, reasoning="none"):
-    request = {"model": model, "instructions": SYSTEM + "\nJSON schema:\n" + json.dumps(ResearchReply.model_json_schema()),
+    request = {"model": model, "instructions": SYSTEM,
                "input": json.dumps({**context, "output_format": "Return one JSON object matching the schema."}, ensure_ascii=False, allow_nan=False),
-               "max_output_tokens": OUTPUT_LIMIT, "text": {"format": {"type": "json_object"}},
+               "max_output_tokens": OUTPUT_LIMIT, "text": {"format": {"type": "json_schema", "name": "strategy_research_reply",
+                    "strict": True, "schema": strict_reply_schema()}},
                "reasoning": {"effort": reasoning}, "store": False}
     if len(json.dumps(request, ensure_ascii=True).encode()) > INPUT_LIMIT:
         raise ValueError("이번 대화의 자료가 너무 큽니다. 새 연구를 시작하거나 비교 후보를 줄여 주세요")
@@ -169,8 +187,12 @@ def _execute(request, configuration):
                 "usage": {key: int(usage.get(key, 0)) for key in ("input_tokens", "output_tokens", "total_tokens")}}
     except httpx.HTTPStatusError as exc:
         raise HTTPException(502, str(_safe_provider_error(exc, "openai"))) from None
-    except (httpx.RequestError, ValueError, KeyError, TypeError):
-        raise HTTPException(502, "AI 연결 또는 응답 검증에 실패했습니다. 자동 재시도하지 않았습니다") from None
+    except httpx.RequestError:
+        raise HTTPException(502, "OpenAI 네트워크 연결이 중단되었습니다. 자동 재시도하지 않았습니다") from None
+    except ValidationError:
+        raise HTTPException(502, "AI 응답이 전략 형식·숫자 범위를 충족하지 못했습니다. 자동 재시도하지 않았습니다") from None
+    except (ValueError, KeyError, TypeError):
+        raise HTTPException(502, "AI 응답의 JSON 또는 종목·보유 수를 검증하지 못했습니다. 자동 재시도하지 않았습니다") from None
 
 
 def invoke_approved(request, key):
