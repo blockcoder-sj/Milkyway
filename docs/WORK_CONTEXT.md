@@ -156,3 +156,21 @@
   product/business notes, public company data worker and regression tests. All
   current and latest user requests remain active; do not report the whole task done
   before this milestone, review, push and visible browser proof are complete.
+
+## 2026-10-01 — dependency security correction after milestone 1 CI
+
+- GitHub run 36745485334 rejected the dependency audit: four known advisories in
+  PyJWT 2.14.0 and urllib3 2.7.0. Updated both hash locks to PyJWT 2.15.0 and
+  urllib3 2.8.0, using verified official PyPI release SHA256 values. Updated direct
+  floors; BeautifulSoup 4.15 was already locked transitively and is now declared
+  directly for the company HTML parser. Do not suppress the audit gate.
+- Actual isolated pip-audit inspected all 65 locked dependencies and reported
+  zero known advisories. pip check passed. Five dependency tests passed, including
+  deeply nested JWT JSON, bounded HTTP chunk-size lines and deflate stream EOF.
+  Full suite at this checkpoint: 357 tests passed in 29.463s. New company tests
+  were added afterwards and will be included in the next complete verification.
+- Immutable dependency patch SHA256:
+  60b1afb312fdf04b21a59bddce313e9c5a6f51579ebcc926de65aa66e00c3344.
+  Fresh read-only review found no blocking defect, verified upstream wheel hashes
+  and offline OCI token/proxy TLS compatibility. Packaged Linux checks remain for
+  CI. This is not a whole-repository deep scan or public OCI clearance.
