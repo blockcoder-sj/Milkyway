@@ -16,4 +16,6 @@ pydantic>=2.8,<3
 python-multipart>=0.0.9,<1
 cryptography>=50,<51
 oci>=2.185,<3
+# Security floor for OCI's transitive JWT dependency (2.14.0 advisory fixes).
+PyJWT>=2.14,<3
 PyYAML>=6,<7

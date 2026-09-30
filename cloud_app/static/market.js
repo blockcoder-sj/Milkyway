@@ -22,7 +22,7 @@
   function sourceLink(row) {
     return `https://finance.yahoo.com/quote/${encodeURIComponent(String(row.symbol || ""))}/`;
   }
-  function card(row, sector = false) {
+  function card(row, sector = false, open = false) {
     const status = statuses[row.status] || "확인 필요";
     const stale = row.status === "stale" || row.status === "unavailable";
     const format = value => number(value, row.group === "fx" && row.unit === "USD" ? 4 : row.group === "fx" && row.unit === "JPY" ? 3 : 2);
@@ -32,7 +32,7 @@
       <div class="market-delta">전일 대비 ${finite(row.change) && row.change > 0 ? "+" : ""}${format(row.change)} ${escape(row.unit === "%" ? "%p" : row.unit)}</div>
       ${sparkline(row.sparkline)}
       <p class="market-quote-state">${status}</p><time class="market-observed">기준 ${time(row.observed_at)}</time>
-      <details class="market-detail"><summary>${sector ? "섹터 정보" : "지표 정보"}</summary>
+      <details class="market-detail" data-market-id="${escape(row.id)}"${open ? " open" : ""}><summary>${sector ? "섹터 정보" : "지표 정보"}</summary>
         <p>${escape(row.description)}</p><dl><dt>전일 기준값</dt><dd>${format(row.previous_close)}</dd>
         <dt>당일 범위</dt><dd>${format(row.day_low)} ~ ${format(row.day_high)}</dd>
         <dt>52주 범위</dt><dd>${format(row.year_low)} ~ ${format(row.year_high)}</dd></dl>
@@ -41,12 +41,21 @@
         <a href="${sourceLink(row)}" target="_blank" rel="noopener noreferrer">Yahoo Finance 원본 ↗</a>
       </details></article>`;
   }
+  const renderedCards = new WeakMap();
+  function renderCards(selector, rows, sector = false) {
+    const target = $(selector);
+    const signature = JSON.stringify(rows);
+    if (renderedCards.get(target) === signature) return;
+    const expanded = new Set(Array.from(target.querySelectorAll("details[open][data-market-id]"), detail => detail.dataset.marketId));
+    target.innerHTML = rows.map(row => card(row, sector, expanded.has(row.id))).join("");
+    renderedCards.set(target, signature);
+  }
   function renderMarket(overview, country) {
     const rows = overview?.items || [];
     $("#marketCards").classList.remove("empty-state");
-    $("#marketCards").innerHTML = rows.filter(row => row.group === "indices" && row.market === country).map(row => card(row)).join("");
-    $("#marketFx").innerHTML = rows.filter(row => row.group === "fx").map(row => card(row)).join("");
-    $("#marketFutures").innerHTML = rows.filter(row => ["futures","commodities"].includes(row.group)).map(row => card(row)).join("");
+    renderCards("#marketCards", rows.filter(row => row.group === "indices" && row.market === country));
+    renderCards("#marketFx", rows.filter(row => row.group === "fx"));
+    renderCards("#marketFutures", rows.filter(row => ["futures","commodities"].includes(row.group)));
     $("#leadingIndicatorLabel").textContent = "해외 선물·원자재";
     $("#marketUpdated").textContent = `${overview?.available_count || 0}/${overview?.total_count || rows.length}개 수신 · 최근 수집 ${time(overview?.attempted_at)}`;
     $("#marketFeedNote").textContent = overview?.note || "시장 데이터 수집을 기다리고 있습니다.";
@@ -65,7 +74,7 @@
       ? "Yahoo Finance가 제공하는 코스피 주요 8개 업종 지수입니다. 전체 업종 목록이 아니며 금융업과 증권·보험의 구성 범위는 겹칩니다. 기준 시각과 지연 여부를 확인하세요."
       : "Yahoo Finance가 제공하는 S&P 500의 GICS 11개 섹터 지수입니다. 지수값과 공급자 전일 기준값으로 등락률을 계산합니다. 기준 시각과 지연 여부를 확인하세요.";
     $("#sectorHeatmap").className = "sector-index-grid";
-    $("#sectorHeatmap").innerHTML = rows.map(row => card(row, true)).join("");
+    renderCards("#sectorHeatmap", rows, true);
   }
   window.MilkywayMarket = {renderMarket, renderSectors};
 })();

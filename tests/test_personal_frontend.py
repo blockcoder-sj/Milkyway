@@ -88,6 +88,7 @@ function element(selector) {
     innerHTML: "", textContent: "", className: "", disabled: false, open: false, style: {},
     classList: {toggle() {}, add() {}, remove() {}, contains() {return false;}},
     addEventListener() {}, setAttribute() {}, showModal() {this.open = true;},
+    querySelectorAll() {return [];},
     insertAdjacentHTML(position, html) {this.innerHTML += html;},
   });
   return elements.get(selector);

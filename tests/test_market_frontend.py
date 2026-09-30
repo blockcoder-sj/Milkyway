@@ -12,7 +12,7 @@ class MarketFrontendTests(unittest.TestCase):
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const elements=new Map();
 function element(id){
- if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',className:'',classList:{remove(){}}});
+ if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',className:'',classList:{remove(){}},querySelectorAll:()=>[]});
  return elements.get(id);
 }
 const ctx=vm.createContext({window:{},document:{querySelector:element},Intl,Date,Number});
@@ -35,6 +35,13 @@ assert(!html.includes('javascript:'));assert(html.includes('0%'));assert(!html.i
 assert(element('#marketFx').innerHTML.includes('EUR/USD'));
 assert(element('#marketFx').innerHTML.includes('1.1327'));
 assert(element('#marketFx').innerHTML.includes('-0.0012 USD'));
+element('#marketCards').innerHTML = 'unchanged DOM';
+ctx.window.MilkywayMarket.renderMarket(overview,'us');
+assert.equal(element('#marketCards').innerHTML,'unchanged DOM');
+element('#marketCards').querySelectorAll=()=>[{dataset:{marketId:'one'}}];
+row.value=101;
+ctx.window.MilkywayMarket.renderMarket(overview,'us');
+assert(element('#marketCards').innerHTML.includes('data-market-id="one" open'));
 ctx.window.MilkywayMarket.renderMarket(overview,'kr');
 assert(element('#marketCards').innerHTML.includes('KOSPI'));
 ctx.window.MilkywayMarket.renderSectors(overview,'us','desc');

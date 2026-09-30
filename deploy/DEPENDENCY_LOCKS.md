@@ -17,6 +17,14 @@ and run the hash-locked pip-audit commands in CI. Retain its JSON and CycloneDX
 SBOM with the release evidence. A lock prevents unnoticed input changes; it
 still needs regular reviewed updates when vulnerabilities are disclosed.
 
+2026-09-30 targeted update: PyJWT 2.13.0 → 2.14.0, with an explicit security
+floor in `requirements.in`. Only this package's pin/hash changed, using official
+PyPI non-yanked wheel metadata; OCI's Python 3.11 constraint permits the update.
+The hash-locked audit reports zero known vulnerabilities across 65 runtime
+dependencies after the update (the old pin reported ten). Local JSON/SBOM
+evidence is in `/tmp/milkyway-market-security/`; the full host suite, including
+JWT compatibility and empty-JWK regression checks, passes 297 tests.
+
 The Python, PostgreSQL, Caddy and local-model images are pinned by digest.
 Debian inputs are restricted to the signed 2026-09-01 archive snapshot in
 `deploy/debian.sources`; the Dockerfile replaces every inherited package source
