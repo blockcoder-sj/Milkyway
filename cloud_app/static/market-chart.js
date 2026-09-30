@@ -1,7 +1,12 @@
 /* Pure daily-bar transforms and an accessible, dependency-free SVG chart. */
 (() => {
   const finite = Number.isFinite;
-  const fmt = value => finite(value) ? new Intl.NumberFormat('ko-KR',{maximumFractionDigits:4}).format(value) : '—';
+  const MOVING_AVERAGES=Object.freeze([
+    Object.freeze({period:5,color:'#e5e9f2'}), Object.freeze({period:20,color:'#f2c761'}),
+    Object.freeze({period:60,color:'#53cdb5'}), Object.freeze({period:120,color:'#aa92ee'})
+  ]);
+  const DEFAULTS=Object.freeze({style:'candle',scale:'linear',interval:'day',volume:false,ma5:true,ma20:true,ma60:true,ma120:true});
+  const fmt = (value,digits=2) => finite(value) ? new Intl.NumberFormat('ko-KR',{maximumFractionDigits:digits}).format(value) : '—';
   const axisFmt=value=>new Intl.NumberFormat('ko-KR',{maximumFractionDigits:Math.abs(value)<10?4:2}).format(value);
   function validBars(rows) {
     if(!Array.isArray(rows)) return [];
@@ -38,59 +43,98 @@
     for(const row of rows){peak=Math.max(peak,row.close);const value=(row.close/peak-1)*100;if(value<drawdown){drawdown=value;drawdown_peak=peak;drawdown_trough=row.close;}}
     return {change:rows.length>1?(rows.at(-1).close/rows[0].close-1)*100:null,high:rows.some(r=>finite(r.high))?Math.max(...rows.map(r=>r.high).filter(finite)):null,low:rows.some(r=>finite(r.low))?Math.min(...rows.map(r=>r.low).filter(finite)):null,drawdown:rows.length>1?drawdown:null,drawdown_peak,drawdown_trough};
   }
-  function create(svg,tooltip) {
-    let visible=[],geometry={width:960,left:88,right:936};
+  function prepare(raw,options) {
+    // Include preceding completed bars for SMA warm-up; never include a later bar.
+    const all=aggregate(validBars(raw).filter(row=>row.date<=options.end),options.interval);
+    const offset=all.findIndex(row=>row.date>=options.start);
+    if(offset<0)return {rows:[],averages:[]};
+    return {rows:all.slice(offset),averages:MOVING_AVERAGES.filter(ma=>options['ma'+ma.period])
+      .map(ma=>({...ma,values:average(all,ma.period).slice(offset)}))};
+  }
+  function create(svg,tooltip,legend) {
+    let visible=[],averages=[],geometry=null,crosshair=null,digits=2;
+    function readout(index) {
+      const row=visible[index];if(!row)return;
+      tooltip.innerHTML=`<time>${row.date}</time>`+[['시',row.open],['고',row.high],['저',row.low],['종',row.close]]
+        .map(([label,value])=>`<span>${label} <b>${fmt(value,digits)}</b></span>`).join('');
+      if(legend)legend.innerHTML=averages.map(ma=>`<span class="market-ma" data-ma="${ma.period}" style="color:${ma.color}"><i></i>MA ${ma.period} <b>${fmt(ma.values[index],digits)}</b></span>`).join('');
+    }
+    function resetCursor(){
+      crosshair?.setAttribute('visibility','hidden');
+      if(visible.length)readout(visible.length-1);
+    }
+    svg.addEventListener('pointerleave',resetCursor);
     svg.addEventListener('pointermove',event=>{
-      if(!visible.length)return;
-      const box=svg.getBoundingClientRect();
-      if(!box.width)return;
-      const x=(event.clientX-box.left)/box.width*geometry.width;
-      const index=Math.max(0,Math.min(visible.length-1,Math.round((x-geometry.left)/(geometry.right-geometry.left)*Math.max(1,visible.length-1))));
-      const row=visible[index];
-      tooltip.textContent=`${row.date} · 시가 ${fmt(row.open)} · 고가 ${fmt(row.high)} · 저가 ${fmt(row.low)} · 종가 ${fmt(row.close)} · 거래량 ${fmt(row.volume)}${row.open===null?' · OHLC 불완전: 종가만 표시':''}`;
+      if(!visible.length||!geometry)return;
+      const box=svg.getBoundingClientRect();if(!box.width||!box.height)return;
+      const {width,height,left,right,top,bottom,xScale,inverseY,step}=geometry;
+      const pointerX=(event.clientX-box.left)/box.width*width;
+      const pointerY=(event.clientY-box.top)/box.height*height;
+      if(!finite(pointerX)||!finite(pointerY)||pointerX<left||pointerX>right||pointerY<top||pointerY>bottom){resetCursor();return;}
+      const index=Math.max(0,Math.min(visible.length-1,Math.round((pointerX-left)/step-.5)));
+      readout(index);if(!crosshair)return;
+      const x=xScale(index),dateX=Math.max(left,Math.min(right-92,x-46));
+      crosshair.innerHTML=`<path d="M ${x} ${top} V ${bottom} M ${left} ${pointerY} H ${right}" fill="none" stroke="#768296" stroke-width=".8" stroke-dasharray="3 4"/>
+        <rect x="${right+1}" y="${pointerY-10}" width="84" height="20" rx="3" fill="#343f51"/>
+        <text class="chart-badge" x="${right+7}" y="${pointerY+4}">${axisFmt(inverseY(pointerY))}</text>
+        <rect x="${dateX}" y="${height-25}" width="92" height="21" rx="3" fill="#343f51"/>
+        <text class="chart-badge" x="${dateX+46}" y="${height-10}" text-anchor="middle">${visible[index].date}</text>`;
+      crosshair.setAttribute('visibility','visible');
     });
-    return {draw(raw,options) {
-      visible=aggregate(validBars(raw).filter(row=>row.date>=options.start&&row.date<=options.end),options.interval);
-      if(!visible.length){svg.innerHTML='';tooltip.textContent='선택한 기간의 차트 데이터가 없습니다.';return null;}
+    return {draw(raw,settings) {
+      const options={...DEFAULTS,...settings},prepared=prepare(raw,options);
+      visible=prepared.rows;averages=prepared.averages;geometry=null;crosshair=null;digits=[2,3,4].includes(options.digits)?options.digits:2;
+      if(!visible.length){svg.innerHTML='';tooltip.textContent='선택한 기간의 차트 데이터가 없습니다.';if(legend)legend.innerHTML='';return null;}
       const box=svg.getBoundingClientRect();
-      const width=Math.max(280,box.width||960),height=Math.max(240,box.height||340);
-      const left=88,right=width-22,top=24,bottom=height-(options.volume?104:42);
-      geometry={width,left,right};svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
-      const low=Math.min(...visible.map(row=>Math.min(row.low??row.close,row.close))),high=Math.max(...visible.map(row=>Math.max(row.high??row.close,row.close)));
+      const width=Math.max(280,box.width||960),height=Math.max(240,box.height||380);
+      const left=14,right=width-90,top=20,bottom=height-(options.volume?100:36);
+      svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+      const prices=visible.flatMap(row=>[row.low??row.close,row.high??row.close,row.close]);
+      for(const ma of averages)prices.push(...ma.values.filter(finite));
+      const low=Math.min(...prices),high=Math.max(...prices);
       const transform=options.scale==='log'?Math.log:value=>value;
       const rawMin=transform(low),rawMax=transform(high);
-      const padding=(rawMax-rawMin)*.06||Math.max(Math.abs(rawMin)*.01,.01);
+      const padding=(rawMax-rawMin)*.08||Math.max(Math.abs(rawMin)*.01,.01);
       const min=rawMin-padding,span=rawMax-rawMin+padding*2;
       const y=value=>bottom-(transform(value)-min)/span*(bottom-top);
-      const xScale=index=>visible.length===1?(left+right)/2:left+index/(visible.length-1)*(right-left);
-      const polyline=(values,color)=>{
+      const inverseY=pixel=>{const value=min+(bottom-pixel)/(bottom-top)*span;return options.scale==='log'?Math.exp(value):value;};
+      const step=(right-left)/visible.length,xScale=index=>left+(index+.5)*step;
+      geometry={width,height,left,right,top,bottom,xScale,inverseY,step};
+      const polyline=(values,color,period)=>{
         const points=values.map((value,index)=>finite(value)?[xScale(index),y(value)]:null).filter(Boolean);
-        if(points.length===1)return `<circle cx="${points[0][0]}" cy="${points[0][1]}" r="4" fill="${color}"/>`;
-        return points.length?`<polyline fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" points="${points.map(p=>p.map(v=>v.toFixed(2)).join(',')).join(' ')}"/>`:'';
+        const tag=period?` data-ma="${period}"`:'';
+        if(points.length===1)return `<circle${tag} cx="${points[0][0]}" cy="${points[0][1]}" r="3" fill="${color}"/>`;
+        return points.length?`<polyline${tag} fill="none" stroke="${color}" stroke-width="1.4" stroke-linejoin="round" points="${points.map(p=>p.map(v=>v.toFixed(2)).join(',')).join(' ')}"/>`:'';
       };
+      const last=visible.at(-1),lastY=y(last.close),lastColor=last.open===null?'#786699':last.close>=last.open?'#b94450':'#3269af';
       let html='';
       for(let i=0;i<=4;i++){
-        const value=options.scale==='log'?Math.exp(min+span*i/4):min+span*i/4;
         const line=bottom-i*(bottom-top)/4;
-        html+=`<line x1="${left}" x2="${right}" y1="${line}" y2="${line}" stroke="rgba(170,155,200,.2)"/><text x="${left-8}" y="${line+4}" text-anchor="end">${axisFmt(value)}</text>`;
+        html+=`<line x1="${left}" x2="${right}" y1="${line}" y2="${line}" stroke="#202a39" stroke-width=".7"/>`;
+        if(Math.abs(line-lastY)>18)html+=`<text x="${right+9}" y="${line+4}">${axisFmt(inverseY(line))}</text>`;
       }
+      html+=`<line x1="${right}" x2="${right}" y1="${top}" y2="${bottom}" stroke="#263142" stroke-width=".7"/>`;
       if(options.style==='candle') {
-        const candleWidth=Math.max(.8,Math.min(12,(right-left)/visible.length*.7));
-        html+=visible.map((row,index)=>{if(row.open===null)return `<circle cx="${xScale(index)}" cy="${y(row.close)}" r="2.5" fill="#c3acff"/>`;const color=row.close>=row.open?'#ff8b9e':'#73aaf7';return `<line x1="${xScale(index)}" x2="${xScale(index)}" y1="${y(row.high)}" y2="${y(row.low)}" stroke="${color}"/><rect x="${xScale(index)-candleWidth/2}" y="${Math.min(y(row.open),y(row.close))}" width="${candleWidth}" height="${Math.max(1,Math.abs(y(row.open)-y(row.close)))}" fill="${color}"/>`;}).join('');
+        const candleWidth=Math.max(.8,Math.min(12,step*.68));
+        html+=visible.map((row,index)=>{
+          if(row.open===null)return `<circle cx="${xScale(index)}" cy="${y(row.close)}" r="2.5" fill="#aa92ee"/>`;
+          const color=row.close>=row.open?'#ee6671':'#5298ee';
+          return `<line x1="${xScale(index)}" x2="${xScale(index)}" y1="${y(row.high)}" y2="${y(row.low)}" stroke="${color}" stroke-width="1"/><rect data-candle x="${xScale(index)-candleWidth/2}" y="${Math.min(y(row.open),y(row.close))}" width="${candleWidth}" height="${Math.max(1,Math.abs(y(row.open)-y(row.close)))}" fill="${color}"/>`;
+        }).join('');
       } else html+=polyline(visible.map(row=>row.close),'#c3acff');
-      if(options.ma20) html+=polyline(average(visible,20),'#ffd380');
-      if(options.ma60) html+=polyline(average(visible,60),'#70dfc7');
+      for(const ma of averages)html+=polyline(ma.values,ma.color,ma.period);
+      html+=`<line x1="${left}" x2="${right}" y1="${lastY}" y2="${lastY}" stroke="${lastColor}" stroke-width=".7" stroke-dasharray="3 4"/><rect x="${right+1}" y="${lastY-10}" width="84" height="20" rx="3" fill="${lastColor}"/><text class="chart-badge" x="${right+7}" y="${lastY+4}">${axisFmt(last.close)}</text>`;
       if(options.volume){
-        const maximum=Math.max(1,...visible.map(row=>row.volume||0));
-        const barWidth=Math.max(1,Math.min(8,(right-left)/visible.length*.7));
-        html+=`<text x="${left}" y="${bottom+24}">거래량 · 최대 ${fmt(maximum===1&&!visible.some(row=>row.volume)?0:maximum)}</text>`;
-        html+=visible.map((row,index)=>{if(row.volume===null)return '';return `<rect x="${xScale(index)-barWidth/2}" y="${height-34-row.volume/maximum*40}" width="${barWidth}" height="${row.volume/maximum*40}" fill="#9180b0"/>`;}).join('');
+        const maximum=Math.max(1,...visible.map(row=>row.volume||0)),barWidth=Math.max(1,Math.min(8,step*.68));
+        html+=`<text x="${left}" y="${bottom+22}">거래량</text>`;
+        html+=visible.map((row,index)=>row.volume===null?'':`<rect data-volume x="${xScale(index)-barWidth/2}" y="${height-30-row.volume/maximum*36}" width="${barWidth}" height="${row.volume/maximum*36}" fill="#34445e"/>`).join('');
       }
-      for(const index of [...new Set([0,Math.floor((visible.length-1)/2),visible.length-1])])html+=`<text x="${xScale(index)}" y="${height-10}" text-anchor="${visible.length===1?'middle':index===0?'start':index===visible.length-1?'end':'middle'}">${visible[index].date}</text>`;
-      svg.innerHTML=html;
-      tooltip.textContent=`${visible[0].date} ~ ${visible.at(-1).date} · ${visible.length}개 봉 · 차트 위에 포인터를 올리면 해당 봉의 가격을 확인할 수 있습니다.`;
-      return {...metrics(visible),count:visible.length,rows:visible,first_close:visible[0].close,last_close:visible.at(-1).close};
+      const ticks=width<450?[0,visible.length-1]:[0,Math.floor((visible.length-1)/2),visible.length-1];
+      for(const index of [...new Set(ticks)])html+=`<text x="${xScale(index)}" y="${height-10}" text-anchor="${visible.length===1?'middle':index===0?'start':index===visible.length-1?'end':'middle'}">${visible[index].date}</text>`;
+      html+='<g data-chart-crosshair visibility="hidden" pointer-events="none"></g>';
+      svg.innerHTML=html;crosshair=svg.querySelector?.('[data-chart-crosshair]');readout(visible.length-1);
+      return {...metrics(visible),count:visible.length,rows:visible,first_close:visible[0].close,last_close:last.close,averages};
     }};
   }
-  window.MilkywayMarketChart=Object.freeze({validBars,aggregate,average,metrics,create});
+  window.MilkywayMarketChart=Object.freeze({MOVING_AVERAGES,DEFAULTS,validBars,aggregate,average,metrics,prepare,create});
 })();

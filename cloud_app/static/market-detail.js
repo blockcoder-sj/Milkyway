@@ -2,6 +2,7 @@
 (() => {
   const $=selector=>document.querySelector(selector);
   const methods=window.MilkywayMarketMethods;
+  const movingAverages=window.MilkywayMarketChart.MOVING_AVERAGES;
   const esc=value=>window.MilkywayResearchView.escape(value);
   const fmt=(value,digits=2)=>Number.isFinite(value)?new Intl.NumberFormat('ko-KR',{maximumFractionDigits:digits}).format(value):'—';
   const cap=value=>Number.isFinite(value)?new Intl.NumberFormat('ko-KR',{notation:'compact',maximumFractionDigits:2}).format(value):'—';
@@ -14,25 +15,31 @@
     const panel=document.createElement('section');panel.id='marketDetail';panel.className='panel market-detail-page hidden';panel.dataset.workspacePage='detail';
     panel.innerHTML=`<button id="detailBack" class="ghost compact">← 시장으로</button><div class="detail-heading"><div><p id="detailCategory" class="eyebrow"></p><h2 id="detailTitle">시장 상세</h2><p id="detailIntro"></p></div><div id="detailQuote"></div></div><div id="detailFacts" class="detail-metrics"></div><p id="detailError" class="error" role="alert"></p>
       <nav class="detail-jumps" aria-label="상세 정보 목차"><a href="#detailChartSection">차트</a><a href="#detailCompaniesSection">기업·비중</a><a href="#detailNewsSection">뉴스</a><a href="#detailSourcesSection">출처 모음</a></nav>
-      <section id="detailChartSection"><div class="detail-chart-heading"><h3>가격 차트 · 최대 3년</h3><button id="detailExpand" class="ghost compact">차트 크게 보기 ↗</button></div><div id="detailChartHome"><div id="detailChartView"><details id="detailChartSettings" open><summary>차트 설정</summary><div id="detailChartControls" class="detail-chart-controls">
-        <label>차트 자료<select id="detailSeries"><option value="history">표시 지수·시세</option></select></label><label>기간<select id="detailPeriod"><option value="1">1개월</option><option value="3">3개월</option><option value="6">6개월</option><option value="12" selected>1년</option><option value="36">3년</option><option value="custom">직접 지정</option></select></label>
-        <label>시작일<input id="detailStart" type="date"></label><label>종료일<input id="detailEnd" type="date"></label>
-        <label>봉 주기<select id="detailInterval"><option value="day">일봉</option><option value="week">주봉</option><option value="month">월봉</option></select></label>
-        <label>표시<select id="detailStyle"><option value="line">선</option><option value="candle">캔들</option></select></label>
-        <label>눈금<select id="detailScale"><option value="linear">일반</option><option value="log">로그</option></select></label>
-        <label class="detail-check"><input id="detailMA20" type="checkbox">20봉 이동평균</label><label class="detail-check"><input id="detailMA60" type="checkbox">60봉 이동평균</label><label class="detail-check"><input id="detailVolume" type="checkbox">거래량</label>
-      </div></details><p id="detailChartStatus" class="fineprint"></p><p id="detailChartLegend" class="fineprint"></p><svg id="detailChart" role="button" tabindex="0" aria-haspopup="dialog" aria-label="가격 차트 크게 보기"></svg><p id="detailChartTooltip" class="fineprint" aria-live="off"></p></div></div><div id="detailMetrics" class="detail-metrics"></div><div id="detailChartMethod"></div><details><summary>최근 봉의 수치 보기</summary><div id="detailPriceTable" class="research-table"></div></details></section>
+      <section id="detailChartSection"><div class="detail-chart-heading"><h3>가격 차트</h3><button id="detailExpand" class="ghost compact">크게 보기 ↗</button></div><div id="detailChartHome"><div id="detailChartView" class="market-terminal">
+        <div class="terminal-toolbar"><div id="detailPeriodButtons" class="chart-periods" role="group" aria-label="차트 기간">${[['1','1개월'],['3','3개월'],['6','6개월'],['12','1년'],['36','3년']].map(([value,label])=>`<button type="button" data-chart-period="${value}" aria-pressed="${value==='3'}">${label}</button>`).join('')}</div><label class="chart-interval">봉 주기<select id="detailInterval"><option value="day">일봉</option><option value="week">주봉</option><option value="month">월봉</option></select></label></div>
+        <div class="terminal-series"><label>차트 자료<select id="detailSeries"><option value="history">표시 지수·시세</option></select></label><details id="detailChartSettings"><summary>설정</summary><div id="detailChartControls" class="detail-chart-controls">
+          <label>기간<select id="detailPeriod"><option value="1">1개월</option><option value="3" selected>3개월</option><option value="6">6개월</option><option value="12">1년</option><option value="36">3년</option><option value="custom">직접 지정</option></select></label>
+          <label>시작일<input id="detailStart" type="date"></label><label>종료일<input id="detailEnd" type="date"></label>
+          <label>표시<select id="detailStyle"><option value="candle" selected>캔들</option><option value="line">선</option></select></label>
+          <label>눈금<select id="detailScale"><option value="linear">일반</option><option value="log">로그</option></select></label>
+          ${movingAverages.map(ma=>`<label class="detail-check"><input id="detailMA${ma.period}" type="checkbox" checked>${ma.period}봉 이동평균</label>`).join('')}<label class="detail-check"><input id="detailVolume" type="checkbox">거래량</label>
+        </div></details></div>
+        <div id="detailChartTooltip" class="chart-readout" aria-live="off"></div><div id="detailChartLegend" class="chart-ma-legend" aria-label="이동평균"></div>
+        <svg id="detailChart" role="button" tabindex="0" aria-haspopup="dialog" aria-label="가격 차트 크게 보기"></svg>
+        <div class="chart-footer"><span id="detailChartRange"></span><span>Yahoo Finance · 일봉 기준</span></div><p id="detailChartWarning" class="chart-data-note"></p><details class="chart-source"><summary>데이터 기준·출처</summary><p id="detailChartStatus"></p></details>
+      </div></div><div id="detailMetrics" class="detail-metrics"></div><div id="detailChartMethod"></div><details><summary>최근 봉의 수치 보기</summary><div id="detailPriceTable" class="research-table"></div></details></section>
       <dialog id="detailChartDialog" aria-labelledby="detailDialogTitle"><header class="detail-dialog-heading"><h3 id="detailDialogTitle">가격 차트</h3><button id="detailCollapse" class="ghost compact" autofocus>닫기 · Esc</button></header><div id="detailChartDialogSlot"></div></dialog>
       <section id="detailCompaniesSection"><h3 id="detailCompaniesTitle">주요 기업과 비중</h3><p id="detailCompanyNote" class="fineprint"></p><div id="detailCompanies"></div><div id="detailMarketShare"></div></section>
       <section id="detailNewsSection"><h3>관련 뉴스</h3><p class="fineprint">지정 언론사의 최근 14일 보도를 발표 시각 순서로 표시합니다. 기사 제목과 원문 링크를 제공합니다.</p><div id="detailNews"></div></section>
       <section id="detailSourcesSection"><h3>출처 모음</h3><p class="fineprint">시세·기업·뉴스는 수집 시점, 사업 점유율은 발표 기준일을 따릅니다. 원자료를 확인하고 수치의 범위를 비교하세요.</p><div id="detailSources"></div></section>`;
     $('#market').after(panel);
-    chart=window.MilkywayMarketChart.create($('#detailChart'),$('#detailChartTooltip'));
+    chart=window.MilkywayMarketChart.create($('#detailChart'),$('#detailChartTooltip'),$('#detailChartLegend'));
     $('#detailBack').addEventListener('click',()=>{closeChart();identity=null;++epoch;hooks.openWorkspace('market');});
     $('#detailSeries').addEventListener('change',()=>{range();draw();});
     $('#detailPeriod').addEventListener('change',()=>{range();draw();});
     for(const id of ['detailStart','detailEnd'])$('#'+id).addEventListener('change',()=>{$('#detailPeriod').value='custom';draw();});
-    for(const id of ['detailInterval','detailStyle','detailScale','detailMA20','detailMA60','detailVolume'])$('#'+id).addEventListener('change',draw);
+    $('#detailPeriodButtons').addEventListener('click',event=>{const button=event.target.closest('[data-chart-period]');if(!button)return;$('#detailPeriod').value=button.dataset.chartPeriod;range();draw();});
+    for(const id of ['detailInterval','detailStyle','detailScale',...movingAverages.map(ma=>'detailMA'+ma.period),'detailVolume'])$('#'+id).addEventListener('change',draw);
     panel.querySelectorAll('.detail-jumps a').forEach(anchor=>anchor.addEventListener('click',event=>{event.preventDefault();$(anchor.getAttribute('href')).scrollIntoView({behavior:'smooth'});}));
     document.addEventListener('click',event=>{const anchor=event.target.closest('a[data-market-detail]');if(!anchor||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();open(anchor.dataset.marketDetail,true,anchor.hasAttribute('data-chart-expand'));});
     addEventListener('popstate',()=>{const match=location.hash.match(/^#detail\/([a-z0-9_]+)$/);if(match)open(match[1],false);else if(identity){closeChart();identity=null;++epoch;hooks.openWorkspace(location.hash==='#strategy'?'strategy':'market',false);}});
@@ -78,21 +85,23 @@
   }
   function draw(){
     if(!data)return;
+    for(const button of $('#detailPeriodButtons').querySelectorAll('button'))button.setAttribute('aria-pressed',String(button.dataset.chartPeriod===$('#detailPeriod').value));
     const start=$('#detailStart').value,end=$('#detailEnd').value;
-    if(!start||!end||start>end||start<$('#detailStart').min||end>$('#detailEnd').max){$('#detailChartLegend').textContent='';$('#detailChartStatus').textContent='사용 가능한 3년 이내의 시작·종료일을 확인하세요.';chart.draw([],{start,end});$('#detailMetrics').innerHTML='';$('#detailPriceTable').innerHTML='';$('#detailChartMethod').innerHTML='';return;}
+    if(!start||!end||start>end||start<$('#detailStart').min||end>$('#detailEnd').max){$('#detailChartLegend').textContent='';$('#detailChartRange').textContent='';$('#detailChartWarning').textContent='사용 가능한 3년 이내의 시작·종료일을 확인하세요.';chart.draw([],{start,end});$('#detailMetrics').innerHTML='';$('#detailPriceTable').innerHTML='';$('#detailChartMethod').innerHTML='';return;}
     const part=historyPart(),related=$('#detailSeries').value==='related_history',subject=related?data.context.related_chart.label:data.label;
     $('#detailChartStatus').textContent=`${subject} · ${related?data.context.related_chart.unit:data.unit} · Yahoo Finance · 수집 ${time(part.fetched_at)} · ${part.stale?'갱신 지연 또는 수신 대기':'15분마다 갱신'}${part.error?' · '+part.error:''}${related?' · '+data.context.related_chart.note:''}${part.rows.length<2?' · 원자료가 부족해 장기 흐름을 표시할 수 없습니다.':''}`;
-    const result=chart.draw(part.rows,{start,end,interval:$('#detailInterval').value,style:$('#detailStyle').value,scale:$('#detailScale').value,ma20:$('#detailMA20').checked,ma60:$('#detailMA60').checked,volume:$('#detailVolume').checked});
     const digits=data.group==='fx'?(data.unit==='USD'?4:data.unit==='JPY'?3:2):2;
+    const result=chart.draw(part.rows,{start,end,digits,interval:$('#detailInterval').value,style:$('#detailStyle').value,scale:$('#detailScale').value,...Object.fromEntries(movingAverages.map(ma=>['ma'+ma.period,$('#detailMA'+ma.period).checked])),volume:$('#detailVolume').checked});
     const incomplete=result?.rows.filter(row=>row.open===null).length||0;
-    $('#detailChartLegend').textContent=[
-      $('#detailStyle').value==='candle'?'캔들: 종가 ≥ 시가 분홍 / 종가 < 시가 파랑':'보라: 종가',
-      $('#detailMA20').checked?'노랑: 20봉 평균 · 20번째 봉부터':'',
-      $('#detailMA60').checked?'민트: 60봉 평균 · 60번째 봉부터':'',
-      incomplete?`OHLC 불완전 ${incomplete}개: 종가 보존 · 캔들 대신 보라색 점`:'',
-      result?.count===1?'자료 1개: 점으로 표시 · 기간 등락 계산 불가':'',
-      $('#detailVolume').checked&&!result?.rows.some(row=>row.volume>0)?'거래량: 양수 자료 없음':''
-    ].filter(Boolean).join(' · ');
+    $('#detailChartRange').textContent=result?`${result.rows[0].date} — ${result.rows.at(-1).date} · ${result.count}개 봉`:'';
+    const unavailable=result?.averages.filter(ma=>!ma.values.some(Number.isFinite)).map(ma=>'MA '+ma.period)||[];
+    $('#detailChartWarning').textContent=[
+      related?'관련 ETF 가격 · 원래 지수와 구성·가중 방식이 다름':'',
+      incomplete?`시가·고가·저가 불완전 ${incomplete}개 · 캔들 대신 종가 점 표시`:'',
+      result?.count===1?'수신 자료 1개 · 기간 등락 계산 불가':'',
+      unavailable.length?`${unavailable.join(' · ')}: 계산에 필요한 이전 봉 부족`:'',
+      part.stale?'갱신 지연 · 데이터 기준·출처 확인':''
+    ].filter(Boolean).join(' / ');
     methods.replace($('#detailMetrics'),result?[['change','기간 등락',fmt(result.change)+'%'],['high','기간 최고',fmt(result.high,digits)],['low','기간 최저',fmt(result.low,digits)],['drawdown','종가 최대 낙폭',fmt(result.drawdown)+'%']].map(([key,label,value])=>`<div><small>${label}</small><strong>${value}</strong>${methods.metric(key,result,digits)}</div>`).join(''):'');
     methods.replace($('#detailChartMethod'),methods.chart(part));
     $('#detailPriceTable').innerHTML=result?`<table><thead><tr><th>날짜</th><th>시가</th><th>고가</th><th>저가</th><th>종가</th><th>거래량</th></tr></thead><tbody>${result.rows.slice(-10).reverse().map(row=>`<tr><td>${row.date}</td>${['open','high','low','close','volume'].map(key=>`<td>${fmt(row[key],key==='volume'?0:digits)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'';
@@ -140,8 +149,8 @@
     closeChart();identity=id;data=null;signature='';++epoch;hooks.openWorkspace('detail',false);
     if(push)history.pushState(null,'','#detail/'+id);
     $('#detailTitle').textContent='상세 정보를 불러오고 있습니다';$('#detailError').textContent='';
-    for(const selector of ['#detailFacts','#detailCategory','#detailCompanyNote','#detailChartStatus','#detailChartTooltip','#detailChartMethod','#detailChartLegend','#detailQuote','#detailIntro','#detailCompanies','#detailMarketShare','#detailNews','#detailSources','#detailMetrics','#detailPriceTable','#detailChart'])$(selector).innerHTML='';
-    $('#detailPeriod').value='12';$('#detailSeries').dataset.identity='';
+    for(const selector of ['#detailFacts','#detailCategory','#detailCompanyNote','#detailChartStatus','#detailChartTooltip','#detailChartMethod','#detailChartLegend','#detailChartWarning','#detailChartRange','#detailQuote','#detailIntro','#detailCompanies','#detailMarketShare','#detailNews','#detailSources','#detailMetrics','#detailPriceTable','#detailChart'])$(selector).innerHTML='';
+    $('#detailPeriod').value='3';$('#detailSeries').dataset.identity='';
     await refresh();if(expanded&&identity===id)expandChart();
   }
   window.MilkywayMarketDetail=Object.freeze({initialize(options){hooks=options;mount();setInterval(()=>{if(!document.hidden)refresh();},15000);},open,quote});
