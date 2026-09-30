@@ -94,6 +94,13 @@ services:
       WORKER_ROLE: personal-data
     command: [python, -m, cloud_app.worker]
 
+  market-data:
+    <<: *service
+    depends_on:
+      app:
+        condition: service_healthy
+    command: [python, -m, cloud_app.market_worker]
+
   backup:
     <<: *service
     depends_on:

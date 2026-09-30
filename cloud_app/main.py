@@ -1759,6 +1759,7 @@ def export_backtests(user: User = Depends(current_user), session: Session = Depe
 def _personal_dashboard(user: User, session: Session) -> dict:
     from .personal_data import personal_data_status
     from .research_ai import configuration_status
+    from .market_service import market_overview as personal_market_overview
     ai_status = configuration_status(settings)
     accounts = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user.id).order_by(PaperAccount.created_at)).all()
     required_symbols = set()
@@ -1816,6 +1817,7 @@ def _personal_dashboard(user: User, session: Session) -> dict:
                           "message": data.get("error") or "선택 종목 일봉 자동 갱신", "last_completed_session": last,
                           "symbol_count": len(data.get("symbols", []))},
         "market": market, "market_groups": {"us": market, "kr": []},
+        "market_overview": personal_market_overview(settings),
         "sector_heatmap": empty_heatmap, "sector_heatmaps": {"us": empty_heatmap, "kr": empty_heatmap},
         "news": [], "accounts": snapshots,
         "data": {"first_completed_session": first, "last_completed_session": last,

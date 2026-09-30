@@ -36,7 +36,7 @@ def main():
         if archive is None or not archive.is_file():
             parser.error("restore requires an existing .zip backup file")
         print("Stopping local processes for a verified restore. A safety backup is created first.", flush=True)
-        run(COMPOSE + ["stop", "app", "paper-worker", "backtest-worker", "personal-data", "backup"])
+        run(COMPOSE + ["stop", "app", "paper-worker", "backtest-worker", "personal-data", "market-data", "backup"])
     helper = "milkyway-recovery-" + uuid.uuid4().hex[:12]
     run(COMPOSE + ["run", "--no-deps", "-d", "--name", helper, "backup", "sleep", "600"])
     successful = False
