@@ -171,6 +171,9 @@ def company_snapshot(settings, sector, symbol, now=None):
 
     graph = CompanyGraph(settings)
     profile = identified(result)
+    existing = graph.by_symbol(symbol)
+    if existing and not profile.entity_id:
+        profile.entity_id = existing["entity_id"]
     result = profile.model_dump(mode="json")
     entity_key = graph.ingest(profile, sector)
     relations = graph.relations(entity_key)

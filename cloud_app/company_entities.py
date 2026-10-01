@@ -79,18 +79,27 @@ def get_entity(settings, key):
 
 
 def entity_snapshot(settings, key, now=None):
-    from .company_service import root, company_row, company_snapshot, REFRESH_SECONDS
+    from .company_service import (
+        root,
+        company_row,
+        company_snapshot,
+        related_directory,
+        REFRESH_SECONDS,
+    )
 
     entity = get_entity(settings, key)
     symbol = entity["symbols"][0] if entity["symbols"] else None
     # Keep prices/weights contextual to the actual classified directory.
-    if symbol and entity["sector"] in BY_ID:
+    sector = entity["sector"]
+    if symbol and sector is None:
+        sector = related_directory(settings, [symbol]).get(symbol, {}).get("sector")
+    if symbol and sector in BY_ID:
         try:
-            company_row(settings, entity["sector"], symbol)
+            company_row(settings, sector, symbol)
         except HTTPException:
             pass
         else:
-            return company_snapshot(settings, entity["sector"], symbol, now)
+            return company_snapshot(settings, sector, symbol, now)
     now = now or dt.datetime.now(dt.timezone.utc)
     value = entity["profile"] or CompanyKnowledge(
         symbol=symbol, entity_id=entity["entity_id"], name=entity["name"]

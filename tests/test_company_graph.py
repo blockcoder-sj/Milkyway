@@ -78,6 +78,45 @@ class CompanyGraphTests(unittest.TestCase):
         self.assertEqual(self.graph.relations(parent)[0]["target_id"], apple)
         self.assertEqual(self.graph.relations(apple)[0]["target_id"], parent)
 
+    def test_same_relationship_groups_all_evidence_and_preserves_retractions(self):
+        apple = self.graph.ingest(company(relations=[edge(detail="Apple statement")]))
+        target = self.graph.relations(apple)[0]["target_id"]
+        other_source = Source(
+            label="Subsidiary report", url="https://www.sec.gov/other"
+        )
+        private = company(
+            None,
+            "Q123",
+            "Private subsidiary",
+            relations=[
+                dict(
+                    name="Apple",
+                    entity_id="Q312",
+                    symbol="AAPL",
+                    kind="parent",
+                    detail="Subsidiary statement",
+                    source=other_source,
+                ),
+            ],
+        )
+        self.assertEqual(self.graph.ingest(private), target)
+        relations = self.graph.relations(target)
+        self.assertEqual(len(relations), 1)
+        self.assertEqual(relations[0]["kind"], "parent")
+        evidence = relations[0]["evidence"]
+        self.assertEqual(
+            {item["detail"] for item in evidence},
+            {"Apple statement", "Subsidiary statement"},
+        )
+        self.assertEqual({item["reverse"] for item in evidence}, {True, False})
+        self.assertEqual(
+            {item["source"]["url"] for item in evidence}, {SRC.url, other_source.url}
+        )
+        self.graph.ingest(company())
+        remaining = self.graph.relations(target)[0]["evidence"]
+        self.assertEqual(len(remaining), 1)
+        self.assertEqual(remaining[0]["detail"], "Subsidiary statement")
+
     def test_same_name_does_not_merge_distinct_identified_entities(self):
         key = self.graph.ingest(
             company(relations=[edge("Same", "Q123"), edge("Same", "Q456")])
@@ -188,6 +227,37 @@ class CompanyGraphTests(unittest.TestCase):
             pages.enqueue_entity(self.settings, private)["status"], "recent"
         )
         self.assertEqual(self.graph.relations(private)[0]["target_id"], key)
+
+    def test_connected_public_ticker_discovers_real_directory_context(self):
+        from cloud_app.market_details import cache_path
+
+        key = self.graph.ingest(
+            company(relations=[edge("Listed company", "Q456", "AAA", "supplier")])
+        )
+        target = self.graph.relations(key)[0]["target_id"]
+        _write_cache(
+            cache_path(self.settings, "us_45"),
+            {
+                "companies": {
+                    "rows": [
+                        dict(
+                            name="Listed company",
+                            symbol="AAA",
+                            currency="USD",
+                            market_cap=123,
+                            displayed_share_pct=100,
+                            source="Yahoo Finance",
+                            url="https://finance.yahoo.com/quote/AAA/",
+                        )
+                    ]
+                }
+            },
+        )
+        page = pages.entity_snapshot(self.settings, target, NOW)
+        self.assertEqual(page["entity_key"], target)
+        self.assertEqual(page["sector"], "us_45")
+        self.assertEqual(page["quote"]["market_cap"], 123)
+        self.assertEqual(page["entity_id"], "Q456")
 
     def test_private_wrong_provider_identity_keeps_old_data(self):
         private = self.graph.ingest(

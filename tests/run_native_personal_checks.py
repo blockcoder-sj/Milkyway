@@ -73,6 +73,7 @@ def run():
         wait_for("native workers", lambda: client.request("/health/ready")[0] == 200, timeout=25)
         assert client.request("/api/research/sessions")[0] == 401
         assert client.request("/api/company-details/kr_13/005930.KS")[0] == 401
+        assert client.request('/api/company-entities/c_' + '0'*32)[0] == 401
         registration = client.expect(201, "/api/auth/register", "POST", {
             "email": EMAIL, "password": PASSWORD, "display_name": "Offline process check", "invite_code": INVITE})
         client.csrf = registration["csrf"]
@@ -86,6 +87,14 @@ def run():
         client.expect(202, "/api/company-details/kr_13/005930.KS/refresh", "POST")
         wait_for("queued company worker", lambda: client.request("/api/company-details/kr_13/005930.KS")[1].get("description") == "Synthetic offline company collection", timeout=15)
         record("company_auth_csrf_queue_and_separate_worker")
+        company = client.expect(200, "/api/company-details/kr_13/005930.KS")
+        private = company['relations'][0]['target_id']
+        private_path = '/api/company-entities/' + private
+        page = client.expect(200, private_path)
+        assert page['symbol'] is None and page['relations'][0]['target_id'] == company['entity_key']
+        client.expect(202, private_path + '/refresh', 'POST')
+        wait_for('private company worker', lambda: client.request(private_path)[1].get('description') == 'Synthetic offline company collection', timeout=15)
+        record('canonical_private_company_navigation_and_reverse_evidence')
         room = client.expect(201, "/api/research/sessions", "POST", {"title": "Offline native check"})
         path = "/api/research/sessions/" + room["id"]
         turn = client.expect(201, path + "/messages", "POST", {"request_id": "native-request-1", "prompt": "AAPL MSFT momentum"})

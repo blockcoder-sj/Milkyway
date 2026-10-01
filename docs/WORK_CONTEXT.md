@@ -272,3 +272,43 @@ resuming; no paid AI regression approval has arrived.
   review covered these boundaries and bounded fixed-host I/O; no CodeRabbit used.
 - Synthetic cached projection benchmark: 100 relations, 30 samples, median 5.26ms,
   p95 5.74ms; no external or AI calls. UI direct navigation is the next milestone.
+
+## 2026-10-01 — company wiki milestone 2: direct navigation and evidence
+
+- Relationship graph nodes and company names now link directly to canonical
+  `#company/c_ID` pages. A separate relationship/source button shows evidence
+  without navigating. Identifiable private firms have their own pages and collect
+  public data by registered Wikidata ID; name-only references remain navigable
+  without guessed collection. Listed relationship targets discover actual cached
+  sector context and retain common IDs when their profiles are first opened.
+- History preserves the origin sector and previous company. Refreshing a deep
+  company or market detail address retains that address and does not add a new
+  history entry. Executable Node regression checks cover direct clicks, navigation
+  races, source escaping, private missing-quote display and deep-link reload.
+- Same target/type relations appear once, with all returned original statements
+  shown separately in the evidence panel and source collection. Evidence keeps
+  reporting company, direction, original explanation, date and URL. The DB still
+  stores independent statements; retracting one reporter's claim preserves others.
+- Full regression suite: 400 tests passed in 40.432s. Network-disabled packaged
+  Linux/Python3.11 process integration passed all 8 stages, including authenticated
+  company/entity queues, private worker results, CSRF, synthetic approval replay,
+  backtest/paper histories, SIGKILL recovery and isolated backup/restore. No real
+  AI call or user account/order was created by those checks. Python formatting,
+  JS syntax and diff whitespace checks passed.
+- Actual Chrome confirmed Apple graph → Claris canonical page, parent link and
+  two original evidence statements grouped into one Apple node after refresh.
+  Real public collection for Claris completed with 1 product / 2 facts / no errors.
+  Final cached Apple projection: 24 relations, 30 samples, median 23.66ms / p95
+  35.08ms; socket connections were blocked during measurement, attempts zero.
+  Actual research DB: 28 entities / 29 statements / foreign-key errors zero at
+  that checkpoint. Counts and timings are dated observations, not completeness.
+- Final local image recreated all 8 existing services without deleting runtime
+  or backup volumes; all running and app healthcheck healthy. Direct source and
+  scoped security review covered auth/CSRF, common ID admission, traversal,
+  fixed-host bounded collection, statement retention, escaped HTML/SVG, history
+  and epoch/owner races. No CodeRabbit; this does not clear whole deep-scan/OCI gates.
+- Storage milestone commit `2be4ae7` is pushed; GitHub run `36820042971` passed.
+  This UI milestone uses the same branch `codex/ai-research-workflow`; check latest
+  remote HEAD and its CI run before reporting GitHub completion.
+- LangGraph, vector search and RAG answering remain future extensions. No paid
+  AI/embedding call or new AI harness was used. Per-call approval stays required.

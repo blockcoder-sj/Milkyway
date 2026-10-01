@@ -355,44 +355,60 @@ class CompanyGraph:
                 (key, key, key),
             ).fetchall()
             result = []
+            groups = {}
             seen = set()
             for row in rows:
                 reverse = row["object_id"] == key
                 kind = INVERSE[row["kind"]] if reverse else row["kind"]
-                identity = (row["target_id"], kind, row["source_id"], row["detail"])
+                identity = (
+                    row["target_id"],
+                    kind,
+                    row["source_id"],
+                    row["detail"],
+                    reverse,
+                    row["reported_by"],
+                )
                 if identity in seen:
                     continue
                 seen.add(identity)
+                evidence = dict(
+                    detail=row["detail"],
+                    reverse=reverse,
+                    reported_by=row["reported_by"],
+                    observed_at=row["observed_at"],
+                    source=Source(
+                        label=row["label"],
+                        url=row["url"],
+                        as_of=row["as_of"],
+                        level=row["level"],
+                    ).model_dump(),
+                )
+                group_key = (row["target_id"], kind)
+                if group_key in groups:
+                    groups[group_key]["evidence"].append(evidence)
+                    continue
                 aliases = db.execute(
                     "SELECT namespace,value FROM company_aliases WHERE entity_id=?",
                     (row["target_id"],),
                 ).fetchall()
-                result.append(
-                    dict(
-                        name=row["name"],
-                        kind=kind,
-                        detail=row["detail"],
-                        target_id=row["target_id"],
-                        reverse=reverse,
-                        reported_by=row["reported_by"],
-                        symbol=next(
-                            (a["value"] for a in aliases if a["namespace"] == "ticker"),
-                            None,
-                        ),
-                        entity_id=next(
-                            (
-                                a["value"]
-                                for a in aliases
-                                if a["namespace"] == "wikidata"
-                            ),
-                            None,
-                        ),
-                        source=Source(
-                            label=row["label"],
-                            url=row["url"],
-                            as_of=row["as_of"],
-                            level=row["level"],
-                        ).model_dump(),
-                    )
+                relation = dict(
+                    name=row["name"],
+                    kind=kind,
+                    detail=row["detail"],
+                    target_id=row["target_id"],
+                    reverse=reverse,
+                    reported_by=row["reported_by"],
+                    symbol=next(
+                        (a["value"] for a in aliases if a["namespace"] == "ticker"),
+                        None,
+                    ),
+                    entity_id=next(
+                        (a["value"] for a in aliases if a["namespace"] == "wikidata"),
+                        None,
+                    ),
+                    source=evidence["source"],
+                    evidence=[evidence],
                 )
+                groups[group_key] = relation
+                result.append(relation)
             return result
