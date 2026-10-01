@@ -133,37 +133,14 @@ def enqueue_company(settings, sector, symbol, *, automatic_request=False, now=No
 
 
 def related_directory(settings, symbols, preferred_sector=None):
-    wanted = set(symbols)
-    from .sector_classifications import read as classifications
-    found = {row.symbol: {'sector': row.sector, 'name': row.name}
-             for row in classifications(settings).rows if row.symbol in wanted}
-    if not wanted:
-        return found
-    for sector, rows in KR_COMPANIES.items():
-        for code, name in rows:
-            symbol = code + ".KS"
-            if symbol in wanted and symbol not in found:
-                found[symbol] = {"sector": sector, "name": name}
-    for symbol, (sector, name) in EDITORIAL_DIRECTORY.items():
-        if symbol in wanted and symbol not in found:
-            found[symbol] = {"sector": sector, "name": name}
-    sectors = sorted(
-        (key for key, value in BY_ID.items() if value.group == "sectors"),
-        key=lambda key: key != preferred_sector,
-    )
-    for sector in sectors:
-        if wanted.issubset(found):
-            break
-        for row in classified_companies(settings, sector)[0].rows:
-            if row.symbol in wanted and row.symbol not in found:
-                found[row.symbol] = {"sector": sector, "name": row.name}
-    return found
+    from .company_directory import lookup
+    return lookup(settings, symbols, preferred_sector)
 
 
 def company_snapshot(settings, sector, symbol, now=None):
     if sector in BY_ID and BY_ID[sector].group == 'sectors' and SYMBOL.fullmatch(symbol):
         # Old bookmarks keep working after a source-backed sector correction.
-        from .sector_classifications import read as classifications
+        from .sector_classifications import read_view as classifications
         verified = next((row for row in classifications(settings).rows if row.symbol == symbol), None)
         if verified:
             sector = verified.sector

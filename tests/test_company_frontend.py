@@ -7,6 +7,43 @@ import unittest
 
 class CompanyFrontendTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("node"), "Node is needed for frontend checks")
+    def test_korean_brief_revenue_originals_and_bottom_only_sources(self):
+        script = r"""
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ctx=vm.createContext({window:{MilkywayResearchView:{escape}},Intl,Number,String,Set,Map,URL,encodeURIComponent});
+for(const name of ['format.js','market-directory.js','company-research-view.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
+const view=ctx.window.MilkywayCompanyResearchView;
+const src={label:'SEC <report>',url:'https://www.sec.gov/report.htm#part1',level:'primary',as_of:'2026-02-25'};
+const rejected={label:'Rejected',url:'https://en.wikipedia.org/wiki/X',level:'primary'};
+const base={group:'product',member:'nvda:DataCenterMember',label:'데이터센터',value:150000000,unit:'USD',start:'2025-01-27',end:'2026-01-25',total:200000000,metric:'us-gaap:Revenues',source:src};
+const data={brief:[{title:'매출 구조',detail:'기기·서비스 판매',source:src}],sources:[src,rejected],products:[
+ {title:'공시 발췌',detail:'',original:'<img src=x> Untranslated source',source:{...src,url:'https://www.sec.gov/report.htm#part2'}},
+ {title:'Bad',detail:'Rejected content',source:rejected}],revenue_mix:[base,{...base,member:'nvda:ComputeMember',label:'컴퓨팅',value:100000000,parent:base.member},
+ {...base,member:'x:OtherMember',label:'기타',value:1,total:null},{...base,group:'geography',member:'country:US',label:'미국'}]};
+const reading=view.create(data),brief=reading.essentials(),original=reading.fact(data.products[0]),revenue=reading.revenue('product'),footer=reading.footer();
+assert.equal(reading.count,1);assert(brief.includes('기기·서비스 판매'));assert(!brief.includes('href="https:'));
+assert(brief.includes('data-company-citation="1"'));assert(!brief.includes('target="_blank"'));
+assert(original.includes('<details class="company-original">'));assert(!original.includes('<details class="company-original" open'));
+assert(original.includes('&lt;img'));assert(!original.includes('<img'));assert(!original.includes('href="https:'));
+assert.equal(reading.fact(data.products[1]),'');assert(!footer.includes('wikipedia'));assert(footer.includes('report.htm#part2'));
+assert(footer.includes('이 자료의 근거 위치'));
+assert(footer.includes('SEC &lt;report&gt;'));assert(footer.includes('https://translate.google.com/'));assert(footer.includes('선택한 공개 발췌문만'));
+assert(revenue.includes('150,000,000 USD'));assert(revenue.includes('75%'));assert(revenue.includes('company-revenue-child'));
+assert(revenue.includes('분모 미확인'));assert(revenue.includes('다시 합산하지 않습니다'));assert(!revenue.includes('미국'));
+assert.equal(reading.groups.length,2);assert(!revenue.includes('href="https:'));
+assert.equal(view.accepted({url:'javascript:alert(1)',level:'primary'}),false);
+assert.equal(view.accepted({url:'https://user:pass@www.sec.gov/',level:'primary'}),false);
+assert.equal(view.accepted({url:'https://www.sec.gov/',level:'encyclopedia'}),false);
+assert.equal(view.accepted({url:'https://x.wikidata.org/wiki/X',level:'primary'}),false);
+assert(view.create({}).essentials().includes('아직 검토되지 않았습니다'));
+"""
+        root = Path(__file__).resolve().parents[1] / 'cloud_app/static'
+        result = subprocess.run([shutil.which('node'), '-e', script, str(root)],
+            capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for frontend checks")
     def test_business_relation_priority_roles_directions_and_safe_links(self):
         script = r"""
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
@@ -93,7 +130,7 @@ function el(id){
 }
 const panel={dataset:{},querySelectorAll(){return[];},addEventListener(kind,fn){panelHandlers[kind]=fn;}};
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let state={workspace:'company',me:{id:'owner'},config:{personal_local_mode:true}},calls=[],resolveDelayed;
+let state={workspace:'company',me:{id:'owner'},config:{personal_local_mode:true}},calls=[],resolveDelayed,poll;
 const src={label:'SEC <bad>',url:'https://www.sec.gov/',as_of:'2025-12-31',level:'primary'};
 const result={symbol:'AAPL',name:'<script>Apple</script>',description:'description',sector:'us_45',sector_label:'Information Technology',
  entity_key:'c_'+'a'.repeat(32),collectable:true,
@@ -105,8 +142,8 @@ const result={symbol:'AAPL',name:'<script>Apple</script>',description:'descripti
 let delayed=false,response=result;
 const ctx=vm.createContext({window:{MilkywayResearchView:{escape},getSelection:()=>null},
  document:{querySelector:el,createElement:()=>panel,addEventListener(kind,fn){documentHandlers[kind]=fn;}},
- history:{state:null,pushState(value){this.state=value;},back(){}},setInterval(){},Intl,Date,Number,Math,Map,Set,URL,encodeURIComponent});
-for(const name of ['format.js','list-paging.js','market-directory.js','company-relations.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
+ history:{state:null,pushState(value){this.state=value;},back(){}},setInterval(fn){poll=fn;},Intl,Date,Number,Math,Map,Set,URL,encodeURIComponent});
+for(const name of ['format.js','list-paging.js','market-directory.js','company-research-view.js','company-relations.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
 ctx.window.MilkywayCompany.initialize({getState:()=>state,openWorkspace:workspace=>{state.workspace=workspace;},
  api:async(path,options)=>{calls.push({path,options});if(delayed)return await new Promise(resolve=>{resolveDelayed=resolve});return response;}});
 function click(attribute,value){panelHandlers.click({target:{closest(selector){return selector==='['+attribute+']'?{dataset:{[attribute.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:String(value)}}:null;}}});}
@@ -121,9 +158,12 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
  click('data-relation-page',2);assert(el('#companyRelationSummary').textContent.includes('현재 페이지 4개'));
  el('#companyRelationFilter').value='supplier';el('#companyRelationFilter').change();
  assert(el('#companyRelationFocus').innerHTML.includes(result.relations[0].target_id));assert(!el('#companyRelationList').innerHTML.includes('&lt;1&gt;'));
+ response={...result,relations:[...result.relations.slice(1),result.relations[0]]};poll();await new Promise(setImmediate);
+ assert(el('#companyRelationFocus').innerHTML.includes(result.relations[0].target_id));assert(!el('#companyRelationFocus').innerHTML.includes(result.relations[1].target_id));
+ response=result;poll();await new Promise(setImmediate);
  assert(el('#companyGraph').innerHTML.includes('href="#company/'+result.relations[0].target_id));
  assert(el('#companyGraph').innerHTML.includes('role="link"'));assert(!el('#companyRelationList').innerHTML.includes('style='));
- assert(el('#companySources').innerHTML.includes('&lt;bad&gt;'));assert(el('#companySourceCount').textContent.includes('1개'));
+ assert(el('#companySources').innerHTML.includes('&lt;bad&gt;'));assert(el('#companySourceCount').textContent.includes('3개'));
  assert(el('#companyReportAnalysis').innerHTML.includes('&lt;script&gt;'));assert(!el('#companyReportAnalysis').innerHTML.includes('<script>'));
  assert(el('#companyRelationFilter').options[0].textContent.includes('1'));
  calls=[];await ctx.window.MilkywayCompany.openEntity(result.relations[0].target_id);
@@ -146,7 +186,7 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
  assert(!el('#companyQuote').innerHTML.includes('1,000,000'));
  assert(el('#companyRelationFocus').innerHTML.includes('Apple &lt;raw&gt;'));assert(el('#companyRelationFocus').innerHTML.includes('반대 방향'));
  assert(el('#companyRelationFocus').innerHTML.includes('First &lt;claim&gt;'));assert(el('#companyRelationFocus').innerHTML.includes('Second &lt;claim&gt;'));
- assert(el('#companyRelationList').innerHTML.includes('근거 2건'));assert(el('#companySourceCount').textContent.includes('2개'));
+ assert(el('#companyRelationList').innerHTML.includes('근거 2건'));assert(el('#companySourceCount').textContent.includes('3개'));
  assert(el('#companySources').innerHTML.includes('Second &lt;report&gt;'));
  response=result;
  calls=[];delayed=true;const opening=ctx.window.MilkywayCompany.open('us_45','AAPL');

@@ -95,11 +95,11 @@ def read_cache(settings,identity):
 
 def classified_companies(settings, identity, cache=None):
     """Reconcile a local directory without any HTTP/provider calls."""
-    from .sector_classifications import read, reconcile
+    from .sector_classifications import read_view, reconcile
     part = (cache or read_cache(settings, identity)).companies
     if not identity.startswith('us_'):
         return part, None
-    rows, audit = reconcile([row.model_dump(mode='json') for row in part.rows], identity, read(settings))
+    rows, audit = reconcile([row.model_dump(mode='json') for row in part.rows], identity, read_view(settings))
     return DetailPart[CompanyRow](**{**part.model_dump(mode='json'), 'rows': rows}), audit
 
 

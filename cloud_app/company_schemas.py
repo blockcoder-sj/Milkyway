@@ -64,6 +64,29 @@ class Financial(BaseModel):
     source: Source
 
 
+class RevenueLine(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+    group: Literal['product', 'segment', 'geography', 'revenue_type']
+    member: str = Field(min_length=1, max_length=190)
+    label: str = Field(min_length=1, max_length=160)
+    value: float = Field(ge=0, le=1e16)
+    unit: str = Field(pattern=r'^[A-Z]{3}$')
+    start: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
+    end: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
+    total: float | None = Field(default=None, gt=0, le=1e16)
+    metric: str = Field(min_length=1, max_length=120)
+    parent: str | None = Field(default=None, max_length=190)
+    source: Source
+
+    @model_validator(mode='after')
+    def valid_period(self):
+        import datetime as dt
+        first, last = dt.date.fromisoformat(self.start), dt.date.fromisoformat(self.end)
+        if not 300 <= (last - first).days <= 400 or (self.total is not None and self.value > self.total):
+            raise ValueError('Invalid annual revenue slice')
+        return self
+
+
 class CompanyKnowledge(BaseModel):
     model_config = ConfigDict(extra="forbid", revalidate_instances="always")
     symbol: str | None = Field(default=None, pattern=r"^[A-Z0-9][A-Z0-9.-]{0,19}$")
@@ -74,6 +97,8 @@ class CompanyKnowledge(BaseModel):
     description_source: Source | None = None
     facts: list[Fact] = Field(default_factory=list, max_length=30)
     brief: list[Fact] = Field(default_factory=list, max_length=8)
+    revenue_mix: list[RevenueLine] = Field(default_factory=list, max_length=80)
+    collector_version: int = Field(default=0, ge=0, le=100)
     products: list[Fact] = Field(default_factory=list, max_length=60)
     segments: list[Fact] = Field(default_factory=list, max_length=30)
     market_shares: list[Fact] = Field(default_factory=list, max_length=30)

@@ -485,3 +485,37 @@ resuming; no paid AI regression approval has arrived.
 - M3 remains: essentials first, structured reported annual revenue, collapsed English
   excerpts and all external source links at the bottom. No new AI approval arrived.
   Evidence: docs/LOCAL_REVIEW_20261002_COMPANY_RESEARCH.md.
+
+## 2026-10-02 — M3 company reading screen complete; M4/M5 continuing
+
+- Korean essentials lead company pages; actual reported annual revenue is separated
+  into product/segment/geography/alternate product-service views. Same-document,
+  metric, period, currency denominators only. Verified child rows are indented;
+  slices are not summed. Actual SEC HTML: NVIDIA 11, Microsoft 17, McDonald's 3 rows.
+- All external source links are in the bottom folded collection; main citations
+  open the document there. English originals are folded. Optional free translation
+  links send only the public excerpt on user click; no automatic paid API calls.
+- Immutable sector views and a bounded company-name index avoid repeated deep
+  copies and chart/news parsing. Public cache median over 30 reads: NVDA 121.11ms,
+  MCD 82.71ms, MSFT 116.39ms; network and cold index costs are separate.
+- Final image 6de1cdf09ef0f104091ff41a10d22f5c27716bbb277febfbe1767dd17f850bf9:
+  450 packaged checks / 172.834s OK (12 Node skipped), host CI frontend files
+  14 checks passed, offline native process integration all 8 stages passed.
+  An existing 3-second OCI synthetic worker test failed intermittently and alone;
+  moved fake spawn targets to a small helper to avoid reimporting the full FastAPI
+  test module. Runtime deadlines, pipe bounds and process cleanup assertions remain.
+  This is not actual deployed OCI/Vault evidence.
+- Same tested image deployed to 8 local services, app healthy, original personal
+  runtime/backup volumes preserved. Read-only public graph check: integrity ok,
+  rejected sources 0, FK errors 0, 1,815 collected profiles at inspection time.
+  Curated reading coverage remains limited; collected profiles are not all reviewed.
+- Chrome verified SEC revenue refresh, group changes, bottom citations, Foxconn
+  internal detail/back navigation; encyclopedia links and external links outside
+  the source section both zero. Selected relation now survives reordered refresh.
+  Proof: /tmp/milkyway-company-research-m3.png; full review in the M2/M3 review doc.
+- Latest user steering extends the work: free-source industry-level relationship
+  coverage, processed/summarized information, and reliable AI strategy replies.
+  Continue M4 data/value-chain coverage and M5 AI failure handling/validation.
+  Do not claim complete all-company coverage or zero possible external failures.
+  No renewed paid-call approval has arrived; new actual AI calls remain prohibited.
+  Use the existing user-configured key/model; no CodeRabbit or new eval harness.

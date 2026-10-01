@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from .bounded_io import read_requests_json, read_requests_bytes
 from .market_broker_feed import FixedSession
 from .company_schemas import CompanyKnowledge
+from .company_revenue import parse_revenue
 from .company_catalog import editorial_for
 from .company_filings import document, parse_report, parse_subsidiaries, subsidiary_document
 
@@ -219,7 +220,9 @@ def parse_sec(submissions, facts, symbol, now):
         facts=[
             dict(
                 title="산업 분류",
-                detail=submissions.get("sicDescription", "")[:1500],
+                detail=("SEC의 SIC 산업 분류 코드 " + str(submissions.get('sic', '미제공'))
+                    + "입니다. 시장 화면의 GICS 섹터와는 분류 체계가 다릅니다."),
+                original=submissions.get("sicDescription", "")[:1500],
                 source=source(
                     "SEC · SIC 산업 분류",
                     f"https://data.sec.gov/submissions/CIK{cik:010d}.json",
@@ -259,6 +262,7 @@ def sec_company(symbol, cik):
                 raise ValueError("Unsupported filing document format")
             raw = get(annual["url"], maximum=24 * 1024 * 1024, html=True)
             parsed_document = document(raw)
+            result['revenue_mix'] = parse_revenue(parsed_document, annual, symbol)
             analysis = parse_report(parsed_document, symbol, annual)
             for key, value in analysis.items():
                 result[key] = result.get(key, []) + value if isinstance(value, list) else value
@@ -432,6 +436,7 @@ def collect_company(payload, _configuration):
         "drivers",
         "relations",
         "financials",
+        "revenue_mix",
         "filings",
         "sources",
     ]:
@@ -444,10 +449,12 @@ def collect_company(payload, _configuration):
                 "market_shares": 30,
                 "relations": 100,
                 "financials": 30,
+                "revenue_mix": 80,
                 "filings": 12,
                 "sources": 200,
             }[key]
         ]
     result["fetched_at"] = dt.datetime.now(UTC).isoformat()
+    result['collector_version'] = 2
     result["unavailable_sources"] = list(dict.fromkeys(result["unavailable_sources"]))
     return CompanyKnowledge.model_validate(result).model_dump(mode="json")

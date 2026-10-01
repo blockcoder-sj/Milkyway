@@ -308,6 +308,7 @@ class CompanyGraph:
             for field in (
                 "facts",
                 "brief",
+                "revenue_mix",
                 "products",
                 "segments",
                 "market_shares",

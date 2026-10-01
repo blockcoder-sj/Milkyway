@@ -10,8 +10,7 @@
   });
   const operating = new Set(['supplier', 'customer', 'partner', 'competitor']);
   const order = Object.keys(kinds);
-  const sourceRank = {primary: 0, provider: 1, encyclopedia: 2};
-  const genericDetail = '공개 백과에 등록된 관계입니다. 진술의 기준일과 원자료를 확인하세요.';
+  const sourceRank = {primary: 0, provider: 1};
   const esc = value => window.MilkywayResearchView.escape(value);
   const evidence = edge => edge.evidence?.length ? edge.evidence : [edge];
   const statementDate = item => /^\d{4}-\d{2}-\d{2}$/.test(item.source?.as_of || '') ? item.source.as_of : '';
@@ -56,9 +55,8 @@
     }).join('');
     const nodes = points.map(point => {
       const item = lead(point), title = lines(point.name, 24);
-      const detail = lines(item.detail === genericDetail
-        ? '사업 역할은 원문·상세 페이지에서 확인' : item.detail || '사업 역할 설명 미등록', 27);
-      const origin = {primary: '기업·공시 원문', provider: '정보 제공사', encyclopedia: '공개 백과'}[item.source?.level] || '출처 확인';
+      const detail = lines(item.detail || '사업 역할 설명 미등록', 27);
+      const origin = {primary: '기업·공시 원문', provider: '정보 제공사·조사'}[item.source?.level] || '출처 확인';
       const valid = /^c_[a-f0-9]{32}$/.test(point.target_id || '');
       const open = valid ? `<a role="link" tabindex="0" href="#company/${point.target_id}" data-company-id="${point.target_id}" aria-label="${esc(point.name + ' 기업 상세 · ' + kinds[point.kind])}" class="company-graph-node">` : '<g>';
       return `${open}<title>${esc(point.name + ' · ' + kinds[point.kind] + '\n' + (item.detail || '') + '\n' + origin)}</title><rect x="${point.x - 130}" y="${point.y - 61}" width="260" height="122" rx="12" fill="#14111d" stroke="${colors[point.kind]}"/><text x="${point.x}" y="${point.y - 42}" text-anchor="middle" fill="${colors[point.kind]}" class="graph-kind">${esc(kinds[point.kind])}</text>${title.map((text, index) => `<text x="${point.x}" y="${point.y - 21 + index * 16}" text-anchor="middle" class="graph-name">${esc(text)}</text>`).join('')}${detail.map((text, index) => `<text x="${point.x}" y="${point.y + 16 + index * 14}" text-anchor="middle" class="graph-role">${esc(text)}</text>`).join('')}<text x="${point.x}" y="${point.y + 49}" text-anchor="middle" class="graph-evidence">${esc(origin)} · 근거 ${evidence(point).length}건</text>${valid ? '</a>' : '</g>'}`;

@@ -51,6 +51,24 @@ class ClassificationCache(BaseModel):
     errors: list[str] = Field(default_factory=list, max_length=15)
 
 
+class ReadOnlySource(Source):
+    model_config = ConfigDict(extra='forbid', frozen=True)
+
+
+class ReadOnlyClassification(Classification):
+    model_config = ConfigDict(extra='forbid', frozen=True)
+    source: ReadOnlySource
+
+
+class ClassificationView(BaseModel):
+    """Immutable shared snapshot; readers do not clone 6,000 nested models."""
+    model_config = ConfigDict(extra='forbid', frozen=True)
+    rows: tuple[ReadOnlyClassification, ...] = Field(default=(), max_length=6000)
+    fetched_at: AwareDatetime | None = None
+    attempted_at: AwareDatetime | None = None
+    errors: tuple[str, ...] = Field(default=(), max_length=15)
+
+
 def fund_url(ticker):
     if ticker not in FUNDS:
         raise ValueError("Unknown sector disclosure")
@@ -207,6 +225,21 @@ def read(settings):
         return _read(str(location), stat.st_mtime_ns, stat.st_size).model_copy(deep=True)
     except (OSError, ValueError, TypeError):
         return ClassificationCache()
+
+
+def read_view(settings):
+    """Read-only cached view, invalidated by the atomic file's timestamp/size."""
+    try:
+        location = path(settings)
+        stat = location.stat()
+        return _read_view(str(location), stat.st_mtime_ns, stat.st_size)
+    except (OSError, ValueError, TypeError):
+        return ClassificationView()
+
+
+@lru_cache(maxsize=8)
+def _read_view(location, mtime, size):
+    return ClassificationView.model_validate(_read(location, mtime, size).model_dump(mode='json'))
 
 
 @lru_cache(maxsize=8)

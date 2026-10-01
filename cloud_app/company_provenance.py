@@ -7,7 +7,7 @@ def forbidden(origin):
     if origin is None:
         return False
     value = origin if isinstance(origin, dict) else origin.model_dump()
-    host = (urlsplit(value.get('url', '')).hostname or '').lower()
+    host = (urlsplit(value.get('url', '')).hostname or '').lower().rstrip('.')
     return value.get('level') == 'encyclopedia' or any(
         host == domain or host.endswith('.' + domain)
         for domain in ('wikipedia.org', 'wikidata.org', 'wikimedia.org')

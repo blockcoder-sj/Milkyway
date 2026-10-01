@@ -54,7 +54,7 @@ def schedule(settings, now=None):
             if cached and cached.attempted_at:
                 wait = 3600 if cached.errors else REFRESH_SECONDS
                 # Old profiles are reprocessed once to add filing body evidence.
-                if not cached.errors and not cached.report_analysis and not row.symbol.endswith(".KS"):
+                if not cached.errors and (not cached.report_analysis or cached.collector_version < 2) and not row.symbol.endswith(".KS"):
                     wait = 3600
                 if (now - cached.attempted_at).total_seconds() < wait:
                     continue

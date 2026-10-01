@@ -398,6 +398,101 @@ CATALOG.update(
 )
 CATALOG["GOOG"] = deepcopy(CATALOG["GOOGL"])
 
+# Concise Korean reading notes for the existing core directory. These retain the
+# date and origin of the business report, separately from newer relationship news.
+CORE_READING = {
+    'AAPL': (
+        '아이폰·맥·아이패드·웨어러블 등 기기 판매와 디지털 콘텐츠·구독·광고·결제 등 서비스에서 매출이 발생합니다. 기기와 서비스는 서로 다른 매출 구분입니다.',
+        '개인·기업·교육·정부 고객에게 직접 판매하거나 이동통신사·재판매 업체를 통해 판매합니다.',
+        '핵심 부품과 완제품 조립을 외부 공급망에 의존합니다. 부품 공급·제조 차질, 제품 출시 시기와 유통 재고가 사업 조건입니다.'),
+    'MSFT': (
+        '클라우드 이용과 소프트웨어 구독·라이선스, 기기·게임·광고 등에서 매출이 발생합니다. Microsoft 365의 구독과 Azure의 사용량 기반 서비스는 구분해서 봅니다.',
+        '기업·공공기관·개발자·개인이 사용하며 직접 계약, 판매 파트너와 PC 제조사 경로로 공급합니다.',
+        '데이터센터·서버·전력과 네트워크, 소프트웨어 개발·보안 운영이 클라우드 제공의 기반입니다.'),
+    'NVDA': (
+        '가속 컴퓨팅·네트워크 제품과 시스템, 그래픽 제품 및 관련 소프트웨어·서비스 판매가 매출 원천입니다. GPU 출하와 시스템·플랫폼 매출의 범위를 구분합니다.',
+        '클라우드·서버·기기 제조사와 유통 경로를 통해 판매합니다. 공개되지 않은 특정 고객의 구매액은 추정하지 않습니다.',
+        '직접 웨이퍼 팹을 운영하지 않고 외부 파운드리·조립·검사·부품 공급망을 사용합니다. 첨단 생산 능력·메모리·패키징과 수출 통제가 사업 조건입니다.'),
+    'AMZN': (
+        '자체 상품 판매, 외부 판매자 수수료·물류 서비스, AWS 이용, 광고와 구독에서 매출이 발생합니다. 외부 판매자의 전체 거래액을 아마존 매출로 합치지 않습니다.',
+        '상품 구매자·입점 판매자·개발자·기업·광고주·콘텐츠 제작자가 서로 다른 고객 집단입니다.',
+        '주문 처리·배송망과 물류 인력, 상품 조달 및 AWS 데이터센터·전력·컴퓨팅 설비가 필요합니다.'),
+    'TSM': (
+        '고객의 반도체 설계를 위탁 제조하고 관련 패키징 서비스를 제공합니다. 공정과 제품별 제조 서비스가 매출의 기반입니다.',
+        '팹리스 설계사와 자체 생산을 병행하는 반도체 기업 등이 고객입니다. 익명 대형 고객 이름은 추정하지 않습니다.',
+        '노광·식각·증착·계측 장비와 웨이퍼·소재, 팹의 전력·물·첨단 패키징 생산 능력이 연결됩니다.'),
+    '005930.KS': (
+        '반도체·스마트폰·가전·디스플레이와 전장·오디오 제품을 판매합니다. 완제품과 부품 사업, 내부 거래를 구분해서 공시를 확인합니다.',
+        '일반 소비자와 기기·시스템 제조사, 기업 고객에게 직접 또는 판매망을 통해 공급합니다.',
+        '메모리·파운드리 공정과 제조 설비, 부품·소재 조달과 완제품 유통이 사업에 연결됩니다.'),
+    '000660.KS': (
+        'DRAM·NAND와 HBM·SSD 등 메모리·저장 제품을 제공합니다. 시스템에 맞춘 메모리 개발·제조·패키징을 함께 수행합니다.',
+        'AI·데이터센터·기기·시스템의 메모리 수요가 제품 사용처입니다. NVIDIA와의 확인된 개발 관계는 아래 관계도에 따로 표시합니다.',
+        '메모리 공정·패키징과 고객 시스템 설계의 적합성, 생산 설비와 소재가 제품 제공에 연결됩니다.'),
+    'GOOGL': (
+        '검색·영상 등 광고, 구독·플랫폼·기기 판매와 Google Cloud 서비스가 매출 원천입니다. 기타 신사업은 별도 보고합니다.',
+        '광고주·개인 이용자와 클라우드·업무 소프트웨어를 쓰는 기업·개발자가 서로 다른 고객 집단입니다.',
+        '데이터센터·네트워크·전력·콘텐츠와 서비스 개발·규제 대응이 사업 운영과 연결됩니다.'),
+    'JPM': (
+        '예금·대출 등에서 발생하는 순이자수익과 카드·결제·투자은행·자산 관리 등의 수수료가 수익 원천입니다. 일반 제조업의 제품 매출과 금융업의 수익 구분은 다릅니다.',
+        '개인·소기업·기업·금융기관·정부와 자산 관리 고객에게 은행·투자·결제 서비스를 제공합니다.',
+        '자금 조달과 예금 기반, 신용·시장 위험 관리, 결제·IT 운영과 규제 자본이 사업 조건입니다.'),
+    'DUK': (
+        '전력과 천연가스 공급을 중심으로 사업을 운영합니다. 고객에게 에너지 서비스를 제공하는 유틸리티입니다.',
+        '서비스 지역의 주거·상업·산업 고객과 지역 사회에 전력·가스를 제공합니다.',
+        '발전원·연료, 전력망·가스 공급 설비의 투자·운영이 에너지 공급과 연결됩니다.'),
+    'PLD': (
+        '물류 부동산을 소유·개발·운영하고 고객에게 시설과 관련 서비스를 제공합니다.',
+        '유통·전자상거래·제조·운송 기업이 시설을 사용합니다. 공개 고객 목록의 기준일과 계약 범위는 아래 관계도에 표시합니다.',
+        '물류 입지와 시설 개발·운영 여건, 고객의 공급망·물류 수요가 사업과 연결됩니다.'),
+    'XOM': (
+        '석유·가스 생산과 연료·윤활유·화학 제품, 저탄소 솔루션 사업을 운영합니다. 각 부문의 사업 단계와 제품을 구분합니다.',
+        '에너지·산업용 제품의 판매망과 기업 고객에게 제품·솔루션을 공급합니다.',
+        '자원 개발·생산, 정유·화학 설비와 투입 원료가 사업 기반입니다. 발표된 신규 프로젝트는 실제 가동과 구분합니다.'),
+    'LIN': (
+        '산업용·의료용·특수가스와 가스 관련 엔지니어링을 제공합니다.',
+        '화학·에너지·식음료·전자·의료·제조·금속·광업 분야가 고객 산업입니다.',
+        '고객의 가스 사용 공정과 고순도 공급 조건, 가스 생산·공급 설비가 연결됩니다.'),
+    'CAT': (
+        '건설·광산 장비와 산업용 엔진, 제품 사용에 필요한 기술·서비스를 제공합니다.',
+        '건설·광업과 산업용 엔진을 사용하는 고객에게 제품·솔루션을 공급합니다.',
+        '고객의 건설·광산 운영 및 장비 사용 환경이 제품 수요와 연결됩니다. 시험 중인 장비 도입과 실제 판매를 구분합니다.'),
+    'JNJ': (
+        '혁신 의약품과 의료기기·의료 기술 제품을 제공하는 두 사업 영역을 운영합니다.',
+        '의료·환자 치료에 쓰이는 의약품과 의료 기술을 제공합니다.',
+        '의약품 연구·개발과 의료기술 제품 개발, 생산·공급이 사업의 기반입니다.'),
+}
+CORE_READING['GOOG'] = CORE_READING['GOOGL']
+for _symbol, (_revenue, _customers, _inputs) in CORE_READING.items():
+    _notes = CATALOG[_symbol]
+    _origin = _notes['description_source']
+    if _symbol == 'NVDA':
+        _origin = src('NVIDIA · FY2026 Form 10-K',
+            'https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm', '2026-01-25')
+    elif _symbol == 'JPM':
+        _origin = src('JPMorganChase · 2025 Form 10-K',
+            'https://www.sec.gov/Archives/edgar/data/19617/000162828026008131/jpm-20251231.htm', '2025-12-31')
+    _notes['brief'] = [dict(title=title, detail=detail, source=_origin) for title, detail in (
+        ('무엇을 하는 기업인가', _notes['description']), ('매출이 생기는 구조', _revenue),
+        ('고객·판매 경로', _customers), ('공급망·주요 투입 요소', _inputs))]
+
+# Business segment names remain exact official labels, with Korean reading aids.
+SEGMENT_KO = {
+    'Productivity and Business Processes': '생산성·비즈니스 프로세스',
+    'Intelligent Cloud': '클라우드', 'More Personal Computing': '퍼스널 컴퓨팅',
+    'Compute & Networking': '컴퓨팅·네트워킹', 'Graphics': '그래픽',
+    'North America': '북미', 'International': '해외', 'Amazon Web Services': 'AWS 클라우드',
+    'Google Services': 'Google 서비스', 'Google Cloud': 'Google 클라우드', 'Other Bets': '기타 신사업',
+    'Consumer & Community Banking': '개인·지역 은행',
+    'Commercial & Investment Banking': '상업·투자은행', 'Asset & Wealth Management': '자산·부 관리',
+    'Upstream': '자원 개발·생산', 'Product Solutions': '연료·화학 등 제품',
+    'Low Carbon Solutions': '저탄소 솔루션', 'Innovative Medicine': '혁신 의약품', 'MedTech': '의료 기술',
+    'DX': '완제품(DX)', 'DS': '반도체(DS)', 'Samsung Display': '삼성디스플레이', 'Harman': '하만 전장·오디오',
+}
+for _notes in CATALOG.values():
+    for _row in _notes['segments']:
+        _row['title'] = SEGMENT_KO.get(_row['title'], _row['title'])
+
 # Free official product/partnership statements complement annual reports that do
 # not name commercial counterparties. Announced transitions remain labelled plans.
 APPLE_CARD = src("Apple · Apple Card 발급사 전환 발표",
@@ -515,8 +610,20 @@ def enrich(value):
         if key in {'cik', 'name', 'entity_id', 'registry_id'}:
             continue
         if isinstance(rows, list):
+            if key == 'brief' and normalized[key]:
+                data[key] = normalized[key]
+                continue
             seen, merged = set(), []
-            for row in normalized[key] + data.get(key, []):
+            preferred = {(row.get('title'), row.get('source', {}).get('url'), row.get('source', {}).get('as_of'))
+                         for row in normalized[key]} if key in {'products', 'segments', 'drivers', 'market_shares'} else set()
+            previous = []
+            for row in data.get(key, []):
+                if key == 'segments':
+                    row = {**row, 'title': SEGMENT_KO.get(row['title'], row['title'])}
+                identity = (row.get('title'), row.get('source', {}).get('url'), row.get('source', {}).get('as_of')) if isinstance(row, dict) else None
+                if identity not in preferred:
+                    previous.append(row)
+            for row in normalized[key] + previous:
                 if key == 'relations' and not row.get('symbol') and not row.get('registry_id') and row['name'] in PRIVATE_NAMES:
                     row = {**row, 'registry_id': PRIVATE_NAMES[row['name']]}
                 identity = json.dumps(row, sort_keys=True, ensure_ascii=False)

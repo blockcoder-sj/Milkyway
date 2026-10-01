@@ -108,6 +108,22 @@ class ClassificationTests(unittest.TestCase):
             provider = SimpleNamespace(run=lambda *a,**kw:fresh.model_dump(mode='json'))
             self.assertEqual([r.symbol for r in sector.refresh(settings,provider).rows], ['MCD'])
 
+    def test_shared_view_is_immutable_including_sources_and_file_change_invalidates(self):
+        with tempfile.TemporaryDirectory() as temp:
+            settings = SimpleNamespace(personal_local_mode=True, production=False, dataset_dir=Path(temp)/'data')
+            location = sector.path(settings)
+            _write_cache(location, sector.ClassificationCache(rows=[classification()], fetched_at=NOW).model_dump(mode='json'))
+            first = sector.read_view(settings)
+            self.assertIs(first, sector.read_view(settings))
+            with self.assertRaises(ValueError):
+                first.rows[0].sector = 'us_30'
+            with self.assertRaises(ValueError):
+                first.rows[0].source.label = 'Changed'
+            self.assertIsInstance(first.rows, tuple)
+            _write_cache(location, sector.ClassificationCache(rows=[classification('OTHER')], fetched_at=NOW).model_dump(mode='json'))
+            self.assertEqual(sector.read_view(settings).rows[0].symbol, 'OTHER')
+            self.assertEqual(first.rows[0].symbol, 'MCD')
+
 
 if __name__=='__main__':
     unittest.main()

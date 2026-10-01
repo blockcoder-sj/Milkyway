@@ -14,23 +14,12 @@ os.environ.setdefault("APP_ENV", "development")
 
 from cloud_app import config, credential_broker, provider_secrets
 from fastapi import HTTPException
+from tests.provider_secret_workers import (
+    bounded_test_release, oversized_test_release, stalled_identity_or_refresh,
+)
 
 
 _real_run_retrieval = provider_secrets._run_retrieval
-
-
-def stalled_identity_or_refresh(sender, settings, purpose):
-    time.sleep(30)
-
-
-def bounded_test_release(sender, settings, purpose):
-    sender.send_bytes(b"sk-test-release-abcdefghijklmnopqrstuvwxyz0123456789")
-    sender.close()
-
-
-def oversized_test_release(sender, settings, purpose):
-    sender.send_bytes(b"x" * 5000)
-    sender.close()
 
 
 class ProviderSecretDeliveryTests(unittest.TestCase):

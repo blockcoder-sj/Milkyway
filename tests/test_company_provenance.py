@@ -1,5 +1,6 @@
 """Primary research cleanup, migration and navigation without network access."""
 import json
+import datetime as dt
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -29,10 +30,25 @@ class ProvenanceTests(unittest.TestCase):
         self.temp.cleanup()
 
     def test_host_and_grade_filters_cannot_be_relabelled_as_primary(self):
-        for host in ['en.wikipedia.org', 'ko.wikipedia.org', 'www.wikidata.org', 'commons.wikimedia.org']:
+        for host in ['en.wikipedia.org', 'ko.wikipedia.org', 'www.wikidata.org', 'commons.wikimedia.org', 'en.wikipedia.org.']:
             self.assertTrue(forbidden(dict(label='Official', url='https://' + host, level='primary')))
         self.assertTrue(forbidden(dict(label='Not wiki', url='https://example.test', level='encyclopedia')))
         self.assertFalse(forbidden(SEC))
+
+    def test_reading_seed_preserves_newer_database_evidence_than_json(self):
+        now = dt.datetime.now(dt.timezone.utc)
+        fresh = CompanyKnowledge(symbol='NVDA', name='NVIDIA', attempted_at=now,
+            products=[dict(title='New verified record', detail='New detail', source=SEC)])
+        key = self.graph.ingest(fresh)
+        older = CompanyKnowledge(symbol='NVDA', name='NVIDIA', attempted_at=now-dt.timedelta(days=1))
+        from cloud_app.company_service import root, read_company
+        (root(self.settings) / 'NVDA.json').write_text(older.model_dump_json())
+        self.assertEqual(read_company(self.settings, 'NVDA').attempted_at, now)
+        with patch('cloud_app.company_service.related_directory', return_value={}):
+            seed_research(self.settings)
+        stored = self.graph.entity(key)['profile']
+        self.assertEqual(stored['attempted_at'], fresh.model_dump(mode='json')['attempted_at'])
+        self.assertTrue(any(row['title'] == 'New verified record' for row in stored['products']))
 
     def test_model_instance_revalidation_blocks_injected_encyclopedia_edges(self):
         value = CompanyKnowledge(symbol='TEST', name='Test')
