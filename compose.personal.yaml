@@ -110,6 +110,9 @@ services:
 
   company-data:
     <<: *service
+    environment:
+      <<: *environment
+      SEC_CONTACT_EMAIL: ${SEC_CONTACT_EMAIL:-}
     depends_on:
       app:
         condition: service_healthy

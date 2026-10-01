@@ -14,9 +14,11 @@
   const genericDetail = '공개 백과에 등록된 관계입니다. 진술의 기준일과 원자료를 확인하세요.';
   const esc = value => window.MilkywayResearchView.escape(value);
   const evidence = edge => edge.evidence?.length ? edge.evidence : [edge];
+  const statementDate = item => /^\d{4}-\d{2}-\d{2}$/.test(item.source?.as_of || '') ? item.source.as_of : '';
   function lead(edge) {
     return [...evidence(edge)].sort((a, b) =>
-      (sourceRank[a.source?.level] ?? 3) - (sourceRank[b.source?.level] ?? 3))[0];
+      (sourceRank[a.source?.level] ?? 3) - (sourceRank[b.source?.level] ?? 3)
+      || statementDate(b).localeCompare(statementDate(a)))[0];
   }
   function select(rows, filter) {
     const score = edge => (operating.has(edge.kind) ? 0 : 100)

@@ -1,6 +1,6 @@
 # Milkyway 작업 맥락
 
-저장일: 2026-09-30 (Asia/Seoul). 사용자 요청으로 다음 작업을 위한 인수인계를
+저장일: 2026-10-01 (Asia/Seoul). 사용자 요청으로 다음 작업을 위한 인수인계를
 저장했다. 아래 상태는 마지막 확인 당시의 기록이며 현재 상태 확인을 대신하지 않는다.
 비밀 키, 환경 변수 값, 개인 원장 데이터는 포함하지 않는다.
 
@@ -363,3 +363,82 @@ resuming; no paid AI regression approval has arrived.
   evidence retention, safe common-ID URLs, escaped text, SVG dimensions and source
   interpretation. No paid AI call, embedding, new AI harness or CodeRabbit used.
   This remains a scoped personal-local review, not pending deep-scan/OCI clearance.
+
+## 2026-10-01 — AI 5-call regression and free filing relationships
+
+- User explicitly requested another five live AI tests. The five approved calls
+  were completed through the actual Chrome conversation/preview/one-call approval
+  flow in a separate `AI 응답 재검증 · 2026-10-01 · 5회` session. All five completed
+  without errors, in 3.743–5.398s. Hypothesis clarification, v1 generation, a
+  three-field v2 adjustment, refusal of unsupported rules without mutation, and
+  final stored-rule explanation were checked. The two StrategySpecs and exported
+  Python ASTs passed. No actual backtest, account deployment or broker order was
+  made for this evaluation. Full evidence: `docs/AI_CHAT_REGRESSION_20261001.md`.
+- This supersedes the earlier pending one-call question. The new five-call scope
+  is entirely consumed; no further paid call is authorized. Model remains
+  gpt-5.4-mini, reasoning none, output cap 4,000, automatic retry zero. No AI
+  evaluation harness or embedding was added. Five passes do not prove that every
+  future provider/network request or strategy hypothesis will succeed.
+- Free SEC extraction no longer depends on Wikidata matching: official exact
+  ticker/CIK lookup and submissions revalidation precede the filing download.
+  The user supplied and authorized a SEC contact email; it is saved only in the
+  ignored owner-only `.env`, passed only to company-data and attached only to SEC
+  headers. Never copy its value into context, Git, screenshots or error output.
+- JPM's submissions exceeded the old 2MiB limit and its annual filing could sit
+  beyond the first 2,000 submissions. New bounds are 8MiB/50,000 submissions,
+  24MiB HTML, 4MiB subsidiary exhibit and 75s process deadline. Complete annual
+  filings precede short amendments. Explicit same-issuer SEC subsidiary links
+  and bounded filing indexes are supported; no arbitrary crawler/redirect is used.
+- Dedicated `company_filings.py` extracts explicit named business statements,
+  product/segment/risk paragraphs and Exhibit 21 tables without AI. Different
+  roles for one counterparty keep separate original evidence. Negated, hypothetical,
+  unnamed and unsupported-alias relationships are not invented. Body/exhibit caps
+  are 80 each; the existing 100-row profile/400-statement view bounds remain.
+- Real NVIDIA refresh: 1,431 paragraphs, 35 business statements plus 3 exhibit
+  statements, 58 raw profile relations, 6 financial fields, errors empty. UI groups
+  the evidence into 37 business nodes: suppliers 7, partners 4, competitors 19,
+  subsidiaries 7; customers/parent 0. These counts are dated observations, not
+  complete coverage. JPM returned 5 financial fields and 18 exhibit subsidiaries,
+  plus 3 official partners; its body rule found no named business edge. Wikidata
+  was rate limited for JPM while the independent SEC collection succeeded.
+- Official free notes add Chase–Amazon/United, announced Apple Card transition,
+  Microsoft–OpenAI, and NVIDIA–Meta/AWS/Anthropic partnerships. Plans remain plans;
+  technology partners are not automatically labelled paying customers. Newest
+  actual statement dates lead within a source grade; retrieval dates do not.
+- Company-data now scans received sector directories in the background, at most
+  one new job per sector/minute, with 20 manual slots and manual priority. A saved
+  cursor limits each sector scan to 50 candidates; success is due after 24h and
+  errors after 1h. HTTP 429 pauses that host for bounded Retry-After time (1min–24h),
+  with no immediate retry. Other sources continue. Source-specific retention
+  preserves failed-source evidence alongside fresh rows, while refreshed sources
+  can retract their old claims. Collection is outside HTTP/trading and has no AI key.
+- Start/default local entry now opens `#market`; explicit strategy/detail/company
+  links stay supported. Chrome verified the actual Start button and NVIDIA graph
+  → Micron canonical detail → previous screen, source panels and filter counts.
+  Sector card lines remain latest-session 1d/5m Yahoo series, not the detailed
+  chart's default 3-month daily series; ETF fallback remains separately identified.
+- Final packaged Python regression has 423 tests; 11 Node-dependent cases are
+  skipped inside the Python image and all 13 host Node frontend cases passed.
+  Packaged network-disabled native process integration passed all 8 stages,
+  including auth/CSRF, queues, private navigation, synthetic approval replay,
+  research/backtest/paper recovery and isolated backup/restore. These synthetic
+  checks neither consume paid calls nor restore the user's runtime.
+- Public-cache copy benchmark, 30 samples each, network attempts zero: NVIDIA
+  snapshot median 48.60ms/p95 76.07ms; JPM 51.19ms/p95 62.34ms. Real public HTML
+  parser, 3 samples: NVIDIA 1.11s median, JPM 7.791s median. A concurrent regression
+  load sample had up to 228.53ms p95; figures do not measure provider latency.
+- Source/code/scoped security review covered identity validation, source-local
+  exhibit identities, contact CRLF rejection and credential separation, fixed-host
+  no-redirect bounded I/O, pathname guards, safe diagnostics, source retention,
+  queue/cursor bounds and escaped HTML/SVG. No dependencies or CodeRabbit added.
+  Whole deep-scan/OCI/public deployment gates remain unchanged.
+- Existing 8 local services were rebuilt/recreated with runtime and backup volumes
+  preserved; app startup reported ready. Completion/push/CI evidence is recorded
+  in `docs/LOCAL_REVIEW_20261001_EDGAR.md`; check branch HEAD/run before reporting
+  current GitHub status. No public deployment or real trading order was performed.
+- Remaining data limits: large directories are still being collected; not every
+  relationship category/company is populated. Free sources can omit counterparties,
+  fail temporarily or exceed supported formats/alias rules. Korean OpenDART key
+  request remains unanswered; `.env`/example has an empty reserved DART_API_KEY,
+  but the DART collector is not implemented or verified. LangGraph/RAG is also a
+  separate future extension, not part of the paid-call approval or this collector.

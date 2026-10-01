@@ -12,6 +12,8 @@ from .market_service import _write_cache
 from .provider_process import ProviderProcess
 from .company_graph import CompanyGraph
 from .company_entities import get_entity, identified, bootstrap
+from .company_schedule import schedule, automatic
+from .company_retention import preserve_previous
 
 _provider = ProviderProcess(collect_company)
 
@@ -59,25 +61,7 @@ def process_request(settings, path):
         parsed = identified(result)
         if parsed.symbol != symbol or (qid and parsed.entity_id != qid):
             raise ValueError("Wrong company result")
-        if parsed.errors:
-            retained = []
-            for key in (
-                "products",
-                "segments",
-                "market_shares",
-                "drivers",
-                "relations",
-                "financials",
-                "filings",
-            ):
-                if old and not getattr(parsed, key) and getattr(old, key):
-                    setattr(parsed, key, getattr(old, key))
-                    retained.append(key)
-            if retained:
-                date = old.fetched_at.isoformat() if old.fetched_at else "기준 시각 미제공"
-                parsed.errors.append(
-                    f"미수신 항목은 이전 수집({date}) 자료를 유지합니다. 항목별 원자료 기준일을 확인하세요."
-                )
+        preserve_previous(parsed, old)
         parsed.attempted_at = now
     except (RuntimeError, TimeoutError, OSError, ValueError):
         parsed = old or CompanyKnowledge(symbol=symbol, entity_id=qid, name=row["name"])
@@ -102,11 +86,17 @@ def main():
     bootstrap(settings)
     requests = root(settings) / "requests"
     requests.mkdir(parents=True, exist_ok=True)
+    last_schedule = 0.0
     try:
         while True:
-            pending = sorted(requests.glob("*.json"), key=lambda p: p.stat().st_mtime)[
-                :200
-            ]
+            if time.monotonic() - last_schedule >= 60:
+                try:
+                    schedule(settings)
+                except (OSError, ValueError, sqlite3.Error):
+                    pass
+                last_schedule = time.monotonic()
+            # User refreshes precede automatic background work. Heartbeat each issuer.
+            pending = sorted(requests.glob("*.json"), key=lambda p: (automatic(p), p.stat().st_mtime))[:1]
             for path in pending:
                 try:
                     detail = "company " + process_request(settings, path)
@@ -137,7 +127,7 @@ def main():
                 )
                 db.add(heartbeat)
                 db.commit()
-            time.sleep(3)
+            time.sleep(1 if pending else 3)
     finally:
         _provider.close()
 

@@ -77,6 +77,10 @@ class CompanyKnowledge(BaseModel):
     financials: list[Financial] = Field(default_factory=list, max_length=30)
     filings: list[Source] = Field(default_factory=list, max_length=12)
     sources: list[Source] = Field(default_factory=list, max_length=200)
+    report_analysis: Fact | None = None
+    unavailable_sources: list[Literal[
+        "wikidata", "sec", "sec_financials", "sec_report", "sec_subsidiaries", "wise"
+    ]] = Field(default_factory=list, max_length=6)
     fetched_at: AwareDatetime | None = None
     attempted_at: AwareDatetime | None = None
     errors: list[str] = Field(default_factory=list, max_length=12)

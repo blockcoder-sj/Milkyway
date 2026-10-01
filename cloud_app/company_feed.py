@@ -1,17 +1,58 @@
-"""Bounded public company research. No credentials, AI, orders or dynamic hosts."""
+"""Bounded public research. SEC contact headers only; no AI or trading calls."""
 import datetime as dt
 import math
+import os
 import re
+import time
 from urllib.parse import quote, urlsplit
 from bs4 import BeautifulSoup
 from .bounded_io import read_requests_json, read_requests_bytes
 from .market_broker_feed import FixedSession
 from .company_schemas import CompanyKnowledge
 from .company_catalog import editorial_for
+from .company_filings import parse_report, parse_subsidiaries, subsidiary_document
 
 UTC = dt.timezone.utc
 AGENT = "MilkywayPersonal/1.0"
 WIKI = "https://www.wikidata.org/w/api.php"
+_sec_last_request = 0.0
+_sec_index = None
+_sec_index_at = 0.0
+_wiki_last_request = 0.0
+_cooldowns = {}
+
+
+class SourceCoolingDown(RuntimeError):
+    """A source asked this collector to pause. No request or retry is made."""
+
+
+def respect_source_limit(host):
+    global _sec_last_request, _wiki_last_request
+    now = time.monotonic()
+    if now < _cooldowns.get(host, 0):
+        raise SourceCoolingDown("Source request limit")
+    if host in {"data.sec.gov", "www.sec.gov"}:
+        time.sleep(max(0, 0.35 - (now - _sec_last_request)))
+        _sec_last_request = time.monotonic()
+    elif host in {"www.wikidata.org", "en.wikipedia.org", "ko.wikipedia.org"}:
+        time.sleep(max(0, 0.4 - (now - _wiki_last_request)))
+        _wiki_last_request = time.monotonic()
+
+
+def remember_source_limit(host, response):
+    if response.status_code != 429:
+        return
+    # No automatic retry. Bound an untrusted Retry-After header and pause this host.
+    raw = str(response.headers.get("Retry-After", ""))[:100]
+    try:
+        seconds = int(raw)
+    except ValueError:
+        from email.utils import parsedate_to_datetime
+        try:
+            seconds = (parsedate_to_datetime(raw) - dt.datetime.now(UTC)).total_seconds()
+        except (ValueError, TypeError, OverflowError):
+            seconds = 60
+    _cooldowns[host] = time.monotonic() + max(60, min(seconds, 86400))
 
 
 def get(url, params=None, maximum=4 * 1024 * 1024, html=False):
@@ -24,6 +65,7 @@ def get(url, params=None, maximum=4 * 1024 * 1024, html=False):
             "en.wikipedia.org",
             "ko.wikipedia.org",
             "data.sec.gov",
+            "www.sec.gov",
             "comp.wisereport.co.kr",
         }
         or parsed.username
@@ -31,18 +73,31 @@ def get(url, params=None, maximum=4 * 1024 * 1024, html=False):
         or parsed.port not in (None, 443)
     ):
         raise ValueError("Unapproved company data host")
+    headers = {"User-Agent": AGENT, "Accept": "text/html" if html else "application/json"}
+    if parsed.hostname in {"data.sec.gov", "www.sec.gov"}:
+        contact = os.getenv("SEC_CONTACT_EMAIL", "").strip()
+        if contact and not re.fullmatch(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@[A-Za-z0-9.-]{1,180}\.[A-Za-z]{2,24}", contact):
+            raise ValueError("SEC contact configuration invalid")
+        if parsed.hostname == "www.sec.gov":
+            if not contact:
+                raise ValueError("SEC contact configuration required")
+            if not (parsed.path == "/files/company_tickers.json" or re.fullmatch(
+                r"/Archives/edgar/data/\d{1,10}/\d{18}/[A-Za-z0-9_.-]{1,160}", parsed.path
+            ) and parsed.path.rsplit("/", 1)[-1] not in {".", ".."}):
+                raise ValueError("Unapproved SEC document path")
+        if contact:
+            headers["User-Agent"] = AGENT + " " + contact
+    respect_source_limit(parsed.hostname)
     with FixedSession() as session:
         response = session.get(
             url,
             params=params,
-            headers={
-                "User-Agent": AGENT,
-                "Accept": "text/html" if html else "application/json",
-            },
-            timeout=(3, 10),
+            headers=headers,
+            timeout=(3, 15),
             stream=True,
         )
         try:
+            remember_source_limit(parsed.hostname, response)
             response.raise_for_status()
             return (
                 read_requests_bytes(response, maximum_bytes=maximum)
@@ -327,7 +382,7 @@ def parse_sec(submissions, facts, symbol, now):
         raise ValueError("SEC companyfacts identity mismatch")
     filings = []
     forms = recent.get("form", [])
-    for index, form in enumerate(forms[:2000]):
+    for index, form in enumerate(forms[:50000]):
         if form not in {"10-K", "10-Q", "20-F", "40-F", "10-K/A"}:
             continue
         filing_date = recent["filingDate"][index]
@@ -446,7 +501,7 @@ def sec_company(symbol, cik):
     now = dt.datetime.now(UTC)
     submissions = get(
         f"https://data.sec.gov/submissions/CIK{int(cik):010d}.json",
-        maximum=2 * 1024 * 1024,
+        maximum=8 * 1024 * 1024,
     )
     error = None
     try:
@@ -454,13 +509,86 @@ def sec_company(symbol, cik):
             f"https://data.sec.gov/api/xbrl/companyfacts/CIK{int(cik):010d}.json",
             maximum=8 * 1024 * 1024,
         )
-    except Exception:
+    except Exception as exc:
         facts = {}
-        error = "SEC 재무 수치를 수신하지 못했습니다. 수신한 공시 링크는 유지합니다"
+        error = collection_error("SEC 재무 수치", exc)
     result = parse_sec(submissions, facts, symbol, now)
     if error:
         result["errors"] = [error]
+        result["unavailable_sources"] = ["sec_financials"]
+    # A recent amendment can contain only a cover/signature page. Prefer the
+    # complete annual filing and retain amendments in the public filing list.
+    annual = next((filing for filing in result["filings"] if filing["label"] in {
+        "SEC · 10-K", "SEC · 20-F", "SEC · 40-F"
+    }), None) or next((filing for filing in result["filings"] if filing["label"] == "SEC · 10-K/A"), None)
+    if annual:
+        try:
+            if not re.search(r"\.html?$", annual["url"], re.I):
+                raise ValueError("Unsupported filing document format")
+            raw = get(annual["url"], maximum=24 * 1024 * 1024, html=True)
+            analysis = parse_report(raw, symbol, annual)
+            for key, value in analysis.items():
+                result[key] = result.get(key, []) + value if isinstance(value, list) else value
+            base = annual["url"].rsplit("/", 1)[0] + "/"
+            try:
+                exhibit_url = subsidiary_document(raw, annual["url"])
+                if not exhibit_url:
+                    index = get(base + "index.json", maximum=1024 * 1024)
+                    exhibit = next((item.get("name", "") for item in index.get("directory", {}).get("item", [])[:2000]
+                        if re.fullmatch(r"[A-Za-z0-9_.-]{1,160}", item.get("name", ""))
+                        and re.search(r"(?:ex(?:hibit)?[-_]?21(?:1|01)?)[_.-].*|(?:ex(?:hibit)?[-_]?21(?:1|01)?)\.html?$", item["name"], re.I)
+                        and re.search(r"\.html?$", item["name"], re.I)), None)
+                    exhibit_url = base + exhibit if exhibit else None
+                if exhibit_url:
+                    origin = source("SEC · Exhibit 21 자회사 명세서", exhibit_url, annual["as_of"] if exhibit_url.startswith(base) else None)
+                    subsidiaries = parse_subsidiaries(get(origin["url"], maximum=4 * 1024 * 1024, html=True), origin)
+                    result["relations"] += subsidiaries
+                    result["sources"].append(origin)
+                    result["report_analysis"]["detail"] += f" 자회사 명세서에서 {len(subsidiaries):,}건을 추가했습니다(최대 80건)."
+                else:
+                    result["report_analysis"]["detail"] += " 이번 공시에서 지원 형식의 자회사 명세서 링크를 찾지 못했습니다."
+            except Exception as exc:
+                result.setdefault("errors", []).append(collection_error("SEC 자회사 명세서", exc))
+                result.setdefault("unavailable_sources", []).append("sec_subsidiaries")
+        except Exception as exc:
+            result.setdefault("errors", []).append(collection_error("SEC 공시 본문", exc))
+            result.setdefault("unavailable_sources", []).extend(["sec_report", "sec_subsidiaries"])
     return result
+
+
+def sec_identity(symbol):
+    """Official exact ticker lookup; do not depend on an encyclopedia match."""
+    global _sec_index, _sec_index_at
+    if _sec_index is None or time.monotonic() - _sec_index_at > 86400:
+        raw = get("https://www.sec.gov/files/company_tickers.json", maximum=4 * 1024 * 1024)
+        rows = raw.values() if isinstance(raw, dict) else []
+        _sec_index = {row["ticker"]: str(row["cik_str"]) for row in rows
+            if isinstance(row, dict) and isinstance(row.get("ticker"), str)
+            and re.fullmatch(r"\d{1,10}", str(row.get("cik_str", "")))}
+        _sec_index_at = time.monotonic()
+    return _sec_index.get(symbol)
+
+
+def collection_error(label, exc):
+    """Known diagnostics only: no remote response text, credentials or headers."""
+    from requests import HTTPError, Timeout, RequestException
+    from .bounded_io import ResponseTooLarge
+    if isinstance(exc, HTTPError):
+        status = getattr(exc.response, "status_code", None)
+        detail = f"HTTP {status}" if status in {400, 401, 403, 404, 429, 500, 502, 503, 504} else "공급자 HTTP 오류"
+    elif isinstance(exc, SourceCoolingDown):
+        detail = "공급자 요청 제한에 따른 대기 중 · 이번 출처는 재호출하지 않음"
+    elif isinstance(exc, ResponseTooLarge):
+        detail = "자료가 수신 크기 제한을 초과함"
+    elif isinstance(exc, (Timeout, TimeoutError)):
+        detail = "응답 시간 초과"
+    elif isinstance(exc, RequestException):
+        detail = "네트워크 연결 실패"
+    elif isinstance(exc, ValueError) and str(exc).startswith("SEC contact configuration"):
+        detail = ".env의 SEC_CONTACT_EMAIL 확인 후 기업 수집 프로세스 재시작 필요"
+    else:
+        detail = "식별자 또는 문서 형식을 확인할 수 없음"
+    return f"{label} 수신·검증 실패 ({detail}). 확보한 다른 원자료는 유지합니다"
 
 
 def parse_wise(raw, symbol):
@@ -532,7 +660,7 @@ def collect_company(payload, _configuration):
     if not symbol and not requested_qid:
         raise ValueError("Missing company identity")
     editorial = editorial_for(symbol) if symbol else {}
-    result = {"symbol": symbol, "name": name[:120], "errors": [], "sources": []}
+    result = {"symbol": symbol, "name": name[:120], "errors": [], "sources": [], "unavailable_sources": []}
     cik = editorial.pop("cik", None)
     qid = requested_qid or editorial.pop("entity_id", None)
     editorial.pop("entity_id", None)
@@ -541,8 +669,15 @@ def collect_company(payload, _configuration):
         wiki, wiki_cik = wikidata(name, symbol, qid)
         result.update(wiki)
         cik = cik or wiki_cik
-    except Exception:
-        result["errors"].append("공개 백과 정보를 수신하거나 종목과 일치시킬 수 없습니다")
+    except Exception as exc:
+        result["errors"].append(collection_error("Wikidata 공개 기업 정보", exc))
+        result["unavailable_sources"].append("wikidata")
+    if not cik and symbol and not symbol.endswith(".KS"):
+        try:
+            cik = sec_identity(symbol)
+        except Exception as exc:
+            result["errors"].append(collection_error("SEC 종목·CIK 목록", exc))
+            result["unavailable_sources"].append("sec")
     try:
         extra = (
             wise_company(symbol)
@@ -552,11 +687,12 @@ def collect_company(payload, _configuration):
             else {}
         )
         for key, value in extra.items():
-            result[key] = result.get(key, []) + value
+            result[key] = value + result.get(key, []) if isinstance(value, list) else value
         if symbol and not symbol.endswith(".KS") and not cik:
             result["errors"].append("SEC 기업 식별자가 확인되지 않아 공시 재무 수치를 표시하지 않습니다")
-    except Exception:
-        result["errors"].append("기업 공시·개요 자료 수신에 실패했습니다")
+    except Exception as exc:
+        result["errors"].append(collection_error("기업 공시·개요", exc))
+        result["unavailable_sources"].append("wise" if symbol and symbol.endswith(".KS") else "sec")
     for key, value in editorial.items():
         if isinstance(value, list):
             result[key] = value + result.get(key, [])
@@ -587,4 +723,5 @@ def collect_company(payload, _configuration):
             }[key]
         ]
     result["fetched_at"] = dt.datetime.now(UTC).isoformat()
+    result["unavailable_sources"] = list(dict.fromkeys(result["unavailable_sources"]))
     return CompanyKnowledge.model_validate(result).model_dump(mode="json")

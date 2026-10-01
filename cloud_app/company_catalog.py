@@ -397,6 +397,47 @@ CATALOG.update(
 )
 CATALOG["GOOG"] = deepcopy(CATALOG["GOOGL"])
 
+# Free official product/partnership statements complement annual reports that do
+# not name commercial counterparties. Announced transitions remain labelled plans.
+APPLE_CARD = src("Apple · Apple Card 발급사 전환 발표",
+    "https://www.apple.com/newsroom/2026/01/chase-to-become-new-issuer-of-apple-card/", "2026-01-07")
+CATALOG["JPM"]["relations"] += [
+    dict(name="Amazon", kind="partner", symbol="AMZN",
+        detail="Amazon 결제 화면의 Chase Pay Over Time 분할 결제 서비스 · 일부 Chase 카드 고객에 순차 제공", source=src("Chase · Amazon 결제 서비스 안내", "https://www.chase.com/personal/credit-cards/education/basics/a-guide-chase-pay-over-time-on-amazon", "열람 2026-10-01")),
+    dict(name="United Airlines", kind="partner", symbol="UAL",
+        detail="United 개인·사업자 공동 브랜드 신용카드와 MileagePlus 고객 혜택", source=src("Chase · United 공동 브랜드 카드", "https://www.chase.com/personal/credit-cards/united", "열람 2026-10-01")),
+    dict(name="Apple", kind="partner", symbol="AAPL",
+        detail="Apple Card 신규 발급사 전환 합의 · 2026-01 발표 당시 약 24개월 전환 예상. 전환 완료를 뜻하지 않습니다.", source=APPLE_CARD),
+]
+CATALOG["AAPL"]["relations"] += [
+    dict(name="JPMorgan Chase", kind="partner", symbol="JPM",
+        detail="Apple Card 발급사 전환 합의 · 2026-01 발표 당시 약 24개월 전환 예상. 전환 완료를 뜻하지 않습니다.", source=APPLE_CARD),
+    dict(name="Mastercard", kind="partner", symbol="MA",
+        detail="Apple Card 결제 네트워크 · 발급사 전환 후에도 네트워크 유지 예정", source=APPLE_CARD),
+]
+CATALOG["MSFT"]["relations"].append(dict(name="OpenAI", kind="partner", symbol=None,
+    detail="클라우드·AI 협력 계약 개정 발표 · 계약 조건은 원문 기준으로 확인", source=src("Microsoft · OpenAI 협력 계약 개정", "https://blogs.microsoft.com/blog/2026/04/27/the-next-phase-of-the-microsoft-openai-partnership/", "2026-04-27")))
+
+ANTHROPIC_PARTNERSHIP = src(
+    "Microsoft · NVIDIA·Anthropic 협력 발표",
+    "https://blogs.microsoft.com/blog/2025/11/18/microsoft-nvidia-and-anthropic-announce-strategic-partnerships/",
+    "2025-11-18",
+)
+CATALOG["NVDA"]["relations"] += [
+    dict(name="Meta Platforms", kind="partner", symbol="META",
+        detail="AI 데이터센터의 CPU·GPU·네트워크 및 모델 공동 설계 협력 · Blackwell·Rubin GPU 확장 계획 포함. 발표된 도입 규모를 매출이나 완료된 납품으로 계산하지 않습니다.",
+        source=src("NVIDIA · Meta 인프라 협력 발표", "https://nvidianews.nvidia.com/news/meta-builds-ai-infrastructure-with-nvidia", "2026-02-17")),
+    dict(name="Amazon", kind="partner", symbol="AMZN",
+        detail="AWS의 NVLink Fusion·Trainium4·Graviton·Nitro 및 클라우드 인프라 통합 협력 · 신규 통합은 발표 당시 계획을 포함합니다.",
+        source=src("NVIDIA · AWS 협력 확대", "https://blogs.nvidia.com/blog/aws-partnership-expansion-reinvent/", "2025-12-02")),
+    dict(name="Anthropic", kind="partner", symbol=None,
+        detail="AI 모델·GPU 아키텍처 설계와 엔지니어링 협력 발표 · 향후 컴퓨팅 용량·투자 약정은 실제 납품·투자 완료를 뜻하지 않습니다.",
+        source=ANTHROPIC_PARTNERSHIP),
+]
+CATALOG["MSFT"]["relations"].append(dict(name="Anthropic", kind="partner", symbol=None,
+    detail="Azure에서 Claude 제공과 Copilot·Foundry 모델 접근 확대 협력 · 컴퓨팅 구매 약정은 완료된 매출을 뜻하지 않습니다.",
+    source=ANTHROPIC_PARTNERSHIP))
+
 # SEC identifiers are fixed only for well-known, ticker-bound issuers. Wikidata
 # supplies identifiers for the wider directory; SEC rechecks the ticker itself.
 CIKS = {

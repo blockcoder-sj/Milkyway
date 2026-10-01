@@ -454,7 +454,7 @@ async function enterApp(me = null) {
   const company = location.hash.match(/^#company\/([a-z0-9_]+)\/([A-Z0-9.-]+)$/);
   const entity = location.hash.match(/^#company\/(c_[a-f0-9]{32})$/);
   const requested = location.hash === "#market" ? "market" : location.hash === "#strategy" ? "strategy" : null;
-  await showDashboard(requested || (state.config.personal_local_mode || state.config.local_demo_data ? "strategy" : "market"), !detail && !company && !entity);
+  await showDashboard(requested || "market", !detail && !company && !entity);
   if (detail && state.config.personal_local_mode) await window.MilkywayMarketDetail.open(detail[1],false);
   if (company && state.config.personal_local_mode) await window.MilkywayCompany.open(company[1],company[2],false);
   if (entity && state.config.personal_local_mode) await window.MilkywayCompany.openEntity(entity[1],false);
@@ -631,7 +631,7 @@ $("#registerForm").addEventListener("submit", async (event) => {
 $("#landingAction").addEventListener("click", () => {
   if (!state.me && state.config.local_auto_login) { initializeApp().catch(showStartupError); return; }
   if (!state.me) { showAuth(); return; }
-  showDashboard(state.config.personal_local_mode || state.config.local_demo_data ? "strategy" : "market").catch(showRefreshError);
+  showDashboard("market").catch(showRefreshError);
 });
 
 const profileController = window.MilkywayProfile.create({

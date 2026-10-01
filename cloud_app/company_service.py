@@ -91,9 +91,9 @@ def read_company(settings, symbol):
         return None
 
 
-def enqueue_company(settings, sector, symbol):
+def enqueue_company(settings, sector, symbol, *, automatic_request=False, now=None):
     row = company_row(settings, sector, symbol)
-    now = dt.datetime.now(UTC)
+    now = now or dt.datetime.now(UTC)
     path = root(settings) / "requests" / (symbol + ".json")
     cached = read_company(settings, symbol)
     # Opening a page repeatedly cannot create unlimited provider calls.
@@ -104,6 +104,11 @@ def enqueue_company(settings, sector, symbol):
     ):
         return {"status": "recent", "symbol": symbol}
     if path.exists():
+        if not automatic_request:
+            value = read_bounded_json(path, maximum_bytes=4096)
+            if value.get("automatic") is True:
+                value["automatic"] = False
+                _write_cache(path, value)
         return {"status": "queued", "symbol": symbol}
     from .company_graph import CompanyGraph
 
@@ -121,6 +126,7 @@ def enqueue_company(settings, sector, symbol):
             "symbol": symbol,
             "name": row["name"],
             "requested_at": now.isoformat(),
+            "automatic": automatic_request,
         },
     )
     return {"status": "queued", "symbol": symbol}

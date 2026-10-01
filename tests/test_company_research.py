@@ -125,6 +125,15 @@ class CompanyFeedTests(unittest.TestCase):
         self.assertEqual(result["financials"], [])
         self.assertTrue(result["errors"])
 
+    def test_high_volume_issuer_filings_do_not_hide_annual_report(self):
+        data = submissions()
+        recent = data["filings"]["recent"]
+        for key in recent:
+            prefix = "4" if key == "form" else recent[key][0]
+            recent[key] = [prefix] * 2500 + recent[key]
+        result = feed.parse_sec(data, {}, "AAPL", NOW)
+        self.assertEqual(result["filings"][0]["label"], "SEC · 10-K")
+
     def test_wise_identity_and_sales_mix_are_separate_from_market_share(self):
         html = b'<div id="comInfo">Samsung 005930</div><table id="cTB203"><tbody><tr><td>Memory</td><td>45.2</td></tr></tbody></table><table id="cTB204"><tr><td>99</td></tr></table>'
         result = feed.parse_wise(html, "005930.KS")
@@ -265,7 +274,45 @@ class CompanyQueueTests(unittest.TestCase):
         with patch.object(service, "QUEUE_LIMIT", 0):
             with self.assertRaises(HTTPException) as error:
                 service.enqueue_company(self.settings, "us_45", "AAPL")
-        self.assertEqual(error.exception.status_code, 429)
+            self.assertEqual(error.exception.status_code, 429)
+
+    def test_free_background_queue_and_user_refresh_priority(self):
+        from cloud_app import company_schedule as scheduler
+        with patch.object(scheduler, "BY_ID", {"us_45": SimpleNamespace(group="sectors")}), patch.object(worker._provider, "run") as provider:
+            self.assertEqual(scheduler.schedule(self.settings, NOW), ["AAPL"])
+            self.assertEqual(scheduler.schedule(self.settings, NOW), [])
+            provider.assert_not_called()
+        path = service.root(self.settings) / "requests/AAPL.json"
+        self.assertTrue(scheduler.automatic(path))
+        service.enqueue_company(self.settings, "us_45", "AAPL")
+        self.assertFalse(scheduler.automatic(path))
+
+    def test_background_reserves_queue_slots_and_respects_retry_cooldown(self):
+        from cloud_app import company_schedule as scheduler
+        with patch.object(scheduler, "QUEUE_LIMIT", 20):
+            self.assertEqual(scheduler.schedule(self.settings, NOW), [])
+        value = CompanyKnowledge(symbol="AAPL", name="Apple", errors=["failed"], attempted_at=NOW)
+        _write_cache(service.root(self.settings) / "AAPL.json", value.model_dump(mode="json"))
+        with patch.object(scheduler, "BY_ID", {"us_45": SimpleNamespace(group="sectors")}):
+            self.assertEqual(scheduler.schedule(self.settings, NOW), [])
+            self.assertEqual(scheduler.schedule(self.settings, NOW + dt.timedelta(hours=2)), ["AAPL"])
+
+    def test_background_scan_is_bounded_and_resumes_after_fresh_rows(self):
+        from cloud_app import company_schedule as scheduler
+        rows = [SimpleNamespace(symbol=f"T{i}") for i in range(120)]
+        fresh = CompanyKnowledge(symbol="AAPL", name="Apple", attempted_at=NOW,
+            report_analysis=dict(title="Checked", source=dict(label="SEC", url="https://www.sec.gov/")))
+        seen = []
+        def read(_settings, symbol):
+            seen.append(symbol)
+            return fresh
+        directory = SimpleNamespace(companies=SimpleNamespace(rows=rows))
+        with patch.object(scheduler, "BY_ID", {"us_45": SimpleNamespace(group="sectors")}), patch.object(scheduler, "read_cache", return_value=directory), patch.object(scheduler, "read_company", side_effect=read):
+            scheduler.schedule(self.settings, NOW)
+            self.assertEqual(seen, [f"T{i}" for i in range(50)])
+            seen.clear()
+            scheduler.schedule(self.settings, NOW)
+            self.assertEqual(seen, [f"T{i}" for i in range(50, 100)])
 
     def test_unknown_symbols_traversal_and_cloud_mode_are_rejected(self):
         for sector, symbol in [

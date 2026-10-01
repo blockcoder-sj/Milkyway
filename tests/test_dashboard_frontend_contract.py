@@ -64,6 +64,13 @@ class DashboardFrontendContractTests(unittest.TestCase):
         self.assertNotIn('name="api_secret"', self.html)
         self.assertNotIn("aiStatus", ids)
 
+    def test_start_button_and_default_login_open_market(self):
+        app = (ROOT / "cloud_app/static/app.js").read_text(encoding="utf-8")
+        action = app.split('$("#landingAction").addEventListener', 1)[1].split("const profileController", 1)[0]
+        self.assertIn('showDashboard("market")', action)
+        self.assertIn('showDashboard(requested || "market"', app)
+        self.assertIn('location.hash === "#strategy" ? "strategy"', app)
+
     def test_strategy_builder_uses_connection_action(self):
         self.assertIn("전략 코드 생성", self.html)
         self.assertNotIn("AI 연결 대기", self.html)

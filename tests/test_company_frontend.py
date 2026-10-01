@@ -23,6 +23,9 @@ assert.equal(selected.length,4);assert(!selected.some(row=>['owner','holding'].i
 assert.equal(selected[0].target_id,rows[5].target_id);assert.equal(selected[1].kind,'customer');
 assert.equal(view.select(rows,'all').length,6);assert.equal(view.select(rows,'owner')[0].index,0);
 assert.equal(view.lead(rows[5]).detail,'Laser <component> supplied');assert.equal(rows[5].evidence[0].detail,'Generic');
+assert.equal(view.lead({evidence:[{detail:'Old',source:{level:'primary',as_of:'2025-01-26'}},
+ {detail:'Current',source:{level:'primary',as_of:'2026-02-25'}},
+ {detail:'Later retrieval',source:{level:'primary',as_of:'열람 2026-10-01'}}]}).detail,'Current');
 let svg=view.draw('<Apple>', 'AAPL', selected);
 assert(svg.includes('Laser &lt;component&gt; supplied'));assert(!svg.includes('Laser <component>'));
 assert(svg.includes('marker-start="url(#company-arrow-start)"'));assert(svg.includes('marker-end="url(#company-arrow-end)"'));
@@ -83,7 +86,7 @@ assert.equal(calls[0].updateHash,false);assert.equal(calls[1].id,key);assert.equ
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const elements=new Map(),documentHandlers={},panelHandlers={};
 function el(id){
- if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',value:'all',disabled:false,
+ if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',value:'all',disabled:false,options:[{value:'supplier',textContent:''}],
   classList:{add(){},remove(){}},querySelectorAll(){return[];},after(){},
   addEventListener(kind,fn){this[kind]=fn;},scrollIntoView(){}});
  return elements.get(id);
@@ -95,7 +98,7 @@ const src={label:'SEC <bad>',url:'https://www.sec.gov/',as_of:'2025-12-31',level
 const result={symbol:'AAPL',name:'<script>Apple</script>',description:'description',sector:'us_45',sector_label:'Information Technology',
  entity_key:'c_'+'a'.repeat(32),collectable:true,
  quote:{market_cap:1000000,currency:'USD',displayed_share_pct:20,source:'Yahoo',url:'https://finance.yahoo.com/'},
- pending:false,stale:false,errors:[],fetched_at:'2026-10-01T00:00:00Z',sources:[src],
+ pending:false,stale:false,errors:[],fetched_at:'2026-10-01T00:00:00Z',sources:[src],report_analysis:{title:'공시 본문',detail:'<script>unsafe</script>',source:src},
  related_directory:{MSFT:{sector:'us_45',name:'Microsoft'}},peers:[{symbol:'MSFT',name:'Microsoft',currency:'USD',market_cap:12,source:'Yahoo',url:'https://finance.yahoo.com/quote/MSFT/'}],financials:[],filings:[],facts:[],segments:[],drivers:[],market_shares:[],
  products:Array.from({length:12},(_,i)=>({title:`<img Product ${i}>`,detail:'safe',source:src})),
  relations:Array.from({length:12},(_,i)=>({name:`Company <${i}>`,target_id:'c_'+String(i+1).padStart(32,'0'),kind:i===0?'supplier':'subsidiary',symbol:i===0?'MSFT':null,detail:'Source-backed relation',source:src}))};
@@ -121,6 +124,8 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
  assert(el('#companyGraph').innerHTML.includes('href="#company/'+result.relations[0].target_id));
  assert(el('#companyGraph').innerHTML.includes('role="link"'));assert(!el('#companyRelationList').innerHTML.includes('style='));
  assert(el('#companySources').innerHTML.includes('&lt;bad&gt;'));assert(el('#companySourceCount').textContent.includes('1개'));
+ assert(el('#companyReportAnalysis').innerHTML.includes('&lt;script&gt;'));assert(!el('#companyReportAnalysis').innerHTML.includes('<script>'));
+ assert(el('#companyRelationFilter').options[0].textContent.includes('1'));
  calls=[];await ctx.window.MilkywayCompany.openEntity(result.relations[0].target_id);
  assert.equal(calls[0].path,'/api/company-entities/'+result.relations[0].target_id);
  assert.equal(ctx.history.state.parentCompany,result.entity_key);
