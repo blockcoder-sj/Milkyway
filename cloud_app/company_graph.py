@@ -445,9 +445,15 @@ class CompanyGraph:
                  JOIN company_entities origin ON origin.id=r.owner_id
                  JOIN company_entities other ON other.id=CASE WHEN r.subject_id=? THEN r.object_id ELSE r.subject_id END
                  WHERE (r.subject_id=? OR r.object_id=?) AND r.subject_id!=r.object_id
-                 ORDER BY r.observed_at DESC,r.id LIMIT 400""",
+                 ORDER BY CASE WHEN r.kind IN ('supplier','customer','partner','competitor') THEN 0 ELSE 1 END,
+                          r.observed_at DESC,r.id LIMIT 400""",
                 (key, key, key),
             ).fetchall()
+            ids = list({row['target_id'] for row in rows})
+            aliases_by_id = {target:[] for target in ids}
+            if ids:
+                for alias in db.execute('SELECT entity_id,namespace,value FROM company_aliases WHERE entity_id IN (' + ','.join('?' for _ in ids) + ') ORDER BY namespace,value', ids):
+                    aliases_by_id[alias['entity_id']].append(alias)
             result = []
             groups = {}
             seen = set()
@@ -482,10 +488,7 @@ class CompanyGraph:
                 if group_key in groups:
                     groups[group_key]["evidence"].append(evidence)
                     continue
-                aliases = db.execute(
-                    "SELECT namespace,value FROM company_aliases WHERE entity_id=?",
-                    (row["target_id"],),
-                ).fetchall()
+                aliases = aliases_by_id[row['target_id']]
                 relation = dict(
                     name=row["name"],
                     kind=kind,

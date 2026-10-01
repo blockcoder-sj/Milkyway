@@ -124,7 +124,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const elements=new Map(),documentHandlers={},panelHandlers={};
 function el(id){
  if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',value:'all',disabled:false,options:[{value:'supplier',textContent:''}],
-  classList:{add(){},remove(){}},querySelectorAll(){return[];},after(){},
+  classList:{add(){},remove(){}},querySelectorAll(){return[];},after(){},append(){},
   addEventListener(kind,fn){this[kind]=fn;},scrollIntoView(){}});
  return elements.get(id);
 }
@@ -143,7 +143,7 @@ let delayed=false,response=result;
 const ctx=vm.createContext({window:{MilkywayResearchView:{escape},getSelection:()=>null},
  document:{querySelector:el,createElement:()=>panel,addEventListener(kind,fn){documentHandlers[kind]=fn;}},
  history:{state:null,pushState(value){this.state=value;},back(){}},setInterval(fn){poll=fn;},Intl,Date,Number,Math,Map,Set,URL,encodeURIComponent});
-for(const name of ['format.js','list-paging.js','market-directory.js','company-research-view.js','company-relations.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
+for(const name of ['format.js','list-paging.js','market-directory.js','company-research-view.js','company-relations.js','company-network.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
 ctx.window.MilkywayCompany.initialize({getState:()=>state,openWorkspace:workspace=>{state.workspace=workspace;},
  api:async(path,options)=>{calls.push({path,options});if(delayed)return await new Promise(resolve=>{resolveDelayed=resolve});return response;}});
 function click(attribute,value){panelHandlers.click({target:{closest(selector){return selector==='['+attribute+']'?{dataset:{[attribute.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:String(value)}}:null;}}});}
@@ -203,6 +203,49 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
             timeout=20,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for frontend checks')
+    def test_two_hop_network_bottom_sources_and_stale_owner_boundaries(self):
+        script=r"""
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const els=new Map(),el=id=>{if(!els.has(id))els.set(id,{innerHTML:'',value:'all',addEventListener(kind,fn){this[kind]=fn;}});return els.get(id);};
+const ctx=vm.createContext({window:{MilkywayResearchView:{escape}},document:{querySelector:el},Map,Set,Intl,URL,Number,String,Object,Array,encodeURIComponent});
+for(const file of ['format.js','market-directory.js','company-research-view.js','company-network.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+file,'utf8'),ctx);
+const key='c_'+'a'.repeat(32),via='c_'+'b'.repeat(32),leaf='c_'+'c'.repeat(32);
+const src={label:'Visible source',url:'https://www.sec.gov/a.htm',level:'primary',as_of:'2026-01-01'};
+const extra={...src,label:'Extra source',url:'https://www.sec.gov/b.htm'};
+const root={entity_key:key,name:'Root',sources:[src],relations:[]};
+const node=(id,name)=>({id,name,symbol:null,brief:[{title:'사업',detail:'반도체 제조 사업',source:src}]});
+const edge={name:'<img Leaf>',target_id:leaf,kind:'supplier',detail:'확인된 공급',source:extra,evidence_total:1,
+ evidence:[{detail:'<script>Claim',original:'A public original',source:extra,reverse:true,reported_by:'Issuer <raw>'}]};
+const payload={root:node(key,'Root'),via:node(via,'Middle'),direct:[edge],rows:[edge],page:1,pages:2,total:9,kind:'all',counts:{supplier:9}};
+let state={me:{id:'owner'},workspace:'company'},calls=[],footer,lastReading,delayed=false,finish;
+const network=ctx.window.MilkywayCompanyNetwork.create({getState:()=>state,footer:reading=>{lastReading=reading;footer=reading.footer();},
+ api:async(path)=>{calls.push(path);return delayed?await new Promise(resolve=>{finish=resolve}):payload;}});
+(async()=>{
+ network.setContext(root,ctx.window.MilkywayCompanyResearchView.create(root));assert.equal(calls.length,0);
+ await network.open(via);assert.equal(calls.length,1);assert(calls[0].includes('/network?via='+via));
+ const html=el('#companyNetwork').innerHTML;
+ assert(html.includes('href="#company/'+leaf));assert(html.includes('&lt;img'));assert(!html.includes('<img'));
+ assert(html.includes('&lt;script&gt;Claim'));assert(html.includes('Issuer &lt;raw&gt;'));assert(!html.includes('href="https:'));
+ assert(html.includes('직접 거래'));assert(html.includes('1 / 2'));assert(html.includes('<details class="company-original">'));
+ assert.equal(lastReading.count,2);assert(footer.includes('Extra source'));assert(footer.includes('https://www.sec.gov/b.htm'));
+ calls=[];await network.open('../env');await network.open(via,'owner');await network.open(via,'all',51);assert.equal(calls.length,0);
+ network.page(2);await new Promise(setImmediate);assert(calls[0].endsWith('page=2'));
+ // A late response from the previous owner cannot replace the current panel.
+ delayed=true;const pending=network.open(via);state.me.id='another';const before=el('#companyNetwork').innerHTML;
+ finish({...payload,via:node(via,'STALE OWNER')});await pending;assert.equal(el('#companyNetwork').innerHTML,before);
+ state.me.id='owner';const pending2=network.open(via);network.reset();finish({...payload,via:node(via,'STALE NAVIGATION')});await pending2;
+ assert(!el('#companyNetwork').innerHTML.includes('STALE'));
+ delayed=false;network.setContext(root,ctx.window.MilkywayCompanyResearchView.create(root));
+ await network.open(via);await network.open(via);assert.equal(lastReading.count,2);
+})().catch(e=>{console.error(e);process.exitCode=1;});
+"""
+        root=Path(__file__).resolve().parents[1]/'cloud_app/static'
+        result=subprocess.run([shutil.which('node'),'-e',script,str(root)],capture_output=True,text=True,timeout=20)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+
 
 
 if __name__ == "__main__":

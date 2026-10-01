@@ -5,10 +5,9 @@ live estimates or an automatic translation. Source documents remain independent
 of ticker identity and sector classification.
 """
 from copy import deepcopy
+from .company_research_notes import source, profile, relation
 
 
-def source(label, url, date="열람 2026-10-01", level="primary"):
-    return dict(label=label, url=url, as_of=date, level=level)
 
 
 TSMC_SUPPLY = source("TSMC · 2025 공급망 포상 명단", "https://pr.tsmc.com/english/news/3274", "2025-11-28")
@@ -36,14 +35,6 @@ IBM_CARLSBERG = source("IBM · Carlsberg ERP 전환 계약", "https://ncee.newsr
 NEE_GENERATION = source("NextEra Energy · 2024 Q4 실적 설명", "https://www.investor.nexteraenergy.com/~/media/Files/N/NEE-IR/news-and-events/events-and-presentations/2025/Final_Q4%202024%20Script.pdf", "2025-01-24")
 
 
-def profile(name, origin, business, revenue, products=(), customers="", inputs="", competition=""):
-    fields = [("무엇을 하는 기업인가", business), ("매출이 생기는 구조", revenue),
-              ("고객·판매 경로", customers), ("공급망·주요 투입 요소", inputs),
-              ("경쟁의 범위", competition)]
-    return dict(name=name, description=business, description_source=origin,
-                brief=[dict(title=title, detail=detail, source=origin) for title, detail in fields if detail],
-                products=[dict(title=title, detail=detail, source=origin) for title, detail in products],
-                relations=[], sources=[origin])
 
 
 PUBLIC_COMPANIES = {
@@ -153,8 +144,11 @@ PRIVATE_COMPANIES = {
 }
 
 
-def relation(name, symbol, kind, detail, origin, registry=None):
-    return dict(name=name, symbol=symbol, registry_id=registry, kind=kind, detail=detail, source=origin)
+
+
+from .company_industry_catalog import PUBLIC as INDUSTRY_PUBLIC, PRIVATE as INDUSTRY_PRIVATE, EDGES as INDUSTRY_EDGES
+PUBLIC_COMPANIES.update(INDUSTRY_PUBLIC)
+PRIVATE_COMPANIES.update(INDUSTRY_PRIVATE)
 
 
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
@@ -202,6 +196,10 @@ RELATIONS = {
             relation("Carlsberg", None, "customer", "ERP 전환·구축·운영 지원 계약", IBM_CARLSBERG, "carlsberg")],
     "NEE": [relation("GE Vernova", "GEV", "partner", "천연가스 발전 프로젝트 협력 · 2025-01 실적 발표 계획, GE Aerospace와 별도 기업", NEE_GENERATION)],
 }
+
+
+for _symbol, _edges in INDUSTRY_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 
 def enrichment(symbol):

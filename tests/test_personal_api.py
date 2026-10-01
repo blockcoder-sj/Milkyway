@@ -97,6 +97,30 @@ class PersonalApiTests(unittest.TestCase):
         with self.assertRaises(HTTPException):
             main.personal_company_entity('c_' + '0'*32, self.user)
 
+    def test_company_network_route_is_authenticated_bounded_and_cache_only(self):
+        from cloud_app.company_graph import CompanyGraph
+        from cloud_app.company_schemas import CompanyKnowledge
+        source = dict(label='Synthetic filing', url='https://www.sec.gov/report.htm',
+                      as_of='2025-12-31', level='primary')
+        graph = CompanyGraph(self.settings)
+        graph.ingest(CompanyKnowledge(symbol='AAA', name='Root', relations=[dict(
+            name='Middle', symbol='BBB', kind='supplier', detail='공시된 공급 관계', source=source)]))
+        root, via = graph.by_symbol('AAA')['id'], graph.by_symbol('BBB')['id']
+        with patch('cloud_app.company_worker._provider.run') as external:
+            payload = main.personal_company_network(root, via, 1, 'all', self.user)
+            self.assertEqual(payload['via']['id'], via)
+            external.assert_not_called()
+        route = next(row for row in main.app.routes
+                     if row.path == '/api/company-entities/{entity_key}/network')
+        self.assertIn(main.current_user, [dep.call for dep in route.dependant.dependencies])
+        parameters = main.app.openapi()['paths'][route.path]['get']['parameters']
+        query = {row['name']: row['schema'] for row in parameters}
+        self.assertEqual((query['page']['minimum'], query['page']['maximum']), (1, 50))
+        self.assertEqual(query['kind']['pattern'], '^(all|supplier|customer|partner|competitor)$')
+        with patch.object(main, 'settings', replace(self.settings, personal_local_mode=False)):
+            with self.assertRaises(HTTPException):
+                main.personal_company_network(root, via, 1, 'all', self.user)
+
     def test_new_install_dashboard_works_before_history_or_keys(self):
         payload=main.dashboard(self.user,self.session)
         self.assertTrue(payload["personal_local_mode"])

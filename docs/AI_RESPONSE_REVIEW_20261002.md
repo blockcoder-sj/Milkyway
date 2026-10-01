@@ -57,3 +57,9 @@
 이번 버전의 새 실사용 결과로 표시하지 않는다. 해당 5회는 모두 완료됐고 그 승인
 범위는 이미 소진됐다. 개인 실행 서비스는 M3 이미지이며 최종 기업 관계망 검수 후
 검증 이미지를 적용한다.
+
+M5 커밋 `49778b16acf733fedf50e11f21a3d4d412681809`을 GitHub에 푸시했다.
+CI [36896059671](https://github.com/blockcoder-sj/Milkyway/actions/runs/36896059671)의
+verify와 postgres-integration 모두 성공했다. 의존성 감사·전체 회귀·PostgreSQL
+경계·패키지 설치/복구·네이티브·호스트 Node 검사를 포함한다. 합성 provider 검사이며
+새 실제 AI 호출의 성공 근거는 아니다.

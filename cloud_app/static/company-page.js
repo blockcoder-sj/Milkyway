@@ -3,7 +3,7 @@
   const $=s=>document.querySelector(s),esc=v=>window.MilkywayResearchView.escape(v),fmt=(v,d=2)=>window.MilkywayFormat.number(v,d);
   const relationView=window.MilkywayCompanyRelations,kinds=relationView.kinds;
   const level={primary:'공시·기업 원문',provider:'정보 제공사·공개 조사'};
-  let reading=null,revenueGroup=null;
+  let reading=null,revenueGroup=null,network=null;
   let hooks,sector=null,symbol=null,entityKey=null,loadPath=null,data=null,epoch=0,loading=null,signature='',relationPage=1,productPage=1,peerPage=1,selected=null;
   const validKey=value=>/^c_[a-f0-9]{32}$/.test(value||'');
   const companyLink=(edge,label=edge.name)=>validKey(edge.target_id)?`<a class="company-open" data-company-id="${esc(edge.target_id)}" href="#company/${edge.target_id}">${esc(label)}</a>`:'';
@@ -22,6 +22,10 @@
       <section id="companyFinancialsSection"><h3>공시·재무 원자료</h3><p class="fineprint">재무 수치는 공시에 보고된 값이며 앱에서 재계산하지 않습니다. 매출·이익은 표에 표시한 연간 기간, 자산·부채·자본은 기말 기준입니다. 최신 분기 수치 또는 예상치와 혼동하지 마세요.</p><div id="companyFinancials"></div><div id="companyFilings"></div></section>
       <section id="companySourcesSection"><details id="companySourceDetails" class="detail-sources-toggle"><summary id="companySourceCount">출처 모음</summary><p class="fineprint">기업·공시 원문과 정보 제공사·공개 조사를 모았습니다. 본문의 번호를 누르면 해당 출처로 이동합니다. 기업 발표는 해당 기업의 진술이며 독립적인 계약 이행 검증을 뜻하지 않습니다.</p><div id="companySources"></div></details></section>`;
     $('#marketDetail').after(panel);
+    const networkSection=document.createElement('section');networkSection.className='company-network-section';
+    networkSection.innerHTML='<h3>업계 연결 탐색</h3><div id="companyNetwork" aria-live="polite"></div>';
+    $('#companyRelationsSection').append(networkSection);
+    network=window.MilkywayCompanyNetwork.create({api:(...args)=>hooks.api(...args),getState:()=>hooks.getState(),footer});
     $('#companyBack').addEventListener('click',()=>{if(history.state?.parentCompany){history.back();return;}const target=sector;leave();if(target)window.MilkywayMarketDetail.open(target);else hooks.openWorkspace('market');});
     $('#companyCollect').addEventListener('click',collect);
     $('#companyRelationFilter').addEventListener('change',()=>{relationPage=1;selected=null;relations();});
@@ -29,6 +33,8 @@
     panel.querySelectorAll('.detail-jumps a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();$(a.getAttribute('href')).scrollIntoView({behavior:'smooth'});}));
     panel.addEventListener('click',event=>{
       const citation=event.target.closest('[data-company-citation]');if(citation){event.preventDefault();$('#companySourceDetails').open=true;$('#company-source-'+citation.dataset.companyCitation)?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+      const via=event.target.closest('[data-network-via]');if(via){network.open(via.dataset.networkVia);return;}
+      const networkPage=event.target.closest('[data-network-page]');if(networkPage&&!networkPage.disabled){network.page(Number(networkPage.dataset.networkPage));return;}
       const relation=event.target.closest('[data-relation-index]');if(relation){selected=Number(relation.dataset.relationIndex);focus();return;}
       const page=event.target.closest('[data-relation-page]');if(page){relationPage=Number(page.dataset.relationPage);selected=null;relations();return;}
       const product=event.target.closest('[data-product-page]');if(product){productPage=Number(product.dataset.productPage);products();}
@@ -44,11 +50,12 @@
       event.preventDefault();open(target.dataset.companySector,target.dataset.companySymbol);
     });
   }
+  function footer(nextReading){if(nextReading)reading=nextReading;if(reading){$('#companySourceCount').textContent=`출처 모음 · ${fmt(reading.count,0)}개`;$('#companySources').innerHTML=reading.footer();}}
   function focus(){
     const edge=data?.relations[selected];
     if(!edge){$('#companyRelationFocus').innerHTML='<h4>관계 확인</h4><p>관계도나 아래 목록에서 기업을 선택하세요.</p>';return;}
     const evidence=edge.evidence?.length?edge.evidence:[edge];
-    $('#companyRelationFocus').innerHTML=`<small>${esc(kinds[edge.kind])} · 근거 ${fmt(evidence.length,0)}건</small><h4>${esc(edge.name)}</h4>${evidence.map(item=>`<div class="company-relation-evidence"><p>${esc(item.detail||'등록된 관계의 세부 조건은 원문을 확인하세요.')} ${source(item.source)}</p>${item.reverse?`<p class="company-reverse-note">${esc(item.reported_by)} 자료에 기록된 관계를 반대 방향에서 표시합니다. 설명과 출처는 원래 진술의 내용입니다.</p>`:''}${reading.original(item.original)}</div>`).join('')}<p>${companyLink(edge,edge.name+' 기업 상세')}</p>`;
+    $('#companyRelationFocus').innerHTML=`<small>${esc(kinds[edge.kind])} · 근거 ${fmt(evidence.length,0)}건</small><h4>${esc(edge.name)}</h4>${evidence.map(item=>`<div class="company-relation-evidence"><p>${esc(item.detail||'등록된 관계의 세부 조건은 원문을 확인하세요.')} ${source(item.source)}</p>${item.reverse?`<p class="company-reverse-note">${esc(item.reported_by)} 자료에 기록된 관계를 반대 방향에서 표시합니다. 설명과 출처는 원래 진술의 내용입니다.</p>`:''}${reading.original(item.original)}</div>`).join('')}<p>${companyLink(edge,edge.name+' 기업 상세')}</p>${['supplier','customer','partner','competitor'].includes(edge.kind)?`<button class="ghost compact" data-network-via="${esc(edge.target_id)}">업계 연결</button>`:''}`;
   }
   function relations(){
     if(!data)return;
@@ -57,7 +64,7 @@
     $('#companyRelationSummary').textContent=`${filter==='business'?'사업 관계':filter==='all'?'전체 관계':kinds[filter]} ${fmt(rows.length,0)}개 · 현재 페이지 ${fmt(result.rows.length,0)}개 · 자료에 등록된 기업만 표시`;
     for(const option of $('#companyRelationFilter').options){if(kinds[option.value])option.textContent=`${kinds[option.value]} (${fmt(relationView.select(data.relations,option.value).length,0)})`;}
     $('#companyGraph').innerHTML=relationView.draw(data.name,data.symbol,result.rows)||'<p class="fineprint company-graph-empty">이 조건에서 출처를 확인한 사업 관계가 아직 등록되지 않았습니다. 관계 종류를 바꾸거나 기업 공시·자료 수집 상태를 확인하세요.</p>';
-    $('#companyRelationList').innerHTML=result.rows.map(edge=>{const item=relationView.lead(edge);return `<div class="company-relation-row"><span class="relation-kind relation-${esc(edge.kind)}">${esc(kinds[edge.kind])}</span><div class="company-relation-business"><strong>${companyLink(edge)}</strong><p>${esc(item.detail||'사업 역할 설명 미등록')}</p></div><small>${esc(item.source.as_of||'기준일 미제공')} · ${esc(level[item.source.level])}${item.reverse?' · 역방향 표시':''}${edge.evidence?.length>1?' · 근거 '+fmt(edge.evidence.length,0)+'건':''}</small><button class="ghost compact" type="button" data-relation-index="${edge.index}" aria-label="${esc(edge.name)} 관계·출처">관계·출처</button></div>`;}).join('');
+    $('#companyRelationList').innerHTML=result.rows.map(edge=>{const item=relationView.lead(edge);return `<div class="company-relation-row"><span class="relation-kind relation-${esc(edge.kind)}">${esc(kinds[edge.kind])}</span><div class="company-relation-business"><strong>${companyLink(edge)}</strong><p>${esc(item.detail||'사업 역할 설명 미등록')}</p></div><small>${esc(item.source.as_of||'기준일 미제공')} · ${esc(level[item.source.level])}${item.reverse?' · 역방향 표시':''}${edge.evidence?.length>1?' · 근거 '+fmt(edge.evidence.length,0)+'건':''}</small><button class="ghost compact" type="button" data-relation-index="${edge.index}" aria-label="${esc(edge.name)} 관계·출처">관계·출처</button>${['supplier','customer','partner','competitor'].includes(edge.kind)?`<button class="ghost compact" data-network-via="${esc(edge.target_id)}" aria-label="${esc(edge.name)} 업계 연결">업계 연결</button>`:''}</div>`;}).join('');
     $('#companyRelationPages').innerHTML=window.MilkywayPaging.controls(result,'data-relation-page');
     selected??=result.rows[0]?.index;focus();
   }
@@ -88,7 +95,7 @@
     for(const [id,key] of [['companySegmentOriginals','segments'],['companyDriverOriginals','drivers']])$('#'+id).innerHTML=(data[key]||[]).filter(row=>row.original).map(fact).join('')||'<p class="fineprint">확보한 발췌 없음</p>';
     $('#companyFinancials').innerHTML=data.financials.length?`<div class="research-table"><table><thead><tr><th>공시 항목</th><th>보고값</th><th>보고 기간·기말</th><th>원자료</th></tr></thead><tbody>${data.financials.map(row=>`<tr><td>${esc(row.label)}</td><td>${fmt(row.value,0)} ${esc(row.unit)}</td><td>${esc(row.period)}</td><td>${source(row.source)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="fineprint">현재 확인된 공시 재무 수치가 없습니다. 아래 기업 공시 원문을 확인하세요.</p>';
     $('#companyFilings').innerHTML=data.filings.length?`<p class="fineprint">확보한 공시 ${fmt(data.filings.length,0)}건 · 원문 링크와 기준일은 하단 출처 모음에서 확인할 수 있습니다.</p>`:'';
-    $('#companySourceCount').textContent=`출처 모음 · ${fmt(reading.count,0)}개`;$('#companySources').innerHTML=reading.footer();
+    network.setContext(data,reading);footer();
   }
   async function refresh(){
     if(!loadPath||loading===epoch||hooks.getState().workspace!=='company')return;
@@ -113,7 +120,7 @@
   async function present(path,hash,nextSector,nextSymbol,key,push){
     const parentCompany=entityKey,origin=nextSector||sector||history.state?.companyOrigin||null;
     sector=origin;symbol=nextSymbol;entityKey=key;loadPath=path;data=null;signature='';
-    ++epoch;relationPage=productPage=peerPage=1;selected=null;reading=null;revenueGroup=null;$('#companyRelationFilter').value='business';$('#companySourceDetails').open=false;
+    network.reset();++epoch;relationPage=productPage=peerPage=1;selected=null;reading=null;revenueGroup=null;$('#companyRelationFilter').value='business';$('#companySourceDetails').open=false;
     hooks.openWorkspace('company',false);
     if(push)history.pushState({companyOrigin:origin,parentCompany},'',hash);
     $('#companyTitle').textContent='기업 자료를 불러오고 있습니다';$('#companyError').textContent='';
@@ -130,6 +137,6 @@
     if(!validKey(key)||!hooks.getState().config.personal_local_mode)return;
     return present('/api/company-entities/'+key,'#company/'+key,null,null,key,push);
   }
-  function leave(){sector=symbol=entityKey=loadPath=null;++epoch;}
+  function leave(){network.reset();sector=symbol=entityKey=loadPath=null;++epoch;}
   window.MilkywayCompany=Object.freeze({initialize(options){hooks=options;mount();setInterval(()=>{if(!document.hidden)refresh();},5000);},open,openEntity,leave});
 })();

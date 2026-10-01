@@ -20,7 +20,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, SecretStr, ValidationError
@@ -1784,6 +1784,14 @@ def personal_company_detail(sector_id: str, symbol: str, user: User = Depends(cu
 def personal_company_entity(entity_key: str, user: User = Depends(current_user)):
     from .company_entities import entity_snapshot
     return entity_snapshot(settings, entity_key)
+
+
+@app.get("/api/company-entities/{entity_key}/network")
+def personal_company_network(entity_key: str, via: str, page: int = Query(1, ge=1, le=50),
+                             kind: str = Query("all", pattern="^(all|supplier|customer|partner|competitor)$"),
+                             user: User = Depends(current_user)):
+    from .company_network import network_snapshot
+    return network_snapshot(settings, entity_key, via, page, kind)
 
 
 @app.post("/api/company-entities/{entity_key}/refresh", status_code=202)

@@ -18,6 +18,7 @@ AGENT = "MilkywayPersonal/1.0"
 _sec_last_request = 0.0
 _sec_index = None
 _sec_index_at = 0.0
+_sec_names = None
 _cooldowns = {}
 
 
@@ -263,7 +264,14 @@ def sec_company(symbol, cik):
             raw = get(annual["url"], maximum=24 * 1024 * 1024, html=True)
             parsed_document = document(raw)
             result['revenue_mix'] = parse_revenue(parsed_document, annual, symbol)
-            analysis = parse_report(parsed_document, symbol, annual)
+            try:
+                sec_identity('__INDEX_ONLY__')
+                names = _sec_names
+            except Exception:
+                # An unavailable identity index never replaces verified aliases
+                # or invalidates the actual issuer filing we already received.
+                names = None
+            analysis = parse_report(parsed_document, symbol, annual, names)
             for key, value in analysis.items():
                 result[key] = result.get(key, []) + value if isinstance(value, list) else value
             base = annual["url"].rsplit("/", 1)[0] + "/"
@@ -295,13 +303,15 @@ def sec_company(symbol, cik):
 
 def sec_identity(symbol):
     """Official exact ticker lookup; do not depend on an encyclopedia match."""
-    global _sec_index, _sec_index_at
+    global _sec_index, _sec_index_at, _sec_names
     if _sec_index is None or time.monotonic() - _sec_index_at > 86400:
         raw = get("https://www.sec.gov/files/company_tickers.json", maximum=4 * 1024 * 1024)
         rows = raw.values() if isinstance(raw, dict) else []
         _sec_index = {row["ticker"]: str(row["cik_str"]) for row in rows
             if isinstance(row, dict) and isinstance(row.get("ticker"), str)
             and re.fullmatch(r"\d{1,10}", str(row.get("cik_str", "")))}
+        from .company_names import SecNameIndex
+        _sec_names = SecNameIndex(raw.values() if isinstance(raw, dict) else [])
         _sec_index_at = time.monotonic()
     return _sec_index.get(symbol)
 
@@ -455,6 +465,6 @@ def collect_company(payload, _configuration):
             }[key]
         ]
     result["fetched_at"] = dt.datetime.now(UTC).isoformat()
-    result['collector_version'] = 2
+    result['collector_version'] = 3
     result["unavailable_sources"] = list(dict.fromkeys(result["unavailable_sources"]))
     return CompanyKnowledge.model_validate(result).model_dump(mode="json")

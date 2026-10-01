@@ -538,3 +538,40 @@ resuming; no paid AI regression approval has arrived.
 - No new actual AI calls: pending maximum-five approval remains unanswered.
   See docs/AI_RESPONSE_REVIEW_20261002.md. Current deployed runtime remains M3;
   deploy the final tested company-network image after M4. M4 is still required.
+
+## 2026-10-02 — M4 local industry exploration verified
+
+- Expanded free primary-source reading to 75 symbol profiles, 43 registry profiles,
+  171 curated symbol-catalogue relationship statements. These include stock classes
+  and scoped alliance-role profiles; not 75 equally complete company analyses or
+  171 distinct current contracts. Source dates, plans and regional roles remain.
+- Separate notes/industry modules provide Korean business, revenue, products,
+  customers and inputs. Foxconn/Cargill/McCain/Wistron received business-specific
+  profiles. Long originals and all external sources remain folded at the bottom.
+- SEC legal-name index adds exact known ticker/CIK names without fuzzy guesses;
+  ambiguity, multiple classes, self and brand-substring collisions are rejected.
+  Explicit relation clauses prevent competitor sections from relabelling suppliers.
+  Collector v3 upgrades old data through the existing bounded scheduler.
+- Selected two-hop business network is cache-only, authenticated, eight rows/page,
+  four business kinds, 400 statements/company and 10 displayed evidence items/edge.
+  Root -> via must be confirmed; no inferred root -> leaf trade. Business precedes
+  ownership, aliases are read in one bounded query. Canonical internal navigation,
+  source footer and actor/workspace/request-epoch guards remain.
+- Initial full suite found a missing FastAPI Query import at startup. Fixed it and
+  added an API auth/cache/query-bound/schema regression. Immutable image
+  6afb3c1732b19d76cc3f7314376a59b9683330694a29e3eb2fe5ab8ae21423ae:
+  full 471 / 74.738s OK (13 Node skip), host frontend 15 / 2.164s OK,
+  offline native 8 stages, Docker packaged 7 stages with public collectors running.
+  Existing limits unchanged; original and synthetic test volumes preserved.
+- Exact index of 10,434 official rows built in .264s; lookup median/p95 .052/.191ms.
+  Actual public DB copy network medians/p95: NVDA->DELL 18.61/56.45ms,
+  AAPL->TSM 16.97/37.09ms, TSM->AMKR 15.35/23.50ms. Integrity ok/FK0.
+  Read-only compatibility check of personal saved strategies: valid5/invalid0;
+  no prompts/keys/account records printed or sent. These are not provider latency.
+- Direct scoped code/security review, Python/JS syntax and diff checks passed.
+  Changed-file credential pattern check found no candidates; .env remains ignored.
+  No CodeRabbit, new dependencies, eval harness, actual AI calls or orders.
+- M5 pushed as 49778b1; CI 36896059671 success in both jobs. M4 commit/push and
+  final deployment/Chrome proof are the next steps. Current personal runtime remains
+  M3 and collectors are running. Maximum-five actual AI approval is still pending.
+  See docs/COMPANY_NETWORK_REVIEW_20261002.md and COMPANY_RESEARCH_MILESTONES.md.

@@ -130,18 +130,25 @@ def blocks(raw):
     return result
 
 
-def named(text, issuer_symbol):
-    return [(name, symbol) for name, symbol, matcher in MATCHERS
-            if symbol != issuer_symbol and not ({symbol, issuer_symbol} <= {"GOOG", "GOOGL"})
-            and matcher.search(text)]
+def named(text, issuer_symbol, name_index=None):
+    legal = name_index.mentions(text) if name_index else []
+    result = []
+    for name, symbol, matcher in MATCHERS:
+        if symbol == issuer_symbol or {symbol, issuer_symbol} <= {'GOOG','GOOGL'}:
+            continue
+        if any(not any(start < mention.end() and mention.start() < end and exact_symbol != symbol
+                       for start,end,_,exact_symbol in legal) for mention in matcher.finditer(text)):
+            result.append((name,symbol))
+    if name_index:
+        existing = {symbol for _, symbol in result}
+        result += [(name, symbol) for name, symbol in name_index.named(text, issuer_symbol) if symbol not in existing]
+    return result
 
 
 def relationship_kind(text, competition=False):
     """High precision issuer statements; hypothetical and negated claims stay out."""
     if re.search(r"\b(?:could|might|may|would|potential|hypothetical|not|no longer|terminated|previously|formerly)\b", text, re.I):
         return None
-    if competition or re.search(r"(?:our (?:principal |major )?competitors (?:include|are)|we compete (?:with|against))", text, re.I):
-        return "competitor", "공시 경쟁 항목에 명시된 기업"
     if re.search(r"(?:we|the company) (?:utilize|use|purchase|buy|source|engage with).{0,150}(?:foundries|manufacturers|subcontractors|from)", text, re.I):
         role = "메모리 공급" if re.search(r"\bmemory\b", text, re.I) else "제조·부품 공급"
         return "supplier", "공시 " + role
@@ -153,10 +160,40 @@ def relationship_kind(text, competition=False):
         return "partner", "공시 협력 관계"
     if re.search(r"(?:our (?:wholly[- ]owned )?subsidiar(?:y|ies)|wholly[- ]owned subsidiar(?:y|ies) of (?:us|the company))", text, re.I):
         return "subsidiary", "공시에 명시된 자회사"
+    if re.search(r"(?:our (?:principal |major )?competitors (?:include|are)|we compete (?:with|against))", text, re.I) or (
+        competition and re.search(r"\b(?:competitors?|competition|compete|including|such as)\b", text, re.I)
+    ):
+        return "competitor", "공시 경쟁 항목에 명시된 기업"
     return None
 
 
-def parse_report(raw, symbol, origin):
+CLAIM_PATTERNS = (
+    ('supplier', re.compile(r'(?:our (?:principal |major |key )?(?:suppliers|manufacturing partners) (?:include|are)|(?:we|the company) (?:utilize|use|purchase|buy|source|engage with).{0,150}?(?:foundries|manufacturers|subcontractors|from))', re.I)),
+    ('customer', re.compile(r'(?:our (?:largest |major |key )?customers (?:include|are)|we (?:sell|supply|provide).{0,100}? to )', re.I)),
+    ('partner', re.compile(r'(?:we (?:have )?(?:partner(?:ed)?|collaborat(?:e|ed)) with|our partnership with|our partners (?:include|are))', re.I)),
+    ('competitor', re.compile(r'(?:our (?:principal |major )?competitors (?:include|are)|we compete (?:with|against))', re.I)),
+)
+
+
+def statements(sentence, competition):
+    if re.search(r'\b(?:could|might|may|would|potential|hypothetical|not|no longer|terminated|previously|formerly)\b', sentence, re.I):
+        return []
+    triggers = sorted((match.start(), match.end(), kind) for kind, pattern in CLAIM_PATTERNS for match in pattern.finditer(sentence))
+    result = []
+    for index, (start, end, kind) in enumerate(triggers):
+        tail = sentence[end:triggers[index+1][0] if index+1 < len(triggers) else len(sentence)]
+        tail = re.split(r'\b(?:using|through|because|whereas|with|which|that|to|for)\b', tail, maxsplit=1, flags=re.I)[0]
+        relation = relationship_kind(sentence[start:end] + tail)
+        if relation:
+            result.append((kind, relation[1], tail))
+    if not triggers:
+        relation = relationship_kind(sentence, competition)
+        if relation:
+            result.append((*relation, sentence))
+    return result
+
+
+def parse_report(raw, symbol, origin, name_index=None):
     rows = blocks(raw)
     if not rows:
         raise ValueError("Empty filing body")
@@ -181,19 +218,16 @@ def parse_report(raw, symbol, origin):
         # Sentence boundary preserves corporate abbreviations and names in lists.
         sentences = re.split(r"(?<!Inc)(?<!Ltd)(?<!Co)\.\s+(?=[A-Z•])", text)
         for sentence in sentences:
-            relation = relationship_kind(sentence, section == "competition" and remaining > 0)
-            if not relation:
-                continue
-            kind, role = relation
-            for name, target_symbol in named(sentence, symbol):
-                # Keep different business roles/statements for the same company.
-                # The UI groups their evidence into one node without discarding it.
-                key = (name, kind, sentence)
-                if key in seen or len(result["relations"]) >= 80:
-                    continue
-                seen.add(key)
-                result["relations"].append(dict(name=name, symbol=target_symbol, kind=kind,
-                    detail=role, original=sentence[:1500], source=src))
+            for kind, role, candidates in statements(sentence, section == "competition" and remaining > 0):
+                for name, target_symbol in named(candidates, symbol, name_index):
+                    # Keep different business roles/statements for the same company.
+                    # The UI groups their evidence into one node without discarding it.
+                    key = (name, kind, sentence)
+                    if key in seen or len(result["relations"]) >= 80:
+                        continue
+                    seen.add(key)
+                    result["relations"].append(dict(name=name, symbol=target_symbol, kind=kind,
+                        detail=role, original=sentence[:1500], source=src))
         remaining = max(0, remaining - 1)
         if remaining == 0:
             section = ""
@@ -204,10 +238,13 @@ def parse_report(raw, symbol, origin):
             ("drivers", "공시 사업 위험·투입 요소 원문", r"(?:we depend|our (?:business|operations|results).{0,80}(?:depend|affected)|supply chain|raw materials|customer concentration)"),
         )
         for key, title, pattern in categories:
-            if len(result[key]) < 4 and re.search(pattern, text, re.I) and text not in seen:
+            boilerplate = re.search(r"(?:forward[- ]looking|you should carefully consider|compensation packages|employee benefits|we offer competitive.{0,60}compensation)", text, re.I)
+            if not boilerplate and len(result[key]) < 4 and re.search(pattern, text, re.I) and text not in seen:
                 result[key].append(dict(title=title, detail="", original=text[:1500], source=src))
                 seen.add(text)
     count = len(result["relations"])
+    if name_index:
+        result['sources'] = [dict(label='SEC · 공식 기업명·종목·CIK 목록', url='https://www.sec.gov/files/company_tickers.json', level='primary')]
     result["report_analysis"] = dict(title="공시 본문 확인", detail=
         f"공시 문단 {len(rows):,}개를 규칙으로 확인해 기업 관계 {count:,}건을 추출했습니다(본문 최대 80건). "
         "영문 원문과 기준일을 보존합니다. 명시되지 않은 관계·익명 고객은 추정하지 않습니다. "
