@@ -207,3 +207,56 @@ PRODUCTS={
 }
 for symbol,rows in PRODUCTS.items():
     PUBLIC[symbol]['products']=[dict(title=title,detail=detail,source=annual(symbol)) for title,detail in rows]
+
+CHRN_REPORT=source('ChronoScale · FY2026 연차 공시',
+    'https://www.sec.gov/Archives/edgar/data/1549084/000162828026058018/chrn-20260531.htm','2026-08-19')
+PUBLIC['CHRN']=profile('ChronoScale Holdings Corporation',CHRN_REPORT,
+    'GPU 장비를 데이터센터에 배치해 AI·머신러닝 등의 연산 용량을 제공하는 클라우드 기업입니다. 과거 Ekso 외골격 사업은 매각 대상·중단 사업으로 구분합니다.',
+    'GPU당 시간 기준의 고정 사용료를 월별 청구합니다. FY2026 공시에서 클라우드 사업은 전체 매출의 약 99.5%입니다. 기업 제품의 시장점유율은 아닙니다.',
+    [('GPU 연산 용량','전용 GPU 인프라를 이용하는 클라우드 연산 서비스')],
+    '2026년 5월 31일 기준 클라우드 고객은 Together AI 한 곳입니다. 같은 연차 공시는 이후 체결한 Microsoft의 2년 GPU 서비스 계약도 설명합니다. 계약 체결과 장비 인도·실제 매출은 구분합니다.',
+    'NVIDIA GPU 공급과 제3자 데이터센터의 공간·전력 및 장비 금융이 필요합니다. 공시에 있는 AMD 활용 계획은 현재 공급 거래와 구분합니다.',
+    '공시에서 CoreWeave·Crusoe·Lambda Labs·Nebius Group을 AI 클라우드 경쟁사로 명시합니다. Nutanix와의 2026년 8월 협력 발표는 최종 계약·구현이 예정된 체계로 설명합니다.')
+PRIVATE['together-ai']=profile('Together AI',source('Together AI · 공식 플랫폼·서비스',
+    'https://www.together.ai/','열람 2026-10-02'),
+    'AI 모델 추론·GPU 컴퓨팅·모델 훈련을 위한 클라우드 플랫폼을 제공합니다.',
+    '모델 추론·컴퓨팅·전용 인프라·훈련 서비스를 제공합니다. 공개된 제품·과금 방식의 범위이며 전체 기업 매출은 확인하지 않았습니다.',
+    [('모델 추론','서버리스·배치·전용 모델 추론'),('컴퓨팅·훈련','GPU 클러스터와 모델 훈련·미세 조정')],
+    'AI 애플리케이션을 개발·운영하는 개발자와 기업을 대상으로 합니다.')
+EDGES['CHRN']=[
+    relation('NVIDIA','NVDA','supplier','2026년 5월말 공시의 주요 GPU 공급사 · GPU 제품 사용을 NVIDIA에 판매한다는 주장으로 바꾸지 않음',CHRN_REPORT),
+    relation('Together AI',None,'customer','2026년 5월말 클라우드 사업의 단일 고객 · GPU당 시간 요금의 연산 용량 계약',CHRN_REPORT,'together-ai'),
+    relation('Microsoft','MSFT','customer','연차 공시에서 최근 체결한 2년 GPU 서비스 계약 · GB300 클러스터의 일정별 인도 의무이며 완료 매출을 뜻하지 않음',CHRN_REPORT),
+    relation('Nutanix','NTNX','partner','2026년 8월 기업용 AI 인프라 공동 영업·개발·통합 체계 발표 · 최종 계약과 구현은 예정 사항',CHRN_REPORT),
+    relation('CoreWeave','CRWV','competitor','공시에 명시된 AI 클라우드 서비스 경쟁사 · 상대 기업의 전체 사업을 동일하게 보지 않음',CHRN_REPORT),
+    relation('Nebius Group','NBIS','competitor','공시에 명시된 AI 클라우드 서비스 경쟁사',CHRN_REPORT),
+    relation('Crusoe',None,'competitor','공시에 Crusoe Energy로 명시된 AI 클라우드 서비스 경쟁사',CHRN_REPORT,'crusoe'),
+    relation('Lambda Labs',None,'competitor','공시에 명시된 AI 클라우드 서비스 경쟁사 · 현재 Lambda 브랜드의 GPU 컴퓨팅 사업',CHRN_REPORT,'lambda-labs'),
+]
+
+# Product scopes come from each firm's free official site, not another issuer's
+# competitor list. Published performance claims are not market-share evidence.
+PUBLIC['CRWV']=profile('CoreWeave, Inc.',source('CoreWeave · 공식 플랫폼·제품',
+    'https://www.coreweave.com/','열람 2026-10-02'),
+    'AI 모델 훈련·추론을 위한 클라우드 연산과 스토리지·네트워크·운영 서비스를 제공합니다.',
+    'GPU·CPU 연산, 스토리지, 네트워크와 관리형 인프라 서비스가 공개된 제공 범위입니다. 제품 소개만으로 전체 기업 매출 구성이나 시장점유율을 만들지 않습니다.',
+    [('연산·인프라','GPU·CPU 컴퓨팅과 베어메탈 서버'),('데이터·운영','스토리지·네트워크·관리형 서비스와 AI 개발 플랫폼')],
+    'AI 모델 훈련·추론을 운영하는 기업과 개발자가 대상입니다.')
+PUBLIC['NBIS']=profile('Nebius Group N.V.',source('Nebius · 공식 AI 클라우드·제품',
+    'https://nebius.com/','열람 2026-10-02'),
+    'AI 개발자를 위한 GPU 클라우드와 훈련·추론·데이터·모델 운영 도구를 제공합니다.',
+    '연산·네트워크·AI 스토리지·서버리스 및 관리형 추론 서비스를 제공합니다. 이 자료는 AI 클라우드 제품 범위이며 그룹의 전체 매출 구성을 뜻하지 않습니다.',
+    [('AI 컴퓨팅','GPU 연산·네트워크·AI 스토리지'),('모델 운영','서버리스·관리형 추론·DataOps·ModelOps')],
+    'AI 모델을 개발하고 서비스에 배포하는 개발자와 기업을 대상으로 합니다.')
+PRIVATE['crusoe']=profile('Crusoe',source('Crusoe · 공식 사업·플랫폼',
+    'https://www.crusoe.ai/','열람 2026-10-02'),
+    'AI 데이터센터 인프라를 설계·구축·운영하고 AI 클라우드와 관리형 AI 서비스를 제공합니다.',
+    '데이터센터 인프라, 클라우드 인프라·플랫폼 및 관리형 AI가 공개된 사업 범위입니다. 미공개 전체 매출이나 특정 고객의 구매 금액을 추정하지 않습니다.',
+    [('AI 인프라','데이터센터와 에너지 연계 인프라'),('AI 클라우드','GPU 컴퓨팅·관리형 추론·서버리스 미세 조정')],
+    'AI 모델 훈련·추론과 관련 데이터 작업을 운영하는 고객을 대상으로 합니다.')
+PRIVATE['lambda-labs']=profile('Lambda Labs',source('Lambda · 공식 GPU 클라우드',
+    'https://lambda.ai/','열람 2026-10-02'),
+    'Lambda 브랜드로 AI 훈련·추론에 사용하는 GPU 인스턴스와 전용 클러스터를 제공합니다.',
+    '클라우드 GPU 인스턴스·1-Click 클러스터·전용 Supercluster가 공개된 제품 범위입니다. 전체 매출·계약 금액·시장점유율은 확인하지 않았습니다.',
+    [('GPU 인스턴스','실험·개발용 GPU 컴퓨팅'),('GPU 클러스터','분산 AI 작업용 클러스터와 전용 Supercluster')],
+    'AI 모델을 개발·훈련하고 추론을 운영하는 고객을 대상으로 합니다.')

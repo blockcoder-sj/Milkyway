@@ -47,14 +47,15 @@ def bootstrap(settings):
                 if value.symbol != path.stem:
                     raise ValueError('Wrong legacy company identity')
                 clean = value.model_dump(mode='json')
-                if raw != clean:
+                changed = raw != clean
+                if changed:
                     _write_cache(path, clean)
                 previous = db.execute(
                     "SELECT json_extract(p.payload,'$.attempted_at') AS attempted FROM company_profiles p "
                     "JOIN company_aliases a ON a.entity_id=p.entity_id WHERE a.namespace='ticker' AND a.value=?",
                     (value.symbol,),
                 ).fetchone()
-                if previous and (previous['attempted'] or '') >= (
+                if not changed and previous and (previous['attempted'] or '') >= (
                     value.attempted_at.isoformat() if value.attempted_at else ''):
                     continue
                 graph.ingest(value, directory.get(value.symbol, {}).get('sector'))

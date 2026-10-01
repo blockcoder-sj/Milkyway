@@ -465,6 +465,6 @@ def collect_company(payload, _configuration):
             }[key]
         ]
     result["fetched_at"] = dt.datetime.now(UTC).isoformat()
-    result['collector_version'] = 3
+    result['collector_version'] = 4
     result["unavailable_sources"] = list(dict.fromkeys(result["unavailable_sources"]))
     return CompanyKnowledge.model_validate(result).model_dump(mode="json")

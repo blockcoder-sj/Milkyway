@@ -145,6 +145,43 @@ def named(text, issuer_symbol, name_index=None):
     return result
 
 
+CUSTOMER_TO = re.compile(
+    r'\bwe (?:sell|supply|provide)(?:\s+(?:(?!\b(?:with|that|which|for|access|using)\b)[^;:]){1,100}?)?\s+to\s+',
+    re.I,
+)
+RESOURCE = re.compile(
+    r"^(?:\s*,?\s*(?:Inc|Corporation|Corp|Ltd|Limited)\.?){0,2}"
+    r"(?:\s*[®™])?\s*(?:['’]s\b|\s+(?:H\d{2,5}|GB\d{2,5}|GPUs?|CPUs?|chips?|processors?|"
+    r"products?|technology|infrastructure|customers?|suppliers?|partners?|(?:credit|debit)\s+cards?)\b)", re.I)
+
+
+def is_counterparty(text, start, end, role=None):
+    """A brand qualifying a product or another company's buyers is not the buyer."""
+    before = text[max(0, start-100):start]
+    resource = RESOURCE.search(text[end:])
+    if resource and role == 'competitor' and re.search(r"['’]s\b", resource.group()):
+        # A firm's own marketplace/product can compete. Its customers or
+        # suppliers remain separate counterparties even in a competition list.
+        if not re.match(r'\s*(?:customers?|suppliers?|partners?|users?|buyers?)\b', text[end+resource.end():], re.I):
+            resource = None
+    return not (re.search(r'\b(?:of|powered by|based on|built on)\s*$', before, re.I) or resource)
+
+
+def counterparties(text, issuer_symbol, name_index=None, role=None):
+    rows = named(text, issuer_symbol, name_index)
+    legal = name_index.mentions(text, issuer_symbol) if name_index else []
+    result = []
+    for name, symbol in rows:
+        spans = [(start,end) for start,end,_,ticker in legal if ticker == symbol]
+        if not spans:
+            spans = [(match.start(),match.end()) for candidate,ticker,matcher in MATCHERS
+                     if ticker == symbol and (symbol is not None or candidate == name)
+                     for match in matcher.finditer(text)]
+        if any(is_counterparty(text,start,end,role) for start,end in spans):
+            result.append((name,symbol))
+    return result
+
+
 def relationship_kind(text, competition=False):
     """High precision issuer statements; hypothetical and negated claims stay out."""
     if re.search(r"\b(?:could|might|may|would|potential|hypothetical|not|no longer|terminated|previously|formerly)\b", text, re.I):
@@ -154,14 +191,14 @@ def relationship_kind(text, competition=False):
         return "supplier", "공시 " + role
     if re.search(r"our (?:principal |major |key )?(?:suppliers|manufacturing partners) (?:include|are)", text, re.I):
         return "supplier", "공시 공급·제조 관계"
-    if re.search(r"(?:our (?:largest |major |key )?customers (?:include|are)|we (?:sell|supply|provide).{0,100} to )", text, re.I):
+    if re.search(r"our (?:largest |major |key )?customers (?:include|are)", text, re.I) or CUSTOMER_TO.search(text):
         return "customer", "공시 판매·고객 관계"
     if re.search(r"(?:we (?:have )?(?:partner(?:ed)?|collaborat(?:e|ed)) with|our partnership with|our partners (?:include|are))", text, re.I):
         return "partner", "공시 협력 관계"
     if re.search(r"(?:our (?:wholly[- ]owned )?subsidiar(?:y|ies)|wholly[- ]owned subsidiar(?:y|ies) of (?:us|the company))", text, re.I):
         return "subsidiary", "공시에 명시된 자회사"
     if re.search(r"(?:our (?:principal |major )?competitors (?:include|are)|we compete (?:with|against))", text, re.I) or (
-        competition and re.search(r"\b(?:competitors?|competition|compete|including|such as)\b", text, re.I)
+        competition and re.search(r"\b(?:competitors?|competition|compet(?:e|es|ed|ing)|includ(?:e|es|ing)|such as)\b", text, re.I)
     ):
         return "competitor", "공시 경쟁 항목에 명시된 기업"
     return None
@@ -169,7 +206,7 @@ def relationship_kind(text, competition=False):
 
 CLAIM_PATTERNS = (
     ('supplier', re.compile(r'(?:our (?:principal |major |key )?(?:suppliers|manufacturing partners) (?:include|are)|(?:we|the company) (?:utilize|use|purchase|buy|source|engage with).{0,150}?(?:foundries|manufacturers|subcontractors|from))', re.I)),
-    ('customer', re.compile(r'(?:our (?:largest |major |key )?customers (?:include|are)|we (?:sell|supply|provide).{0,100}? to )', re.I)),
+    ('customer', re.compile(r'(?:our (?:largest |major |key )?customers (?:include|are)|' + CUSTOMER_TO.pattern + ')', re.I)),
     ('partner', re.compile(r'(?:we (?:have )?(?:partner(?:ed)?|collaborat(?:e|ed)) with|our partnership with|our partners (?:include|are))', re.I)),
     ('competitor', re.compile(r'(?:our (?:principal |major )?competitors (?:include|are)|we compete (?:with|against))', re.I)),
 )
@@ -219,7 +256,7 @@ def parse_report(raw, symbol, origin, name_index=None):
         sentences = re.split(r"(?<!Inc)(?<!Ltd)(?<!Co)\.\s+(?=[A-Z•])", text)
         for sentence in sentences:
             for kind, role, candidates in statements(sentence, section == "competition" and remaining > 0):
-                for name, target_symbol in named(candidates, symbol, name_index):
+                for name, target_symbol in counterparties(candidates, symbol, name_index, kind):
                     # Keep different business roles/statements for the same company.
                     # The UI groups their evidence into one node without discarding it.
                     key = (name, kind, sentence)

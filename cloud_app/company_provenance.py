@@ -64,4 +64,14 @@ def clean(value):
             and not (legacy_wiki_failure and re.search(r'\bwiki\b', message, re.I))]
     if 'unavailable_sources' in result:
         result['unavailable_sources'] = [item for item in result['unavailable_sources'] if item != 'wikidata']
+    from .company_relation_validation import legacy_rejections
+    rejected = legacy_rejections(result)
+    if rejected:
+        result['relations'] = [row for row in result.get('relations', []) if row not in rejected]
+        if result.get('report_analysis'):
+            item = result['report_analysis']
+            report = dict(item) if isinstance(item, dict) else item.model_dump()
+            report['detail'] = (report.get('detail', '') +
+                f" 이전 자동 추출 {len(rejected):,}건은 현재의 역할·거래 상대 확인 기준을 충족하지 않아 관계 표시에서 제외했습니다.")[:1500]
+            result['report_analysis'] = report
     return result

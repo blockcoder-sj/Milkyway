@@ -575,3 +575,55 @@ resuming; no paid AI regression approval has arrived.
   final deployment/Chrome proof are the next steps. Current personal runtime remains
   M3 and collectors are running. Maximum-five actual AI approval is still pending.
   See docs/COMPANY_NETWORK_REVIEW_20261002.md and COMPANY_RESEARCH_MILESTONES.md.
+
+## 2026-10-02 — M4/M5 applied; final industry screen and corrections verified
+
+- Initial M4 pushed as `2c345a2`; both jobs of GitHub CI 36900893992 succeeded.
+  M5 `49778b1` also has successful CI 36896059671. Check Git HEAD and the latest
+  branch workflow for this final corrective commit; do not infer its CI from the
+  preceding commits. Branch/remote remain codex/ai-research-workflow and origin.
+- Chrome found an old CHRN→NVDA customer false claim caused by treating access
+  to NVIDIA H100 products as selling to NVIDIA. Added counterparty/clause checks
+  and collector_version4. Recheck only old automatic SEC claims. Exact physical
+  deletion includes owner/target/kind/detail/original/source; reviewed statements,
+  unrelated owners, filings and private trading/research DB remain intact.
+- Bootstrap now reingests changed cleaned/enriched JSON even with an unchanged
+  attempted_at. Cleanup idempotence, full legal names, real competition lists,
+  reviewed claims and independent owner evidence have regression coverage.
+- Read actual CHRN FY2026 annual filing: NVIDIA GPU supplier, Together AI customer,
+  later Microsoft 2-year service contract, announced Nutanix framework and four
+  AI cloud rivals. Curated Korean business notes keep May31/FY2026 and plans apart.
+  Read rival official product sites, verify exact SEC alias titles and Lambda's
+  old official domain redirect. No performance/market-share marketing used.
+- Final curated scope:78 symbol profiles,46 registry profiles,179 statements.
+  Includes stock classes and limited-role notes, not124 fully analyzed unique
+  companies or179 distinct contracts. Broad free automatic filing collection stays
+  bounded and continues; all thousands of profiles are not fully curated Korean.
+- Final immutable local image:
+  sha256:7215bab13782e05133943a67f0b25fc17260a8446ab390c17722f2900017d0f7
+  Pinned as milkyway-company-m4-cloud:verify and applied to milkyway-personal:local.
+  Full477/109.359s OK(13 Node skips);host Node15/3.653s;native8 and packaged Docker7
+  passed. Collectors ran normally, limits unchanged. A prior package run failed
+  because its old SHA image disappeared during another build; final pin passed.
+  A test-name fixture collision, wrong host test module names and omitted explicit
+  development env were corrected; review document records failures and results.
+- Same verified image recreated existing8services, all running, app healthy.
+  Read-only public DB:2521 profiles,integrityok,FK0,forbidden encyclopedia sources0,
+  unsupported old automatic claims0,wrong CHRN customer NVDA0; reviewed roles1
+  supplier/2customers/1partner/4competitors. User/test runtime/backup volumes retained.
+- Active-cache30reads median/p95(ms):NVDA→CHRN17.49/60.05,NVDA→DELL15.65/20.57,
+  AAPL→TSM28.34/108.42. Load/profile counts differ from earlier measurements.
+- Chrome:NVDA→CHRN→cloud ecosystem;Together AI internal detail/disabled SEC collect/
+  back;AAPL supplier page5→TSMC;42 business neighbors;partner26,page1→2,8perpage;
+  refresh retains filter/page;Foxconn full Korean40/38/15/7 business composition;
+  footer expand/collapse. Wiki links and external links outside footer0.
+  Proof /tmp/milkyway-company-research-m4.png. Deliverable Chrome tab810509737
+  at AAPL, TSMC partner exploration. Original user MCD tab untouched.
+- Direct scoped source/security review, AST/diff checks and changed credential
+  pattern scans passed; .env ignored. No CodeRabbit/new dependencies/harness/AI
+  paid requests/orders. Single-owner loopback local scope; public OCI/KMS NO-GO.
+- M5 reliability code is deployed. New actual provider calls remain0; maximum5
+  GPT-5.4-mini/reasoningnone approval question is still unanswered. Prepared public
+  5-turn prompts/criteria in AI_RESPONSE_REVIEW_20261002.md; do not call until approval.
+  Previous5-call approval was consumed. Do not assert zero external outages, future
+  returns, all-company relationship completeness or licensed whole-GICS verification.

@@ -164,6 +164,7 @@ class CompanyGraph:
                            (detail, row['original'] or original, row['id']))
         # Exact ticker / old opaque identity aliases are preserved; no new wiki I/O.
         for row in db.execute('SELECT p.entity_id,p.payload,p.digest,e.sector,e.name FROM company_profiles p JOIN company_entities e ON e.id=p.entity_id').fetchall():
+            CompanyGraph._remove_legacy_claims(db,row['entity_id'],json.loads(row['payload']))
             profile = CompanyKnowledge.model_validate_json(row['payload'])
             if row['entity_id'] in affected and not profile.description_source:
                 profile.name = row['name']
@@ -175,6 +176,25 @@ class CompanyGraph:
             if payload != row['payload'] or fingerprint != row['digest']:
                 db.execute('UPDATE company_profiles SET payload=?,digest=? WHERE entity_id=?',
                            (payload, fingerprint, row['entity_id']))
+
+    @staticmethod
+    def _remove_legacy_claims(db, owner, value):
+        from .company_relation_validation import legacy_rejections
+        for edge in legacy_rejections(value):
+            if edge.get('symbol'):
+                namespace, alias = 'ticker',edge['symbol']
+            elif edge.get('registry_id'):
+                namespace, alias = 'registry',edge['registry_id']
+            elif edge.get('entity_id'):
+                namespace, alias = 'wikidata',edge['entity_id']
+            else:
+                namespace, alias = 'reference',digest(edge['source']['url']+'|'+edge['name'].casefold().strip())
+            target = db.execute('SELECT entity_id FROM company_aliases WHERE namespace=? AND value=?', (namespace,alias)).fetchone()
+            if target:
+                resolved = CompanyGraph._resolve(db,target[0])
+                source_id = digest(encoded(Source.model_validate(edge['source']).model_dump()))
+                db.execute('DELETE FROM company_relations WHERE owner_id=? AND object_id=? AND kind=? AND detail=? AND original=? AND source_id=?',
+                           (owner,resolved['id'],edge['kind'],edge['detail'],edge['original'],source_id))
 
     def remove_encyclopedia(self):
         """Idempotent public-knowledge cleanup, independent from the trading DB."""
