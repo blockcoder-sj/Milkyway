@@ -10,15 +10,13 @@ from .bounded_io import read_requests_json, read_requests_bytes
 from .market_broker_feed import FixedSession
 from .company_schemas import CompanyKnowledge
 from .company_catalog import editorial_for
-from .company_filings import parse_report, parse_subsidiaries, subsidiary_document
+from .company_filings import document, parse_report, parse_subsidiaries, subsidiary_document
 
 UTC = dt.timezone.utc
 AGENT = "MilkywayPersonal/1.0"
-WIKI = "https://www.wikidata.org/w/api.php"
 _sec_last_request = 0.0
 _sec_index = None
 _sec_index_at = 0.0
-_wiki_last_request = 0.0
 _cooldowns = {}
 
 
@@ -27,16 +25,13 @@ class SourceCoolingDown(RuntimeError):
 
 
 def respect_source_limit(host):
-    global _sec_last_request, _wiki_last_request
+    global _sec_last_request
     now = time.monotonic()
     if now < _cooldowns.get(host, 0):
         raise SourceCoolingDown("Source request limit")
     if host in {"data.sec.gov", "www.sec.gov"}:
         time.sleep(max(0, 0.35 - (now - _sec_last_request)))
         _sec_last_request = time.monotonic()
-    elif host in {"www.wikidata.org", "en.wikipedia.org", "ko.wikipedia.org"}:
-        time.sleep(max(0, 0.4 - (now - _wiki_last_request)))
-        _wiki_last_request = time.monotonic()
 
 
 def remember_source_limit(host, response):
@@ -61,9 +56,6 @@ def get(url, params=None, maximum=4 * 1024 * 1024, html=False):
         parsed.scheme != "https"
         or parsed.hostname
         not in {
-            "www.wikidata.org",
-            "en.wikipedia.org",
-            "ko.wikipedia.org",
             "data.sec.gov",
             "www.sec.gov",
             "comp.wisereport.co.kr",
@@ -110,266 +102,6 @@ def get(url, params=None, maximum=4 * 1024 * 1024, html=False):
 
 def source(label, url, as_of=None, level="primary"):
     return dict(label=label, url=url, as_of=as_of, level=level)
-
-
-def claim_value(claim):
-    return claim.get("mainsnak", {}).get("datavalue", {}).get("value")
-
-
-def claims(entity, prop, now):
-    result = []
-    for claim in entity.get("claims", {}).get(prop, [])[:200]:
-        if claim.get("rank") == "deprecated":
-            continue
-        ends = claim.get("qualifiers", {}).get("P582", [])
-        if any(
-            str(e.get("datavalue", {}).get("value", {}).get("time", ""))[1:11]
-            <= now.date().isoformat()
-            for e in ends
-        ):
-            continue
-        result.append(claim)
-    return result
-
-
-def identity_matches(entity, symbol):
-    now = dt.datetime.now(UTC)
-    tickers = [claim_value(row) for row in claims(entity, "P249", now)]
-    tickers += [
-        snak.get("datavalue", {}).get("value")
-        for row in claims(entity, "P414", now)
-        for snak in row.get("qualifiers", {}).get("P249", [])
-    ]
-    return symbol.removesuffix(".KS") in tickers
-
-
-def find_entity(name, symbol, known_id=None):
-    if known_id:
-        candidates = [known_id]
-    else:
-        search_name = re.sub(
-            r"\s+(?:Inc(?:orporated)?|Corporation|Corp|Company|Ltd|Limited|plc)[.,]?$",
-            "",
-            name,
-            flags=re.IGNORECASE,
-        ).strip()
-        found = get(
-            WIKI,
-            {
-                "action": "wbsearchentities",
-                "search": search_name,
-                "language": "en" if not symbol.endswith(".KS") else "ko",
-                "limit": 3,
-                "format": "json",
-            },
-            maximum=64 * 1024,
-        )
-        candidates = [
-            row["id"]
-            for row in found.get("search", [])
-            if re.fullmatch(r"Q\d{1,12}", row.get("id", ""))
-        ]
-    if not candidates:
-        return None
-    response = get(
-        WIKI,
-        {
-            "action": "wbgetentities",
-            "ids": "|".join(candidates),
-            "props": "claims|labels|descriptions|sitelinks",
-            "sitefilter": "enwiki|kowiki",
-            "languages": "ko|en",
-            "format": "json",
-        },
-    )
-    for identifier in candidates:
-        entity = response.get("entities", {}).get(identifier, {})
-        if (
-            entity.get("id", identifier) == identifier
-            and "missing" not in entity
-            and (identity_matches(entity, symbol) if symbol else bool(known_id))
-        ):
-            return identifier, entity
-    return None
-
-
-def reference(claim, identifier, now):
-    # Keep the Wikidata statement as the attribution; references are linked separately.
-    dates = claim.get("qualifiers", {}).get("P585", [])
-    as_of = next(
-        (
-            str(row.get("datavalue", {}).get("value", {}).get("time", ""))[1:11]
-            for row in dates
-        ),
-        None,
-    )
-    return source(
-        "Wikidata · 관계 진술",
-        f"https://www.wikidata.org/wiki/{identifier}",
-        as_of,
-        level="encyclopedia",
-    )
-
-
-def wikidata(name, symbol, known_id=None):
-    found = find_entity(name, symbol, known_id)
-    if not found:
-        raise ValueError("No exact ticker-matched entity")
-    identifier, entity = found
-    now = dt.datetime.now(UTC)
-    properties = {"P355": "subsidiary", "P749": "parent", "P127": "owner"}
-    relation_claims = [
-        (kind, row)
-        for prop, kind in properties.items()
-        for row in claims(entity, prop, now)
-    ][:80]
-    product_claims = claims(entity, "P1056", now)[:50]
-    industry_claims = claims(entity, "P452", now)[:10]
-    needed = {
-        value["id"]
-        for _, row in relation_claims
-        for value in [claim_value(row)]
-        if isinstance(value, dict) and re.fullmatch(r"Q\d{1,12}", value.get("id", ""))
-    }
-    needed |= {
-        value["id"]
-        for row in product_claims + industry_claims
-        for value in [claim_value(row)]
-        if isinstance(value, dict) and re.fullmatch(r"Q\d{1,12}", value.get("id", ""))
-    }
-    labels = {}
-    ids = sorted(needed)
-    for offset in range(0, len(ids), 50):
-        response = get(
-            WIKI,
-            {
-                "action": "wbgetentities",
-                "ids": "|".join(ids[offset : offset + 50]),
-                "props": "labels",
-                "languages": "ko|en",
-                "format": "json",
-            },
-            maximum=512 * 1024,
-        )
-        for key, item in response.get("entities", {}).items():
-            label = item.get("labels", {})
-            labels[key] = (label.get("ko") or label.get("en") or {}).get("value", key)
-    info_source = source(
-        "Wikidata · 공개 기업 정보",
-        f"https://www.wikidata.org/wiki/{identifier}",
-        level="encyclopedia",
-    )
-
-    def facts(rows):
-        return [
-            dict(
-                title=labels[value["id"]][:160], source=reference(row, identifier, now)
-            )
-            for row in rows
-            for value in [claim_value(row)]
-            if isinstance(value, dict) and value.get("id") in labels
-        ]
-
-    relations = [
-        dict(
-            name=labels[value["id"]][:160],
-            kind=kind,
-            entity_id=value["id"],
-            source=reference(row, identifier, now),
-            detail="공개 백과에 등록된 관계입니다. 진술의 기준일과 원자료를 확인하세요.",
-        )
-        for kind, row in relation_claims
-        for value in [claim_value(row)]
-        if isinstance(value, dict) and value.get("id") in labels
-    ]
-    # Links to statement references are preserved without fetching arbitrary hosts.
-    references = []
-    for _, claim in relation_claims:
-        for ref in claim.get("references", [])[:8]:
-            for snak in ref.get("snaks", {}).get("P854", [])[:3]:
-                value = snak.get("datavalue", {}).get("value")
-                if (
-                    isinstance(value, str)
-                    and value.startswith("https://")
-                    and len(value) <= 2000
-                ):
-                    try:
-                        from .company_schemas import Source
-
-                        references.append(
-                            Source.model_validate(
-                                source("관계 진술의 참고 원문", value, level="encyclopedia")
-                            ).model_dump()
-                        )
-                    except ValueError:
-                        pass
-    description = (
-        entity.get("descriptions", {}).get("ko")
-        or entity.get("descriptions", {}).get("en")
-        or {}
-    ).get("value", "")
-    cik = next(
-        (
-            str(claim_value(row))
-            for row in entity.get("claims", {}).get("P5531", [])
-            if re.fullmatch(r"\d{1,10}", str(claim_value(row)))
-        ),
-        None,
-    )
-    result = dict(
-        entity_id=identifier,
-        description=description[:1500],
-        description_source=info_source,
-        products=facts(product_claims),
-        facts=facts(industry_claims),
-        relations=relations,
-        sources=[info_source] + references[:100],
-    )
-    wiki_link = entity.get("sitelinks", {}).get("kowiki") or entity.get(
-        "sitelinks", {}
-    ).get("enwiki")
-    if wiki_link:
-        language = "ko" if "kowiki" in entity.get("sitelinks", {}) else "en"
-        try:
-            result["facts"] += wikipedia_business(language, wiki_link["title"])
-        except Exception:
-            pass
-    return result, cik
-
-
-def wikipedia_business(language, title):
-    """Licensed encyclopedia context, attributed separately from official disclosures."""
-    if language not in {"ko", "en"}:
-        raise ValueError("Unsupported encyclopedia")
-    url = f"https://{language}.wikipedia.org/w/api.php"
-    payload = get(
-        url,
-        {
-            "action": "query",
-            "prop": "extracts",
-            "exintro": "1",
-            "explaintext": "1",
-            "exchars": "1400",
-            "titles": title,
-            "redirects": "1",
-            "format": "json",
-        },
-        maximum=256 * 1024,
-    )
-    pages = payload.get("query", {}).get("pages", {})
-    if len(pages) != 1:
-        return []
-    page = next(iter(pages.values()))
-    text = page.get("extract", "")
-    if not isinstance(text, str) or not text.strip():
-        return []
-    origin = source(
-        "Wikipedia · 기업 개요 (CC BY-SA)",
-        f"https://{language}.wikipedia.org/wiki/"
-        + quote(page.get("title", title).replace(" ", "_"), safe=""),
-        level="encyclopedia",
-    )
-    return [dict(title="공개 백과 사업 개요", detail=text[:1400], source=origin)]
 
 
 def parse_sec(submissions, facts, symbol, now):
@@ -526,12 +258,13 @@ def sec_company(symbol, cik):
             if not re.search(r"\.html?$", annual["url"], re.I):
                 raise ValueError("Unsupported filing document format")
             raw = get(annual["url"], maximum=24 * 1024 * 1024, html=True)
-            analysis = parse_report(raw, symbol, annual)
+            parsed_document = document(raw)
+            analysis = parse_report(parsed_document, symbol, annual)
             for key, value in analysis.items():
                 result[key] = result.get(key, []) + value if isinstance(value, list) else value
             base = annual["url"].rsplit("/", 1)[0] + "/"
             try:
-                exhibit_url = subsidiary_document(raw, annual["url"])
+                exhibit_url = subsidiary_document(parsed_document, annual["url"])
                 if not exhibit_url:
                     index = get(base + "index.json", maximum=1024 * 1024)
                     exhibit = next((item.get("name", "") for item in index.get("directory", {}).get("item", [])[:2000]
@@ -665,13 +398,6 @@ def collect_company(payload, _configuration):
     qid = requested_qid or editorial.pop("entity_id", None)
     editorial.pop("entity_id", None)
     result["entity_id"] = qid
-    try:
-        wiki, wiki_cik = wikidata(name, symbol, qid)
-        result.update(wiki)
-        cik = cik or wiki_cik
-    except Exception as exc:
-        result["errors"].append(collection_error("Wikidata 공개 기업 정보", exc))
-        result["unavailable_sources"].append("wikidata")
     if not cik and symbol and not symbol.endswith(".KS"):
         try:
             cik = sec_identity(symbol)

@@ -103,6 +103,7 @@ services:
 
   market-details:
     <<: *service
+    cpu_shares: 128
     depends_on:
       app:
         condition: service_healthy
@@ -110,6 +111,7 @@ services:
 
   company-data:
     <<: *service
+    cpu_shares: 128
     environment:
       <<: *environment
       SEC_CONTACT_EMAIL: ${SEC_CONTACT_EMAIL:-}

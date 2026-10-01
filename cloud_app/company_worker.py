@@ -11,7 +11,7 @@ from .company_service import root, read_company, company_row, SYMBOL
 from .market_service import _write_cache
 from .provider_process import ProviderProcess
 from .company_graph import CompanyGraph
-from .company_entities import get_entity, identified, bootstrap
+from .company_entities import get_entity, identified, bootstrap, seed_research
 from .company_schedule import schedule, automatic
 from .company_retention import preserve_previous
 
@@ -31,7 +31,7 @@ def process_request(settings, path):
             or key != entity["id"]
             or value.get("symbol") != symbol
             or value.get("entity_id") != qid
-            or not (symbol or qid)
+            or not symbol
         ):
             raise ValueError("Invalid registered company request")
         row = {"name": entity["name"]}
@@ -84,6 +84,7 @@ def main():
         raise SystemExit("Invalid personal configuration")
     prepare_runtime_database()
     bootstrap(settings)
+    seed_research(settings)
     requests = root(settings) / "requests"
     requests.mkdir(parents=True, exist_ok=True)
     last_schedule = 0.0

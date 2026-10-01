@@ -85,15 +85,19 @@ def run():
         assert client.request("/api/company-details/kr_13/005930.KS/refresh", "POST")[0] == 403
         client.csrf = registration["csrf"]
         client.expect(202, "/api/company-details/kr_13/005930.KS/refresh", "POST")
-        wait_for("queued company worker", lambda: client.request("/api/company-details/kr_13/005930.KS")[1].get("description") == "Synthetic offline company collection", timeout=15)
+        def company_collected():
+            value = client.request("/api/company-details/kr_13/005930.KS")[1]
+            return bool(value.get('fetched_at')) and any(edge.get('entity_id') == 'Q123' for edge in value.get('relations', []))
+        wait_for("queued company worker", company_collected, timeout=15)
         record("company_auth_csrf_queue_and_separate_worker")
         company = client.expect(200, "/api/company-details/kr_13/005930.KS")
+        assert company['brief'] and company['description'] != 'Synthetic offline company collection'
         private = next(edge['target_id'] for edge in company['relations'] if edge['entity_id'] == 'Q123')
         private_path = '/api/company-entities/' + private
         page = client.expect(200, private_path)
         assert page['symbol'] is None and page['relations'][0]['target_id'] == company['entity_key']
-        client.expect(202, private_path + '/refresh', 'POST')
-        wait_for('private company worker', lambda: client.request(private_path)[1].get('description') == 'Synthetic offline company collection', timeout=15)
+        assert page['collectable'] is False
+        client.expect(409, private_path + '/refresh', 'POST')
         record('canonical_private_company_navigation_and_reverse_evidence')
         room = client.expect(201, "/api/research/sessions", "POST", {"title": "Offline native check"})
         path = "/api/research/sessions/" + room["id"]

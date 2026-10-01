@@ -1,5 +1,6 @@
 """Dated, source-backed business notes; dynamic providers cover the wider directory."""
 from copy import deepcopy
+import json
 
 
 def src(label, url, as_of=None):
@@ -438,8 +439,7 @@ CATALOG["MSFT"]["relations"].append(dict(name="Anthropic", kind="partner", symbo
     detail="Azure에서 Claude 제공과 Copilot·Foundry 모델 접근 확대 협력 · 컴퓨팅 구매 약정은 완료된 매출을 뜻하지 않습니다.",
     source=ANTHROPIC_PARTNERSHIP))
 
-# SEC identifiers are fixed only for well-known, ticker-bound issuers. Wikidata
-# supplies identifiers for the wider directory; SEC rechecks the ticker itself.
+# Fixed ticker-bound issuers complement the exact official SEC index.
 CIKS = {
     "GOOGL": "1652044",
     "GOOG": "1652044",
@@ -476,6 +476,10 @@ EDITORIAL_DIRECTORY = {"TSM": ("us_45", "TSMC")}
 
 def editorial_for(symbol):
     value = deepcopy(CATALOG.get(symbol, {}))
+    from .company_research_catalog import enrichment
+    extra = enrichment(symbol)
+    for key, rows in extra.items():
+        value[key] = rows + value.get(key, []) if isinstance(rows, list) else rows
     if symbol in CIKS:
         value["cik"] = CIKS[symbol]
     if symbol in {"TSM", "005930.KS"}:
@@ -492,3 +496,47 @@ def editorial_for(symbol):
             }
         ]
     return value
+
+
+def enrich(value):
+    """Apply reviewed reading notes to cached profiles without losing raw evidence."""
+    from .company_schemas import CompanyKnowledge
+    from .company_research_catalog import private_profile, PRIVATE_NAMES, PRIVATE_COMPANIES
+    data = CompanyKnowledge.model_validate(value).model_dump(mode="json")
+    if data.get('registry_id') and data['registry_id'] not in PRIVATE_COMPANIES:
+        raise ValueError('Unknown primary-source company registry')
+    curated = (private_profile(data['registry_id']) if data.get('registry_id')
+               else editorial_for(data['symbol']))
+    normalized = CompanyKnowledge.model_validate({
+        'name': data['name'], **{key: rows for key, rows in curated.items()
+                               if key in CompanyKnowledge.model_fields and key not in {'name', 'entity_id'}}
+    }).model_dump(mode='json')
+    for key, rows in curated.items():
+        if key in {'cik', 'name', 'entity_id', 'registry_id'}:
+            continue
+        if isinstance(rows, list):
+            seen, merged = set(), []
+            for row in normalized[key] + data.get(key, []):
+                if key == 'relations' and not row.get('symbol') and not row.get('registry_id') and row['name'] in PRIVATE_NAMES:
+                    row = {**row, 'registry_id': PRIVATE_NAMES[row['name']]}
+                identity = json.dumps(row, sort_keys=True, ensure_ascii=False)
+                if identity not in seen:
+                    seen.add(identity)
+                    merged.append(row)
+            limit = CompanyKnowledge.model_fields[key].metadata
+            bound = next((item.max_length for item in limit if hasattr(item, 'max_length')), 200)
+            data[key] = merged[:bound]
+        elif rows:
+            data[key] = rows
+    if not data['brief'] and curated.get('description_source'):
+        origin = curated['description_source']
+        cards = [('핵심 사업', curated.get('description', ''))]
+        for key, label in [('products', '제품·서비스'), ('segments', '사업을 나누는 기준'), ('drivers', '확인할 사업 조건')]:
+            detail = ' · '.join(row['title'] + (': ' + row['detail'] if row.get('detail') else '')
+                                for row in curated.get(key, [])[:6])
+            cards.append((label, detail[:600]))
+        data['brief'] = [dict(title=title, detail=detail, source=origin) for title, detail in cards if detail]
+    for edge in data['relations']:
+        if not edge.get('symbol') and not edge.get('registry_id') and edge['name'] in PRIVATE_NAMES:
+            edge['registry_id'] = PRIVATE_NAMES[edge['name']]
+    return CompanyKnowledge.model_validate(data)

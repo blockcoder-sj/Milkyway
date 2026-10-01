@@ -170,15 +170,18 @@ class CompanyGraphTests(unittest.TestCase):
             )
             self.assertIsNone(db.execute("PRAGMA foreign_key_check").fetchone())
 
-    def test_legacy_import_preserves_files_and_rejects_wrong_identity(self):
+    def test_legacy_import_enriches_public_research_and_rejects_wrong_identity(self):
         path = root(self.settings) / "AAPL.json"
         value = company(relations=[edge()]).model_dump(mode="json")
         _write_cache(path, value)
         _write_cache(path.with_name("WRONG.json"), value)
         before = path.read_bytes()
         self.assertEqual(pages.bootstrap(self.settings), {"imported": 1, "rejected": 1})
-        self.assertEqual(path.read_bytes(), before)
+        self.assertNotEqual(path.read_bytes(), before)
+        self.assertEqual(pages.identified(__import__('json').loads(path.read_text())).entity_id, 'Q312')
+        after = path.read_bytes()
         self.assertEqual(pages.bootstrap(self.settings)["imported"], 0)
+        self.assertEqual(path.read_bytes(), after)
         with self.graph.connection() as db:
             self.assertEqual(
                 db.execute("SELECT COUNT(*) FROM company_profiles").fetchone()[0], 1
@@ -200,32 +203,13 @@ class CompanyGraphTests(unittest.TestCase):
             self.graph.ingest(company())
         self.assertEqual(target.read_text(), "untouched")
 
-    def test_private_company_queue_worker_requires_registered_exact_qid(self):
+    def test_legacy_private_qid_is_navigation_only_and_cannot_queue_wiki(self):
         key = self.graph.ingest(company(relations=[edge()]))
         private = self.graph.relations(key)[0]["target_id"]
-        pages.enqueue_entity(self.settings, private)
-        self.assertEqual(
-            pages.enqueue_entity(self.settings, private)["status"], "queued"
-        )
-        request = root(self.settings) / "requests" / (private + ".json")
-        response = company(
-            None,
-            "Q123",
-            "Private subsidiary",
-            products=[dict(title="Product", source=SRC)],
-        ).model_dump(mode="json")
-        with patch.object(worker._provider, "run", return_value=response) as provider:
-            worker.process_request(self.settings, request)
-        payload = provider.call_args.args[0]
-        self.assertIsNone(payload["symbol"])
-        self.assertEqual(payload["entity_id"], "Q123")
-        self.assertEqual(
-            pages.entity_snapshot(self.settings, private, NOW)["products"][0]["title"],
-            "Product",
-        )
-        self.assertEqual(
-            pages.enqueue_entity(self.settings, private)["status"], "recent"
-        )
+        with self.assertRaises(HTTPException) as error:
+            pages.enqueue_entity(self.settings, private)
+        self.assertEqual(error.exception.status_code, 409)
+        self.assertFalse(pages.entity_snapshot(self.settings, private, NOW)['collectable'])
         self.assertEqual(self.graph.relations(private)[0]["target_id"], key)
 
     def test_connected_public_ticker_discovers_real_directory_context(self):
@@ -259,37 +243,30 @@ class CompanyGraphTests(unittest.TestCase):
         self.assertEqual(page["quote"]["market_cap"], 123)
         self.assertEqual(page["entity_id"], "Q456")
 
-    def test_private_wrong_provider_identity_keeps_old_data(self):
+    def test_legacy_qid_only_queued_request_is_rejected_without_provider(self):
         private = self.graph.ingest(
             company(None, "Q123", "Private", description="original")
         )
-        pages.enqueue_entity(self.settings, private)
         request = root(self.settings) / "requests" / (private + ".json")
+        _write_cache(request, {'entity_key':private,'symbol':None,'entity_id':'Q123'})
         with patch.object(
             worker._provider,
             "run",
             return_value=company(None, "Q999", "Wrong").model_dump(mode="json"),
-        ):
-            worker.process_request(self.settings, request)
+        ) as provider:
+            with self.assertRaises(ValueError): worker.process_request(self.settings, request)
+            provider.assert_not_called()
         value = pages.entity_snapshot(self.settings, private, NOW)
         self.assertEqual(value["description"], "original")
         self.assertEqual(value["entity_id"], "Q123")
-        self.assertTrue(value["errors"])
+        self.assertFalse(value["errors"])
 
-    def test_qid_fetch_never_uses_name_search_or_ticker_for_private_entities(self):
-        response = {"entities": {"Q123": {"id": "Q123", "claims": {}, "labels": {}}}}
-        with patch.object(feed, "get", return_value=response) as network:
-            result, _ = feed.wikidata("Private", None, "Q123")
-        self.assertEqual(result["entity_id"], "Q123")
-        self.assertEqual(network.call_args.args[1]["action"], "wbgetentities")
-        self.assertEqual(network.call_count, 1)
-        with patch.object(
-            feed,
-            "get",
-            return_value={"entities": {"Q123": {"id": "Q123", "missing": ""}}},
-        ):
-            with self.assertRaises(ValueError):
-                feed.wikidata("Private", None, "Q123")
+    def test_legacy_private_identity_never_requests_an_encyclopedia(self):
+        with patch.object(feed, 'get') as network:
+            result=feed.collect_company({'name':'Private','symbol':None,'entity_id':'Q123'}, {})
+        self.assertEqual(result['entity_id'],'Q123')
+        self.assertEqual(result['sources'],[])
+        network.assert_not_called()
 
     def test_online_backup_restores_committed_graph_and_excludes_wal(self):
         key = self.graph.ingest(company(relations=[edge()]))

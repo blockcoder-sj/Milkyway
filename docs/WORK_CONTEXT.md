@@ -464,3 +464,24 @@ resuming; no paid AI regression approval has arrived.
   structured revenue, collapsed originals and bottom sources remain required work.
   See docs/COMPANY_RESEARCH_MILESTONES.md. Paid AI approval question is unanswered;
   zero new actual AI provider calls are authorized or made in this task.
+
+## 2026-10-02 — M2 primary company research complete
+
+- Removed active Wikipedia/Wikidata I/O and rejected encyclopedia facts by source
+  grade AND domain, including legacy JSON and SQLite migrations. Existing opaque
+  ID aliases preserve internal navigation. Source-linked English originals are
+  separate from concise Korean business-role notes.
+- Reviewed free primary research now covers 30 public / 20 additional entities and
+  85 curated relationship statements. Common verified registry IDs support direct
+  nonlisted company pages and reverse business edges; no name-only identity merge.
+- Consistent online public graph backup: integrity ok, 718 encyclopedia sources
+  removed, zero retained rejected sources and FK errors; migration 7.156 seconds.
+  Repeat 1,500-file public-cache bootstrap 15.770 seconds. Latest focused 64 checks
+  passed. Packaged regression 436 and isolated native 8-stage integration passed;
+  latest small index/bootstrap improvements will also receive final package/CI checks.
+- Actual stored annual HTML single parse: NVIDIA 0.758s, JPM 7.867s (one sample each).
+  No new dependencies/AI calls/CodeRabbit. Background company/market-detail collector
+  CPU shares 128 reduce contention without relaxing deadlines. Personal volumes intact.
+- M3 remains: essentials first, structured reported annual revenue, collapsed English
+  excerpts and all external source links at the bottom. No new AI approval arrived.
+  Evidence: docs/LOCAL_REVIEW_20261002_COMPANY_RESEARCH.md.

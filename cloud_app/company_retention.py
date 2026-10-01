@@ -2,7 +2,7 @@
 from urllib.parse import urlsplit
 
 LIST_LIMITS = {
-    "facts": 30, "products": 60, "segments": 30, "market_shares": 30,
+    "facts": 30, "brief": 8, "products": 60, "segments": 30, "market_shares": 30,
     "drivers": 30, "relations": 100, "financials": 30, "filings": 12, "sources": 200,
 }
 
@@ -10,10 +10,6 @@ LIST_LIMITS = {
 def belongs_to_failed_source(item, field, failures):
     origin = item if field in {"filings", "sources"} else item.source
     host = urlsplit(origin.url).hostname
-    if "wikidata" in failures and host in {
-        "www.wikidata.org", "en.wikipedia.org", "ko.wikipedia.org"
-    }:
-        return True
     if "wise" in failures and host == "comp.wisereport.co.kr":
         return True
     if host not in {"www.sec.gov", "data.sec.gov"}:

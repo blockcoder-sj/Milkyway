@@ -597,8 +597,9 @@ def startup() -> None:
         raise RuntimeError("Startup configuration failed: " + "; ".join(errors))
     prepare_runtime_database()
     if settings.personal_local_mode and not settings.production:
-        from .company_entities import bootstrap
+        from .company_entities import bootstrap, seed_research
         bootstrap(settings)
+        seed_research(settings)
     if _broker_enabled():
         broker_preflight(settings, "app")
     _migrate_legacy_credentials()

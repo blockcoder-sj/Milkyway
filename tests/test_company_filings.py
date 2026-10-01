@@ -15,7 +15,7 @@ class FilingExtractionTests(unittest.TestCase):
         result = parse_report(raw, "NVDA", SOURCE)
         pairs = {(r["symbol"], r["kind"]) for r in result["relations"]}
         self.assertEqual(pairs, {("TSM", "supplier"), ("005930.KS", "supplier"), ("000660.KS", "supplier"), ("MU", "supplier"), ("AMD", "competitor"), ("INTC", "competitor")})
-        self.assertTrue(all("규칙으로 추출한 원문" in r["detail"] for r in result["relations"]))
+        self.assertTrue(all(r["original"] and len(r["detail"]) < 80 for r in result["relations"]))
         self.assertTrue(result["relations"][0]["source"]["url"].endswith("#supply"))
         CompanyKnowledge(symbol="NVDA", name="NVIDIA", **result)
 
@@ -47,13 +47,11 @@ class FilingExtractionTests(unittest.TestCase):
         large = "".join(f"<p>Our competitors include Intel Corporation in the distinct synthetic market number {i}.</p>" for i in range(100)).encode()
         self.assertEqual(len(parse_report(large, "NVDA", SOURCE)["relations"]), 80)
 
-    def test_sec_contact_is_never_sent_to_wikipedia(self):
+    def test_encyclopedia_hosts_are_removed_even_with_sec_contact(self):
         import os
-        with patch.dict(os.environ, {"SEC_CONTACT_EMAIL": "a@example.test"}), patch.object(feed, "respect_source_limit"), patch.object(feed, "FixedSession") as sessions, patch.object(feed, "read_requests_json", return_value={}):
-            response = sessions.return_value.__enter__.return_value.get.return_value
-            response.status_code = 200
-            feed.get(feed.WIKI)
-            self.assertEqual(sessions.return_value.__enter__.return_value.get.call_args.kwargs["headers"]["User-Agent"], feed.AGENT)
+        with patch.dict(os.environ, {"SEC_CONTACT_EMAIL": "a@example.test"}), patch.object(feed, "FixedSession") as network:
+            with self.assertRaises(ValueError): feed.get("https://www.wikidata.org/w/api.php")
+            network.assert_not_called()
 
     def test_exhibit_company_names_remain_unmerged_source_local_entities(self):
         raw = b'''<h1>Exhibit 21 Subsidiaries</h1><table><tr><td>Name of Subsidiary</td><td>Jurisdiction</td></tr><tr><td>Alpha Services LLC</td><td>Delaware</td></tr><tr><td>Alpha Services LLC</td><td>Delaware</td></tr><tr><td>Beta Limited</td><td>United Kingdom</td></tr></table>'''
@@ -98,43 +96,43 @@ class FilingExtractionTests(unittest.TestCase):
         from types import SimpleNamespace
         response = SimpleNamespace(status_code=429, headers={"Retry-After": "600"})
         with patch.object(feed, "_cooldowns", {}), patch.object(feed.time, "monotonic", return_value=100), patch.object(feed.time, "sleep") as sleep:
-            feed.remember_source_limit("www.wikidata.org", response)
-            self.assertEqual(feed._cooldowns["www.wikidata.org"], 700)
+            feed.remember_source_limit("data.sec.gov", response)
+            self.assertEqual(feed._cooldowns["data.sec.gov"], 700)
             with patch.object(feed, "FixedSession") as network:
                 with self.assertRaises(feed.SourceCoolingDown):
-                    feed.get(feed.WIKI)
+                    feed.get("https://data.sec.gov/submissions/CIK0000000001.json")
                 network.assert_not_called()
-            feed.respect_source_limit("data.sec.gov")
-            sleep.assert_called_once()
+            feed.respect_source_limit("comp.wisereport.co.kr")
+            sleep.assert_not_called()
 
     def test_retry_header_is_bounded_and_diagnostics_are_redacted(self):
         from types import SimpleNamespace
         for value in ("invalid secret", "-100", "9" * 100):
             with patch.object(feed, "_cooldowns", {}), patch.object(feed.time, "monotonic", return_value=100):
-                feed.remember_source_limit("www.wikidata.org", SimpleNamespace(status_code=429, headers={"Retry-After": value}))
-                self.assertGreaterEqual(feed._cooldowns["www.wikidata.org"], 160)
-                self.assertLessEqual(feed._cooldowns["www.wikidata.org"], 86500)
+                feed.remember_source_limit("data.sec.gov", SimpleNamespace(status_code=429, headers={"Retry-After": value}))
+                self.assertGreaterEqual(feed._cooldowns["data.sec.gov"], 160)
+                self.assertLessEqual(feed._cooldowns["data.sec.gov"], 86500)
         self.assertNotIn("secret", feed.collection_error("Wikidata", RuntimeError("secret")))
         self.assertIn("대기 중", feed.collection_error("Wikidata", feed.SourceCoolingDown()))
 
-    def test_failed_wiki_preserves_wiki_evidence_but_retracts_refreshed_sec_claims(self):
+    def test_rejected_legacy_wiki_failure_cannot_resurrect_old_claims(self):
         def edge(name, origin):
             return dict(name=name, kind="subsidiary", source=origin)
         wiki = dict(label="Wikidata", url="https://www.wikidata.org/wiki/Q1", level="encyclopedia")
         old = CompanyKnowledge(symbol="TEST", name="Test", relations=[edge("Wiki child", wiki), edge("Old SEC child", SOURCE)])
         current = CompanyKnowledge(symbol="TEST", name="Test", errors=["wiki failed"], unavailable_sources=["wikidata"])
         preserve_previous(current, old)
-        self.assertEqual([r.name for r in current.relations], ["Wiki child"])
-        self.assertTrue(any("이전 수집" in message for message in current.errors))
+        self.assertEqual([r.name for r in current.relations], [])
+        self.assertFalse(any("이전 수집" in message for message in current.errors))
 
-    def test_sec_failure_preserves_prior_sec_edges_alongside_current_wiki_edges(self):
+    def test_sec_failure_preserves_sec_edges_and_removes_wiki_edges(self):
         wiki = dict(label="Wikidata", url="https://www.wikidata.org/wiki/Q1", level="encyclopedia")
         old = CompanyKnowledge(symbol="TEST", name="Test", relations=[dict(name="SEC supplier", kind="supplier", source=SOURCE)])
         current = CompanyKnowledge(symbol="TEST", name="Test", errors=["SEC failed"], unavailable_sources=["sec_report"], relations=[dict(name="Wiki child", kind="subsidiary", source=wiki)])
         preserve_previous(current, old)
-        self.assertEqual([r.name for r in current.relations], ["Wiki child", "SEC supplier"])
+        self.assertEqual([r.name for r in current.relations], ["SEC supplier"])
         preserve_previous(current, old)
-        self.assertEqual(len(current.relations), 2)
+        self.assertEqual(len(current.relations), 1)
 
     def test_no_failure_does_not_resurrect_old_relations(self):
         old = CompanyKnowledge(symbol="TEST", name="Test", relations=[dict(name="Old", kind="supplier", source=SOURCE)])

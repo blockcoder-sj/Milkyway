@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 # Vetted issuer/brand aliases. Unknown mentions never acquire a guessed ticker.
 COMPANIES = (
     ("TSMC", "TSM", ("Taiwan Semiconductor Manufacturing", "TSMC")),
-    ("Samsung Electronics", "005930.KS", ("Samsung Electronics", "Samsung")),
+    ("Samsung Electronics", "005930.KS", ("Samsung Electronics",)),
     ("SK hynix", "000660.KS", ("SK Hynix", "SK hynix")),
     ("Micron Technology", "MU", ("Micron Technology", "Micron")),
     ("Intel", "INTC", ("Intel Corporation", "Intel")),
@@ -85,19 +85,40 @@ COMPANIES = (
     ("Air Products", "APD", ("Air Products",)),
     ("UPS", "UPS", ("United Parcel Service",)),
     ("FedEx", "FDX", ("FedEx",)),
+    ("ASML", "ASML", ("ASML",)),
+    ("Applied Materials", "AMAT", ("Applied Materials",)),
+    ("Lam Research", "LRCX", ("Lam Research",)),
+    ("KLA", "KLAC", ("KLA Corporation", "KLA-Tencor")),
+    ("Onto Innovation", "ONTO", ("Onto Innovation",)),
+    ("Amkor", "AMKR", ("Amkor Technology",)),
+    ("McDonald's", "MCD", ("McDonald's", "McDonald’s")),
+    ("Accenture", "ACN", ("Accenture",)),
+    ("Thermo Fisher Scientific", "TMO", ("Thermo Fisher Scientific",)),
+    ("Novo Nordisk", "NVO", ("Novo Nordisk",)),
+    ("Sanofi", "SNY", ("Sanofi",)),
+    ("Prologis", "PLD", ("Prologis",)),
+    ("NextEra Energy", "NEE", ("NextEra Energy",)),
+    ("GE Vernova", "GEV", ("GE Vernova",)),
+    ("Home Depot", "HD", ("The Home Depot", "Home Depot Inc")),
+    ("BHP", "BHP", ("BHP Group",)),
+    ("Rio Tinto", "RIO", ("Rio Tinto",)),
 )
 MATCHERS = tuple((name, symbol, re.compile(r"(?<![\w])(?:" + "|".join(
     re.escape(alias) for alias in sorted(set(aliases), key=len, reverse=True)
 ) + r")(?![\w])", re.I)) for name, symbol, aliases in COMPANIES)
 
 
+def document(raw):
+    return raw if isinstance(raw, BeautifulSoup) else BeautifulSoup(raw, "html.parser")
+
+
 def blocks(raw):
     """Keep document order, headings and original anchors, without executing HTML."""
-    soup = BeautifulSoup(raw, "html.parser")
-    for node in soup(["script", "style", "ix:header", "ix:hidden", "noscript"]):
-        node.decompose()
+    soup = document(raw)
     result = []
     for node in soup.find_all(["p", "div", "li", "h1", "h2", "h3", "h4"]):
+        if node.find_parent(["script", "style", "ix:header", "ix:hidden", "noscript"]):
+            continue
         if node.find(["p", "div", "li", "h1", "h2", "h3", "h4"]):
             continue
         text = re.sub(r"\s+", " ", node.get_text(" ", strip=True)).strip()
@@ -172,7 +193,7 @@ def parse_report(raw, symbol, origin):
                     continue
                 seen.add(key)
                 result["relations"].append(dict(name=name, symbol=target_symbol, kind=kind,
-                    detail=(role + " · 규칙으로 추출한 원문: " + sentence)[:700], source=src))
+                    detail=role, original=sentence[:1500], source=src))
         remaining = max(0, remaining - 1)
         if remaining == 0:
             section = ""
@@ -184,7 +205,7 @@ def parse_report(raw, symbol, origin):
         )
         for key, title, pattern in categories:
             if len(result[key]) < 4 and re.search(pattern, text, re.I) and text not in seen:
-                result[key].append(dict(title=title, detail=text[:1500], source=src))
+                result[key].append(dict(title=title, detail="", original=text[:1500], source=src))
                 seen.add(text)
     count = len(result["relations"])
     result["report_analysis"] = dict(title="공시 본문 확인", detail=
@@ -196,7 +217,7 @@ def parse_report(raw, symbol, origin):
 
 def parse_subsidiaries(raw, origin):
     """Exhibit 21 table names remain source-local identities, never name-based merges."""
-    soup = BeautifulSoup(raw, "html.parser")
+    soup = document(raw)
     if not re.search(r"subsidiar", soup.get_text(" ", strip=True)[:4000], re.I):
         raise ValueError("Not a subsidiary exhibit")
     result, seen = [], set()
@@ -227,7 +248,7 @@ def parse_subsidiaries(raw, origin):
 def subsidiary_document(raw, annual_url):
     """Follow only the issuer's explicitly named SEC subsidiary exhibit."""
     issuer = urlsplit(annual_url).path.split("/")[4]
-    soup = BeautifulSoup(raw, "html.parser")
+    soup = document(raw)
     for anchor in soup.find_all("a", href=True)[:10000]:
         if not re.fullmatch(r"(?:subsidiaries of (?:the )?(?:registrant|company)|list of subsidiaries)", anchor.get_text(" ", strip=True), re.I):
             continue

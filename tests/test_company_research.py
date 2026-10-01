@@ -42,38 +42,19 @@ def submissions(symbol="AAPL"):
 
 
 class CompanyFeedTests(unittest.TestCase):
-    def test_ticker_can_be_an_exchange_qualifier(self):
-        entity = {
-            "claims": {
-                "P414": [
-                    claim(
-                        {"id": "Q82059"},
-                        qualifiers={"P249": [{"datavalue": {"value": "AAPL"}}]},
-                    )
-                ]
-            }
-        }
-        self.assertTrue(feed.identity_matches(entity, "AAPL"))
-        self.assertFalse(feed.identity_matches(entity, "MSFT"))
-        self.assertTrue(
-            feed.identity_matches({"claims": {"P249": [claim("005930")]}}, "005930.KS")
-        )
+    def test_encyclopedias_are_rejected_before_network(self):
+        with patch.object(feed, 'FixedSession') as network:
+            for url in ('https://www.wikidata.org/w/api.php', 'https://en.wikipedia.org/w/api.php', 'https://ko.wikipedia.org/w/api.php'):
+                with self.assertRaises(ValueError): feed.get(url)
+            network.assert_not_called()
 
-    def test_ended_or_deprecated_relations_are_not_current(self):
-        ended = {"P582": [{"datavalue": {"value": {"time": "+2025-01-01T00:00:00Z"}}}]}
-        entity = {
-            "claims": {
-                "P355": [
-                    claim({"id": "Q1"}, rank="deprecated"),
-                    claim({"id": "Q2"}, qualifiers=ended),
-                    claim({"id": "Q3"}),
-                ]
-            }
-        }
-        self.assertEqual(
-            [feed.claim_value(c)["id"] for c in feed.claims(entity, "P355", NOW)],
-            ["Q3"],
-        )
+    def test_legacy_encyclopedia_facts_removed_but_existing_identity_preserved(self):
+        origin = dict(label='Wikidata · 공개 기업 정보',url='https://www.wikidata.org/wiki/Q312',level='encyclopedia')
+        value=CompanyKnowledge(symbol='AAPL',name='Apple',description='Untrusted',description_source=origin,
+            facts=[dict(title='Wiki overview',detail='Untrusted',source=origin)],sources=[origin],
+            relations=[dict(name='Untrusted supplier',kind='supplier',source=origin)])
+        self.assertEqual(value.entity_id,'Q312');self.assertEqual(value.description,'')
+        self.assertEqual(value.facts,[]);self.assertEqual(value.relations,[]);self.assertEqual(value.sources,[])
 
     def test_fixed_network_hosts_reject_arbitrary_urls_before_io(self):
         with patch.object(feed, "FixedSession") as session:
@@ -159,9 +140,7 @@ class CompanyFeedTests(unittest.TestCase):
         self.assertTrue(share["source"]["as_of"])
 
     def test_no_ai_and_partial_public_data_failure_retains_curated_notes(self):
-        with patch.object(feed, "wikidata", side_effect=TimeoutError()), patch.object(
-            feed, "sec_company", side_effect=TimeoutError()
-        ):
+        with patch.object(feed, "sec_company", side_effect=TimeoutError()):
             result = feed.collect_company({"symbol": "AAPL", "name": "Apple"}, {})
         self.assertTrue(result["products"])
         self.assertTrue(result["errors"])

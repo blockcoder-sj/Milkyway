@@ -4,7 +4,7 @@ import re
 from fastapi import HTTPException
 
 from .bounded_io import read_bounded_json
-from .company_catalog import editorial_for
+from .company_catalog import editorial_for, enrich, CATALOG
 from .company_graph import CompanyGraph, ENTITY_KEY
 from .company_schemas import CompanyKnowledge
 from .market_catalog import BY_ID
@@ -33,37 +33,52 @@ def bootstrap(settings):
     from .company_service import root, related_directory, SYMBOL
 
     graph = CompanyGraph(settings)
+    graph.remove_encyclopedia()
     imported = rejected = 0
-    for path in sorted(root(settings).glob("*.json"))[:1000]:
-        if not SYMBOL.fullmatch(path.stem):
-            continue
-        try:
-            value = identified(read_bounded_json(path, maximum_bytes=2 * 1024 * 1024))
-            if value.symbol != path.stem:
-                raise ValueError("Wrong legacy company identity")
-            existing = None
-            # Avoid replacing a newer transactional DB profile with a legacy file.
-            with graph.connection() as db:
-                alias = db.execute(
-                    "SELECT entity_id FROM company_aliases WHERE namespace='ticker' AND value=?",
+    paths = [path for path in sorted(root(settings).glob('*.json')) if SYMBOL.fullmatch(path.stem)]
+    directory = related_directory(settings, [path.stem for path in paths])
+    # Read only the comparison timestamp; do not load each entity's 200 sources
+    # or open thousands of SQLite connections during a repeated startup.
+    with graph.connection() as db:
+        for path in paths:
+            try:
+                raw = read_bounded_json(path, maximum_bytes=2 * 1024 * 1024)
+                value = identified(enrich(raw))
+                if value.symbol != path.stem:
+                    raise ValueError('Wrong legacy company identity')
+                clean = value.model_dump(mode='json')
+                if raw != clean:
+                    _write_cache(path, clean)
+                previous = db.execute(
+                    "SELECT json_extract(p.payload,'$.attempted_at') AS attempted FROM company_profiles p "
+                    "JOIN company_aliases a ON a.entity_id=p.entity_id WHERE a.namespace='ticker' AND a.value=?",
                     (value.symbol,),
                 ).fetchone()
-            if alias:
-                existing = graph.entity(alias[0])["profile"]
-            if existing and (existing.get("attempted_at") or "") >= (
-                value.attempted_at.isoformat() if value.attempted_at else ""
-            ):
-                continue
-            sector = (
-                related_directory(settings, [value.symbol])
-                .get(value.symbol, {})
-                .get("sector")
-            )
-            graph.ingest(value, sector)
-            imported += 1
-        except (OSError, ValueError, TypeError):
-            rejected += 1
+                if previous and (previous['attempted'] or '') >= (
+                    value.attempted_at.isoformat() if value.attempted_at else ''):
+                    continue
+                graph.ingest(value, directory.get(value.symbol, {}).get('sector'))
+                imported += 1
+            except (OSError, ValueError, TypeError):
+                rejected += 1
     return {"imported": imported, "rejected": rejected}
+
+
+def seed_research(settings):
+    """Publish vetted public research once at startup, with no provider calls."""
+    from .company_research_catalog import PUBLIC_COMPANIES, RELATIONS, PRIVATE_COMPANIES, private_profile
+    from .company_service import related_directory, read_company
+    graph = CompanyGraph(settings)
+    symbols = sorted(set(CATALOG) | set(PUBLIC_COMPANIES) | set(RELATIONS))
+    directory = related_directory(settings, symbols)
+    for symbol in symbols:
+        old = read_company(settings, symbol)
+        notes = PUBLIC_COMPANIES.get(symbol, {})
+        name = directory.get(symbol, {}).get('name') or notes.get('name') or (old.name if old else symbol)
+        profile = identified(enrich(old or CompanyKnowledge(symbol=symbol, name=name)))
+        graph.ingest(profile, directory.get(symbol, {}).get('sector'))
+    for key in PRIVATE_COMPANIES:
+        graph.ingest(CompanyKnowledge.model_validate(private_profile(key)))
 
 
 def get_entity(settings, key):
@@ -102,8 +117,9 @@ def entity_snapshot(settings, key, now=None):
             return company_snapshot(settings, sector, symbol, now)
     now = now or dt.datetime.now(dt.timezone.utc)
     value = entity["profile"] or CompanyKnowledge(
-        symbol=symbol, entity_id=entity["entity_id"], name=entity["name"]
+        symbol=symbol, entity_id=entity["entity_id"], registry_id=entity['registry_id'], name=entity["name"]
     ).model_dump(mode="json")
+    value = enrich(value).model_dump(mode='json')
     relations = CompanyGraph(settings).relations(entity["id"])
     if not value["description"]:
         value["description"] = "출처가 있는 기업 관계 자료로 등록된 항목입니다. 제품·공시 등은 확보된 원자료만 표시합니다."
@@ -132,7 +148,7 @@ def entity_snapshot(settings, key, now=None):
         "quote_basis": {},
         "peers": [],
         "pending": (root(settings) / "requests" / (entity["id"] + ".json")).exists(),
-        "collectable": bool(symbol or entity["entity_id"]),
+        "collectable": bool(symbol),
         "stale": not fetched
         or bool(value["errors"])
         or (now - fetched).total_seconds() > REFRESH_SECONDS,
@@ -145,9 +161,9 @@ def enqueue_entity(settings, key):
 
     entity = get_entity(settings, key)
     symbol = entity["symbols"][0] if entity["symbols"] else None
-    if not symbol and not entity["entity_id"]:
+    if not symbol:
         raise HTTPException(
-            409, "이 기업은 원문 관계 자료만 있습니다. 공개 기업 식별자가 확인되면 추가 자료를 수집할 수 있습니다"
+            409, "이 기업은 검증된 공식 관계 자료로 제공합니다. 자동 공시 수집용 상장 종목은 등록되어 있지 않습니다"
         )
     profile = entity["profile"] or {}
     attempted = profile.get("attempted_at")

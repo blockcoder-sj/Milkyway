@@ -12,6 +12,7 @@ import sqlite3
 import uuid
 
 from .company_schemas import CompanyKnowledge, Source
+from .company_provenance import forbidden
 
 ENTITY_KEY = re.compile(r"c_[a-f0-9]{32}")
 QID = re.compile(r"Q\d{1,12}")
@@ -42,6 +43,7 @@ CREATE TABLE company_entity_sources (
  entity_id TEXT NOT NULL REFERENCES company_entities(id),
  source_id TEXT NOT NULL REFERENCES company_sources(id),
  PRIMARY KEY(entity_id,source_id));
+CREATE INDEX company_entity_source_origin ON company_entity_sources(source_id);
 CREATE TABLE company_profiles (
  entity_id TEXT PRIMARY KEY REFERENCES company_entities(id),
  payload TEXT NOT NULL, digest TEXT NOT NULL);
@@ -50,11 +52,13 @@ CREATE TABLE company_relations (
  subject_id TEXT NOT NULL REFERENCES company_entities(id),
  object_id TEXT NOT NULL REFERENCES company_entities(id),
  kind TEXT NOT NULL, detail TEXT NOT NULL,
- source_id TEXT NOT NULL REFERENCES company_sources(id), observed_at TEXT);
+ source_id TEXT NOT NULL REFERENCES company_sources(id), observed_at TEXT,
+ original TEXT NOT NULL DEFAULT '');
 CREATE INDEX company_relation_subject ON company_relations(subject_id);
 CREATE INDEX company_relation_object ON company_relations(object_id);
 CREATE INDEX company_relation_owner ON company_relations(owner_id);
-PRAGMA user_version=1;
+CREATE INDEX company_relation_source ON company_relations(source_id);
+PRAGMA user_version=2;
 """
 
 
@@ -97,13 +101,62 @@ class CompanyGraph:
                         if statement.strip():
                             db.execute(statement)
                 db.commit()
-            elif version != 1:
+            elif version == 1:
+                db.execute('BEGIN IMMEDIATE')
+                if db.execute('PRAGMA user_version').fetchone()[0] == 1:
+                    db.execute("ALTER TABLE company_relations ADD COLUMN original TEXT NOT NULL DEFAULT ''")
+                    db.execute('CREATE INDEX IF NOT EXISTS company_entity_source_origin ON company_entity_sources(source_id)')
+                    db.execute('CREATE INDEX IF NOT EXISTS company_relation_source ON company_relations(source_id)')
+                    self._remove_encyclopedia(db)
+                    db.execute('PRAGMA user_version=2')
+                db.commit()
+            elif version != 2:
                 raise ValueError("Unsupported company graph schema")
             db.execute("PRAGMA journal_mode=WAL")
+            db.execute('CREATE INDEX IF NOT EXISTS company_entity_source_origin ON company_entity_sources(source_id)')
+            db.execute('CREATE INDEX IF NOT EXISTS company_relation_source ON company_relations(source_id)')
             with db:
                 yield db
         finally:
             db.close()
+
+    @staticmethod
+    def _remove_encyclopedia(db):
+        rejected = [row['id'] for row in db.execute('SELECT * FROM company_sources') if forbidden(dict(row))]
+        affected = set()
+        for key in rejected:
+            affected.update(row[0] for row in db.execute('SELECT entity_id FROM company_entity_sources WHERE source_id=?', (key,)))
+            db.execute('DELETE FROM company_relations WHERE source_id=?', (key,))
+            db.execute('DELETE FROM company_entity_sources WHERE source_id=?', (key,))
+            db.execute('DELETE FROM company_sources WHERE id=?', (key,))
+        for key in affected:
+            if not db.execute('SELECT 1 FROM company_entity_sources WHERE entity_id=? LIMIT 1', (key,)).fetchone():
+                ticker = db.execute("SELECT value FROM company_aliases WHERE entity_id=? AND namespace='ticker' LIMIT 1", (key,)).fetchone()
+                db.execute('UPDATE company_entities SET name=? WHERE id=?', (ticker[0] if ticker else '공식 자료 확인 대기', key))
+        marker = ' · 규칙으로 추출한 원문: '
+        for row in db.execute('SELECT id,detail,original FROM company_relations').fetchall():
+            if marker in row['detail']:
+                detail, original = row['detail'].split(marker, 1)
+                db.execute('UPDATE company_relations SET detail=?,original=? WHERE id=?',
+                           (detail, row['original'] or original, row['id']))
+        # Exact ticker / old opaque identity aliases are preserved; no new wiki I/O.
+        for row in db.execute('SELECT p.entity_id,p.payload,p.digest,e.sector,e.name FROM company_profiles p JOIN company_entities e ON e.id=p.entity_id').fetchall():
+            profile = CompanyKnowledge.model_validate_json(row['payload'])
+            if row['entity_id'] in affected and not profile.description_source:
+                profile.name = row['name']
+            for edge in profile.relations:
+                if marker in edge.detail:
+                    edge.detail, edge.original = edge.detail.split(marker, 1)
+            payload = encoded(profile.model_dump(mode='json'))
+            fingerprint = digest(payload + '|' + (row['sector'] or ''))
+            if payload != row['payload'] or fingerprint != row['digest']:
+                db.execute('UPDATE company_profiles SET payload=?,digest=? WHERE entity_id=?',
+                           (payload, fingerprint, row['entity_id']))
+
+    def remove_encyclopedia(self):
+        """Idempotent public-knowledge cleanup, independent from the trading DB."""
+        with self.connection() as db:
+            self._remove_encyclopedia(db)
 
     @staticmethod
     def _resolve(db, key):
@@ -160,7 +213,7 @@ class CompanyGraph:
             (target, old),
         )
 
-    def _entity(self, db, name, symbol=None, qid=None, reference=None, sector=None):
+    def _entity(self, db, name, symbol=None, qid=None, reference=None, sector=None, registry=None):
         aliases = []
         if symbol:
             if not SYMBOL.fullmatch(symbol):
@@ -170,6 +223,15 @@ class CompanyGraph:
             if not QID.fullmatch(qid):
                 raise ValueError("Invalid Wikidata identity")
             aliases.append(("wikidata", qid))
+        if registry:
+            from .company_research_catalog import PRIVATE_COMPANIES
+            if registry not in PRIVATE_COMPANIES or symbol:
+                raise ValueError("Unknown primary-source company registry")
+            aliases.append(("registry", registry))
+            if reference:
+                # Upgrade an earlier source-local alias only after manual registry
+                # verification; this keeps existing links to that evidence alive.
+                aliases.append(("reference", digest(reference + "|" + name.casefold().strip())))
         if not aliases:
             if not reference:
                 raise ValueError("Company identity requires evidence")
@@ -222,6 +284,7 @@ class CompanyGraph:
             alias = (
                 ("ticker", profile.symbol)
                 if profile.symbol
+                else ("registry", profile.registry_id) if profile.registry_id
                 else ("wikidata", profile.entity_id)
             )
             row = db.execute(
@@ -232,7 +295,8 @@ class CompanyGraph:
                 return row["entity_id"]
             db.execute("BEGIN IMMEDIATE")
             key = self._entity(
-                db, profile.name, profile.symbol, profile.entity_id, sector=sector
+                db, profile.name, profile.symbol, profile.entity_id, sector=sector,
+                registry=profile.registry_id
             )
             db.execute(
                 "INSERT OR REPLACE INTO company_profiles VALUES(?,?,?)",
@@ -243,6 +307,7 @@ class CompanyGraph:
                 sources.append(profile.description_source)
             for field in (
                 "facts",
+                "brief",
                 "products",
                 "segments",
                 "market_shares",
@@ -256,7 +321,8 @@ class CompanyGraph:
             db.execute("DELETE FROM company_relations WHERE owner_id=?", (key,))
             for edge in profile.relations:
                 target = self._entity(
-                    db, edge.name, edge.symbol, edge.entity_id, edge.source.url
+                    db, edge.name, edge.symbol, edge.entity_id, edge.source.url,
+                    registry=edge.registry_id
                 )
                 if target == key:
                     continue
@@ -269,7 +335,7 @@ class CompanyGraph:
                     encoded([key, target, edge.kind, edge.detail, source_id])
                 )
                 db.execute(
-                    "INSERT OR REPLACE INTO company_relations VALUES(?,?,?,?,?,?,?,?)",
+                    "INSERT OR REPLACE INTO company_relations VALUES(?,?,?,?,?,?,?,?,?)",
                     (
                         relation_id,
                         key,
@@ -279,6 +345,7 @@ class CompanyGraph:
                         edge.detail,
                         source_id,
                         profile.fetched_at.isoformat() if profile.fetched_at else None,
+                        edge.original,
                     ),
                 )
             return key
@@ -308,6 +375,9 @@ class CompanyGraph:
             row["symbols"] = [a["value"] for a in aliases if a["namespace"] == "ticker"]
             row["entity_id"] = next(
                 (a["value"] for a in aliases if a["namespace"] == "wikidata"), None
+            )
+            row["registry_id"] = next(
+                (a["value"] for a in aliases if a["namespace"] == "registry"), None
             )
             profile = db.execute(
                 "SELECT payload FROM company_profiles WHERE entity_id=?", (row["id"],)
@@ -373,6 +443,7 @@ class CompanyGraph:
                 seen.add(identity)
                 evidence = dict(
                     detail=row["detail"],
+                    original=row['original'],
                     reverse=reverse,
                     reported_by=row["reported_by"],
                     observed_at=row["observed_at"],
@@ -395,6 +466,7 @@ class CompanyGraph:
                     name=row["name"],
                     kind=kind,
                     detail=row["detail"],
+                    original=row['original'],
                     target_id=row["target_id"],
                     reverse=reverse,
                     reported_by=row["reported_by"],

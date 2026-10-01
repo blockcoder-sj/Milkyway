@@ -1,7 +1,7 @@
 """Explicit display-only company knowledge contracts."""
 from typing import Literal
 from urllib.parse import urlsplit
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class Source(BaseModel):
@@ -30,6 +30,7 @@ class Fact(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: str = Field(min_length=1, max_length=160)
     detail: str = Field(default="", max_length=1500)
+    original: str = Field(default="", max_length=1500)
     source: Source
 
 
@@ -47,8 +48,10 @@ class Relation(BaseModel):
         "competitor",
     ]
     detail: str = Field(default="", max_length=700)
+    original: str = Field(default="", max_length=1500)
     symbol: str | None = Field(default=None, max_length=20)
     entity_id: str | None = Field(default=None, pattern=r"^Q\d{1,12}$")
+    registry_id: str | None = Field(default=None, pattern=r"^[a-z0-9][a-z0-9-]{0,63}$")
     source: Source
 
 
@@ -62,13 +65,15 @@ class Financial(BaseModel):
 
 
 class CompanyKnowledge(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", revalidate_instances="always")
     symbol: str | None = Field(default=None, pattern=r"^[A-Z0-9][A-Z0-9.-]{0,19}$")
     entity_id: str | None = Field(default=None, pattern=r"^Q\d{1,12}$")
+    registry_id: str | None = Field(default=None, pattern=r"^[a-z0-9][a-z0-9-]{0,63}$")
     name: str = Field(max_length=120)
     description: str = Field(default="", max_length=1500)
     description_source: Source | None = None
     facts: list[Fact] = Field(default_factory=list, max_length=30)
+    brief: list[Fact] = Field(default_factory=list, max_length=8)
     products: list[Fact] = Field(default_factory=list, max_length=60)
     segments: list[Fact] = Field(default_factory=list, max_length=30)
     market_shares: list[Fact] = Field(default_factory=list, max_length=30)
@@ -84,3 +89,9 @@ class CompanyKnowledge(BaseModel):
     fetched_at: AwareDatetime | None = None
     attempted_at: AwareDatetime | None = None
     errors: list[str] = Field(default_factory=list, max_length=12)
+
+    @model_validator(mode='before')
+    @classmethod
+    def accepted_provenance(cls, value):
+        from .company_provenance import clean
+        return clean(value)
