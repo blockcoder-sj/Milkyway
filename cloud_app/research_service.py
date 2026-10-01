@@ -35,6 +35,7 @@ from .research_store import (
     session_payload,
 )
 from .research_ports import ResearchServices
+from .research_validation import narrative_only
 from .strategies import StrategySpec
 
 
@@ -118,7 +119,9 @@ class ResearchService:
                 raise HTTPException(409, "이 연구의 대화 한도에 도달했습니다. 새 연구를 시작하세요")
             history = self.db.scalars(
                 select(ResearchTurn)
-                .where(ResearchTurn.session_id == room.id, ResearchTurn.status == "completed")
+                .where(ResearchTurn.session_id == room.id,
+                       ResearchTurn.status.in_(['completed', 'failed']),
+                       ResearchTurn.response_json.is_not(None))
                 .order_by(ResearchTurn.created_at.desc(), ResearchTurn.id.desc())
                 .limit(12)
             ).all()
@@ -132,7 +135,8 @@ class ResearchService:
                 "user_message": body.prompt.strip(),
                 "selected_strategy": json.loads(selected.spec_json) if selected else None,
                 "recent_history": [
-                    {"user": row.prompt, "assistant": json.loads(row.response_json)["reply"]}
+                    {"user": row.prompt, "assistant": json.loads(row.response_json)["reply"],
+                     "turn_status": row.status, "strategy_saved": bool(row.strategy_id)}
                     for row in reversed(history)
                 ],
                 "evidence": {
@@ -209,14 +213,18 @@ class ResearchService:
         if not claimed:
             self.db.refresh(row)
             return turn_payload(row)
+        reply, usage = None, {}
         try:
             result = research_ai.invoke_approved(request, config.key)
+            usage = research_ai.safe_usage({'usage': result.get('usage', {})})
             if result.get("error"):
                 self.db.refresh(row)
                 if row.status == "running":
+                    narrative = narrative_only(result.get('reply'))
+                    row.response_json = json.dumps(narrative, ensure_ascii=False) if narrative else None
                     row.status, row.finished_at = "failed", utcnow()
                     row.error = json.dumps(result["error"], ensure_ascii=False)
-                    row.usage_json = json.dumps(result.get("usage", {}))
+                    row.usage_json = json.dumps(usage)
                     self.db.commit()
                 return turn_payload(row)
             reply = research_ai.ResearchReply.model_validate(result["reply"])
@@ -225,7 +233,7 @@ class ResearchService:
                 if row.status != "running":
                     return turn_payload(row)
                 row.response_json = reply.model_dump_json()
-                row.usage_json = json.dumps(result.get("usage", {}))
+                row.usage_json = json.dumps(usage)
                 row.status, row.finished_at = ("completed", utcnow())
                 if reply.strategy:
                     with self.services.strategy_creation(
@@ -247,12 +255,21 @@ class ResearchService:
         except Exception as exc:
             self.db.rollback()
             self.db.refresh(row)
+            if row.status != 'running':
+                return turn_payload(row)
             row.status, row.finished_at = ("failed", utcnow())
-            row.error = (
+            detail = (
                 exc.detail
                 if isinstance(exc, HTTPException) and isinstance(exc.detail, str)
                 else "응답 저장 또는 검증에 실패했습니다. 자동 재시도하지 않습니다"
             )
+            if reply:
+                row.response_json = json.dumps(narrative_only(reply.model_dump(mode='json')), ensure_ascii=False)
+                row.error = json.dumps({'code':'save', 'detail':research_ai.ERROR_MESSAGES['save']+' · '+detail,
+                                       'request_id':None, 'http_status':None, 'elapsed_ms':None}, ensure_ascii=False)
+            else:
+                row.error = detail
+            row.usage_json = json.dumps(usage)
             self.db.commit()
         return turn_payload(row)
 

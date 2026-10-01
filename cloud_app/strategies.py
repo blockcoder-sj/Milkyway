@@ -112,14 +112,18 @@ class StrategySpec(StrictSpecModel):
         from .personal_data import normalize_symbols
         return normalize_symbols(values, maximum=20)
 
-    @field_validator("name", "description")
+    @field_validator("name", "description", mode="before")
     @classmethod
     def strip_text(cls, value: str) -> str:
-        return value.strip()
+        return value.strip() if isinstance(value, str) else value
 
     @model_validator(mode="after")
     def require_nonzero_factor(self):
-        if not any(abs(factor.weight) > 1e-12 for factor in self.factors):
+        combined = {}
+        for factor in self.factors:
+            key = (factor.kind, factor.lookback)
+            combined[key] = combined.get(key, 0.0) + factor.weight
+        if not any(abs(weight) > 1e-12 for weight in combined.values()):
             raise ValueError("at least one factor weight must be non-zero")
         return self
 

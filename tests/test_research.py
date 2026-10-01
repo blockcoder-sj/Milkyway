@@ -373,8 +373,77 @@ class ResearchTests(unittest.TestCase):
             self.assertEqual(self.approve(turn).status_code, 409)
         self.provider.assert_not_called()
 
+    def test_failed_draft_preserves_narrative_and_context_without_a_version(self):
+        self.key(); turn = self.prepare()
+        self.provider.side_effect = None
+        self.provider.return_value = {'reply':{'reply':'대상을 먼저 확인하겠습니다',
+            'strategy':{'invalid':'discarded'}, 'limitations':[], 'next_steps':[]},
+            'error':{'code':'schema','detail':'전략 형식을 검증하지 못했습니다'},
+            'usage':{'input_tokens':100,'output_tokens':200}}
+        failed = self.approve(turn).json()
+        self.assertEqual(failed['status'], 'failed')
+        self.assertEqual(failed['response']['reply'], '대상을 먼저 확인하겠습니다')
+        self.assertIsNone(failed['response']['strategy'])
+        self.assertIsNone(failed['strategy_id'])
+        self.assertEqual(self.client.get(f'/api/research/sessions/{self.room["id"]}').json()['versions'], [])
+        self.assertEqual(self.approve(turn).json()['status'], 'failed')
+        self.assertEqual(self.provider.call_count, 1)
+        next_turn = self.prepare('그 가설을 다시 구체화해 주세요')
+        history = json.loads(next_turn['approval']['request']['input'])['recent_history']
+        self.assertEqual(history[0]['turn_status'], 'failed')
+        self.assertFalse(history[0]['strategy_saved'])
+        self.assertEqual(history[0]['assistant'], failed['response']['reply'])
+
+    def test_strategy_save_denial_preserves_reply_and_usage_without_mutation(self):
+        self.key(); turn = self.prepare()
+        with patch.object(main, 'settings', replace(self.settings, max_strategies_per_user=0)):
+            failed = self.approve(turn).json()
+        self.assertEqual(failed['status'], 'failed')
+        self.assertEqual(failed['diagnostic']['code'], 'save')
+        self.assertEqual(failed['response']['reply'], '가설을 전략으로 만들었습니다')
+        self.assertIsNone(failed['response']['strategy'])
+        self.assertEqual(failed['usage']['output_tokens'], 100)
+        room = self.client.get(f'/api/research/sessions/{self.room["id"]}').json()
+        self.assertEqual(room['versions'], [])
+        self.assertIsNone(room['selected_strategy_id'])
+
 
 class ProviderContractTests(unittest.TestCase):
+    def test_recovery_keeps_prose_but_no_rejected_or_interrupted_strategy(self):
+        cases = [
+            ('completed', '{"reply":"가설을 먼저 확인합니다","strategy":{"name":"x"}}', 'schema'),
+            ('completed', '{"reply":"확인된 내용만 보존","strategy":{"factors":[', 'json'),
+            ('incomplete', '{"reply":"확인한 대화 내용","strategy":{"factors":[', 'output_limit'),
+            ('completed', '{"reply":"   ","strategy":null}', 'schema'),
+        ]
+        for state, text, code in cases:
+            with self.subTest(state=state, text=text):
+                calls = []
+                def handle(request):
+                    calls.append(request)
+                    return httpx.Response(200, json={'status':state,
+                        'incomplete_details':{'reason':'max_output_tokens'},
+                        'output':[{'type':'message','content':[{'type':'output_text','text':text}]}]})
+                with patch.object(research_ai.httpx,'Client',return_value=httpx.Client(transport=httpx.MockTransport(handle))):
+                    result = research_ai._execute({}, {'key':'synthetic'})
+                self.assertEqual(result['error']['code'], code)
+                if '   ' in text:
+                    self.assertNotIn('reply', result)
+                else:
+                    self.assertIsNone(result['reply']['strategy'])
+                    self.assertTrue(result['reply']['reply'])
+                self.assertEqual(len(calls), 1)
+
+    def test_a_refusal_never_recovers_a_partial_narrative(self):
+        payload = {'status':'incomplete','incomplete_details':{'reason':'max_output_tokens'},
+                   'output':[{'type':'message','content':[{'type':'refusal','refusal':'declined'},
+                       {'type':'output_text','text':'{"reply":"discarded","strategy":'}]}]}
+        client=httpx.Client(transport=httpx.MockTransport(lambda request:httpx.Response(200,json=payload)))
+        with patch.object(research_ai.httpx,'Client',return_value=client):
+            result = research_ai._execute({}, {'key':'synthetic'})
+        self.assertEqual(result['error']['code'], 'refusal')
+        self.assertNotIn('reply', result)
+
     def test_single_request_contract_and_rejection_do_not_retry(self):
         for status in (200, 429):
             calls = []

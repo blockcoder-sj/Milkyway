@@ -519,3 +519,22 @@ resuming; no paid AI regression approval has arrived.
   Do not claim complete all-company coverage or zero possible external failures.
   No renewed paid-call approval has arrived; new actual AI calls remain prohibited.
   Use the existing user-configured key/model; no CodeRabbit or new eval harness.
+
+## 2026-10-02 — M5 local AI response validation complete
+
+- Keep gpt-5.4-mini / none, one provider attempt per approval, no paid retries.
+  Shorter output constraints reduce truncation; only complete validated prose can
+  survive failed schema/universe/output checks. Refusals are never recovered.
+  Failed strategy fields are discarded, save rollback preserves history/usage and
+  the previous selected strategy. Copying a hypothesis is local and requires a new
+  approval for re-sending. Canonical rules come from the actual saved strategy.
+- SQLite first-WAL concurrent-open race reproduced and fixed with bounded initial
+  BUSY/LOCKED handling; already-WAL connections avoid mode writes.
+- Immutable image 47ad955673aa8e16a33d74c6b80680f66dff8b2c9957b48eee8478688543adb8:
+  regression 459 / 84.588s OK (12 Node skip), host frontend 14 / 2.326s,
+  offline native integration 8 stages. Initial Docker check exhausted its global
+  300s after 6 stages under collection load. Same-condition recheck with company
+  collection paused passed all 7; collector resumed, personal volumes untouched.
+- No new actual AI calls: pending maximum-five approval remains unanswered.
+  See docs/AI_RESPONSE_REVIEW_20261002.md. Current deployed runtime remains M3;
+  deploy the final tested company-network image after M4. M4 is still required.

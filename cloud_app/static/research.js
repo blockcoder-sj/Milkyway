@@ -174,6 +174,13 @@
     else {
       const turn = room.turns.find(item => item.id === id);
       if (!turn) return;
+      if (action === 'retry') {
+        if (turn.status !== 'failed') return;
+        const input=$('#researchMessage').elements.prompt;
+        if (input.value.trim()&&input.value!==turn.prompt) throw new Error('작성 중인 가설을 먼저 저장하거나 비워 주세요');
+        input.value=turn.prompt;input.focus();
+        hooks.toast('가설을 가져왔습니다. 무료 미리보기 후 별도로 승인해 주세요.');return;
+      }
       if (action === "approve") {
         const digest=turn.approval.request_digest;
         turn.status="running";view.invalidate();render();

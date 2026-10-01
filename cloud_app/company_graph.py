@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sqlite3
+import time
 import uuid
 
 from .company_schemas import CompanyKnowledge, Source
@@ -70,6 +71,30 @@ def digest(value):
     return hashlib.sha256(value.encode()).hexdigest()
 
 
+def _enable_wal(db):
+    """Change journal mode once; SQLite's mode switch can return BUSY immediately.
+
+    Concurrent first opens wait within the existing five second connection budget.
+    Normal reads never request another journal-mode write. No claim is retried.
+    """
+    deadline = time.monotonic() + 5
+    while True:
+        try:
+            mode = db.execute('PRAGMA journal_mode').fetchone()[0]
+            if mode == 'wal':
+                return
+            if db.execute('PRAGMA journal_mode=WAL').fetchone()[0] != 'wal':
+                raise ValueError('Company graph requires WAL mode')
+            return
+        except sqlite3.OperationalError as exc:
+            if (getattr(exc, 'sqlite_errorcode', 0) & 0xff) not in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                raise
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise
+            time.sleep(min(0.025, remaining))
+
+
 class CompanyGraph:
     def __init__(self, settings):
         if not settings.personal_local_mode or settings.production:
@@ -92,6 +117,7 @@ class CompanyGraph:
         db.row_factory = sqlite3.Row
         try:
             db.execute("PRAGMA foreign_keys=ON")
+            _enable_wal(db)
             version = db.execute("PRAGMA user_version").fetchone()[0]
             if version == 0:
                 # Serialize first creation across app and worker startup.
@@ -112,9 +138,6 @@ class CompanyGraph:
                 db.commit()
             elif version != 2:
                 raise ValueError("Unsupported company graph schema")
-            db.execute("PRAGMA journal_mode=WAL")
-            db.execute('CREATE INDEX IF NOT EXISTS company_entity_source_origin ON company_entity_sources(source_id)')
-            db.execute('CREATE INDEX IF NOT EXISTS company_relation_source ON company_relations(source_id)')
             with db:
                 yield db
         finally:

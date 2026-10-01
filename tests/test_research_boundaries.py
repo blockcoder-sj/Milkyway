@@ -30,7 +30,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const root=process.argv[1], elements=new Map(), handlers=new Map();
 function element(key) {
  if(!elements.has(key)) elements.set(key, {innerHTML:'',textContent:'',value:'',hidden:false,disabled:false,
-  elements:{strategy_id:{value:'',innerHTML:''}},dataset:{},classList:{toggle(){}},
+  elements:{strategy_id:{value:'',innerHTML:''},prompt:{value:'',focus(){}}},dataset:{},classList:{toggle(){}},
   removeAttribute(){},querySelectorAll(){return []},reset(){},
   addEventListener(event,handler){handlers.set(key+':'+event,handler)}});
  return elements.get(key);
@@ -50,6 +50,17 @@ for(const id of ['#researchTurns','#researchVersions']) {
 }
 assert(element('#researchMessage button').disabled);
 assert(element('#researchTurns').innerHTML.includes('data-research-action="approve"'));
+const spec={symbols:['NVDA','MSFT'],factors:[{kind:'mean_reversion',lookback:20,weight:1},{kind:'rsi',lookback:14,weight:-0.5}],
+ portfolio:{initial_cash:100000,max_positions:2,investment_fraction:0.7,max_position_fraction:0.4,
+ rebalance_days:10,rebalance_weights:true,stop_loss_pct:-0.05,cost_per_side:0.003},
+ filters:{min_price:5,min_average_volume:200000,history_days:60}};
+const rules=window.MilkywayResearchView.executionRules(spec);
+for(const text of ['100,000','70.00%','40.00%','10달력일','20거래일','수익률 낮은 순','RSI 낮은 순','200,000','평균 매입단가'])assert(rules.includes(text),text);
+room.turns[0].status='completed';room.turns[0].strategy_id='v1';room.turns[0].response.strategy={...spec,symbols:[payload]};
+room.versions[0].spec=spec;view.invalidate();view.render(room,false);
+assert(element('#researchTurns').innerHTML.includes('NVDA, MSFT'),'Execution rules come from the saved version');
+assert(!element('#researchTurns').innerHTML.includes('대상 종목</th><td>&lt;img'),'Rejected response fields cannot replace the saved rules');
+room.turns[0].status='awaiting_approval';view.invalidate();view.render(room,false);
 const api=window.MilkywayResearchApi.create(async(path,options)=>{calls.push({path,options});return {}});
 (async()=>{
  await api.prepare('room',{prompt:'test',request_id:'test-0001'});
@@ -71,6 +82,23 @@ const api=window.MilkywayResearchApi.create(async(path,options)=>{calls.push({pa
  assert(calls.every(call=>!call.options),'Refresh must never spend or mutate');
  assert(!element('#researchSessions').innerHTML.includes('<img'));
  assert.equal(element('#researchDeploy').elements.strategy_id.value,'v1');
+ room.turns[0].status='failed';room.turns[0].error='전략 검증 실패';
+ room.turns[0].response.strategy=null;
+ view.invalidate();view.render(room,false);
+ assert(element('#researchTurns').innerHTML.includes('data-research-action="retry"'));
+ assert(element('#researchTurns').innerHTML.includes('전략은 저장하지 않았습니다'));
+ calls.length=0;
+ const retryButton={dataset:{researchAction:'retry',id:'turn'}};
+ handlers.get('#researchPanel:click')({target:{closest(){return retryButton}}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(element('#researchMessage').elements.prompt.value,payload);
+ assert.equal(calls.length,0,'Copying a failed hypothesis must make no API request');
+ element('#researchMessage').elements.prompt.value='작성 중인 새 가설';
+ handlers.get('#researchPanel:click')({target:{closest(){return retryButton}}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(element('#researchMessage').elements.prompt.value,'작성 중인 새 가설');
+ assert(calls.every(call=>!call.options),'Recovery may only refresh local saved state');
+ assert(element('#researchError').textContent.includes('작성 중인'));
  console.log('research UI boundary checks passed');
 })().catch(error=>{console.error(error);process.exitCode=1});
 '''

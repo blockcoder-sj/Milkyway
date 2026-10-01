@@ -6,10 +6,10 @@ import sqlite3
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from fastapi import HTTPException
-from cloud_app.company_graph import CompanyGraph
+from cloud_app.company_graph import CompanyGraph, _enable_wal
 from cloud_app.company_schemas import CompanyKnowledge, Source
 from cloud_app import (
     company_entities as pages,
@@ -50,6 +50,23 @@ class CompanyGraphTests(unittest.TestCase):
 
     def tearDown(self):
         self.temp.cleanup()
+
+    def test_wal_initialization_retries_only_sqlite_busy_and_never_rewrites_active_mode(self):
+        busy = sqlite3.OperationalError('busy')
+        busy.sqlite_errorcode = sqlite3.SQLITE_BUSY
+        db = Mock()
+        db.execute.side_effect = [busy, Mock(fetchone=lambda: ('wal',))]
+        with patch('cloud_app.company_graph.time.sleep') as pause:
+            _enable_wal(db)
+        self.assertEqual(db.execute.call_count, 2)
+        self.assertTrue(all(call.args == ('PRAGMA journal_mode',) for call in db.execute.call_args_list))
+        pause.assert_called_once()
+        db.execute.side_effect = sqlite3.OperationalError('disk failure')
+        with self.assertRaisesRegex(sqlite3.OperationalError, 'disk failure'):
+            _enable_wal(db)
+        db.execute.side_effect = busy
+        with patch('cloud_app.company_graph.time.monotonic', side_effect=[0, 6]), self.assertRaises(sqlite3.OperationalError):
+            _enable_wal(db)
 
     def test_directed_relations_have_canonical_targets_and_original_evidence(self):
         key = self.graph.ingest(
