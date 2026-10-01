@@ -77,7 +77,7 @@ def run():
         registration = client.expect(201, "/api/auth/register", "POST", {
             "email": EMAIL, "password": PASSWORD, "display_name": "Offline process check", "invite_code": INVITE})
         client.csrf = registration["csrf"]
-        for asset in ("/", "/static/research.js", "/static/research/api.js", "/static/research/view.js", "/static/research/panel.js", "/static/company-page.js", "/static/company.css"):
+        for asset in ("/", "/static/research.js", "/static/research/api.js", "/static/research/view.js", "/static/research/panel.js", "/static/company-relations.js", "/static/company-page.js", "/static/company.css"):
             client.expect(200, asset, raw=True)
         record("real_startup_workers_authentication_and_assets")
         client.csrf = "wrong"
@@ -88,7 +88,7 @@ def run():
         wait_for("queued company worker", lambda: client.request("/api/company-details/kr_13/005930.KS")[1].get("description") == "Synthetic offline company collection", timeout=15)
         record("company_auth_csrf_queue_and_separate_worker")
         company = client.expect(200, "/api/company-details/kr_13/005930.KS")
-        private = company['relations'][0]['target_id']
+        private = next(edge['target_id'] for edge in company['relations'] if edge['entity_id'] == 'Q123')
         private_path = '/api/company-entities/' + private
         page = client.expect(200, private_path)
         assert page['symbol'] is None and page['relations'][0]['target_id'] == company['entity_key']

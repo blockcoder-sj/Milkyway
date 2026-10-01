@@ -7,6 +7,50 @@ import unittest
 
 class CompanyFrontendTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("node"), "Node is needed for frontend checks")
+    def test_business_relation_priority_roles_directions_and_safe_links(self):
+        script = r"""
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ctx=vm.createContext({window:{MilkywayResearchView:{escape}},Set,Object,Array,String});
+vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),ctx);
+const view=ctx.window.MilkywayCompanyRelations,primary={level:'primary'},wiki={level:'encyclopedia'};
+const edge=(kind,index,source=wiki)=>({kind,name:'Company '+index,target_id:'c_'+String(index).padStart(32,'0'),source,detail:'Source detail'});
+const rows=[edge('owner',1),edge('holding',2),edge('subsidiary',3),edge('supplier',4),
+ edge('customer',5,primary),{...edge('supplier',6),evidence:[{source:wiki,detail:'Generic'},
+ {source:primary,detail:'Laser <component> supplied',reverse:true,reported_by:'Source company'}]}];
+const selected=view.select(rows,'business');
+assert.equal(selected.length,4);assert(!selected.some(row=>['owner','holding'].includes(row.kind)));
+assert.equal(selected[0].target_id,rows[5].target_id);assert.equal(selected[1].kind,'customer');
+assert.equal(view.select(rows,'all').length,6);assert.equal(view.select(rows,'owner')[0].index,0);
+assert.equal(view.lead(rows[5]).detail,'Laser <component> supplied');assert.equal(rows[5].evidence[0].detail,'Generic');
+let svg=view.draw('<Apple>', 'AAPL', selected);
+assert(svg.includes('Laser &lt;component&gt; supplied'));assert(!svg.includes('Laser <component>'));
+assert(svg.includes('marker-start="url(#company-arrow-start)"'));assert(svg.includes('marker-end="url(#company-arrow-end)"'));
+assert(svg.includes('id="company-arrow-start" viewBox="0 0 10 10" refX="9"'));
+assert(svg.includes('근거 2건'));assert(svg.includes('href="#company/'+rows[5].target_id));
+assert(!svg.includes('#company/'+rows[0].target_id));assert(svg.includes('&lt;Apple&gt;'));
+svg=view.draw('Root','AAA',[{...rows[5],target_id:'javascript:alert(1)'}]);
+assert(!svg.includes('javascript:'));assert(!svg.includes('role="link"'));
+assert.equal(view.draw('Root','AAA',[]),'');
+svg=view.draw('Corning Incorporated','GLW',[rows[5]]);
+assert(svg.includes('class="graph-center-title">Corning</text>'));
+assert(svg.includes('class="graph-center-title">Incorporated</text>'));
+svg=view.draw('Root','AAA',Array.from({length:8},(_,i)=>edge('supplier',i+10,primary)));
+assert(svg.includes('viewBox="0 0 1000 660"'));assert.equal((svg.match(/class="company-graph-node"/g)||[]).length,8);
+"""
+        path = (
+            Path(__file__).resolve().parents[1]
+            / "cloud_app/static/company-relations.js"
+        )
+        result = subprocess.run(
+            [shutil.which("node"), "-e", script, str(path)],
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for frontend checks")
     def test_reload_keeps_canonical_address_and_parent_history(self):
         script = r"""
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
@@ -52,14 +96,14 @@ const result={symbol:'AAPL',name:'<script>Apple</script>',description:'descripti
  entity_key:'c_'+'a'.repeat(32),collectable:true,
  quote:{market_cap:1000000,currency:'USD',displayed_share_pct:20,source:'Yahoo',url:'https://finance.yahoo.com/'},
  pending:false,stale:false,errors:[],fetched_at:'2026-10-01T00:00:00Z',sources:[src],
- related_directory:{MSFT:{sector:'us_45',name:'Microsoft'}},financials:[],filings:[],facts:[],segments:[],drivers:[],market_shares:[],
+ related_directory:{MSFT:{sector:'us_45',name:'Microsoft'}},peers:[{symbol:'MSFT',name:'Microsoft',currency:'USD',market_cap:12,source:'Yahoo',url:'https://finance.yahoo.com/quote/MSFT/'}],financials:[],filings:[],facts:[],segments:[],drivers:[],market_shares:[],
  products:Array.from({length:12},(_,i)=>({title:`<img Product ${i}>`,detail:'safe',source:src})),
  relations:Array.from({length:12},(_,i)=>({name:`Company <${i}>`,target_id:'c_'+String(i+1).padStart(32,'0'),kind:i===0?'supplier':'subsidiary',symbol:i===0?'MSFT':null,detail:'Source-backed relation',source:src}))};
 let delayed=false,response=result;
 const ctx=vm.createContext({window:{MilkywayResearchView:{escape},getSelection:()=>null},
  document:{querySelector:el,createElement:()=>panel,addEventListener(kind,fn){documentHandlers[kind]=fn;}},
  history:{state:null,pushState(value){this.state=value;},back(){}},setInterval(){},Intl,Date,Number,Math,Map,Set,URL,encodeURIComponent});
-for(const name of ['format.js','list-paging.js','market-directory.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
+for(const name of ['format.js','list-paging.js','market-directory.js','company-relations.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
 ctx.window.MilkywayCompany.initialize({getState:()=>state,openWorkspace:workspace=>{state.workspace=workspace;},
  api:async(path,options)=>{calls.push({path,options});if(delayed)return await new Promise(resolve=>{resolveDelayed=resolve});return response;}});
 function click(attribute,value){panelHandlers.click({target:{closest(selector){return selector==='['+attribute+']'?{dataset:{[attribute.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:String(value)}}:null;}}});}
@@ -69,9 +113,9 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
  assert(el('#companyQuote').innerHTML.includes('1,000,000'));
  assert(el('#companyGraph').innerHTML.includes('&lt;script&gt;'));assert(!el('#companyGraph').innerHTML.includes('<script>'));
  assert(el('#companyProducts').innerHTML.includes('&lt;img'));assert(!el('#companyProducts').innerHTML.includes('<img'));
- assert(!el('#companyProducts').innerHTML.includes('Product 8'));assert(!el('#companyRelationList').innerHTML.includes('&lt;8&gt;'));
+ assert(!el('#companyProducts').innerHTML.includes('Product 8'));assert.equal(el('#companyRelationFilter').value,'business');
  click('data-product-page',2);assert(el('#companyProducts').innerHTML.includes('Product 8'));assert(!el('#companyProducts').innerHTML.includes('Product 0'));
- click('data-relation-page',2);assert(el('#companyRelationList').innerHTML.includes('&lt;8&gt;'));
+ click('data-relation-page',2);assert(el('#companyRelationSummary').textContent.includes('현재 페이지 4개'));
  el('#companyRelationFilter').value='supplier';el('#companyRelationFilter').change();
  assert(el('#companyRelationFocus').innerHTML.includes(result.relations[0].target_id));assert(!el('#companyRelationList').innerHTML.includes('&lt;1&gt;'));
  assert(el('#companyGraph').innerHTML.includes('href="#company/'+result.relations[0].target_id));
@@ -80,6 +124,8 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
  calls=[];await ctx.window.MilkywayCompany.openEntity(result.relations[0].target_id);
  assert.equal(calls[0].path,'/api/company-entities/'+result.relations[0].target_id);
  assert.equal(ctx.history.state.parentCompany,result.entity_key);
+ ctx.window.MilkywayCompany.leave();await ctx.window.MilkywayCompany.openEntity(result.entity_key);
+ assert(el('#companyPeers').innerHTML.includes('#company/us_45/MSFT'));assert(!el('#companyPeers').innerHTML.includes('#company/null/'));
  calls=[];await ctx.window.MilkywayCompany.openEntity('../env');assert.equal(calls.length,0);
  const privateKey='c_'+'b'.repeat(32);
  response={...result,entity_key:privateKey,symbol:null,sector:null,sector_label:'기업 관계 자료',collectable:false,stale:true,

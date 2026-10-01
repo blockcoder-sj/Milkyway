@@ -2,8 +2,7 @@
 (() => {
   const $=s=>document.querySelector(s),esc=v=>window.MilkywayResearchView.escape(v),fmt=(v,d=2)=>window.MilkywayFormat.number(v,d);
   const link=(label,url)=>window.MilkywayMarketDirectory.link(label,url);
-  const kinds={subsidiary:'자회사',parent:'모회사',owner:'소유·지분 관계',holding:'보유·지분 기업',partner:'협력사',supplier:'공급사',customer:'고객사',competitor:'경쟁사'};
-  const colors={subsidiary:'#b69aef',parent:'#b69aef',owner:'#9298a9',holding:'#9298a9',partner:'#7dcfb5',supplier:'#e9be77',customer:'#85b9ed',competitor:'#e99099'};
+  const relationView=window.MilkywayCompanyRelations,kinds=relationView.kinds;
   const level={primary:'공시·기업 원문',provider:'정보 제공사',encyclopedia:'공개 백과 · 원자료 확인'};
   let hooks,sector=null,symbol=null,entityKey=null,loadPath=null,data=null,epoch=0,loading=null,signature='',relationPage=1,productPage=1,peerPage=1,selected=null;
   const validKey=value=>/^c_[a-f0-9]{32}$/.test(value||'');
@@ -14,7 +13,7 @@
     const panel=document.createElement('section');panel.id='companyPage';panel.className='panel company-page hidden';panel.dataset.workspacePage='company';
     panel.innerHTML=`<div class="section-head"><button id="companyBack" class="ghost compact">← 이전 화면</button><button id="companyCollect" class="ghost compact">기업 자료 새로 수집</button></div><div class="company-heading"><div><p class="eyebrow">COMPANY ENCYCLOPEDIA</p><h2 id="companyTitle">기업 상세</h2><p id="companyIntro"></p><div id="companyIntroSource"></div></div><div id="companyQuote"></div></div><p id="companyStatus" class="fineprint" role="status"></p><p id="companyError" class="error" role="alert"></p>
       <nav class="detail-jumps" aria-label="기업 상세 목차"><a href="#companyRelationsSection">기업 관계도</a><a href="#companyProductsSection">제품·서비스</a><a href="#companySegmentsSection">사업 구성</a><a href="#companyDriversSection">실적 관련 요인</a><a href="#companyFinancialsSection">공시·재무</a><a href="#companySourcesSection">출처</a></nav>
-      <section id="companyRelationsSection"><div class="section-head"><h3>기업 관계도</h3><label>관계 종류<select id="companyRelationFilter"><option value="all">전체 관계</option>${Object.entries(kinds).map(([key,name])=>`<option value="${key}">${name}</option>`).join('')}</select></label></div><p class="fineprint">관계도의 기업을 누르면 해당 상세 페이지로 이동합니다. 아래 목록의 ‘관계·출처’에서 연결 근거를 확인할 수 있습니다. 연결선은 지분율·거래액·관계의 강도를 뜻하지 않으며 기준일이 다른 진술이 함께 표시될 수 있습니다.</p><div class="company-graph-layout"><div id="companyGraph"></div><aside id="companyRelationFocus" class="company-fact" aria-live="polite"></aside></div><div id="companyRelationList"></div><div id="companyRelationPages"></div></section>
+      <section id="companyRelationsSection"><div class="section-head"><h3>기업 관계도</h3><label>관계 종류<select id="companyRelationFilter"><option value="business">사업 관계 우선</option><option value="all">소유·지분 포함 전체</option>${Object.entries(kinds).map(([key,name])=>`<option value="${key}">${name}</option>`).join('')}</select></label></div><p class="fineprint">기업을 누르면 상세 페이지로 이동합니다. 카드에는 관계 종류·사업 역할·근거를 표시하고, 아래 ‘관계·출처’에서 세부 설명을 확인합니다. 화살표는 공급사 → 현재 기업 → 고객사 또는 모회사 → 자회사 방향입니다. 연결선은 지분율·거래액·관계의 강도를 뜻하지 않습니다.</p><details class="company-graph-method"><summary>기업 표시 순서·자료 범위</summary><p>기본 화면은 소유·지분 관계를 제외합니다. 공급·고객·협력·경쟁 관계를 먼저, 모회사·자회사 관계를 이어서 표시합니다. 각 묶음에서 기업·공시 원문, 정보 제공사, 공개 백과 순으로 배열합니다. 이 순서는 사업 규모나 투자 중요도 점수가 아닙니다. 원자료의 기준일이 다르며 공개 백과에는 과거 관계가 포함될 수 있습니다. 최신 관계와 사업 규모는 원문을 확인하세요.</p></details><p id="companyRelationSummary" class="fineprint"></p><div class="company-graph-layout"><div id="companyGraph" tabindex="0" role="region" aria-label="기업 관계도 · 좁은 화면에서 좌우 스크롤"></div><aside id="companyRelationFocus" class="company-fact" aria-live="polite"></aside></div><div id="companyRelationList"></div><div id="companyRelationPages"></div></section>
       <section id="companyProductsSection"><h3>제품·서비스</h3><div id="companyProducts" class="company-fact-grid"></div><div id="companyProductPages"></div></section>
       <section id="companySegmentsSection"><h3>사업·매출 구성</h3><div id="companySegments" class="company-fact-grid"></div><h3>기업 기본 정보</h3><div id="companyFacts" class="company-fact-grid"></div><h3>제품 시장점유율</h3><div id="companyMarketShares" class="company-fact-grid"></div></section>
       <section id="companyDriversSection"><h3>실적에 관련된 요인</h3><p class="fineprint">원자료에 제시된 사업 조건·투입 요소를 정리합니다. 수익률 전망이나 수치의 좋고 나쁨을 평가하지 않습니다.</p><div id="companyDrivers" class="company-fact-grid"></div></section>
@@ -50,15 +49,11 @@
   }
   function relations(){
     if(!data)return;
-    const filter=$('#companyRelationFilter').value,rows=data.relations.map((edge,index)=>({...edge,index})).filter(edge=>filter==='all'||edge.kind===filter),result=window.MilkywayPaging.slice(rows,relationPage);
+    const filter=$('#companyRelationFilter').value,rows=relationView.select(data.relations,filter),result=window.MilkywayPaging.slice(rows,relationPage);
     relationPage=result.page;
-    const points=result.rows.map((edge,index)=>{
-      const angle=-Math.PI/2+index*2*Math.PI/Math.max(result.rows.length,1);
-      return {...edge,x:450+Math.cos(angle)*305,y:210+Math.sin(angle)*155};
-    });
-    const text=name=>{const chars=Array.from(name);return [chars.slice(0,20).join(''),chars.slice(20,40).join('')+(chars.length>40?'…':'')];};
-    $('#companyGraph').innerHTML=points.length?`<svg class="company-graph" viewBox="0 0 900 420" role="group" aria-label="${esc(data.name)} 기업 관계도">${points.map(p=>`<line x1="450" y1="210" x2="${p.x.toFixed(2)}" y2="${p.y.toFixed(2)}" stroke="${colors[p.kind]}" stroke-opacity=".45"/>`).join('')}<rect x="345" y="173" width="210" height="74" rx="16" class="company-graph-center"/><text x="450" y="204" text-anchor="middle" class="graph-center-title">${esc(text(data.name)[0])}</text><text x="450" y="226" text-anchor="middle" class="graph-center-symbol">${esc(data.symbol||'관계 자료')}</text>${points.map(p=>{const lines=text(p.name);return `<a role="link" tabindex="0" href="#company/${esc(p.target_id)}" data-company-id="${esc(p.target_id)}" aria-label="${esc(p.name+' 기업 상세 · '+kinds[p.kind])}" class="company-graph-node"><title>${esc(p.name)}</title><rect x="${(p.x-105).toFixed(2)}" y="${(p.y-36).toFixed(2)}" width="210" height="72" rx="12" fill="#14111d" stroke="${colors[p.kind]}"/><text x="${p.x.toFixed(2)}" y="${(p.y-14).toFixed(2)}" text-anchor="middle" fill="${colors[p.kind]}" class="graph-kind">${esc(kinds[p.kind])}</text><text x="${p.x.toFixed(2)}" y="${(p.y+6).toFixed(2)}" text-anchor="middle" class="graph-name">${esc(lines[0])}</text>${lines[1]?`<text x="${p.x.toFixed(2)}" y="${(p.y+23).toFixed(2)}" text-anchor="middle" class="graph-name">${esc(lines[1])}</text>`:''}</a>`;}).join('')}</svg>`:'<p class="fineprint company-graph-empty">출처를 확인한 관계가 이 조건에 등록되지 않았습니다. 자료 수집 상태와 기업 공시 원문을 확인하세요.</p>';
-    $('#companyRelationList').innerHTML=result.rows.map(edge=>`<div class="company-relation-row"><span class="relation-kind relation-${esc(edge.kind)}">${esc(kinds[edge.kind])}</span><strong>${companyLink(edge)}</strong><small>${esc(edge.source.as_of||'기준일 미제공')} · ${esc(level[edge.source.level])}${edge.reverse?' · 역방향 표시':''}${edge.evidence?.length>1?' · 근거 '+fmt(edge.evidence.length,0)+'건':''}</small><button class="ghost compact" type="button" data-relation-index="${edge.index}" aria-label="${esc(edge.name)} 관계·출처">관계·출처</button></div>`).join('');
+    $('#companyRelationSummary').textContent=`${filter==='business'?'사업 관계':filter==='all'?'전체 관계':kinds[filter]} ${fmt(rows.length,0)}개 · 현재 페이지 ${fmt(result.rows.length,0)}개 · 자료에 등록된 기업만 표시`;
+    $('#companyGraph').innerHTML=relationView.draw(data.name,data.symbol,result.rows)||'<p class="fineprint company-graph-empty">이 조건에서 출처를 확인한 사업 관계가 아직 등록되지 않았습니다. 관계 종류를 바꾸거나 기업 공시·자료 수집 상태를 확인하세요.</p>';
+    $('#companyRelationList').innerHTML=result.rows.map(edge=>{const item=relationView.lead(edge);return `<div class="company-relation-row"><span class="relation-kind relation-${esc(edge.kind)}">${esc(kinds[edge.kind])}</span><div class="company-relation-business"><strong>${companyLink(edge)}</strong><p>${esc(item.detail||'사업 역할 설명 미등록')}</p></div><small>${esc(item.source.as_of||'기준일 미제공')} · ${esc(level[item.source.level])}${item.reverse?' · 역방향 표시':''}${edge.evidence?.length>1?' · 근거 '+fmt(edge.evidence.length,0)+'건':''}</small><button class="ghost compact" type="button" data-relation-index="${edge.index}" aria-label="${esc(edge.name)} 관계·출처">관계·출처</button></div>`;}).join('');
     $('#companyRelationPages').innerHTML=window.MilkywayPaging.controls(result,'data-relation-page');
     selected??=result.rows[0]?.index;focus();
   }
@@ -88,7 +83,7 @@
     try{
       const next=await hooks.api(loadPath);
       if(token!==epoch||actor!==hooks.getState().me?.id||hooks.getState().workspace!=='company')return;
-      const nextSignature=JSON.stringify(next);data=next;entityKey=next.entity_key;
+      const nextSignature=JSON.stringify(next);data=next;entityKey=next.entity_key;if(next.sector)sector=next.sector;
       if(nextSignature!==signature){signature=nextSignature;render();}
     }catch(e){if(token===epoch)$('#companyError').textContent=e.message;}
     finally{if(loading===token)loading=null;}
@@ -103,12 +98,12 @@
   async function present(path,hash,nextSector,nextSymbol,key,push){
     const parentCompany=entityKey,origin=nextSector||sector||history.state?.companyOrigin||null;
     sector=origin;symbol=nextSymbol;entityKey=key;loadPath=path;data=null;signature='';
-    ++epoch;relationPage=productPage=peerPage=1;selected=null;$('#companyRelationFilter').value='all';
+    ++epoch;relationPage=productPage=peerPage=1;selected=null;$('#companyRelationFilter').value='business';
     hooks.openWorkspace('company',false);
     if(push)history.pushState({companyOrigin:origin,parentCompany},'',hash);
     $('#companyTitle').textContent='기업 자료를 불러오고 있습니다';$('#companyError').textContent='';
     $('#companyStatus').textContent='';$('#companyCollect').disabled=true;
-    for(const id of ['companyIntro','companyIntroSource','companyQuote','companyGraph','companyRelationFocus','companyRelationList','companyRelationPages','companyProducts','companyProductPages','companySegments','companyFacts','companyMarketShares','companyDrivers','companyPeers','companyPeerPages','companyFinancials','companyFilings','companySources'])$('#'+id).innerHTML='';
+    for(const id of ['companyIntro','companyIntroSource','companyQuote','companyGraph','companyRelationFocus','companyRelationList','companyRelationPages','companyRelationSummary','companyProducts','companyProductPages','companySegments','companyFacts','companyMarketShares','companyDrivers','companyPeers','companyPeerPages','companyFinancials','companyFilings','companySources'])$('#'+id).innerHTML='';
     const token=epoch;await refresh();
     if(token===epoch&&hooks.getState().workspace==='company'&&data?.stale&&!data.pending&&data.collectable!==false)await collect();
   }

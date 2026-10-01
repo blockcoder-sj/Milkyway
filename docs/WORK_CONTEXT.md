@@ -308,7 +308,58 @@ resuming; no paid AI regression approval has arrived.
   fixed-host bounded collection, statement retention, escaped HTML/SVG, history
   and epoch/owner races. No CodeRabbit; this does not clear whole deep-scan/OCI gates.
 - Storage milestone commit `2be4ae7` is pushed; GitHub run `36820042971` passed.
-  This UI milestone uses the same branch `codex/ai-research-workflow`; check latest
+  UI milestone commit `72ef323` is also pushed; GitHub run `36823002927` passed.
+  Subsequent changes use the same branch `codex/ai-research-workflow`; check latest
   remote HEAD and its CI run before reporting GitHub completion.
 - LangGraph, vector search and RAG answering remain future extensions. No paid
   AI/embedding call or new AI harness was used. Per-call approval stays required.
+
+## 2026-10-01 — company wiki milestone 3: business relationships first
+
+- User asked for relationships useful for company analysis rather than a graph
+  dominated by investment holders. Default selection now excludes owner/holding
+  edges and prioritizes suppliers, customers, partners and competitors, followed
+  by parent/subsidiary firms. Primary sources precede provider/encyclopedia material
+  within each group. This is a transparent display rule, not a financial importance
+  score. Ownership/all/type filters remain available.
+- Dedicated pure `static/company-relations.js` owns selection, evidence lead and
+  SVG layout. Eight cards per page show business role and evidence count, with
+  directional supply/customer and parent/subsidiary arrows. Fixed columns avoid
+  overlapping nodes; longer labels wrap by word; narrow screens can scroll the
+  graph horizontally. Full explanations, dates and sources remain in the panel/list.
+- Apple supplier/partner roles were expanded from its actual 2025-08-06 public
+  manufacturing-program release: glass, VCSEL lasers, foundational semiconductors,
+  packaging/testing, rare-earth magnets, equipment and wafer collaboration. Planned
+  expansions are explicitly described as plans. New curated statements join cached
+  provider statements without repeated duplicates; no source or role is guessed.
+- Found canonical direct-entry pages could generate same-sector links with a null
+  sector. Refresh now adopts the returned actual sector; browser verified the NVIDIA
+  link is `#company/us_45/NVDA`. Existing company IDs survive enriched company names.
+  Removed an unnecessary second identity/profile read when Wikidata identity is
+  already known. Source handling and exact-identity collection boundaries remain.
+- Full suite: 402 tests passed in 31.284s. Added executable regression assertions
+  for business/default/ownership filters, source priority, arrow direction/anchors,
+  descriptive cards, escaping, invalid target rejection, label wrapping, direct
+  sector links, and cached note enrichment preserving earlier statements and IDs.
+- Chrome verified default supplier cards, ownership filter, Corning evidence panel,
+  graph → Corning Incorporated page → back to Apple, canonical refresh and valid
+  same-sector links. First-page geometry: 8 nodes / zero overlaps / zero nonempty
+  text exceeding card bounds. Original user strategy tab was preserved; the separate
+  graph preview tab is the deliverable. No viewport override was used.
+- Final graph rendering benchmark: synthetic 400 relations, 100 samples, median
+  1.23ms / p95 2.35ms, external calls zero. This measures selection/SVG generation,
+  not network latency or every screen/device.
+- Final real cached Apple projection: 32 relations / 28 business relations,
+  30 samples, median 33.86ms / p95 48.18ms with socket connections blocked and
+  zero attempts. Research DB at that checkpoint: 41 entities / 44 statements /
+  zero foreign-key errors. During a previous deployment-overlap sample, p95 was
+  119.72ms; use the steady sample above, not that mixed-load run, for comparison.
+- Final network-disabled Linux image integration passed all 8 stages, including
+  canonical private collection, synthetic approval replay, paper/backtest state,
+  crash recovery and isolated backup/restore. Latest local image recreated the
+  existing 8 services; all running and app healthcheck healthy. User runtime/backup
+  volumes remain intact. Latest UI commit/CI must be checked at the branch HEAD.
+- Source/code/security review covered bounded cached enrichment, independent
+  evidence retention, safe common-ID URLs, escaped text, SVG dimensions and source
+  interpretation. No paid AI call, embedding, new AI harness or CodeRabbit used.
+  This remains a scoped personal-local review, not pending deep-scan/OCI clearance.

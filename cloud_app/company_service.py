@@ -164,16 +164,34 @@ def company_snapshot(settings, sector, symbol, now=None):
     # Source-backed notes are available immediately, even before an external fetch.
     notes = editorial_for(symbol)
     for key, value in notes.items():
-        if key not in {"cik", "entity_id"} and not result.get(key):
+        if key == "relations":
+            # New sourced business notes are visible with old cached profiles too.
+            # Keep independent provider statements; do not accumulate duplicate notes.
+            combined, seen = [], set()
+            for edge in value + result.get(key, []):
+                origin = edge["source"]
+                identity = (
+                    edge.get("symbol") or edge.get("entity_id") or edge["name"],
+                    edge["kind"],
+                    edge.get("detail", ""),
+                    origin["url"],
+                    origin.get("as_of"),
+                )
+                if identity not in seen:
+                    seen.add(identity)
+                    combined.append(edge)
+            result[key] = combined[:100]
+        elif key not in {"cik", "entity_id"} and not result.get(key):
             result[key] = value
     from .company_entities import identified
     from .company_graph import CompanyGraph
 
     graph = CompanyGraph(settings)
     profile = identified(result)
-    existing = graph.by_symbol(symbol)
-    if existing and not profile.entity_id:
-        profile.entity_id = existing["entity_id"]
+    if not profile.entity_id:
+        existing = graph.by_symbol(symbol)
+        if existing:
+            profile.entity_id = existing["entity_id"]
     result = profile.model_dump(mode="json")
     entity_key = graph.ingest(profile, sector)
     relations = graph.relations(entity_key)

@@ -4,4 +4,6 @@
 
 .relation-supplier{color:#e9be77}.relation-customer{color:#85b9ed}.relation-partner{color:#7dcfb5}.relation-competitor{color:#e99099}.relation-owner,.relation-holding{color:#9298a9}.relation-subsidiary,.relation-parent{color:#b69aef}.company-reverse-note{color:var(--muted)}
 .company-relation-evidence+.company-relation-evidence{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.company-graph-edge{fill:none;stroke-width:1.5;stroke-opacity:.6}.graph-role{fill:#d3cbdc;font-size:11px}.graph-evidence{fill:#a79bac;font-size:9px}#companyGraph{min-width:0;overflow-x:auto}.company-graph-method{font-size:11px;color:var(--muted);line-height:1.8;margin:10px 0}.company-graph-method summary{cursor:pointer}.company-relation-business p{font-size:11px;line-height:1.6;margin:6px 0 0;color:var(--muted);overflow-wrap:anywhere}.company-graph-layout{align-items:start}
 @media(max-width:680px){.company-relation-row>button{grid-column:2;justify-self:start}}
+@media(max-width:680px){#companyGraph .company-graph{min-width:760px}}

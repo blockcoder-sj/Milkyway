@@ -209,6 +209,40 @@ class CompanyQueueTests(unittest.TestCase):
         self.assertTrue(value["products"])
         self.assertTrue(value["stale"])
 
+    def test_new_business_notes_join_cached_relations_without_loss_or_duplicates(self):
+        cached = CompanyKnowledge(
+            symbol="AAPL",
+            name="Apple",
+            relations=[
+                dict(
+                    name="Existing subsidiary",
+                    entity_id="Q999",
+                    kind="subsidiary",
+                    detail="Earlier public statement",
+                    source=dict(label="Public source", url="https://www.sec.gov/old"),
+                )
+            ],
+        )
+        _write_cache(
+            service.root(self.settings) / "AAPL.json", cached.model_dump(mode="json")
+        )
+        with patch.object(worker._provider, "run") as provider:
+            first = service.company_snapshot(self.settings, "us_45", "AAPL", NOW)
+            second = service.company_snapshot(self.settings, "us_45", "AAPL", NOW)
+            provider.assert_not_called()
+        symbols = {edge["symbol"] for edge in first["relations"]}
+        self.assertTrue(
+            {"TSM", "GLW", "COHR", "TXN", "AMKR", "MP", "AMAT"}.issubset(symbols)
+        )
+        self.assertTrue(
+            any(edge["name"] == "Existing subsidiary" for edge in first["relations"])
+        )
+        self.assertEqual(first["relations"], second["relations"])
+        self.assertEqual(
+            {edge["target_id"] for edge in first["relations"]},
+            {edge["target_id"] for edge in second["relations"]},
+        )
+
     def test_queue_is_deduplicated_bounded_and_has_cooldown(self):
         first = service.enqueue_company(self.settings, "us_45", "AAPL")
         self.assertEqual(first["status"], "queued")
