@@ -37,7 +37,14 @@ class Relation(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=160)
     kind: Literal[
-        "subsidiary", "parent", "owner", "partner", "supplier", "customer", "competitor"
+        "subsidiary",
+        "parent",
+        "owner",
+        "holding",
+        "partner",
+        "supplier",
+        "customer",
+        "competitor",
     ]
     detail: str = Field(default="", max_length=700)
     symbol: str | None = Field(default=None, max_length=20)
@@ -56,7 +63,8 @@ class Financial(BaseModel):
 
 class CompanyKnowledge(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    symbol: str = Field(pattern=r"^[A-Z0-9][A-Z0-9.-]{0,19}$")
+    symbol: str | None = Field(default=None, pattern=r"^[A-Z0-9][A-Z0-9.-]{0,19}$")
+    entity_id: str | None = Field(default=None, pattern=r"^Q\d{1,12}$")
     name: str = Field(max_length=120)
     description: str = Field(default="", max_length=1500)
     description_source: Source | None = None

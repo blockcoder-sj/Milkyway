@@ -129,7 +129,11 @@ def find_entity(name, symbol, known_id=None):
     )
     for identifier in candidates:
         entity = response.get("entities", {}).get(identifier, {})
-        if identity_matches(entity, symbol):
+        if (
+            entity.get("id", identifier) == identifier
+            and "missing" not in entity
+            and (identity_matches(entity, symbol) if symbol else bool(known_id))
+        ):
             return identifier, entity
     return None
 
@@ -258,6 +262,7 @@ def wikidata(name, symbol, known_id=None):
         None,
     )
     result = dict(
+        entity_id=identifier,
         description=description[:1500],
         description_source=info_source,
         products=facts(product_claims),
@@ -517,14 +522,21 @@ def wise_company(symbol):
 
 
 def collect_company(payload, _configuration):
-    symbol = payload["symbol"]
+    symbol = payload.get("symbol")
     name = payload["name"]
-    if not re.fullmatch(r"[A-Z0-9][A-Z0-9.-]{0,19}", symbol):
+    if symbol is not None and not re.fullmatch(r"[A-Z0-9][A-Z0-9.-]{0,19}", symbol):
         raise ValueError("Invalid symbol")
-    editorial = editorial_for(symbol)
+    requested_qid = payload.get("entity_id")
+    if requested_qid is not None and not re.fullmatch(r"Q\d{1,12}", requested_qid):
+        raise ValueError("Invalid company entity")
+    if not symbol and not requested_qid:
+        raise ValueError("Missing company identity")
+    editorial = editorial_for(symbol) if symbol else {}
     result = {"symbol": symbol, "name": name[:120], "errors": [], "sources": []}
     cik = editorial.pop("cik", None)
-    qid = editorial.pop("entity_id", None)
+    qid = requested_qid or editorial.pop("entity_id", None)
+    editorial.pop("entity_id", None)
+    result["entity_id"] = qid
     try:
         wiki, wiki_cik = wikidata(name, symbol, qid)
         result.update(wiki)
@@ -534,14 +546,14 @@ def collect_company(payload, _configuration):
     try:
         extra = (
             wise_company(symbol)
-            if symbol.endswith(".KS")
+            if symbol and symbol.endswith(".KS")
             else sec_company(symbol, cik)
-            if cik
+            if cik and symbol
             else {}
         )
         for key, value in extra.items():
             result[key] = result.get(key, []) + value
-        if not symbol.endswith(".KS") and not cik:
+        if symbol and not symbol.endswith(".KS") and not cik:
             result["errors"].append("SEC 기업 식별자가 확인되지 않아 공시 재무 수치를 표시하지 않습니다")
     except Exception:
         result["errors"].append("기업 공시·개요 자료 수신에 실패했습니다")

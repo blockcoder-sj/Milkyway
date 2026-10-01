@@ -72,6 +72,14 @@ def company_row(settings, sector, symbol):
 def read_company(settings, symbol):
     if not SYMBOL.fullmatch(symbol):
         raise ValueError("Invalid company symbol")
+    from .company_graph import CompanyGraph
+
+    stored = CompanyGraph(settings).by_symbol(symbol)
+    if stored and stored["profile"]:
+        value = CompanyKnowledge.model_validate(stored["profile"])
+        # Different stock classes may identify the same issuer.
+        value.symbol = symbol
+        return value
     try:
         value = CompanyKnowledge.model_validate(
             read_bounded_json(
@@ -96,6 +104,11 @@ def enqueue_company(settings, sector, symbol):
     ):
         return {"status": "recent", "symbol": symbol}
     if path.exists():
+        return {"status": "queued", "symbol": symbol}
+    from .company_graph import CompanyGraph
+
+    entity = CompanyGraph(settings).by_symbol(symbol)
+    if entity and path.with_name(entity["id"] + ".json").exists():
         return {"status": "queued", "symbol": symbol}
     requests = path.parent
     requests.mkdir(parents=True, exist_ok=True)
@@ -153,6 +166,14 @@ def company_snapshot(settings, sector, symbol, now=None):
     for key, value in notes.items():
         if key not in {"cik", "entity_id"} and not result.get(key):
             result[key] = value
+    from .company_entities import identified
+    from .company_graph import CompanyGraph
+
+    graph = CompanyGraph(settings)
+    profile = identified(result)
+    result = profile.model_dump(mode="json")
+    entity_key = graph.ingest(profile, sector)
+    relations = graph.relations(entity_key)
     related = related_directory(
         settings,
         [edge["symbol"] for edge in result["relations"] if edge.get("symbol")],
@@ -168,6 +189,9 @@ def company_snapshot(settings, sector, symbol, now=None):
     )
     return {
         **result,
+        "entity_key": entity_key,
+        "relations": relations,
+        "collectable": True,
         "sector": sector,
         "sector_label": BY_ID[sector].label,
         "quote": row,
@@ -180,7 +204,10 @@ def company_snapshot(settings, sector, symbol, now=None):
             else None,
             "fetched_at": part.fetched_at.isoformat() if part.fetched_at else None,
         },
-        "pending": (root(settings) / "requests" / (symbol + ".json")).exists(),
+        "pending": any(
+            (root(settings) / "requests" / (key + ".json")).exists()
+            for key in (symbol, entity_key)
+        ),
         "stale": not cached
         or bool(cached.errors)
         or not cached.fetched_at

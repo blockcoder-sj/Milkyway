@@ -242,3 +242,33 @@ resuming; no paid AI regression approval has arrived.
   awaiting the user's explicit approval. No new paid call or AI evaluation harness
   was used. Existing 5-call evaluation remains 3 success / 2 failure. Real continuous
   paper operation is not claimed; no active user paper accounts were created.
+
+## 2026-10-01 — company wiki milestone 1: normalized local storage
+
+- User authorized the suggested common company IDs, SQLite company/relation/source
+  tables and direct Wikipedia-like navigation including identifiable private firms.
+  The RAG chatbot was described as a future extension, not implemented or evaluated
+  here. No new paid AI call or embedding is authorized/used.
+- Public research has its own SQLite database at `company-details/graph.sqlite3`.
+  Identity aliases, sources, directed relations and profiles are transactional;
+  graph indexes support both ends. Exact ticker/Wikidata matches unify identities
+  and preserve old ID redirects. Equal names do not merge entities. Name-only
+  references have source-scoped identities and do not trigger guessed collection.
+- Existing JSON stays intact and is imported at personal app/worker startup.
+  DB profiles take priority afterwards. Collection preserves provenance and
+  previous sections on partial failures; private firms use only registered exact
+  Wikidata IDs. New local authenticated entity routes share CSRF/rate limits.
+- Reverse views preserve the original statement and reporting company. Replacing
+  a profile retracts only that profile's claims. Shared sources and identity
+  references remain stored. A source may be a publicly editable encyclopedia;
+  there is no claim that all relations are current or complete.
+- Personal backup/restore snapshots this SQLite DB through its online backup API,
+  excludes WAL/SHM files, and validates integrity/FKs before restore. Actual checks
+  used temporary databases and did not restore or delete the user's runtime.
+- Full regression suite: 397 tests passed in 29.895s. New offline checks cover
+  canonical IDs/redirects, no name merging, exact private identity, worker queue,
+  conflicts/transactions, concurrent initialization, migration preserving files,
+  source/reverse links, auth/CSRF and real WAL backup/restore. Scoped direct code
+  review covered these boundaries and bounded fixed-host I/O; no CodeRabbit used.
+- Synthetic cached projection benchmark: 100 relations, 30 samples, median 5.26ms,
+  p95 5.74ms; no external or AI calls. UI direct navigation is the next milestone.

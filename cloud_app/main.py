@@ -596,6 +596,9 @@ def startup() -> None:
     if errors:
         raise RuntimeError("Startup configuration failed: " + "; ".join(errors))
     prepare_runtime_database()
+    if settings.personal_local_mode and not settings.production:
+        from .company_entities import bootstrap
+        bootstrap(settings)
     if _broker_enabled():
         broker_preflight(settings, "app")
     _migrate_legacy_credentials()
@@ -1774,6 +1777,19 @@ def personal_market_detail(instrument_id: str, user: User = Depends(current_user
 def personal_company_detail(sector_id: str, symbol: str, user: User = Depends(current_user)):
     from .company_service import company_snapshot
     return company_snapshot(settings, sector_id, symbol)
+
+
+@app.get("/api/company-entities/{entity_key}")
+def personal_company_entity(entity_key: str, user: User = Depends(current_user)):
+    from .company_entities import entity_snapshot
+    return entity_snapshot(settings, entity_key)
+
+
+@app.post("/api/company-entities/{entity_key}/refresh", status_code=202)
+def personal_company_entity_refresh(entity_key: str, user: User = Depends(csrf_guard)):
+    from .company_entities import enqueue_entity
+    _rate_limit("company-research:" + user.id, 60, 3600)
+    return enqueue_entity(settings, entity_key)
 
 
 @app.post("/api/company-details/{sector_id}/{symbol}/refresh", status_code=202)

@@ -87,6 +87,16 @@ class PersonalApiTests(unittest.TestCase):
         with patch.object(main, 'settings', replace(self.settings, personal_local_mode=False)):
             with self.assertRaises(HTTPException): main.personal_company_detail('kr_13', '005930.KS', self.user)
 
+    def test_entity_routes_require_authentication_and_csrf_and_known_identity(self):
+        payload = main.personal_company_detail('kr_13', '005930.KS', self.user)
+        entity = main.personal_company_entity(payload['entity_key'], self.user)
+        self.assertEqual(entity['entity_key'], payload['entity_key'])
+        routes = {route.path: route for route in main.app.routes if hasattr(route, 'dependant')}
+        self.assertIn(main.current_user, [d.call for d in routes['/api/company-entities/{entity_key}'].dependant.dependencies])
+        self.assertIn(main.csrf_guard, [d.call for d in routes['/api/company-entities/{entity_key}/refresh'].dependant.dependencies])
+        with self.assertRaises(HTTPException):
+            main.personal_company_entity('c_' + '0'*32, self.user)
+
     def test_new_install_dashboard_works_before_history_or_keys(self):
         payload=main.dashboard(self.user,self.session)
         self.assertTrue(payload["personal_local_mode"])

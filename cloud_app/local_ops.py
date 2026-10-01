@@ -99,6 +99,16 @@ def _create_backup_locked(runtime: Path, destination: Path) -> Path:
             source.backup(dest, pages=256, progress=progress, sleep=0.05)
         _integrity(copy)
         entries = {"club.sqlite3": copy}
+        graph_name = "company-details/graph.sqlite3"
+        graph = runtime / graph_name
+        if graph.is_symlink():
+            raise RuntimeError("Runtime backup refuses symbolic links")
+        if graph.is_file():
+            graph_copy = Path(directory) / "company-graph.sqlite3"
+            with _database(graph) as source, _database(graph_copy) as dest:
+                source.backup(dest, pages=256, progress=progress, sleep=0.05)
+            _integrity(graph_copy)
+            entries[graph_name] = graph_copy
         for path in sorted(runtime.rglob("*")):
             relative = path.relative_to(runtime)
             if any(part.startswith(".restore-") for part in relative.parts) or relative.name == "RESTORE_IN_PROGRESS":
@@ -108,6 +118,8 @@ def _create_backup_locked(runtime: Path, destination: Path) -> Path:
             if not path.is_file() or path.name.startswith((".session-new-", ".secret-new-")):
                 continue
             if path.name in {"club.sqlite3", "club.sqlite3-wal", "club.sqlite3-shm"} or path.suffix in {".lock", ".partial"}:
+                continue
+            if relative.as_posix() in {graph_name, graph_name + "-wal", graph_name + "-shm"}:
                 continue
             entries[relative.as_posix()] = path
         if len(entries) > MAX_ARCHIVE_FILES or sum(path.stat().st_size for path in entries.values()) > MAX_ARCHIVE_BYTES:
@@ -168,6 +180,8 @@ def _validate_archive(archive_path: Path, staged: Path) -> dict:
             if target.stat().st_size != expected["size"] or _digest(target) != expected["sha256"]:
                 raise ValueError("Backup checksum mismatch")
     _integrity(staged / "club.sqlite3")
+    if (staged / "company-details/graph.sqlite3").exists():
+        _integrity(staged / "company-details/graph.sqlite3")
     return manifest
 
 
@@ -204,6 +218,9 @@ def restore_backup(archive: Path, runtime: Path, destination: Path, *, replace: 
             os.replace(staged / name, target)
         for suffix in ("-wal", "-shm"):
             (runtime / ("club.sqlite3" + suffix)).unlink(missing_ok=True)
+            (runtime / ("company-details/graph.sqlite3" + suffix)).unlink(missing_ok=True)
+        if "company-details/graph.sqlite3" not in manifest["files"]:
+            (runtime / "company-details/graph.sqlite3").unlink(missing_ok=True)
         os.replace(staged / "club.sqlite3", runtime / "club.sqlite3")
         _sync_directory(runtime)
         # Reset stale process leases/sessions after recovery; holdings/results
