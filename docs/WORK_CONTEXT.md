@@ -442,3 +442,25 @@ resuming; no paid AI regression approval has arrived.
   request remains unanswered; `.env`/example has an empty reserved DART_API_KEY,
   but the DART collector is not implemented or verified. LangGraph/RAG is also a
   separate future extension, not part of the paid-call approval or this collector.
+
+## 2026-10-01 — company research redesign in progress
+
+- User now explicitly rejects Wikipedia/Wikidata company knowledge, including old
+  cached business text and relationships. Keep wiki-style internal company navigation;
+  replace encyclopedic knowledge with official filings/IR/verified public research.
+  Source links should live in a bottom source collection; essential Korean business,
+  revenue model, products, customers, supply chain and competition lead the page.
+- M1 implemented exact-ticker public fund disclosure cross-checks. Real ITOT + 11
+  Select Sector files provide 2,444 US equities as of 2026-09-30. All 3,689 received
+  US sector rows audited: 207 sector corrections; disclosed members added for a
+  3,880-row display (2,444 matched, 1,436 unverified). This is not a licensed GICS
+  master validation; nonmatched companies remain labelled unverified.
+- M1 focused 56 checks include host Node. Final immutable M1 package: 429 regression
+  tests in 75.745s OK, 11 Node-dependent skipped; existing offline native process
+  integration passes all 8 stages. Actual directory reconciliation median 3.69ms,
+  max 10.05ms. Initial host mount permission failures and collection CPU contention
+  caused fixture/startup failures; production deadlines/tests were not relaxed.
+- M2 provenance cleanup and primary business relationships; M3 Korean concise brief,
+  structured revenue, collapsed originals and bottom sources remain required work.
+  See docs/COMPANY_RESEARCH_MILESTONES.md. Paid AI approval question is unanswered;
+  zero new actual AI provider calls are authorized or made in this task.

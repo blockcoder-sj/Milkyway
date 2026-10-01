@@ -236,7 +236,7 @@ def context_for(identity):
     if identity in US_SECTORS:
         slug, query, points = US_SECTORS[identity]
         result.update(news_query=query, watchpoints=points.split(', '), sector_slug=slug,
-            companies_note='Yahoo 분류의 기업 목록을 시가총액 순으로 수집합니다. S&P 500 구성 종목 전체나 공식 지수 비중이 아닙니다.')
+            companies_note='기업별로 공식 운용사 구성·섹터 공시와 대조합니다. 확인된 불일치는 해당 섹터로 이동하고 공시에 있는 기업을 보완합니다. 미확인 기업은 Yahoo 분류로 표시합니다. S&P 500 구성 종목 전체·공식 지수 비중·GICS 전체 원장 직접 검증과 구분합니다.')
         sources.extend([source('S&P DJI · GICS 분류',GICS,'분류'),
             source('Yahoo Finance · 섹터 기업 목록',f'https://finance.yahoo.com/sectors/{slug}/','기업'),
             source('SEC EDGAR · 기업 공시',SEC,'공시')])

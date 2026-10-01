@@ -2,7 +2,7 @@
 import datetime as dt
 from fastapi import HTTPException
 from .market_catalog import BY_ID
-from .market_details import read_cache
+from .market_details import classified_companies
 from .company_service import root, read_company, enqueue_company, QUEUE_LIMIT, REFRESH_SECONDS
 from .bounded_io import read_bounded_json
 from .market_service import _write_cache
@@ -40,7 +40,7 @@ def schedule(settings, now=None):
             break
         if definition.group != "sectors":
             continue
-        rows = read_cache(settings, sector).companies.rows
+        rows = classified_companies(settings, sector)[0].rows
         if not rows:
             continue
         start = positions.get(sector, 0) % len(rows)

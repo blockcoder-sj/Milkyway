@@ -7,7 +7,7 @@ from .company_schemas import CompanyKnowledge
 from .company_catalog import EDITORIAL_DIRECTORY, editorial_for
 from .market_catalog import BY_ID
 from .market_detail_catalog import KR_COMPANIES
-from .market_details import read_cache
+from .market_details import classified_companies
 from .market_service import _write_cache
 
 UTC = dt.timezone.utc
@@ -30,7 +30,7 @@ def company_row(settings, sector, symbol):
         or not SYMBOL.fullmatch(symbol)
     ):
         raise HTTPException(404, "기업 정보를 찾을 수 없습니다")
-    rows = read_cache(settings, sector).companies.rows
+    rows = classified_companies(settings, sector)[0].rows
     row = next(
         (row.model_dump(mode="json") for row in rows if row.symbol == symbol), None
     )
@@ -134,7 +134,9 @@ def enqueue_company(settings, sector, symbol, *, automatic_request=False, now=No
 
 def related_directory(settings, symbols, preferred_sector=None):
     wanted = set(symbols)
-    found = {}
+    from .sector_classifications import read as classifications
+    found = {row.symbol: {'sector': row.sector, 'name': row.name}
+             for row in classifications(settings).rows if row.symbol in wanted}
     if not wanted:
         return found
     for sector, rows in KR_COMPANIES.items():
@@ -152,13 +154,19 @@ def related_directory(settings, symbols, preferred_sector=None):
     for sector in sectors:
         if wanted.issubset(found):
             break
-        for row in read_cache(settings, sector).companies.rows:
+        for row in classified_companies(settings, sector)[0].rows:
             if row.symbol in wanted and row.symbol not in found:
                 found[row.symbol] = {"sector": sector, "name": row.name}
     return found
 
 
 def company_snapshot(settings, sector, symbol, now=None):
+    if sector in BY_ID and BY_ID[sector].group == 'sectors' and SYMBOL.fullmatch(symbol):
+        # Old bookmarks keep working after a source-backed sector correction.
+        from .sector_classifications import read as classifications
+        verified = next((row for row in classifications(settings).rows if row.symbol == symbol), None)
+        if verified:
+            sector = verified.sector
     row = company_row(settings, sector, symbol)
     now = now or dt.datetime.now(UTC)
     cached = read_company(settings, symbol)
@@ -206,7 +214,7 @@ def company_snapshot(settings, sector, symbol, now=None):
         [edge["symbol"] for edge in result["relations"] if edge.get("symbol")],
         sector,
     )
-    part = read_cache(settings, sector).companies
+    part = classified_companies(settings, sector)[0]
     peers = [
         item.model_dump(mode="json") for item in part.rows if item.symbol != symbol
     ][:80]

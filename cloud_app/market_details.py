@@ -10,6 +10,7 @@ from .market_detail_catalog import context_for
 from .market_detail_feed import collect_detail, merge_news
 from .market_service import _write_cache
 from .provider_process import ProviderProcess
+from .sector_classifications import Classification
 
 UTC=dt.timezone.utc
 REFRESH_SECONDS=900
@@ -35,6 +36,7 @@ class CompanyRow(BaseModel):
     source:str=Field(max_length=80)
     url:str=Field(max_length=2000)
     displayed_share_pct:float|None=Field(default=None,ge=0,le=100)
+    classification:Classification|None=None
 
 
 class NewsRow(BaseModel):
@@ -91,6 +93,16 @@ def read_cache(settings,identity):
         return DetailCache()
 
 
+def classified_companies(settings, identity, cache=None):
+    """Reconcile a local directory without any HTTP/provider calls."""
+    from .sector_classifications import read, reconcile
+    part = (cache or read_cache(settings, identity)).companies
+    if not identity.startswith('us_'):
+        return part, None
+    rows, audit = reconcile([row.model_dump(mode='json') for row in part.rows], identity, read(settings))
+    return DetailPart[CompanyRow](**{**part.model_dump(mode='json'), 'rows': rows}), audit
+
+
 def refresh_detail(settings,identity):
     old=read_cache(settings,identity).model_dump(mode='json')
     try:
@@ -116,6 +128,8 @@ def detail_snapshot(settings,identity,now=None):
     instrument=BY_ID[identity]
     now=now or dt.datetime.now(UTC)
     cache=read_cache(settings,identity)
+    classified, audit=classified_companies(settings, identity, cache)
+    cache.companies=classified
     result=cache.model_dump(mode='json')
     for key in ('history','companies','news','related_history'):
         part=getattr(cache,key)
@@ -125,6 +139,7 @@ def detail_snapshot(settings,identity,now=None):
     earliest=years_ago(now).date().isoformat()
     for key in ('history','related_history'):
         result[key]['rows']=[row for row in result[key]['rows'] if earliest<=row['date']<=now.date().isoformat()]
+    result['companies']['classification_audit']=audit
     return {**result,'id':identity,'label':instrument.label,'symbol':instrument.symbol,'unit':instrument.unit,
             'group':instrument.group,'market':instrument.market,'context':context_for(identity),
             'refresh_seconds':REFRESH_SECONDS,'maximum_years':3}

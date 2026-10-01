@@ -1,5 +1,7 @@
 """Bounded personal detail collection, independent of streaming and ledger work."""
 import time
+from .provider_process import ProviderProcess
+from . import sector_classifications
 from .config import get_settings
 from .database import RuntimeHeartbeat,SessionLocal,prepare_runtime_database,utcnow
 from .market_catalog import CATALOG
@@ -13,8 +15,15 @@ def main():
     if settings.startup_errors('deployment'):
         raise SystemExit('Invalid personal configuration')
     prepare_runtime_database()
+    classifications = ProviderProcess(sector_classifications.collect)
     try:
         while True:
+            check = sector_classifications.read(settings)
+            if check.attempted_at is None or (utcnow()-check.attempted_at).total_seconds()>=sector_classifications.REFRESH_SECONDS:
+                try:
+                    sector_classifications.refresh(settings, classifications)
+                except (OSError,ValueError,RuntimeError,TimeoutError):
+                    pass
             for instrument in CATALOG:
                 cache=read_cache(settings,instrument.id)
                 when=cache.attempted_at
@@ -33,6 +42,7 @@ def main():
             time.sleep(15)
     finally:
         _provider.close()
+        classifications.close()
 
 
 if __name__=='__main__':

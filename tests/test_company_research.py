@@ -307,7 +307,7 @@ class CompanyQueueTests(unittest.TestCase):
             seen.append(symbol)
             return fresh
         directory = SimpleNamespace(companies=SimpleNamespace(rows=rows))
-        with patch.object(scheduler, "BY_ID", {"us_45": SimpleNamespace(group="sectors")}), patch.object(scheduler, "read_cache", return_value=directory), patch.object(scheduler, "read_company", side_effect=read):
+        with patch.object(scheduler, "BY_ID", {"us_45": SimpleNamespace(group="sectors")}), patch.object(scheduler, "classified_companies", return_value=(directory.companies, None)), patch.object(scheduler, "read_company", side_effect=read):
             scheduler.schedule(self.settings, NOW)
             self.assertEqual(seen, [f"T{i}" for i in range(50)])
             seen.clear()
