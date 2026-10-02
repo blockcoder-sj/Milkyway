@@ -199,6 +199,31 @@ class CompanyGraphTests(unittest.TestCase):
         after = path.read_bytes()
         self.assertEqual(pages.bootstrap(self.settings)["imported"], 0)
         self.assertEqual(path.read_bytes(), after)
+
+    def test_identical_unreviewed_cache_skips_validation_but_content_and_sector_changes_do_not(self):
+        root(self.settings)
+        value=company('ZZZTEST',qid=None,name='Synthetic public company',collector_version=4)
+        self.graph.ingest(value)
+        path=root(self.settings)/'ZZZTEST.json'
+        _write_cache(path,value.model_dump(mode='json'))
+        with patch.object(pages,'enrich',wraps=pages.enrich) as enrich:
+            self.assertEqual(pages.bootstrap(self.settings)['imported'],0)
+            enrich.assert_not_called()
+        value.description='Changed content, same timestamp'
+        value.description_source=SRC
+        _write_cache(path,value.model_dump(mode='json'))
+        with patch.object(pages,'enrich',wraps=pages.enrich) as enrich:
+            self.assertEqual(pages.bootstrap(self.settings)['imported'],1)
+            enrich.assert_called_once()
+        with patch('cloud_app.company_service.related_directory',return_value={'ZZZTEST':{'sector':'us_45'}}):
+            self.assertEqual(pages.bootstrap(self.settings)['imported'],1)
+        self.assertEqual(self.graph.by_symbol('ZZZTEST')['sector'],'us_45')
+
+    def test_clean_v4_graph_does_not_reparse_all_reports_at_startup(self):
+        self.graph.ingest(company(collector_version=4))
+        with patch.object(CompanyKnowledge,'model_validate_json',wraps=CompanyKnowledge.model_validate_json) as validate:
+            self.graph.remove_encyclopedia()
+            validate.assert_not_called()
         with self.graph.connection() as db:
             self.assertEqual(
                 db.execute("SELECT COUNT(*) FROM company_profiles").fetchone()[0], 1

@@ -43,3 +43,10 @@
 - Review source directly. Never use CodeRabbit (including its CLI, API, plugins,
   IDE extension, or GitHub review bot).
 - Actual AI provider calls require the user's explicit approval for that call.
+
+## Local resource use
+
+- The user reported high RAM pressure on 2026-10-02. Reuse one development
+  browser tab and run expensive verification jobs one at a time. Remove disposable
+  verification containers after preserving their evidence; preserve personal
+  runtime and backup volumes and the user's other apps/tabs.

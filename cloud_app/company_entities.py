@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from .bounded_io import read_bounded_json
 from .company_catalog import editorial_for, enrich, CATALOG
-from .company_graph import CompanyGraph, ENTITY_KEY
+from .company_graph import CompanyGraph, ENTITY_KEY, encoded, digest
 from .company_schemas import CompanyKnowledge
 from .market_catalog import BY_ID
 from .market_service import _write_cache
@@ -37,12 +37,26 @@ def bootstrap(settings):
     imported = rejected = 0
     paths = [path for path in sorted(root(settings).glob('*.json')) if SYMBOL.fullmatch(path.stem)]
     directory = related_directory(settings, [path.stem for path in paths])
-    # Read only the comparison timestamp; do not load each entity's 200 sources
+    from .company_research_catalog import PUBLIC_COMPANIES, RELATIONS
+    reviewed = set(CATALOG) | set(PUBLIC_COMPANIES) | set(RELATIONS)
+    # Read only comparison fields; do not load each entity's 200 sources
     # or open thousands of SQLite connections during a repeated startup.
     with graph.connection() as db:
         for path in paths:
             try:
                 raw = read_bounded_json(path, maximum_bytes=2 * 1024 * 1024)
+                if raw.get('symbol') != path.stem:
+                    raise ValueError('Wrong legacy company identity')
+                sector = directory.get(path.stem, {}).get('sector')
+                previous = db.execute(
+                    'SELECT p.digest,json_extract(p.payload,\'$.attempted_at\') AS attempted FROM company_profiles p JOIN company_aliases a ON a.entity_id=p.entity_id '
+                    'WHERE a.namespace=\'ticker\' AND a.value=?', (path.stem,)).fetchone()
+                # Exact content + sector comparison, never timestamp alone.
+                # Reviewed issuers still get current reading notes even when
+                # their provider timestamps or original cache did not change.
+                if (path.stem not in reviewed and previous
+                    and previous['digest'] == digest(encoded(raw)+'|'+(sector or ''))):
+                    continue
                 value = identified(enrich(raw))
                 if value.symbol != path.stem:
                     raise ValueError('Wrong legacy company identity')
@@ -50,15 +64,13 @@ def bootstrap(settings):
                 changed = raw != clean
                 if changed:
                     _write_cache(path, clean)
-                previous = db.execute(
-                    "SELECT json_extract(p.payload,'$.attempted_at') AS attempted FROM company_profiles p "
-                    "JOIN company_aliases a ON a.entity_id=p.entity_id WHERE a.namespace='ticker' AND a.value=?",
-                    (value.symbol,),
-                ).fetchone()
-                if not changed and previous and (previous['attempted'] or '') >= (
-                    value.attempted_at.isoformat() if value.attempted_at else ''):
-                    continue
-                graph.ingest(value, directory.get(value.symbol, {}).get('sector'))
+                if previous:
+                    if previous['digest']==digest(encoded(clean)+'|'+(sector or '')):
+                        continue
+                    if not changed and (previous['attempted'] or '') > (
+                        value.attempted_at.isoformat() if value.attempted_at else ''):
+                        continue
+                graph.ingest(value, sector)
                 imported += 1
             except (OSError, ValueError, TypeError):
                 rejected += 1

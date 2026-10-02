@@ -61,6 +61,10 @@
         }
       }
     }
+    function registerPrice(price) {
+      for(const [label,url] of [[price.source+' · 기업 현재가',price.source_url],
+        [price.comparison_source,price.comparison_source_url]]) if(url) add({label,url,level:'provider'});
+    }
     function original(text, title = '영문 원문 확인') {
       return text ? `<details class="company-original"><summary>${esc(title)}</summary><p lang="en">${esc(text)}</p><small>한글 핵심 정리와 구분한 공시 발췌입니다. 하단 출처에서 무료 번역으로 읽을 수 있습니다.</small></details>` : '';
     }
@@ -93,7 +97,7 @@
       return `<ol class="company-source-list">${rows.map(row => `<li id="company-source-${row.number}"><strong>${external(row.label, row.url)}</strong><small>${esc(levels[row.level] || '출처')} · ${esc(row.as_of ? '자료 기준 ' + row.as_of : '원자료 기준일 미제공')}</small><small>${esc(new URL(row.url).hostname)}</small>${row.locations.size ? `<details class="company-source-locations"><summary>이 자료의 근거 위치 · ${fmt(row.locations.size)}개</summary><ul>${[...row.locations].map(([url, title]) => `<li>${external(title, url)}</li>`).join('')}</ul></details>` : ''}</li>`).join('')}</ol>
         ${excerpts.size ? `<details class="company-translations"><summary>영문 발췌 한글로 읽기 · 무료 외부 번역</summary><p class="fineprint">선택한 공개 발췌문만 Google 번역 새 창으로 보냅니다. 자동 호출은 없으며 기계 번역은 검토된 한글 요약과 다릅니다.</p><ul>${[...excerpts.values()].map(row => `<li>${external(row.title, 'https://translate.google.com/?sl=en&tl=ko&op=translate&text=' + encodeURIComponent(row.text))} ${cite(row.source)}</li>`).join('')}</ul></details>` : ''}`;
     }
-    return Object.freeze({cite, fact, original, essentials, revenue, footer, registerNetwork, get count() { return sources.size; },
+    return Object.freeze({cite, fact, original, essentials, revenue, footer, registerNetwork, registerPrice, get count() { return sources.size; },
       groups: Object.keys(groups).filter(key => (data.revenue_mix || []).some(row => row.group === key)), quoteSource});
   }
   window.MilkywayCompanyResearchView = Object.freeze({create, accepted, groups});

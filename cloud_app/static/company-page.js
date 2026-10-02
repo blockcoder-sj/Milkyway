@@ -3,7 +3,7 @@
   const $=s=>document.querySelector(s),esc=v=>window.MilkywayResearchView.escape(v),fmt=(v,d=2)=>window.MilkywayFormat.number(v,d);
   const relationView=window.MilkywayCompanyRelations,kinds=relationView.kinds;
   const level={primary:'공시·기업 원문',provider:'정보 제공사·공개 조사'};
-  let reading=null,revenueGroup=null,network=null;
+  let reading=null,revenueGroup=null,network=null,prices=null;
   let hooks,sector=null,symbol=null,entityKey=null,loadPath=null,data=null,epoch=0,loading=null,signature='',relationPage=1,productPage=1,peerPage=1,selected=null;
   const validKey=value=>/^c_[a-f0-9]{32}$/.test(value||'');
   const companyLink=(edge,label=edge.name)=>validKey(edge.target_id)?`<a class="company-open" data-company-id="${esc(edge.target_id)}" href="#company/${edge.target_id}">${esc(label)}</a>`:'';
@@ -22,6 +22,9 @@
       <section id="companyFinancialsSection"><h3>공시·재무 원자료</h3><p class="fineprint">재무 수치는 공시에 보고된 값이며 앱에서 재계산하지 않습니다. 매출·이익은 표에 표시한 연간 기간, 자산·부채·자본은 기말 기준입니다. 최신 분기 수치 또는 예상치와 혼동하지 마세요.</p><div id="companyFinancials"></div><div id="companyFilings"></div></section>
       <section id="companySourcesSection"><details id="companySourceDetails" class="detail-sources-toggle"><summary id="companySourceCount">출처 모음</summary><p class="fineprint">기업·공시 원문과 정보 제공사·공개 조사를 모았습니다. 본문의 번호를 누르면 해당 출처로 이동합니다. 기업 발표는 해당 기업의 진술이며 독립적인 계약 이행 검증을 뜻하지 않습니다.</p><div id="companySources"></div></details></section>`;
     $('#marketDetail').after(panel);
+    const pricePanel=document.createElement('div');pricePanel.id='companyLivePrice';
+    $('#companyQuote').before(pricePanel);
+    prices=window.MilkywayCompanyPrice.create({api:(...args)=>hooks.api(...args),getState:()=>hooks.getState(),target:pricePanel,footer});
     const networkSection=document.createElement('section');networkSection.className='company-network-section';
     networkSection.innerHTML='<h3>업계 연결 탐색</h3><div id="companyNetwork" aria-live="polite"></div>';
     $('#companyRelationsSection').append(networkSection);
@@ -95,7 +98,7 @@
     for(const [id,key] of [['companySegmentOriginals','segments'],['companyDriverOriginals','drivers']])$('#'+id).innerHTML=(data[key]||[]).filter(row=>row.original).map(fact).join('')||'<p class="fineprint">확보한 발췌 없음</p>';
     $('#companyFinancials').innerHTML=data.financials.length?`<div class="research-table"><table><thead><tr><th>공시 항목</th><th>보고값</th><th>보고 기간·기말</th><th>원자료</th></tr></thead><tbody>${data.financials.map(row=>`<tr><td>${esc(row.label)}</td><td>${fmt(row.value,0)} ${esc(row.unit)}</td><td>${esc(row.period)}</td><td>${source(row.source)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="fineprint">현재 확인된 공시 재무 수치가 없습니다. 아래 기업 공시 원문을 확인하세요.</p>';
     $('#companyFilings').innerHTML=data.filings.length?`<p class="fineprint">확보한 공시 ${fmt(data.filings.length,0)}건 · 원문 링크와 기준일은 하단 출처 모음에서 확인할 수 있습니다.</p>`:'';
-    network.setContext(data,reading);footer();
+    network.setContext(data,reading);prices.setContext(data,reading);footer();
   }
   async function refresh(){
     if(!loadPath||loading===epoch||hooks.getState().workspace!=='company')return;
@@ -120,7 +123,7 @@
   async function present(path,hash,nextSector,nextSymbol,key,push){
     const parentCompany=entityKey,origin=nextSector||sector||history.state?.companyOrigin||null;
     sector=origin;symbol=nextSymbol;entityKey=key;loadPath=path;data=null;signature='';
-    network.reset();++epoch;relationPage=productPage=peerPage=1;selected=null;reading=null;revenueGroup=null;$('#companyRelationFilter').value='business';$('#companySourceDetails').open=false;
+    network.reset();prices.clear();++epoch;relationPage=productPage=peerPage=1;selected=null;reading=null;revenueGroup=null;$('#companyRelationFilter').value='business';$('#companySourceDetails').open=false;
     hooks.openWorkspace('company',false);
     if(push)history.pushState({companyOrigin:origin,parentCompany},'',hash);
     $('#companyTitle').textContent='기업 자료를 불러오고 있습니다';$('#companyError').textContent='';
@@ -137,6 +140,6 @@
     if(!validKey(key)||!hooks.getState().config.personal_local_mode)return;
     return present('/api/company-entities/'+key,'#company/'+key,null,null,key,push);
   }
-  function leave(){network.reset();sector=symbol=entityKey=loadPath=null;++epoch;}
+  function leave(){network.reset();prices.clear();sector=symbol=entityKey=loadPath=null;++epoch;}
   window.MilkywayCompany=Object.freeze({initialize(options){hooks=options;mount();setInterval(()=>{if(!document.hidden)refresh();},5000);},open,openEntity,leave});
 })();

@@ -70,7 +70,7 @@ def parse_chart(payload: dict, instrument: Instrument, now: dt.datetime) -> Obse
     row = chart["result"][0]
     meta = row["meta"]
     expected_type = {"indices": "INDEX", "sectors": "INDEX", "fx": "CURRENCY",
-                     "futures": "FUTURE", "commodities": "FUTURE"}[instrument.group]
+                     "futures": "FUTURE", "commodities": "FUTURE", "stocks": "EQUITY"}[instrument.group]
     if meta.get("symbol") != instrument.symbol or meta.get("instrumentType") != expected_type:
         raise ValueError("source instrument mismatch")
     observed = _timestamp(meta.get("regularMarketTime"))

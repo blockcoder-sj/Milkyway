@@ -163,7 +163,26 @@ class CompanyGraph:
                 db.execute('UPDATE company_relations SET detail=?,original=? WHERE id=?',
                            (detail, row['original'] or original, row['id']))
         # Exact ticker / old opaque identity aliases are preserved; no new wiki I/O.
-        for row in db.execute('SELECT p.entity_id,p.payload,p.digest,e.sector,e.name FROM company_profiles p JOIN company_entities e ON e.id=p.entity_id').fetchall():
+        # New ingests are already validated. Revalidating thousands of clean
+        # annual reports on every startup blocks the HTTP server for minutes.
+        # Only old automatic claims, deprecated inline originals and actual
+        # rejected-source owners need this migration.
+        from .company_relation_validation import AUTOMATIC
+        automatic = tuple(AUTOMATIC)
+        candidates = set(affected)
+        candidates.update(row[0] for row in db.execute(
+            'SELECT DISTINCT p.entity_id FROM company_profiles p, '
+            'json_each(p.payload,\'$.relations\') AS edge '
+            'WHERE COALESCE(json_extract(p.payload,\'$.collector_version\'),0)<4 '
+            'AND json_extract(edge.value,\'$.detail\') IN ('+','.join('?' for _ in automatic)+') '
+            'AND length(COALESCE(json_extract(edge.value,\'$.original\'),\'\'))>0', automatic))
+        candidates.update(row[0] for row in db.execute(
+            'SELECT entity_id FROM company_profiles WHERE instr(payload,?)>0', (marker,)))
+        for key in candidates:
+            row = db.execute('SELECT p.entity_id,p.payload,p.digest,e.sector,e.name FROM company_profiles p '
+                             'JOIN company_entities e ON e.id=p.entity_id WHERE p.entity_id=?', (key,)).fetchone()
+            if row is None:
+                continue
             CompanyGraph._remove_legacy_claims(db,row['entity_id'],json.loads(row['payload']))
             profile = CompanyKnowledge.model_validate_json(row['payload'])
             if row['entity_id'] in affected and not profile.description_source:

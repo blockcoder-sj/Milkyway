@@ -1794,6 +1794,22 @@ def personal_company_network(entity_key: str, via: str, page: int = Query(1, ge=
     return network_snapshot(settings, entity_key, via, page, kind)
 
 
+@app.get("/api/company-entities/{entity_key}/price")
+def personal_company_price(entity_key: str, symbol: str | None = Query(None, max_length=20),
+                           user: User = Depends(current_user), session: Session = Depends(get_db)):
+    from .company_prices import snapshot
+    return snapshot(settings, entity_key, symbol,
+                    connection_identity=_market_connection_identity(session, user))
+
+
+@app.post("/api/company-entities/{entity_key}/price-watch", status_code=202)
+def personal_company_price_watch(entity_key: str, symbol: str | None = Query(None, max_length=20),
+                                 user: User = Depends(csrf_guard)):
+    from .company_prices import watch
+    _rate_limit('company-price-watch:' + user.id, 30, 60)
+    return watch(settings, entity_key, user.id, symbol)
+
+
 @app.post("/api/company-entities/{entity_key}/refresh", status_code=202)
 def personal_company_entity_refresh(entity_key: str, user: User = Depends(csrf_guard)):
     from .company_entities import enqueue_entity

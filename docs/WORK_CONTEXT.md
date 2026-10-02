@@ -627,3 +627,46 @@ resuming; no paid AI regression approval has arrived.
   5-turn prompts/criteria in AI_RESPONSE_REVIEW_20261002.md; do not call until approval.
   Previous5-call approval was consumed. Do not assert zero external outages, future
   returns, all-company relationship completeness or licensed whole-GICS verification.
+
+## Company prices and resource correction — 2026-10-02
+
+- User additionally requested a current stock price on each company page and
+  reported high RAM pressure from container/browser proliferation. Use one
+  development tab and sequential expensive checks. Temporary unit runners have
+  exited; the stopped native-check container was removed after copying evidence.
+  The existing Milkyway group has eight running services, not three required
+  independent deployments. All personal runtime/backup volumes were preserved.
+- Added registered-company REST/watch APIs, strict bounded quotes, Toss initial
+  REST + acknowledged trade-only WebSocket support, and Yahoo once-per-minute
+  fallback. Visible pages read every two seconds; no off-page/hidden-page requests.
+  Provider, actual price timestamp, delayed/closed/stale status, same-day compatible
+  previous-close calculation and thousands separators are displayed. Sources are
+  registered in the existing footer. No order, ledger quote or AI call introduced.
+- Fixed restart slowdown from thousands of public profiles: skip identical
+  uncurated content by exact digest plus sector, still enrich reviewed firms,
+  reimport equal-timestamp content changes, and only revalidate legacy migration
+  candidates. Existing encyclopedia removal and false-claim tests still pass.
+- Final price image: `milkyway-company-prices-final:verify`, applied to existing
+  `milkyway-personal:local`. Full offline498/267.117s OK(skipped14), host
+  frontend16/17.295s OK, graph/legacy25/2.358s OK. Python AST/diff checks passed;
+  direct scoped source/security review, no CodeRabbit or new dependency.
+- Actual AAPL/AMD/Samsung cached prices received from Yahoo; cached HTTP median
+  17.39ms/p95 35.31ms over30 reads. Existing Toss connection is configured but
+  a direct current quote request failed with TossIpNotAllowedError. Do not claim
+  that current Toss real-time delivery is working; allowed outbound IP is pending.
+- App healthy, all8 services running. Startup/ready HTTP200; database/worker flags
+  true, dataset/data_gate false. No real paper execution feed success is claimed.
+- Two intermediate packaged checks timed out after4 checks; no final packaged
+  success. An intermediate native8 pass preceded final startup optimization.
+  Reports/evidence retained under /tmp; see COMPANY_PRICE_REVIEW_20261002.md.
+- Browser extension was unavailable; native Chrome control was interrupted while
+  the user edited another document. No new window opened, and a fresh price UI
+  screenshot remains outstanding. Do not interfere with the user's documents.
+- US IT detailed Korean business notes and supply/customer/partner research are
+  still outstanding: 453 IT profiles were audited, only30 with briefs; major
+  AMD/AVGO/ORCL/etc gaps. Samsung official Supplier_List.pdf was read and saved
+  under /tmp. Use its declared historical 80%-of-procurement consented scope,
+  not product-specific purchasing or assumed present contracts. Korean industry
+  scope is still eight KOSPI entries; verified KIS master has24KOSPI/22KOSDAQ.
+- Five newly requested real GPT-5.4-mini/reasoningnone tests still await explicit
+  approval; new paid provider calls remain0. No harness authorized.

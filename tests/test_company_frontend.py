@@ -124,7 +124,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const elements=new Map(),documentHandlers={},panelHandlers={};
 function el(id){
  if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',value:'all',disabled:false,options:[{value:'supplier',textContent:''}],
-  classList:{add(){},remove(){}},querySelectorAll(){return[];},after(){},append(){},
+  classList:{add(){},remove(){}},querySelectorAll(){return[];},after(){},before(){},append(){},
   addEventListener(kind,fn){this[kind]=fn;},scrollIntoView(){}});
  return elements.get(id);
 }
@@ -140,7 +140,7 @@ const result={symbol:'AAPL',name:'<script>Apple</script>',description:'descripti
  products:Array.from({length:12},(_,i)=>({title:`<img Product ${i}>`,detail:'safe',source:src})),
  relations:Array.from({length:12},(_,i)=>({name:`Company <${i}>`,target_id:'c_'+String(i+1).padStart(32,'0'),kind:i===0?'supplier':'subsidiary',symbol:i===0?'MSFT':null,detail:'Source-backed relation',source:src}))};
 let delayed=false,response=result;
-const ctx=vm.createContext({window:{MilkywayResearchView:{escape},getSelection:()=>null},
+const ctx=vm.createContext({window:{MilkywayResearchView:{escape},MilkywayCompanyPrice:{create:()=>({setContext(){},clear(){}})},getSelection:()=>null},
  document:{querySelector:el,createElement:()=>panel,addEventListener(kind,fn){documentHandlers[kind]=fn;}},
  history:{state:null,pushState(value){this.state=value;},back(){}},setInterval(fn){poll=fn;},Intl,Date,Number,Math,Map,Set,URL,encodeURIComponent});
 for(const name of ['format.js','list-paging.js','market-directory.js','company-research-view.js','company-relations.js','company-network.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
