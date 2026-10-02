@@ -1,5 +1,8 @@
 """Canonical identity and public company navigation, entirely offline."""
 import datetime as dt
+import os
+import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import sqlite3
@@ -67,6 +70,27 @@ class CompanyGraphTests(unittest.TestCase):
         db.execute.side_effect = busy
         with patch('cloud_app.company_graph.time.monotonic', side_effect=[0, 6]), self.assertRaises(sqlite3.OperationalError):
             _enable_wal(db)
+
+    @unittest.skipUnless(os.name == 'posix', 'POSIX advisory lock regression')
+    def test_second_connection_does_not_release_first_connections_file_locks(self):
+        # A different process probes SQLite's shared-byte region on the main DB.
+        # Raw os.open/close of an existing file releases ALL this process's locks.
+        probe = """
+import errno, fcntl, os, sys
+fd=os.open(sys.argv[1],os.O_RDWR)
+try:
+    fcntl.lockf(fd,fcntl.LOCK_EX|fcntl.LOCK_NB,510,0x40000002,os.SEEK_SET)
+except OSError as exc:
+    sys.exit(0 if exc.errno in (errno.EACCES, errno.EAGAIN) else 8)
+sys.exit(9)
+"""
+        with self.graph.connection() as first:
+            first.execute('BEGIN IMMEDIATE')
+            with self.graph.connection() as second:
+                second.execute('SELECT COUNT(*) FROM company_entities').fetchone()
+                result=subprocess.run([sys.executable,'-c',probe,str(self.graph.path)],capture_output=True,timeout=10)
+                self.assertEqual(result.returncode,0,result.stderr.decode())
+            self.assertEqual(first.execute('PRAGMA quick_check').fetchone()[0],'ok')
 
     def test_directed_relations_have_canonical_targets_and_original_evidence(self):
         key = self.graph.ingest(
@@ -244,6 +268,23 @@ class CompanyGraphTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.graph.ingest(company())
         self.assertEqual(target.read_text(), "untouched")
+
+    def test_symlink_inserted_during_exclusive_creation_is_rejected(self):
+        target = Path(self.temp.name) / 'untouched-raced'
+        target.write_text('untouched')
+        target.chmod(0o640)
+        original_open = os.open
+        def raced_open(path, flags, mode=0o777, **kwargs):
+            if Path(path) == self.graph.path:
+                self.graph.path.symlink_to(target)
+                raise FileExistsError('raced creation')
+            return original_open(path, flags, mode, **kwargs)
+        with patch('cloud_app.company_graph.os.open', side_effect=raced_open):
+            with self.assertRaisesRegex(ValueError, 'Unsafe company graph file'):
+                with self.graph.connection():
+                    self.fail('Must reject the raced symlink')
+        self.assertEqual(target.read_text(), 'untouched')
+        self.assertEqual(target.stat().st_mode & 0o777, 0o640)
 
     def test_legacy_private_qid_is_navigation_only_and_cannot_queue_wiki(self):
         key = self.graph.ingest(company(relations=[edge()]))

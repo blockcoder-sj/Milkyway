@@ -14,7 +14,7 @@
   function mount(){
     const panel=document.createElement('section');panel.id='marketDetail';panel.className='panel market-detail-page hidden';panel.dataset.workspacePage='detail';
     panel.innerHTML=`<button id="detailBack" class="ghost compact">← 시장으로</button><div class="detail-heading"><div><p id="detailCategory" class="eyebrow"></p><h2 id="detailTitle">시장 상세</h2><p id="detailIntro"></p></div><div id="detailQuote"></div></div><div id="detailFacts" class="detail-metrics"></div><p id="detailError" class="error" role="alert"></p>
-      <nav class="detail-jumps" aria-label="상세 정보 목차"><a href="#detailChartSection">차트</a><a id="detailCompaniesJump" href="#detailCompaniesSection">구성·산출</a><a href="#detailNewsSection">뉴스</a><a href="#detailSourcesSection">출처 모음</a></nav>
+      <nav class="detail-jumps" aria-label="상세 정보 목차"><a href="#detailChartSection">차트</a><a id="detailIndustryJump" href="#detailIndustrySection" hidden>산업 구조</a><a id="detailCompaniesJump" href="#detailCompaniesSection">구성·산출</a><a href="#detailNewsSection">뉴스</a><a href="#detailSourcesSection">출처 모음</a></nav>
       <section id="detailChartSection"><div class="detail-chart-heading"><h3>가격 차트</h3><button id="detailExpand" class="ghost compact">크게 보기 ↗</button></div><div id="detailChartHome"><div id="detailChartView" class="market-terminal">
         <div class="terminal-toolbar"><div id="detailPeriodButtons" class="chart-periods" role="group" aria-label="차트 기간">${[['1','1개월'],['3','3개월'],['6','6개월'],['12','1년'],['36','3년']].map(([value,label])=>`<button type="button" data-chart-period="${value}" aria-pressed="${value==='3'}">${label}</button>`).join('')}</div><label class="chart-interval">봉 주기<select id="detailInterval"><option value="day">일봉</option><option value="week">주봉</option><option value="month">월봉</option></select></label></div>
         <div class="terminal-series"><label>차트 자료<select id="detailSeries"><option value="history">표시 지수·시세</option></select></label><details id="detailChartSettings"><summary>설정</summary><div id="detailChartControls" class="detail-chart-controls">
@@ -29,11 +29,13 @@
         <div class="chart-footer"><span id="detailChartRange"></span><span>Yahoo Finance · 일봉 기준</span></div><p id="detailChartWarning" class="chart-data-note"></p><details class="chart-source"><summary>데이터 기준·출처</summary><p id="detailChartStatus"></p></details>
       </div></div><div id="detailMetrics" class="detail-metrics"></div><div id="detailChartMethod"></div><details><summary>최근 봉의 수치 보기</summary><div id="detailPriceTable" class="research-table"></div></details></section>
       <dialog id="detailChartDialog" aria-labelledby="detailDialogTitle"><header class="detail-dialog-heading"><h3 id="detailDialogTitle">가격 차트</h3><button id="detailCollapse" class="ghost compact" autofocus>닫기 · Esc</button></header><div id="detailChartDialogSlot"></div></dialog>
+      <section id="detailIndustrySection" hidden></section>
       <section id="detailCompaniesSection"><h3 id="detailCompaniesTitle">주요 기업과 비중</h3><p id="detailCompanyNote" class="fineprint"></p><div id="detailCompanies"></div><div id="detailMarketShare"></div></section>
       <section id="detailNewsSection"><h3>관련 뉴스</h3><p class="fineprint">제목의 관련 키워드 조건을 통과한 지정 언론사의 최근 30일 보도를 최신 순으로 표시합니다. 한 페이지에 8건씩 제공하며 뒤로 갈수록 이전 보도가 나옵니다. 기사 제목과 원문 링크를 모으며, 검색에 잡히지 않거나 제목 조건에 맞지 않는 보도는 포함되지 않을 수 있습니다.</p><div id="detailNews"></div></section>
       <section id="detailSourcesSection"><details class="detail-sources-toggle"><summary id="detailSourceCount">출처 모음</summary><p class="fineprint">시세·기업·뉴스는 수집 시점, 사업 점유율은 발표 기준일을 따릅니다. 원자료를 확인하고 수치의 범위를 비교하세요.</p><div id="detailSources"></div></details></section>`;
     $('#market').after(panel);
     window.MilkywayMarketDirectory.initialize();
+    window.MilkywayEnergyGuide.initialize();
     chart=window.MilkywayMarketChart.create($('#detailChart'),$('#detailChartTooltip'),$('#detailChartLegend'));
     $('#detailBack').addEventListener('click',()=>{closeChart();identity=null;++epoch;hooks.openWorkspace('market');});
     $('#detailSeries').addEventListener('change',()=>{range();draw();});
@@ -136,6 +138,7 @@
     $('#detailCompaniesTitle').textContent=data.group==='sectors'?'섹터 기업 백과':data.group==='fx'?'통화정책 원문':data.group==='indices'?'구성·산출 원문':'계약 명세와 거래소';
     $('#detailCompanyNote').textContent=(context.companies_note||'이 항목의 공식 구성·관련 정보는 아래 산출기관 원문에서 확인할 수 있습니다.')+(companies.length?` 수집 ${time(data.companies.fetched_at)}${data.companies.stale?' · 갱신 지연':''}`:'');
     window.MilkywayMarketDirectory.render(data);
+    window.MilkywayEnergyGuide.render(data.industry_guide);
     const shares=context.market_share||[];
     $('#detailMarketShare').innerHTML=shares.length?shares.map(share=>`<article class="detail-share-fact"><h4>${esc(share.title)}</h4><p>${esc(share.period)} · 발표 ${esc(share.published_at)} · 확인 ${esc(share.checked_at)}</p><p>${esc(share.scope)}</p><div class="detail-watchpoints">${share.values.map(row=>`<span>${esc(row.name)} <strong>${fmt(row.value)}%</strong></span>`).join('')}</div>${methods.help('published-share',['발표기관이 공표한 비율을 그대로 옮긴 값입니다. 앱에서 재계산하지 않습니다.','파운드리 사업 매출을 기준으로 한 점유율입니다. 개별 매출 원자료와 전체 분모는 앱에 저장되어 있지 않아 여기서 수치를 재현할 수 없습니다. 발표기관 원문의 조사 범위·산식을 확인하세요.'])}${link(share.provider+' 원자료',share.url)}</article>`).join(''):data.group==='sectors'?'<p class="fineprint">사업별 실제 시장점유율은 비교 범위·기준일을 확인한 자료가 있을 때만 제공합니다. 현재 이 업종의 검증된 수치는 등록되지 않았습니다.</p>':'';
     range();draw();
@@ -155,6 +158,7 @@
   async function open(id,push=true,expanded=false){
     if(!/^[a-z0-9_]{1,30}$/.test(id)||!hooks.getState().config.personal_local_mode)return;
     closeChart();identity=id;data=null;signature='';++epoch;hooks.openWorkspace('detail',false);
+    window.MilkywayEnergyGuide.render(null);
     if(push)history.pushState(null,'','#detail/'+id);
     $('#detailTitle').textContent='상세 정보를 불러오고 있습니다';$('#detailError').textContent='';
     for(const selector of ['#detailFacts','#detailCategory','#detailCompanyNote','#detailChartStatus','#detailChartTooltip','#detailChartMethod','#detailChartLegend','#detailChartWarning','#detailChartRange','#detailQuote','#detailIntro','#detailCompanies','#detailMarketShare','#detailNews','#detailSources','#detailMetrics','#detailPriceTable','#detailChart'])$(selector).innerHTML='';

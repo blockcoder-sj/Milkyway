@@ -616,8 +616,15 @@ def enrich(value):
             seen, merged = set(), []
             preferred = {(row.get('title'), row.get('source', {}).get('url'), row.get('source', {}).get('as_of'))
                          for row in normalized[key]} if key in {'products', 'segments', 'drivers', 'market_shares'} else set()
+            # A reviewed figure replaces the same filing coordinate, including
+            # old English labels/anchors. Other periods and sources are retained.
+            if key == 'revenue_mix':
+                from .company_revenue import basis
+                reviewed_revenue = {(*basis(row), row['member']) for row in normalized[key]}
             previous = []
             for row in data.get(key, []):
+                if key == 'revenue_mix' and (*basis(row), row['member']) in reviewed_revenue:
+                    continue
                 if key == 'segments':
                     row = {**row, 'title': SEGMENT_KO.get(row['title'], row['title'])}
                 identity = (row.get('title'), row.get('source', {}).get('url'), row.get('source', {}).get('as_of')) if isinstance(row, dict) else None

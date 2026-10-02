@@ -27,6 +27,72 @@ class RevenueTests(unittest.TestCase):
     def parse(self, raw, symbol='NVDA'):
         return parse_revenue(raw, ORIGIN, symbol, dt.date(2026, 10, 1))
 
+    def test_chevron_keeps_both_segment_and_geography_with_external_only_coordinates(self):
+        origin = {**ORIGIN, 'url':'https://www.sec.gov/Archives/edgar/data/93410/000009341026000078/cvx-20251231.htm'}
+        contexts = context('total', cik='93410') + context('parent', 'us-gaap:ReportableSegmentAggregationBeforeOtherOperatingSegmentMember',
+            axis='us-gaap:StatementBusinessSegmentsAxis', cik='93410')
+        facts = fact('total','184,432') + fact('parent','184,328')
+        for index,(segment,region,value) in enumerate([
+            ('Upstream','country:US','19,608'),('Upstream','us-gaap:NonUsMember','33,844'),
+            ('Downstream','country:US','65,331'),('Downstream','us-gaap:NonUsMember','65,545'),
+        ]):
+            geography=f'<xbrldi:explicitMember dimension="srt:StatementGeographicalAxis">{region}</xbrldi:explicitMember>'
+            contexts += context(str(index),'cvx:'+segment+'SegmentMember',axis='us-gaap:StatementBusinessSegmentsAxis',extra=geography,cik='93410')
+            facts += fact(str(index),value)
+        raw = doc(contexts,facts)
+        rows = parse_revenue(raw,origin,'CVX')
+        self.assertEqual(len(rows),5)
+        self.assertEqual(len([r for r in rows if r['parent']]),4)
+        self.assertTrue(all('/' in r['member'] for r in rows if r['parent']))
+        self.assertEqual(len({r['label'] for r in rows}),5)
+        CompanyKnowledge(symbol='CVX', name='Chevron',revenue_mix=rows)
+        # No geography silently dropped; qualifier/internal-sales and extra axes fail closed.
+        extra='<xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>'
+        internal=raw.replace('</xbrli:segment>',extra+'</xbrli:segment>')
+        self.assertEqual(parse_revenue(internal,origin,'CVX'),[])
+        self.assertEqual(len(parse_revenue(raw,origin,'OTHER')),1)
+        self.assertEqual(parse_revenue(raw,{**origin,'url':origin['url'].replace('www.sec.gov','evil.test')},'CVX'),[])
+
+    def test_valero_only_accepts_reviewed_product_segment_pair(self):
+        origin={**ORIGIN,'url':'https://www.sec.gov/Archives/edgar/data/1035002/000162828026011499/vlo-20251231.htm'}
+        metric='us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax'
+        extra='<xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">vlo:RefiningMember</xbrldi:explicitMember>'
+        raw=doc(context('total',cik='1035002')+context('p','vlo:GasolineAndBlendstocksMember',extra=extra,cik='1035002'),
+                fact('total','122,687',metric=metric)+fact('p','50,917',metric=metric))
+        row,=parse_revenue(raw,origin,'VLO')
+        self.assertEqual(row['label'],'휘발유·혼합 기재')
+        self.assertEqual(row['total'],122687000000)
+        self.assertEqual(parse_revenue(raw.replace('vlo:RefiningMember','vlo:EthanolMember'),origin,'VLO'),[])
+        self.assertEqual(parse_revenue(raw,origin,'OTHER'),[])
+
+    def test_conocophillips_subtotal_not_added_again_and_old_cache_labels_updated(self):
+        origin={**ORIGIN,'url':'https://www.sec.gov/Archives/edgar/data/1163165/000116316526000009/cop-20251231.htm'}
+        members=[('AlaskaSegment',5638),('LowerFortyEightSegment',41395),('CanadaOperatingSegment',3625),
+                 ('EuropeMiddleEastAndNorthAfricaSegment',6484),('AsiaPacificOperatingSegment',1770),('TotalSegments',58912),('CorporateSegment',32)]
+        contexts=context('total',cik='1163165');facts=fact('total','58,944')
+        for member,value in members:
+            contexts+=context(member,'cop:'+member+'Member',axis='us-gaap:StatementBusinessSegmentsAxis',cik='1163165')
+            facts+=fact(member,str(value))
+        rows=parse_revenue(doc(contexts,facts),origin,'COP')
+        self.assertEqual(sum(r['value'] for r in rows if not r['parent']),58944000000)
+        self.assertEqual(len([r for r in rows if r['parent']]),5)
+        cached=[dict(r,parent=None,label='English') for r in rows]
+        revised=present_revenue(cached,'COP')
+        self.assertTrue(all(r['label']!='English' for r in revised))
+        self.assertEqual(sum(r['value'] for r in revised if not r['parent']),58944000000)
+
+    def test_curated_revenue_replaces_same_filing_coordinates_without_cache_duplicates(self):
+        from cloud_app.company_catalog import enrich
+        from cloud_app.company_energy_research import REPORTS
+        original=REPORTS['COP']['revenue_mix']
+        legacy=[dict(r,label='Old English label',parent=None) for r in original]
+        # An independent, later source must remain intact.
+        newer={**legacy[0], 'source':{**legacy[0]['source'],'url':'https://www.sec.gov/Archives/edgar/data/1163165/000116316526000099/cop-another.htm'}}
+        value=enrich(CompanyKnowledge(symbol='COP',name='ConocoPhillips',revenue_mix=legacy+[newer]))
+        self.assertEqual(len(value.revenue_mix),len(original)+1)
+        self.assertTrue(any(r.source.url.endswith('cop-another.htm') for r in value.revenue_mix))
+        self.assertEqual(value.model_dump(),enrich(value).model_dump())
+
     def test_reported_units_denominator_hierarchy_and_latest_period(self):
         raw = doc(context('total') + context('p', 'nvda:DataCenterMember')
             + context('c', 'nvda:ComputeMember') + context('n', 'nvda:NetworkingMember')

@@ -139,6 +139,22 @@ class PersonalApiTests(unittest.TestCase):
         self.assertEqual(main.ready(self.session).status_code,200)
         self.assertEqual(main.trading_ready(self.user,self.session).status_code,503)
 
+    def test_idle_backtest_worker_does_not_mark_paper_operation_offline(self):
+        for component in ('paper-worker', 'personal-data'):
+            self.session.add(RuntimeHeartbeat(component=component,instance_id='test',observed_at=utcnow(),detail='running'))
+        self.session.commit()
+        payload=main.dashboard(self.user,self.session)
+        self.assertEqual(payload['operational']['status'],'credentials_required')
+        self.assertFalse(payload['workers']['backtest']['alive'])
+        self.assertTrue(payload['workers']['paper']['alive'])
+        for component in ('paper-worker', 'personal-data'):
+            heartbeat=self.session.get(RuntimeHeartbeat,component)
+            heartbeat.observed_at=utcnow()-dt.timedelta(minutes=10)
+            self.session.commit()
+            self.assertEqual(main.dashboard(self.user,self.session)['operational']['status'],'worker_offline')
+            heartbeat.observed_at=utcnow()
+            self.session.commit()
+
     def test_latest_history_and_full_exports_keep_old_and_new_records(self):
         origin=dt.datetime(2026,1,1,tzinfo=dt.timezone.utc)
         self.session.add_all([EquityPoint(account_id=self.account.id,equity=1000+number,cash=1000,observed_at=origin+dt.timedelta(minutes=number)) for number in range(3002)])

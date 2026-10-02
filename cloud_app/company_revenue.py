@@ -10,6 +10,7 @@ import re
 from urllib.parse import urlsplit
 
 from .company_filings import document
+from . import company_energy_revenue as energy
 
 METRICS = (
     'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax',
@@ -125,6 +126,7 @@ HIERARCHIES = {
         'crm:AgentforceMarketingAndAgentforceCommerceMember',
         'crm:AgentforceSalesMember', 'crm:AgentforceServiceMember']},
 }
+HIERARCHIES.update(energy.HIERARCHIES)
 
 
 def source_cik(origin):
@@ -148,6 +150,9 @@ def basis(row):
 
 def dimensions(members, symbol, cik):
     pairs = [(item.get('dimension'), item.get_text(strip=True)) for item in members]
+    reviewed = energy.dimensions(pairs, symbol, cik)
+    if reviewed:
+        return reviewed
     if len(pairs) == 2 and OPERATING_SEGMENTS.get(symbol) == cik:
         qualifier = ('srt:ConsolidationItemsAxis', 'us-gaap:OperatingSegmentsMember')
         if qualifier in pairs:
@@ -203,7 +208,8 @@ def present_revenue(rows, symbol):
         row = dict(value)
         cik = source_cik(row['source'])
         local = re.sub(r'Member$', '', row['member'].split(':')[-1])
-        override = ISSUER_LABELS.get((symbol, cik), {}).get(row['member'])
+        override = (energy.LABELS.get((symbol, cik, row['member']))
+                    or ISSUER_LABELS.get((symbol, cik), {}).get(row['member']))
         if override or local in LABELS:
             row['label'] = override or LABELS[local]
         if symbol == 'ADI' and cik == 6281 and row['group'] == 'segment' and row['member'] in ADI_END_MARKETS:
@@ -290,7 +296,8 @@ def parse_revenue(raw, origin, symbol, today=None):
         if classified is None:
             continue
         group, member = classified
-        if member and not re.fullmatch(r'[A-Za-z0-9_.-]{1,30}:[A-Za-z0-9_.-]{1,150}', member):
+        if member and not (re.fullmatch(r'[A-Za-z0-9_.-]{1,30}:[A-Za-z0-9_.-]{1,150}', member)
+                           or energy.compound_member(member, symbol, expected_cik)):
             continue
         contexts[ctx.get('id')] = (start.text, end.text, group, member)
     # Duplicate reports of the same fact must agree; conflicting values are dropped.

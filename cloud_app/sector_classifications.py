@@ -32,6 +32,24 @@ FUNDS = {"XLE": "us_10", "XLB": "us_15", "XLI": "us_20", "XLY": "us_25",
          "XLC": "us_50", "XLU": "us_55", "XLRE": "us_60"}
 ITOT_URL = "https://www.ishares.com/us/products/239724/ishares-core-s-p-total-u-s-stock-market-etf/latest-holdings.csv"
 SYMBOL = re.compile(r"[A-Z][A-Z0-9.-]{0,19}")
+CONTRACT_NAME = re.compile(r"\b(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s*\d{2,4}$")
+
+
+def exclusion_reason(symbol, name):
+    """Reject stale non-company holdings in both newly fetched and legacy caches.
+
+    A nine-character fund 'Identifier' is not proof of a CUSIP: XLE reports
+    synthetic identifiers for its sector futures, too. A liquidating receivable
+    may also survive in a fund's holdings after the issuer has ceased to exist.
+    Names qualify historical ticker exceptions to avoid excluding a later reuse.
+    """
+    normalized = " ".join(str(name).upper().split())
+    if CONTRACT_NAME.search(normalized):
+        return "만기월이 있는 파생 계약 · 기업 목록 제외"
+    if symbol == "HNR" and normalized.startswith("HARVEST NATURAL RES"):
+        # OCC #49243: corporate existence ended 2021-08-21, not an active issuer.
+        return "Harvest Natural Resources · 2021-08-21 법인 청산 완료"
+    return None
 
 
 class Classification(BaseModel):
@@ -114,7 +132,7 @@ def parse_itot(raw, now):
             or row.get("Market Currency") != "USD" or row.get("Sector") not in SECTORS):
             continue
         symbol = row.get("Ticker", "").replace(".", "-")
-        if not SYMBOL.fullmatch(symbol):
+        if not SYMBOL.fullmatch(symbol) or exclusion_reason(symbol, row.get("Name", "")):
             continue
         result.append(Classification(symbol=symbol, name=row["Name"][:120],
             sector=SECTORS[row["Sector"]], basis="공식 운용사 섹터 공시 대조", source=src))
@@ -172,9 +190,12 @@ def parse_fund(raw, ticker, now):
     result = []
     for row in rows[header + 1:]:
         symbol = row.get("B", "").replace(".", "-")
-        # US common shares have a nine-character CUSIP. Exclude fund cash/futures.
+        # Fund synthetic derivative identifiers may also have nine characters.
+        # The equity rows additionally carry a SEDOL; derivatives use '-'.
         if (not SYMBOL.fullmatch(symbol) or row.get("H") != "USD"
             or not re.fullmatch(r"[A-Z0-9]{9}", row.get("C", ""))
+            or not re.fullmatch(r"[A-Z0-9]{6}[0-9]", row.get("D", ""))
+            or exclusion_reason(symbol, row.get("A", ""))
             or "CASH" in row.get("A", "") or not row.get("A")):
             continue
         result.append(Classification(symbol=symbol, name=row["A"][:120], sector=FUNDS[ticker],
@@ -245,7 +266,9 @@ def _read_view(location, mtime, size):
 @lru_cache(maxsize=8)
 def _read(location, _mtime, _size):
     from pathlib import Path
-    return ClassificationCache.model_validate(read_bounded_json(Path(location), maximum_bytes=4 * 1024 * 1024))
+    value = ClassificationCache.model_validate(read_bounded_json(Path(location), maximum_bytes=4 * 1024 * 1024))
+    value.rows = [row for row in value.rows if not exclusion_reason(row.symbol, row.name)]
+    return value
 
 
 def refresh(settings, provider):
@@ -264,9 +287,13 @@ def reconcile(rows, sector, cache, now=None):
     """Audit every received row and add disclosed members; never invent market caps."""
     now = now or dt.datetime.now(UTC)
     mapped = {row.symbol: row for row in cache.rows}
-    result, removed = [], []
+    result, removed, excluded = [], [], []
     for value in rows:
         row = dict(value)
+        reason = exclusion_reason(row["symbol"], row.get("name", ""))
+        if reason:
+            excluded.append(dict(symbol=row["symbol"], reason=reason))
+            continue
         verified = mapped.get(row["symbol"])
         if verified and verified.sector != sector:
             removed.append({"symbol": row["symbol"], "sector": verified.sector})
@@ -275,7 +302,7 @@ def reconcile(rows, sector, cache, now=None):
         result.append(row)
     present = {row["symbol"] for row in result}
     for row in cache.rows:
-        if row.sector == sector and row.symbol not in present:
+        if row.sector == sector and row.symbol not in present and not exclusion_reason(row.symbol, row.name):
             result.append(dict(symbol=row.symbol, name=row.name, market_cap=None, currency="USD",
                 displayed_share_pct=None, source="시가총액 수신 대기", url="https://finance.yahoo.com/quote/" + row.symbol + "/",
                 classification=row.model_dump(mode="json")))
@@ -289,7 +316,7 @@ def reconcile(rows, sector, cache, now=None):
             row["displayed_share_pct"] = row["market_cap"] / total * 100 if total else None
     stale = bool(cache.errors) or not cache.fetched_at or not -120 <= (now - cache.fetched_at).total_seconds() <= REFRESH_SECONDS * 3
     return result[:1100], dict(checked=len(rows), matched=sum(bool(r.get("classification")) for r in result[:1100]),
-        unverified=sum(not r.get("classification") for r in result), moved=removed, stale=stale,
+        unverified=sum(not r.get("classification") for r in result), moved=removed, excluded=excluded, stale=stale,
         omitted=max(0, len(result)-1100),
         fetched_at=cache.fetched_at.isoformat() if cache.fetched_at else None, errors=cache.errors,
         method="무료 공식 운용사 구성·섹터 공시 대조 · GICS 전체 원장 직접 검증과 구분")

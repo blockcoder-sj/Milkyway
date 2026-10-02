@@ -903,3 +903,91 @@ resuming; no paid AI regression approval has arrived.
   At market close, read account.paper_session.summary plus full fills/history;
   report actual fills or specific waiting/error state. Never describe premarket
   setup as successful full-day paper operation.
+
+## 2026-10-02 · energy scope and immediate memory reduction (in progress)
+
+- Paper-session milestone committed/pushed ef7dc32320f6fb5290add6c34728843f166425b4;
+  CI37002994456 completed successfully. One-day account remains armed for today.
+- User clarified energy means a comprehensive industry encyclopedia, not a sample
+  of major issuers. Sector completion is NOT achieved. Initial universe107 includes
+  IXPZ6 (XLE sector future) and HNR (liquidated Harvest); company coverage is shallow.
+  Scope must include MLPs missing from broad common-stock ETFs and dated corporate
+  changes. Official Hornbeck release confirms Helix merger completed2026-09-01;
+  legacy Helix2025 annual is not the combined company's annual. ExxonMobil holdco
+  reorganization2026-07-01 needs predecessor reporting provenance.
+- Uncommitted classification fix rejects fund synthetic identifiers without equity
+  SEDOL, dated contract names and exact-name historical HNR liquidation. It also
+  filters legacy caches. Focused8tests passed; not yet full-reviewed/deployed/pushed.
+- Research uses free official sources, 0 AI calls. Temporary sequential collector
+  /tmp/energy_sources_collect.py saved56annual/quarter documents for28issuers with
+  SHA256+date manifest in /tmp/milkyway-energy-research before being stopped.
+  Downloaded documents have NOT all been read/summarized/verified. Baselines:
+  /tmp/milkyway-energy-baseline.json and /tmp/milkyway-energy-profiles-baseline.json.
+- User then requested memory cleanup. Around12:12UTC:8containers~1.05GiB; company-data
+  ~308MiB/~103%CPU; market-details~148MiB; backtest~85MiB. Host16GiB, swap~5GiB.
+  Stopped company-data, market-details, idle backtest-worker after confirming all20
+  jobs completed/noqueued/running. Terminated only our temporary collector PID29036.
+  Existing data/volumes retained. Do not blindly restart all8services.
+- Remaining5:app,market-data,paper-worker,personal-data,backup total~534MiB at12:13UTC.
+  /health/startup returnedready. Paper/data/backup needed for today's real-time
+  exercise remain running. New backtests and company/detail refreshes require their
+  paused workers to be started when needed; cached pages still work.
+- CUA inventory now ChromeextensionID2profile'seung zoo', oneMilkyway#strategy tab
+  id810509711. Native Chrome confirmed one tab (~223MBtabindicator); no duplicate
+  research tabs to close. Did not killrendererprocesses or touch userSafari/Word/Code.
+  Browser tab has expiredlocal-session warning, original8:47PMdata; refresh only when
+  needed, don't create APIlogin that invalidates user's browser session unnecessarily.
+- Continue energy implementation with one heavy collector/test at a time, default
+  5services during research. No further paid AI approval remains.
+
+
+## 2026-10-02 · Energy intermediate changes and graph recovery
+
+- Resource request remains in effect: only app/market-data/paper-worker/personal-data/
+  backup run. company-data/market-details/backtest-worker remain stopped; no duplicate
+  browser tabs, one heavy test/build/collector at a time. Do not blindly start8.
+- Added Energy industry guide (7GICSsubindustries, physical chains, units, formulas,
+  regulations, bottom source links), CVX/COP/VLO primary-source Korean notes, exact
+  FY2025 revenue tables and6contextual counterparty profiles. Only an intermediate
+  change; even these3companies do NOT meet all-sector/full-company completion.
+  MLP/fullissuer scope and remaining company/contract/competition research still open.
+- CVX composite segment/geography and VLO qualified product coordinates are exact
+  symbol+CIK allowlists. COP subtotal hierarchy requires matching sums. Curated
+  coordinates replace old same-source/period values to avoid English-label duplicates.
+  All3issuer revenue group root sums matched original reported denominators.
+- Found actual public graph corruption during app restart at~12:55UTC. Trading
+  ledger club.sqlite3 quick_check was ok and paper/personal workers stayed active.
+  Original197,378,048-byte graph preserved at runtime/company-details/
+  quarantine-20261002T125625Z/graph.sqlite3, SHA256
+  8d9f82690d0489975f36a7e17676097e03bc4b98013810b6fa717c83c70f52d1.
+- Restored ONLY public graph from backup milkyway-20261002T114320Z-d0c23e5d.zip,
+  validating manifest hash/size and full integrity_check. Backup graph hash
+  4f06fdce8720cd160690af63e582006b7f88d695b7f18105382f8b276da358bc.
+  Existing3815JSONprofiles retained and reimported through bootstrap; user ledger/
+  keys/accounts were not restored. Do not claim all graph-only post-backup data
+  was recovered; keep corrupt original for further inspection. Post-restore both
+  DBquick_checks passed. App subsequently healthy, new backup130623 succeeded.
+- Fixed graph connection's unsafe raw os.open/close of an existing SQLite file.
+  Separate-process POSIX lock regression failed on prior image and passed on fix.
+  O_EXCL create-only plus process lock protects first creators; existing regular
+  files checked no-follow and chmod no-follow. Raced-symlink target data/mode tested.
+  Independent read-only reviewer approved bounded patch after two suggestions;
+  no remaining concrete High/Medium in scope. Not proof of original corruption cause.
+- Full528tests87.704s passed(skipped17Node); host19Node/frontend tests1.076s passed.
+  Final image focused70tests17.077s passed. Initial failures were test runtime
+  permissions/noexec setup, subsequently corrected; host .venv iCloud dataless
+  import also caused an interrupted run. Direct source/security/performance review
+  recorded in docs/ENERGY_REVIEW_20261002.md; no CodeRabbit and0provider AI calls.
+- App final image7ab8a5b63636ad0c725bb2750e17deed54fae5607e51c9c4bd3a86beac2d2202.
+  market-data/backup and stopped company-data/market-details/backtest use earlier
+  14f9c9fdaaffeaf19de606699d40eea360e2116f60f785ec7a9b7186ce35a23d, already has graph fix.
+  paper/personal-data remain prior097f64ade4b15072d52754d4f2293ceb8dceb9724bf0a635ed97bb6312d4927d.
+  Main final difference separates paper readiness from optional stopped backtest worker.
+- CUA Chrome2 existing tab810509711; current controlled handle energyReviewTab
+  (browser energyBrowser). Native cleanupChrome has snapshot rendering issues;
+  extension screenshot showed actual page correctly. Verified industry links, source
+  disclosure, VLO product/segment tables and direct DGDentity navigation. No new tabs.
+- Today's real paper session remains open13:30UTC / initial rebalance13:35UTC /
+  expires20:00UTC, account b1042a427dec4e1991be17f24f8becc8. Check actual session
+  after open, pending today's Yahoo action data gate. Do not claim a full day yet.
+- Exact commit/push/CI to be confirmed after this checkpoint.

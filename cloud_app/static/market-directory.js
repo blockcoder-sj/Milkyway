@@ -18,9 +18,10 @@
   }
   function sources(){
     const context=data.context,all=[...context.sources,...data.companies.rows.map(row=>({label:row.name+' · '+row.source,url:row.url,kind:'기업'})),...data.companies.rows.filter(row=>row.classification).map(row=>({label:row.classification.source.label,url:row.classification.source.url,kind:'분류 · '+row.classification.source.as_of})),...(context.market_share||[]).map(row=>({label:row.provider+' · '+row.title,url:row.url,kind:'시장점유율'})),...data.news.rows.map(row=>({label:row.publisher+' · '+row.title,url:row.url,kind:'보도'}))];
-    const unique=[...new Map(all.map(row=>[row.url,row])).values()];
+    const guideSources=Object.entries(data.industry_guide?.sources||{}).map(([id,row])=>({...row,id:/^[a-z][a-z0-9-]{0,30}$/.test(id)?'energy-source-'+id:null}));
+    const unique=[...new Map([...all,...guideSources].map(row=>[row.url,row])).values()];
     $('#detailSourceCount').textContent=`출처 모음 · ${fmt(unique.length,0)}개`;
-    $('#detailSources').innerHTML=unique.map(row=>`<p><small>${esc(row.kind)}</small> ${link(row.label,row.url)}</p>`).join('');
+    $('#detailSources').innerHTML=unique.map(row=>`<p${row.id?` id="${esc(row.id)}"`:''}><small>${esc(row.kind)}</small> ${link(row.label,row.url)}</p>`).join('');
   }
   function render(next){
     if(data?.id!==next.id){companyPage=newsPage=1;query='';}data=next;

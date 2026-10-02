@@ -9,6 +9,8 @@ import json
 import os
 import re
 import sqlite3
+import stat
+import threading
 import time
 import uuid
 
@@ -19,6 +21,7 @@ from .company_context import business_context
 ENTITY_KEY = re.compile(r"c_[a-f0-9]{32}")
 QID = re.compile(r"Q\d{1,12}")
 SYMBOL = re.compile(r"[A-Z0-9][A-Z0-9.-]{0,19}")
+_FILE_CREATION_LOCK = threading.Lock()
 INVERSE = {
     "subsidiary": "parent",
     "parent": "subsidiary",
@@ -110,10 +113,20 @@ class CompanyGraph:
     def connection(self):
         if self.path.is_symlink():
             raise ValueError("Unsafe company graph file")
-        # Establish private permissions before SQLite opens a new file.
-        descriptor = os.open(self.path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
-        os.close(descriptor)
-        os.chmod(self.path, 0o600)
+        # Create a private file only if absent. Opening/closing an EXISTING
+        # database outside SQLite drops this process's POSIX advisory locks,
+        # including locks held by other live connections (howtocorrupt §2.2).
+        # A racing first opener in this process must wait for the creator's
+        # descriptor to close before it can establish SQLite locks on that file.
+        with _FILE_CREATION_LOCK:
+            try:
+                descriptor = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+            except FileExistsError:
+                if not stat.S_ISREG(os.stat(self.path, follow_symlinks=False).st_mode):
+                    raise ValueError("Unsafe company graph file")
+            else:
+                os.close(descriptor)
+            os.chmod(self.path, 0o600, follow_symlinks=False)
         db = sqlite3.connect(self.path, timeout=5)
         db.row_factory = sqlite3.Row
         try:

@@ -42,13 +42,13 @@ class ClassificationTests(unittest.TestCase):
     def test_spreadsheet_fund_identity_date_and_cash_exclusion(self):
         import xml.etree.ElementTree as ET
         ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
-        strings = ['Fund Name:', 'Technology Fund', 'XLK', 'As of 30-Sep-2026', 'Name', 'Ticker', 'NVIDIA', 'NVDA', '67066G104', 'USD', 'CASH']
+        strings = ['Fund Name:', 'Technology Fund', 'XLK', 'As of 30-Sep-2026', 'Name', 'Ticker', 'NVIDIA', 'NVDA', '67066G104', 'USD', 'CASH', '2379504', 'XAE ENERGY        DEC26', 'IXPZ6', 'ADI394XW3', '-']
         shared = ET.Element('sst', xmlns=ns)
         for string in strings:
             ET.SubElement(ET.SubElement(shared, 'si'), 't').text = string
         sheet = ET.Element('worksheet', xmlns=ns)
         body = ET.SubElement(sheet, 'sheetData')
-        values = [{'A':0,'B':1},{'A':0,'B':2},{'A':0,'B':3},{'A':4,'B':5}, {'A':6,'B':7,'C':8,'H':9},{'A':10,'B':10,'H':9}]
+        values = [{'A':0,'B':1},{'A':0,'B':2},{'A':0,'B':3},{'A':4,'B':5}, {'A':6,'B':7,'C':8,'D':11,'H':9},{'A':10,'B':10,'H':9}, {'A':12,'B':13,'C':14,'D':15,'H':9}]
         for index, value in enumerate(values, 1):
             row = ET.SubElement(body, 'row')
             for col, string in value.items():
@@ -85,6 +85,24 @@ class ClassificationTests(unittest.TestCase):
         session = FixedSession()
         self.assertFalse(session.trust_env)
         session.close()
+
+    def test_old_caches_and_company_rows_cannot_restore_derivatives_or_liquidated_issuer(self):
+        future = classification('IXPZ6', 'us_10').model_copy(update={'name':'XAE ENERGY DEC26'})
+        liquidated = classification('HNR', 'us_10').model_copy(update={'name':'HARVEST NATURAL RESOURCES INC'})
+        cache = sector.ClassificationCache(rows=[future, liquidated], fetched_at=NOW)
+        with tempfile.TemporaryDirectory() as temp:
+            settings = SimpleNamespace(personal_local_mode=True, production=False, dataset_dir=Path(temp)/'data')
+            sector._read.cache_clear()
+            _write_cache(sector.path(settings), cache.model_dump(mode='json'))
+            self.assertEqual(sector.read_view(settings).rows, ())
+        rows, audit = sector.reconcile([
+            dict(quote('IXPZ6'), name=future.name), dict(quote('HNR'), name=liquidated.name)
+        ], 'us_10', cache, NOW)
+        self.assertEqual(rows, [])
+        self.assertEqual(len(audit['excluded']), 2)
+        # Historical name exception does not blacklist possible future ticker reuse.
+        self.assertIsNone(sector.exclusion_reason('HNR', 'Another Corporation'))
+        self.assertIsNone(sector.exclusion_reason('HOS', 'HORNBECK OFFSHORE SERVICES'))
 
     def test_cache_snapshot_has_classification_but_never_fetches(self):
         with tempfile.TemporaryDirectory() as temp:

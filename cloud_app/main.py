@@ -1881,7 +1881,9 @@ def _personal_dashboard(user: User, session: Session) -> dict:
     last_quote = max((row["observed_at"] for row in market), default=None)
     active = [row for row in accounts if row.status == "active"]
     open_now = regular_market_open()
-    if not worker["alive"] or not backtest_worker["alive"] or not data_worker["alive"]:
+    # Paper operation does not depend on the optional backtest queue worker.
+    # Its actual heartbeat remains available separately in workers.backtest.
+    if not worker["alive"] or not data_worker["alive"]:
         state, message = "worker_offline", "실행 프로세스를 시작하거나 재시작해 주세요. doctor 명령으로 상태를 확인할 수 있습니다."
     elif worker["error"]:
         state, message = "worker_error", "가상 체결 처리 중 오류가 발생했습니다. 원장은 보존되며 자동 재시도합니다. 반복되면 doctor와 로그를 확인하세요."

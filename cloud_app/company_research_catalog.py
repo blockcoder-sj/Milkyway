@@ -155,6 +155,9 @@ PRIVATE_COMPANIES.update(IT_PRIVATE)
 from .company_semiconductor_catalog import PUBLIC as SEMI_PUBLIC, PRIVATE as SEMI_PRIVATE, EDGES as SEMI_EDGES
 PUBLIC_COMPANIES.update(SEMI_PUBLIC)
 PRIVATE_COMPANIES.update(SEMI_PRIVATE)
+from .company_energy_research import PUBLIC as ENERGY_PUBLIC, PRIVATE as ENERGY_PRIVATE, EDGES as ENERGY_EDGES
+PUBLIC_COMPANIES.update(ENERGY_PUBLIC)
+PRIVATE_COMPANIES.update(ENERGY_PRIVATE)
 
 
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
@@ -209,6 +212,8 @@ for _symbol, _edges in INDUSTRY_EDGES.items():
 for _symbol, _edges in IT_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in SEMI_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in ENERGY_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

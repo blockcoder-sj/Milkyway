@@ -140,6 +140,9 @@ def detail_snapshot(settings,identity,now=None):
     for key in ('history','related_history'):
         result[key]['rows']=[row for row in result[key]['rows'] if earliest<=row['date']<=now.date().isoformat()]
     result['companies']['classification_audit']=audit
+    if identity == 'us_10':
+        from .energy_guide import snapshot as energy_guide
+        result['industry_guide'] = energy_guide()
     return {**result,'id':identity,'label':instrument.label,'symbol':instrument.symbol,'unit':instrument.unit,
             'group':instrument.group,'market':instrument.market,'context':context_for(identity),
             'refresh_seconds':REFRESH_SECONDS,'maximum_years':3}
