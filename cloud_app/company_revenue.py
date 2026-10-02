@@ -221,6 +221,7 @@ def present_revenue(rows, symbol):
         result.append(row)
     for cik in {source_cik(row['source']) for row in result} - {None}:
         hierarchy(result, symbol, cik)
+        energy.annotate([row for row in result if source_cik(row['source']) == cik], symbol, cik)
     return result
 
 

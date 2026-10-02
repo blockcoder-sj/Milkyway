@@ -1054,3 +1054,34 @@ resuming; no paid AI regression approval has arrived.
   hydrated; all13 local app/test files matched verified release SHA256 again.
   Continue using original Milkyway repo; no reset/overwrite of local code. Temporary
   checkout was not pushed and is only a fallback. Final commit occurs in original.
+
+## 2026-10-03 · uninterrupted Energy continuation
+
+- User explicitly asked to continue until whole-sector research is complete; do not end
+  at a batch, commit or deployment and do not imply background work after a final reply.
+- Added WMB/KMI/TRGP/OKE/LNG Korean business/products/operating/contract notes, original
+  FY2025 revenue tables and 15 contextual counterparties. Existing operating links kept.
+  Eleven expanded primary profiles are NOT certified complete across all criteria.
+- Original collection finished: 345 annual/quarter documents for 185 ticker targets,
+  zero collection errors. Target counts are not unique-company or research-complete counts.
+- Exact TRGP operating segment coordinates prevent internal/elimination mix; -5.3m
+  adjustment explicitly excludes percentage. OKE product/service subtotals and LNG
+  third-party subset bound to exact issuer/CIK/document/period. Historical source date
+  for EOG IPM corrected to2022-02-24; WMB Momentum closed2026-09-03; Stage3 handed over
+  Aug28; Petrobras Sept29 newSPA, no guessedstartyear. No paid/model provider calls.
+- Focused54 passed0.764s; full539 passed54.552s(skipped17Node); host9frontend passed
+  6.141s. Initial full-test setup failures solved only in isolated test tmp/runtime.
+  Direct diff/security review; no CodeRabbit. git diff --check before commit required.
+- App-only image81cdd8d58504416d17f62326a943810fc8a1ddf30cbd2d1e9b9e49465c82f1ce
+  deployed healthy. Five existing services only. Paper session expires20UTC, preserve
+  workers/caffeinate and check actual day-end report if work continues past then.
+- Offline merge benchmark512MiB/1CPU500reads:2.844s/p503.610ms/p9511.273ms/RSS33.1MiB.
+  This excludes network/graph/UI latency. Native Chrome existingone tab verified LNG
+  updatedanalysis/contractstatus/revenuehierarchy/linkedcounterparties/quote.
+- Next immediate substantive work: EPD/ET/MPLX/PAA/PAGP/WES/HESM own original reports,
+  full issuer registry and per-field audit, E&P/services/coal/nuclear fuel/royalties/
+  shipping. PAA Canadian NGL sale closedMay12,2026(Keyera), ET LakeCharles export
+  development suspendedDec2025, HESM Chevron sponsor/GIPexitMay2025; current/source
+  scope needs actual review before editing. XOM current CIK2115436 successor Jul1.
+- Temporary original documents/evidence in /tmp/milkyway-energy-research; exact source
+  manifests/SHA retained. No user secrets/runtime copied. No additional AI approval.

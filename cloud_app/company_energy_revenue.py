@@ -70,6 +70,42 @@ for _symbol, _cik, _mapping in [
         'dino:MarketingSegmentMember':'브랜드 연료 판매', 'dino:MidstreamSegmentMember':'물류',
         'dino:RefiningSegmentMember':'정유', 'dino:RenewablesSegmentMember':'재생연료',
     }),
+    ('WMB', 107263, {
+        'wmb:NonRegulatedServiceCommodityConsiderationMember':'집하·처리 등 · 현물 상품 대가',
+        'wmb:NonRegulatedServiceMonetaryConsiderationMember':'집하·처리 등 · 현금 대가',
+        'wmb:OtherServiceMember':'기타 서비스', 'wmb:RegulatedServiceMember':'규제 가스 운송·저장',
+    }),
+    ('KMI', 1506307, {
+        'kmi:FeebasedservicesMember':'사용량 등 기반 서비스', 'kmi:FirmServicesMember':'확정 용량 서비스',
+        'kmi:NaturalGasSalesMember':'천연가스 판매', 'kmi:OtherCommodityMember':'기타 상품 판매',
+        'kmi:ProductOtherThanNaturalGasMember':'천연가스 외 제품 판매',
+        'kmi:Co2Member':'CO₂·유전·재생가스', 'kmi:NaturalGasPipelinesMember':'천연가스 파이프라인',
+        'kmi:ProductsPipelinesMember':'제품 파이프라인', 'kmi:TerminalsMember':'터미널', 'country:MX':'멕시코',
+    }),
+    ('TRGP', 1389170, {
+        'srt:NaturalGasLiquidsReservesMember':'NGL 판매', 'srt:NaturalGasReservesMember':'천연가스 판매',
+        'trgp:GatheringAndProcessingFeesMember':'집하·처리 수수료',
+        'trgp:MidstreamServicesOtherMember':'기타 중류 서비스',
+        'trgp:NGLTransportationFractionationAndServicesMember':'NGL 운송·분별·서비스',
+        'trgp:StorageTerminalingAndExportMember':'저장·터미널·수출',
+        'us-gaap:OilAndCondensateMember':'원유·콘덴세이트 판매',
+        'trgp:GatheringAndProcessingMember':'집하·처리 · 외부 매출',
+        'trgp:LogisticsAndTransportationMember':'물류·운송 · 외부 매출',
+    }),
+    ('OKE', 1039684, {
+        'oke:CommoditySalesMember':'상품 판매 소계',
+        'oke:ExchangeServicesAndNaturalGasGatheringAndProcessingRevenueMember':'교환·집하·처리',
+        'oke:LiquidsCommodityMember':'액체 상품 판매', 'oke:OtherMember':'기타',
+        'oke:ResidueNaturalGasSalesMember':'잔여 천연가스 판매',
+        'oke:ServicesMember':'서비스·기타 소계',
+        'oke:TransportationandStorageRevenueMember':'운송·저장',
+    }),
+    ('LNG', 3570, {
+        'lng:LiquefiedNaturalGasMember':'LNG 판매 · 고객 계약',
+        'lng:LiquefiedNaturalGasProcuredFromThirdPartiesMember':'외부 조달 LNG 재판매 · LNG 판매에 포함',
+        'lng:RegasificationServiceMember':'재기화 서비스',
+        'us-gaap:ProductAndServiceOtherMember':'기타 고객 계약 매출',
+    }),
 ]:
     for _member, _label in _mapping.items():
         LABELS[(_symbol, _cik, _member)] = _label
@@ -86,7 +122,46 @@ HIERARCHIES = {
     ('DINO', 1915657, 'product'): {
         'dino:RefinedProductMember': ['dino:TransportationFuelsMember',
             'dino:LubricantsAndSpecialtyProductsMember', 'dino:AsphaltFuelOilAndOtherProductsMember']},
+    ('OKE', 1039684, 'product'): {
+        'oke:CommoditySalesMember': ['oke:LiquidsCommodityMember', 'oke:ResidueNaturalGasSalesMember'],
+        'oke:ServicesMember': ['oke:ExchangeServicesAndNaturalGasGatheringAndProcessingRevenueMember',
+                             'oke:TransportationandStorageRevenueMember', 'oke:OtherMember']},
 }
+
+# Targa's external segment rows use this exact two-axis coordinate. Its nearby
+# MaterialReconcilingItems and IntersegmentElimination rows must not be admitted.
+for _member in ('trgp:GatheringAndProcessingMember', 'trgp:LogisticsAndTransportationMember'):
+    COORDINATES[('TRGP', 1389170, frozenset([
+        ('srt:ConsolidationItemsAxis', 'us-gaap:OperatingSegmentsMember'),
+        ('us-gaap:StatementBusinessSegmentsAxis', _member),
+    ]))] = ('segment', _member)
+
+
+def annotate(rows, symbol, cik):
+    """Period-bound presentation notes; preserve source values and metric scope."""
+    if (symbol, cik) == ('TRGP', 1389170):
+        for row in rows:
+            if (row['group'] == 'segment' and row['end'] == '2025-12-31'
+                    and row['source']['url'].split('#')[0] ==
+                    'https://www.sec.gov/Archives/edgar/data/1389170/000119312526059296/trgp-20251231.htm'):
+                row['share_exclusion'] = ('두 부문의 외부 매출 합계에는 기타 조정 −530만 달러가 필요합니다. '
+                    '음수 조정과 양수 매출을 100% 구성비로 표시하지 않습니다.')
+    if (symbol, cik) == ('LNG', 3570):
+        for child in rows:
+            if (child['group'] != 'product' or child['member'] != 'lng:LiquefiedNaturalGasProcuredFromThirdPartiesMember'
+                    or child['source']['url'].split('#')[0] !=
+                    'https://www.sec.gov/Archives/edgar/data/3570/000000357026000005/lng-20251231.htm'):
+                continue
+            parents = [row for row in rows if row['group'] == 'product'
+                and row['member'] == 'lng:LiquefiedNaturalGasMember'
+                and all(row[key] == child[key] for key in ('start', 'end', 'unit', 'metric'))
+                and row['source']['url'].split('#')[0] == child['source']['url'].split('#')[0]
+                and row['end'] == '2025-12-31' and child['value'] <= row['value']]
+            if len(parents) == 1:
+                # The filing explicitly calls this a subset; it is not a full
+                # reconciliation of all LNG sales into named subcategories.
+                child['parent'] = parents[0]['member']
+    return rows
 
 
 def dimensions(pairs, symbol, cik):

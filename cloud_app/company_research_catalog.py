@@ -161,6 +161,9 @@ PRIVATE_COMPANIES.update(ENERGY_PRIVATE)
 from .company_energy_refining import PUBLIC as REFINING_PUBLIC, PRIVATE as REFINING_PRIVATE, EDGES as REFINING_EDGES
 PUBLIC_COMPANIES.update(REFINING_PUBLIC)
 PRIVATE_COMPANIES.update(REFINING_PRIVATE)
+from .company_energy_midstream import PUBLIC as MIDSTREAM_PUBLIC, PRIVATE as MIDSTREAM_PRIVATE, EDGES as MIDSTREAM_EDGES
+PUBLIC_COMPANIES.update(MIDSTREAM_PUBLIC)
+PRIVATE_COMPANIES.update(MIDSTREAM_PRIVATE)
 
 
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
@@ -219,6 +222,8 @@ for _symbol, _edges in SEMI_EDGES.items():
 for _symbol, _edges in ENERGY_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in REFINING_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in MIDSTREAM_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

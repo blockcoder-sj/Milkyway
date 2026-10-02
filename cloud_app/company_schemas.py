@@ -77,6 +77,7 @@ class RevenueLine(BaseModel):
     metric: str = Field(min_length=1, max_length=120)
     parent: str | None = Field(default=None, max_length=190)
     includes_intersegment: bool = False
+    share_exclusion: str | None = Field(default=None, max_length=400)
     source: Source
 
     @model_validator(mode='after')

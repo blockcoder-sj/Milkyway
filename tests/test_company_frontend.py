@@ -42,6 +42,9 @@ assert.equal(view.accepted({url:'https://www.sec.gov/',level:'encyclopedia'}),fa
 assert.equal(view.accepted({url:'https://x.wikidata.org/wiki/X',level:'primary'}),false);
 assert(view.create({}).essentials().includes('아직 검토되지 않았습니다'));
 const internal=view.create({revenue_mix:[{...base,group:'segment',includes_intersegment:true}]}).revenue('segment');
+const adjusted=view.create({revenue_mix:[{...base,group:'segment',share_exclusion:'음수 조정 <script>excluded</script>'}]}).revenue('segment');
+assert(adjusted.includes('150,000,000 USD'));assert(adjusted.includes('조정 포함 · 산출 제외'));
+assert(adjusted.includes('&lt;script&gt;'));assert(!adjusted.includes('<script>'));assert(!adjusted.includes('75%'));
 assert(internal.includes('내부 거래 포함'));assert(!internal.includes('75%'));assert(internal.includes('150,000,000 USD'));
 const periods=view.create({revenue_mix:[base,{...base,start:'2024-01-27',end:'2025-01-25'},
  {...base,unit:'KRW'},{...base,source:{...src,url:'https://www.sec.gov/another.htm'}},
