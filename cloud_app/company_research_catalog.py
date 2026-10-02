@@ -173,6 +173,13 @@ PRIVATE_COMPANIES.update(SERVICES_PRIVATE)
 from .company_energy_upstream import PUBLIC as UPSTREAM_PUBLIC, PRIVATE as UPSTREAM_PRIVATE, EDGES as UPSTREAM_EDGES
 PUBLIC_COMPANIES.update(UPSTREAM_PUBLIC)
 PRIVATE_COMPANIES.update(UPSTREAM_PRIVATE)
+from .company_energy_providers import PUBLIC as PROVIDER_PUBLIC, PRIVATE as PROVIDER_PRIVATE, EDGES as PROVIDER_EDGES
+PUBLIC_COMPANIES.update(PROVIDER_PUBLIC)
+PRIVATE_COMPANIES.update(PROVIDER_PRIVATE)
+
+# Explicitly reviewed brand/issuer mapping. Similar names never create aliases.
+# Range names the ProFrac service group; its listed parent is ACDC, not FLOC.
+REGISTERED_TICKERS = {'range-profrac': 'ACDC'}
 
 
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
@@ -240,6 +247,8 @@ for _symbol, _edges in SERVICES_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in UPSTREAM_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in PROVIDER_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 
 def enrichment(symbol):
@@ -250,5 +259,10 @@ def enrichment(symbol):
 
 
 def private_profile(key):
+    symbol = REGISTERED_TICKERS.get(key)
+    if symbol:
+        value = deepcopy(PUBLIC_COMPANIES[symbol])
+        value.setdefault('relations', []).extend(deepcopy(RELATIONS.get(symbol, [])))
+        return {**value, 'symbol': symbol, 'registry_id': key}
     value = deepcopy(PRIVATE_COMPANIES[key])
     return dict(**value, registry_id=key)

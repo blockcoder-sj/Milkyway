@@ -4,8 +4,10 @@ Chevron reports external sales by both segment and geography. Retain both actual
 XBRL member names in a composite key; never silently drop a geographic dimension.
 Valero's product facts are qualified by the associated reported segment.
 """
-COORDINATES = {}
-LABELS = {}
+from . import company_energy_provider_revenue as providers
+
+COORDINATES = dict(providers.COORDINATES)
+LABELS = dict(providers.LABELS)
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -387,7 +389,7 @@ def annotate(rows, symbol, cik):
                     row['share_exclusion'] = explanation
                     if row['group'] == 'segment':
                         row['includes_intersegment'], row['total'] = True, None
-    return rows
+    return providers.annotate(rows, symbol, cik)
 
 
 def _reviewed_year(row, document):
@@ -402,6 +404,7 @@ def canonical_revenue(rows, symbol):
     This also normalizes legacy caches without fetching or modifying numbers.
     """
     document = 'https://www.sec.gov/Archives/edgar/data/33213/000003321326000018/eqt-20251231.htm'
+    rows = providers.canonical_revenue(rows, symbol)
     if symbol != 'EQT':
         return rows
     kept = []
@@ -428,6 +431,11 @@ def metric_allowed(tag, group, start, end, origin, symbol, cik):
 
 
 def dimensions(pairs, symbol, cik):
+    if len(set(pairs)) != len(pairs):
+        return None
+    reviewed = providers.dimensions(pairs, symbol, cik)
+    if reviewed:
+        return reviewed
     # These issuers put external corporate revenue on a consolidation axis.
     # Never accept the operating-segment totals or elimination coordinates here.
     if ((symbol, cik) in {('MPC', 1510295), ('PSX', 1534701)}
@@ -436,6 +444,10 @@ def dimensions(pairs, symbol, cik):
     if len(pairs) not in (2, 3) or len(set(pairs)) != len(pairs):
         return None
     return COORDINATES.get((symbol, cik, frozenset(pairs)))
+
+
+def presentation_group(row, symbol, cik):
+    return providers.presentation_group(row, symbol, cik)
 
 
 def compound_member(member, symbol, cik):

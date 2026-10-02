@@ -90,7 +90,11 @@
     }
     function revenue(group) {
       const rows = (data.revenue_mix || []).filter(row => row.group === group && accepted(row.source));
-      if (!rows.length) return '<p class="fineprint">동일 공시의 연간 매출 구성 수치를 확인하지 못했습니다. 임의 비중은 계산하지 않습니다.</p>';
+      if (!rows.length) {
+        const note = !(data.revenue_mix || []).length && (data.brief || []).find(row =>
+          row.title === '매출이 생기는 구조' && row.detail && accepted(row.source));
+        return note ? fact(note) : '<p class="fineprint">동일 공시의 연간 매출 구성 수치를 확인하지 못했습니다. 임의 비중은 계산하지 않습니다.</p>';
+      }
       const sets = new Map();
       for (const row of rows) {
         const key = revenueBasis(row);

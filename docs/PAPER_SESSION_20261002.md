@@ -65,3 +65,26 @@ C5 `9ac37176f4bc4feea965f6f065957ad3` — Tech Momentum LowVol Top3. 전체 샤�
 - No additional AI calls, no real brokerage orders, no new permanent containers. Paid data not used. This is a focused local patch review, not a full public deployment security audit.
 - Browser observation found the user working in unrelated Google Docs tabs; those tabs were left unchanged. Existing Node behavior tests verify the added account display. Open the local portfolio view to inspect the armed account.
 - Git push / exact CI result: record after commit; do not substitute previous commit CI.
+
+## 실제 하루 종료 확인 · 2026-10-03 05:03 KST
+
+로컬 원장을 직접 읽어 확인했다. 세션은2026-10-02 20:00:02.510410 UTC에
+종료됐고 계좌는 `paused`다. 모의 매수3건, 평가 기록77건이며 잔여 현금은
+40,000달러다. 마감 강제매도는 없고 아래 포지션은 보유 상태로 남는다.
+
+| 종목 | 13:35:08 UTC 모의 매수 수량 | 체결가 USD | 수수료 USD |
+|---|---:|---:|---:|
+| MSFT | 38.389893323124184 | 520.45 | 19.980019980019986 |
+| AAPL | 60.12373795952631 | 332.315 | 19.980019980019986 |
+| NVDA | 84.58941566477556 | 236.2 | 19.980019980019986 |
+
+- 종료 시 마지막 알려진 포지션 평가 합산액: **99,710.06549077679달러**,
+  초기100,000달러 대비 **−0.28993450922321085%**.
+- 마지막 완전한 평가 기록:19:56:29.206899 UTC,
+  **99,632.63039387972달러**. 이후 개별 최신 가격의 합산액과 시각/범위가 다르다.
+- `closing_price_verified=false`. 위 값을 공식 종가 평가, 청산 수익률 또는
+  전략의 수익성 검증으로 표시하지 않는다. 하루·6종목·정해진 전략의 관측이다.
+- 앱 DB와 기업 관계 DB `PRAGMA quick_check=ok`를 확인했다.
+- 활성 계좌0개/중지 계좌1개 확인 후 유휴 `paper-worker`를 중지했다.
+  다음 모의 운용 전 `docker compose --env-file .env -f compose.personal.yaml start paper-worker`
+  로 재개해야 한다. 원장·보유 포지션·백업 볼륨은 보존했다.

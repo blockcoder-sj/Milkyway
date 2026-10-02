@@ -8,11 +8,32 @@
   },
   "rows": [
     {
+      "symbol": "ACDC",
+      "name": "ProFrac Holding Corp.",
+      "cik": "1881487",
+      "exchange": "Nasdaq",
+      "group": "oilfield-services",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 10-K",
+        "url": "https://www.sec.gov/Archives/edgar/data/1881487/000119312526106120/acdc-20251231.htm",
+        "as_of": "2026-03-13",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001881487.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "AESI",
       "name": "Atlas Energy Solutions Inc.",
       "cik": "1984060",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "proppant-logistics",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -153,7 +174,7 @@
       "name": "Baker Hughes Co",
       "cik": "1701605",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -539,6 +560,27 @@
       }
     },
     {
+      "symbol": "DTI",
+      "name": "Drilling Tools International Corp",
+      "cik": "1884516",
+      "exchange": "Nasdaq",
+      "group": "equipment",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 10-K",
+        "url": "https://www.sec.gov/Archives/edgar/data/1884516/000119312526095973/dti-20251231.htm",
+        "as_of": "2026-03-06",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001884516.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "DTM",
       "name": "DT Midstream, Inc.",
       "cik": "1842022",
@@ -783,7 +825,7 @@
       "name": "Flowco Holdings Inc.",
       "cik": "2035149",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "equipment",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -993,7 +1035,7 @@
       "name": "HALLIBURTON CO",
       "cik": "45012",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1169,6 +1211,27 @@
       }
     },
     {
+      "symbol": "KLXE",
+      "name": "KLX Energy Services Holdings, Inc.",
+      "cik": "1738827",
+      "exchange": "Nasdaq",
+      "group": "oilfield-services",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 10-K",
+        "url": "https://www.sec.gov/Archives/edgar/data/1738827/000173882726000013/klxe-20251231.htm",
+        "as_of": "2026-03-12",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001738827.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "KMI",
       "name": "KINDER MORGAN, INC.",
       "cik": "1506307",
@@ -1263,7 +1326,7 @@
       "name": "Liberty Energy Inc.",
       "cik": "1694028",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1953,7 +2016,7 @@
       "name": "PATTERSON UTI ENERGY INC",
       "cik": "889900",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1968,7 +2031,7 @@
       "name": "ProPetro Holding Corp.",
       "cik": "1680247",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2178,7 +2241,7 @@
       "name": "SLB LIMITED/NV",
       "cik": "87347",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2238,7 +2301,7 @@
       "name": "Smart Sand, Inc.",
       "cik": "1529628",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "proppant-logistics",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

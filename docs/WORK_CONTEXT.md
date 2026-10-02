@@ -1153,3 +1153,37 @@ resuming; no paid AI regression approval has arrived.
   9e5a53050a179da3ccd305b50d7e19e75c82088ecbfbc7284563fb893910f80a ready;
   10source/testSHA matched; appDB+graphDBquick_checkOK. Existingone Chrome tab confirmed
   directoryCSSrowalignment and EXEown/revenue/latestactualcontracts+Keydetailclickthrough.
+
+### Service-provider continuation · 2026-10-03
+
+- Upstream1308039c61a9e9fb3141bd7e1d173c27b283cd73 pushed; CI37049578304 SUCCESS.
+  Whole Energy objective remains active. Do not end at a batch/commit/deploy.
+- Added12 provider dossiers: SLB/BKR/HAL/PTEN/PUMP/LBRT/SND/AESI/FLOC/ACDC/DTI/KLXE,
+  24 original SHA receipts, actual equipment/tool/field customers,36 context profiles.
+  Registry190; main expanded46 are NOT all-field completion counts.
+- Exact FY2025 provider revenue coordinates: gross/internal elimination no percentages;
+  Atlas shortfall not additive; DTI rental/sales vs regional rounding; other annual
+  reports do not reuse reviewed elimination. Flowco Valiant note121.3m vs MD&A113.2m
+  acquired cash inconsistency is explicit, not silently reconciled.
+- Manual ProFrac range-profrac→ACDC identity bridge preserves old bookmarks/edges,
+  normalizes old cached name, rejects FLOC/conflicting tickers, keeps unrelated
+  private registries tickerless. Public cached financials preserved during seed.
+- Final570 tests61.214s OK(skipped18Node); host26tests all OK; focused38tests8.874s OK.
+  Final perf1CPU/512MiB p95 directory3.590ms, ACDCnotes3.820ms/graph32.823ms/RSS57.7MiB.
+- App-only image5ae0b7e3b9d69f039f3b9b0ce018aaced8e9d7a504b847bde5c9f32edcfd081d,
+  15appSHA match, startupready/healthy. ExistingChrome1tab verified newProFracname,
+  graph→LBRT, single-segment revenue explanation after intentional static reload.
+- 2026-10-02 US paper session completed20:00:02.510410UTC, paused,3BUY fills,
+  77valuationpoints. Last-known99,710.06549USD/-0.2899345%; last-complete19:56:29
+  valuation99,632.630394USD. closing_price_verified=false; no synthetic closing sale.
+  details docs/PAPER_SESSION_20261002.md. Activeaccounts0→idlepaper-worker stopped.
+  Four necessary services app/market-data/personal-data/backup remain. Runtimevolumes
+  preserved. Start paper-worker before new paper run. Caffeinate25591 autoexpires20:10UTC.
+- No actual AI calls, no CodeRabbit, no new agents. Serial heavy jobs. Whole public
+  security scan still requires managedworkspace; bounded source review only.
+- Next12 FTI/NOV/WHD/WTTR/FTK/NINE/TTI/NBR/HP/WFRD/RES/RNGR originals already
+  in /tmp/milkyway-energy-research, bounded paragraphs /tmp/energy-equipment-key-blocks.json.
+  WHD CactusInternational CLOSEDJan1(not Jan2announcement); WTTRPilot Sept24deal
+  pendingQ4; FTKLithium/ProFrac saleleaseback and NINEfreshstart require own review.
+  Also fill financials currently absent for newly added providers, field audit,
+  foreignADR/newOTC inventory audit and all remaining industrial groups.

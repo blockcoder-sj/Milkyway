@@ -288,7 +288,7 @@ EDGES = {
         relation('Baker Hughes / Baker', 'BKR', 'supplier', '방향성 시추 · 공식 현장 안내, 발표일·현재 계약 지속 여부 미확인', RANGE_DRILL),
         relation('SLB / Schlumberger', 'SLB', 'supplier', '방향성 시추 · 공식 현장 안내, 발표일·현재 계약 지속 여부 미확인', RANGE_DRILL),
         relation('Halliburton', 'HAL', 'supplier', '시멘팅 · 공식 현장 안내, 발표일·현재 계약 지속 여부 미확인', RANGE_DRILL),
-        relation('ProFrac', None, 'supplier', '완결 서비스 · 공식 현장 안내, 발표일·현재 계약 지속 여부 미확인', RANGE_COMPLETE, 'range-profrac'),
+        relation('ProFrac', 'ACDC', 'supplier', '완결 서비스 · 공식 현장 안내, 발표일·현재 계약 지속 여부 미확인', RANGE_COMPLETE, 'range-profrac'),
         relation('TETRA Technologies / Tetra', 'TTI', 'supplier', 'flowback · 공식 현장 안내, 발표일·현재 계약 지속 여부 미확인', RANGE_COMPLETE),
         relation('Nine Energy Service', 'NINE', 'supplier', 'wireline · 공식 현장 안내, 발표일·현재 계약 지속 여부 미확인', RANGE_COMPLETE),
         relation('CalFrac', None, 'supplier', '완결 서비스 · 공식 현장 안내, 발표일·현재 계약 지속 여부 미확인', RANGE_COMPLETE, 'range-calfrac'),
@@ -346,7 +346,7 @@ for _symbol, _name, _origin, _customers, _detail in [
     EDGES.setdefault(_symbol, []).extend(relation(_customer_name, _customer, 'customer', _detail, _origin)
         for _customer, _customer_name in _customers)
 
-for _supplier in ('BKR', 'SLB', 'HAL', 'TTI', 'NINE'):
+for _supplier in ('BKR', 'SLB', 'HAL', 'TTI', 'NINE', 'ACDC'):
     _edge = next(row for row in EDGES['RRC'] if row['symbol'] == _supplier)
     EDGES.setdefault(_supplier, []).append(relation('Range Resources', 'RRC', 'customer',
         _edge['detail'], _edge['source']))

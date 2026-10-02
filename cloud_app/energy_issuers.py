@@ -21,6 +21,10 @@ GROUPS = {
     'nuclear-fuel': '원자력 연료 · 산업 연결', 'coal-minerals': '석탄·광물',
     'digital-power': '디지털 인프라·전력 · 산업 연결',
     'diversified': '복합 사업 · 산업 연결', 'utility': '가스 유틸리티 · 산업 연결',
+    'oilfield-services': '시추·완결·유정 서비스',
+    'equipment': '유전 장비·도구·인공 채유',
+    'proppant-logistics': '파쇄 모래·현장 물류',
+    'drilling': '계약 시추·리그',
 }
 
 
@@ -36,7 +40,8 @@ class Issuer(BaseModel):
     exchange: str = Field(min_length=1, max_length=40)
     group: Literal['pending', 'integrated', 'upstream', 'refining',
                    'gas-infrastructure', 'lng', 'fuel-distribution', 'compression',
-                   'nuclear-fuel', 'coal-minerals', 'digital-power', 'diversified', 'utility']
+                   'nuclear-fuel', 'coal-minerals', 'digital-power', 'diversified', 'utility',
+                   'oilfield-services', 'equipment', 'proppant-logistics', 'drilling']
     scope: Literal['research', 'context']
     sector_hint: Literal['us_10', 'us_55'] = 'us_10'
     report_source: ImmutableSource

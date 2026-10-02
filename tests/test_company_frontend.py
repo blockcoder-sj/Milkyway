@@ -41,6 +41,11 @@ assert.equal(view.accepted({url:'https://user:pass@www.sec.gov/',level:'primary'
 assert.equal(view.accepted({url:'https://www.sec.gov/',level:'encyclopedia'}),false);
 assert.equal(view.accepted({url:'https://x.wikidata.org/wiki/X',level:'primary'}),false);
 assert(view.create({}).essentials().includes('아직 검토되지 않았습니다'));
+const single=view.create({brief:[{title:'매출이 생기는 구조',detail:'단일 보고 부문 · 개별 구성비 미공개 <script>',source:src}]}).revenue('product');
+assert(single.includes('단일 보고 부문'));assert(single.includes('data-company-citation="1"'));
+assert(single.includes('&lt;script&gt;'));assert(!single.includes('<script>'));assert(!single.includes('수치를 확인하지 못했습니다'));
+assert(view.create({brief:[{title:'매출이 생기는 구조',detail:'Bad',source:rejected}]}).revenue('product').includes('확인하지 못했습니다'));
+assert(view.create({...data,brief:[{title:'매출이 생기는 구조',detail:'Other note',source:src}]}).revenue('segment').includes('확인하지 못했습니다'));
 const internal=view.create({revenue_mix:[{...base,group:'segment',includes_intersegment:true}]}).revenue('segment');
 const adjusted=view.create({revenue_mix:[{...base,group:'segment',share_exclusion:'음수 조정 <script>excluded</script>'}]}).revenue('segment');
 assert(adjusted.includes('150,000,000 USD'));assert(adjusted.includes('조정 포함 · 산출 제외'));

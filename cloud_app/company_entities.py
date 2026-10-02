@@ -79,7 +79,7 @@ def bootstrap(settings):
 
 def seed_research(settings):
     """Publish vetted public research once at startup, with no provider calls."""
-    from .company_research_catalog import PUBLIC_COMPANIES, RELATIONS, PRIVATE_COMPANIES, private_profile
+    from .company_research_catalog import PUBLIC_COMPANIES, RELATIONS, PRIVATE_COMPANIES, private_profile, REGISTERED_TICKERS
     from .company_service import related_directory, read_company
     graph = CompanyGraph(settings)
     symbols = sorted(set(CATALOG) | set(PUBLIC_COMPANIES) | set(RELATIONS))
@@ -91,6 +91,10 @@ def seed_research(settings):
         profile = identified(enrich(old or CompanyKnowledge(symbol=symbol, name=name)))
         graph.ingest(profile, directory.get(symbol, {}).get('sector'))
     for key in PRIVATE_COMPANIES:
+        if key in REGISTERED_TICKERS:
+            # The public profile already upgrades its old registry bookmark.
+            # Do not overwrite independent cached public financial evidence.
+            continue
         graph.ingest(CompanyKnowledge.model_validate(private_profile(key)))
 
 

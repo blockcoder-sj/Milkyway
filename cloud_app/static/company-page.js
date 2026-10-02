@@ -89,7 +89,7 @@
     products();relations();peers();
     $('#companyBrief').innerHTML=reading.essentials();
     revenueGroup=reading.groups.includes(revenueGroup)?revenueGroup:reading.groups[0]||'product';
-    $('#companyRevenueGroup').innerHTML=reading.groups.map(key=>`<option value="${key}">${esc(window.MilkywayCompanyResearchView.groups[key])}</option>`).join('')||'<option value="product">수치 확인 대기</option>';
+    $('#companyRevenueGroup').innerHTML=reading.groups.map(key=>`<option value="${key}">${esc(window.MilkywayCompanyResearchView.groups[key])}</option>`).join('')||'<option value="product">매출 구조</option>';
     $('#companyRevenueGroup').value=revenueGroup;$('#companyRevenueGroup').disabled=!reading.groups.length;
     $('#companyRevenue').innerHTML=reading.revenue(revenueGroup);
     for(const [id,key,message] of [['companySegments','segments',''],['companyFacts','facts','등록·산업 분류 수신 대기'],['companyDrivers','drivers','검토된 관련 요인 수신 대기'],['companyMarketShares','market_shares','조사 범위·기간이 확인된 제품별 시장점유율 미확보. 시총 비중은 시장점유율로 사용하지 않습니다.']]){

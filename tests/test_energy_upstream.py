@@ -119,6 +119,8 @@ class EnergyUpstreamTests(unittest.TestCase):
         self.assertFalse(any(row['symbol'] == 'FLOC' for row in rows))
         profrac = next(row for row in rows if row['name'] == 'ProFrac')
         self.assertEqual(profrac['registry_id'], 'range-profrac')
+        self.assertEqual(profrac['symbol'], 'ACDC')
+        self.assertEqual(private_profile('range-profrac')['symbol'], 'ACDC')
         for row in rows:
             self.assertIn('지속 여부 미확인', row['detail'])
             self.assertIn('발표일 미표기', row['source']['as_of'])

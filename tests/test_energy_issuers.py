@@ -15,8 +15,13 @@ from cloud_app.sector_classifications import ClassificationView, ReadOnlyClassif
 
 class EnergyIssuerTests(unittest.TestCase):
     def test_exact_current_identities_and_off_index_otc_are_preserved(self):
-        self.assertEqual(len(registry().rows), 187)
-        self.assertEqual(len({row.symbol for row in registry().rows}), 187)
+        self.assertEqual(len(registry().rows), 190)
+        self.assertEqual(len({row.symbol for row in registry().rows}), 190)
+        for symbol, cik, group in [('ACDC', '1881487', 'oilfield-services'),
+                                  ('DTI', '1884516', 'equipment'),
+                                  ('KLXE', '1738827', 'oilfield-services')]:
+            self.assertEqual(issuer(symbol).cik, cik)
+            self.assertEqual(issuer(symbol).group, group)
         self.assertEqual(issuer('XOM').cik, '2115436')
         self.assertIn('ARKO', issuer('APC').name)
         self.assertIn('Summit', issuer('SMC').name)

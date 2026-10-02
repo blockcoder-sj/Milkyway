@@ -601,12 +601,21 @@ def editorial_for(symbol):
 def enrich(value):
     """Apply reviewed reading notes to cached profiles without losing raw evidence."""
     from .company_schemas import CompanyKnowledge
-    from .company_research_catalog import private_profile, PRIVATE_NAMES, PRIVATE_COMPANIES
+    from .company_research_catalog import private_profile, PRIVATE_NAMES, PRIVATE_COMPANIES, REGISTERED_TICKERS, PUBLIC_COMPANIES
     data = CompanyKnowledge.model_validate(value).model_dump(mode="json")
     if data.get('registry_id') and data['registry_id'] not in PRIVATE_COMPANIES:
         raise ValueError('Unknown primary-source company registry')
+    registered_symbol = REGISTERED_TICKERS.get(data.get('registry_id'))
+    if registered_symbol:
+        if data['symbol'] and data['symbol'] != registered_symbol:
+            raise ValueError('Conflicting registered company symbol')
+        data['symbol'] = registered_symbol
     curated = (private_profile(data['registry_id']) if data.get('registry_id')
                else editorial_for(data['symbol']))
+    canonical_registry = curated.get('registry_id')
+    if canonical_registry in REGISTERED_TICKERS and REGISTERED_TICKERS[canonical_registry] == data['symbol']:
+        data['registry_id'] = canonical_registry
+        data['name'] = PUBLIC_COMPANIES[data['symbol']]['name']
     normalized = CompanyKnowledge.model_validate({
         'name': data['name'], **{key: rows for key, rows in curated.items()
                                if key in CompanyKnowledge.model_fields and key not in {'name', 'entity_id'}}

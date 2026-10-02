@@ -290,6 +290,12 @@ class CompanyGraph:
         )
 
     def _entity(self, db, name, symbol=None, qid=None, reference=None, sector=None, registry=None):
+        if registry:
+            from .company_research_catalog import PRIVATE_COMPANIES, REGISTERED_TICKERS
+            expected = REGISTERED_TICKERS.get(registry)
+            if registry not in PRIVATE_COMPANIES or (symbol and symbol != expected):
+                raise ValueError("Unknown primary-source company registry")
+            symbol = symbol or expected
         aliases = []
         if symbol:
             if not SYMBOL.fullmatch(symbol):
@@ -300,9 +306,6 @@ class CompanyGraph:
                 raise ValueError("Invalid Wikidata identity")
             aliases.append(("wikidata", qid))
         if registry:
-            from .company_research_catalog import PRIVATE_COMPANIES
-            if registry not in PRIVATE_COMPANIES or symbol:
-                raise ValueError("Unknown primary-source company registry")
             aliases.append(("registry", registry))
             if reference:
                 # Upgrade an earlier source-local alias only after manual registry
