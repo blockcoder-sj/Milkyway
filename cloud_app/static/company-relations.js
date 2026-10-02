@@ -24,7 +24,9 @@
       + (sourceRank[lead(edge).source?.level] ?? 3) * 10 + order.indexOf(edge.kind);
     return rows.map((edge, index) => ({...edge, index})).filter(edge =>
       filter === 'all' || (filter === 'business' ? !['owner', 'holding'].includes(edge.kind) : edge.kind === filter)
-    ).sort((a, b) => score(a) - score(b) || a.name.localeCompare(b.name, 'ko') || a.index - b.index);
+    ).sort((a, b) => score(a) - score(b)
+      || Number(Boolean(b.business?.detail)) - Number(Boolean(a.business?.detail))
+      || a.name.localeCompare(b.name, 'ko') || a.index - b.index);
   }
   function lines(value, width, maximum = 2) {
     let chars = Array.from(String(value || '').replace(/\s+/g, ' ').trim());

@@ -606,6 +606,12 @@ def enrich(value):
         'name': data['name'], **{key: rows for key, rows in curated.items()
                                if key in CompanyKnowledge.model_fields and key not in {'name', 'entity_id'}}
     }).model_dump(mode='json')
+    # A reviewed note moved into a visible section should not also remain in the
+    # old raw-fact appendix. Match the entire validated fact, including evidence.
+    promoted = {json.dumps(row, sort_keys=True, ensure_ascii=False)
+                for key in ('brief', 'products', 'segments', 'drivers') for row in normalized[key]}
+    data['facts'] = [row for row in data['facts']
+                     if json.dumps(row, sort_keys=True, ensure_ascii=False) not in promoted]
     for key, rows in curated.items():
         if key in {'cik', 'name', 'entity_id', 'registry_id'}:
             continue
@@ -618,11 +624,13 @@ def enrich(value):
                          for row in normalized[key]} if key in {'products', 'segments', 'drivers', 'market_shares'} else set()
             # A reviewed figure replaces the same filing coordinate, including
             # old English labels/anchors. Other periods and sources are retained.
+            previous_rows = data.get(key, [])
             if key == 'revenue_mix':
-                from .company_revenue import basis
+                from .company_revenue import basis, present_revenue
+                previous_rows = present_revenue(previous_rows, data['symbol'])
                 reviewed_revenue = {(*basis(row), row['member']) for row in normalized[key]}
             previous = []
-            for row in data.get(key, []):
+            for row in previous_rows:
                 if key == 'revenue_mix' and (*basis(row), row['member']) in reviewed_revenue:
                     continue
                 if key == 'segments':

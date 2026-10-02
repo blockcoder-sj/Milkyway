@@ -990,4 +990,67 @@ resuming; no paid AI regression approval has arrived.
 - Today's real paper session remains open13:30UTC / initial rebalance13:35UTC /
   expires20:00UTC, account b1042a427dec4e1991be17f24f8becc8. Check actual session
   after open, pending today's Yahoo action data gate. Do not claim a full day yet.
-- Exact commit/push/CI to be confirmed after this checkpoint.
+- That checkpoint was committed/pushed as dfb39cd1ba22b77b3a7cbf9c590fddde7a21de6e.
+  GitHub CI37012409210 succeeded in verify and postgres-integration.
+
+## 2026-10-02 · resumed Energy refining research
+
+- User asked whether Energy work was actually happening. Acknowledged that the
+  preceding final answer had ended research; do not claim background research
+  continues after ending a turn. Resumed with substantive primary-source work.
+- Added MPC/PSX/DINO annual/quarter Korean analysis, actual operating contracts,
+  11 contextual counterparty profiles and MPLX role notes. Existing CVX relations
+  extended without replacing prior work. Six main Energy companies now have expanded
+  notes (CVX/COP/VLO/MPC/PSX/DINO); NONE is certified complete across every criterion.
+- Reviewed primary SEC FY2025 tables and Q2 changes plus corporate/FTC contracts.
+  Six new source documents' hashes/byte lengths match retained /tmp evidence.
+  DINO Aug3 Chevron/SK Enmove base-oil agreement and PSX Oct1 United supply route
+  checked. Historical Linde2021 and Speedway2021 contracts explicitly dated.
+  Raw oil sellers were not guessed from pipeline operators; Shell2023/24 shares
+  are not current customer shares. WRB's former Cenovus stake is not current JV.
+- Exact revenue roots reconcile: MPC132699m/PSX132376m/DINO26869m USD.
+  Added exact MPC/PSX corporate axis, DINO product subtotal and separate RIN subset
+  view. Canonicalize legacy cache before merging; exact promoted facts no longer
+  duplicate hidden raw appendix entries. Eight brief cards remain bounded; further
+  reviewed notes are visible in product/business/driver sections.
+- Tiny positive revenue percentages show <0.01% rather than0%; same-kind/source
+  graph neighbours with reviewed business descriptions precede bare legal entities.
+- Latest whole regression534/93.432s OK(skipped17Node), host20frontend/structure
+  tests2.994s OK. Release image focused70/1.855s OK.13changed app/test SHA256 files
+  matched deployed image. Direct code/security review, no new dependencies, no
+  CodeRabbit. Actual AI provider calls0; previous5-call authorization exhausted.
+- Final app image ef7d5d589a377528a099069b7d9db128a8d750fac63a2be9e3ca29c803659e3f.
+  App-only Compose deployment; paper/personal-data and their real session retained.
+  Other running services retain their prior images (all graph writers had lock fix).
+  company-data/market-details/backtest-worker stay stopped. No collector restarted.
+- One-at-a-time temporary --rm jobs; normal5services only. Brief test job used ~171MiB,
+  host memory_pressure reported36%free. During US session paper/data workers grew to
+  ~184/237MiB; don't stop them just to reproduce idle premarket memory numbers.
+- Existing Chrome2 tab810509711 reused, no extra tabs. Verified MPC Korean briefing,
+  external revenue and Green Bison linked page; DINO product hierarchy and actual
+  pipeline/base-oil supplier roles. Final current tab is DINO's company page.
+- Today's paper session's first3fills at13:35:08UTC verified by read-only ledger:
+  MSFT38.389893323124184@520.45, AAPL60.12373795952631@332.315,
+  NVDA84.58941566477556@236.2. This is not a finished-day result. Expiry20:00UTC
+  (Oct3 05:00KST), idle protection until20:10UTC; preserve live session.
+- Details and limits: docs/ENERGY_REFINING_REVIEW_20261002.md. Remaining: full Energy
+  issuer/MLP scope, counterparties/raw suppliers/competitors/market-share research,
+  midstream/LNG/E&P/services/coal/nuclear fuel. Collected docs are not completed research.
+
+
+### Final refining UI and workspace check
+
+- Final native Chrome reload confirmed reviewed operating companies first in DINO
+  graph, including Industrial Oils Unlimited before bare numbered subsidiaries.
+  Saved /tmp/milkyway-energy-refining.png; kept existing one Chrome usertab.
+  Extension disconnected; native controls worked. DINO quote remained awaitingreceipt.
+- Postdeploy both club.sqlite3 and public graph.sqlite3 quick_check=ok.
+  Running5services remained app/backup/market-data/paper/personal; app159MiB,
+  backup33/market251/paper185/personal237. macOS memory free61% at finalcheck.
+- iCloud temporarily evicted .git/index/refs/objects and docs, blocking git/read.
+  Requested brctl download .git docs. Created a temporary safety checkout at
+  /tmp/milkyway-refining-publish-20261002 from remote dfb39cd and copied only
+  deployed changed code/tests/docs (no credentials/runtime). Original files then
+  hydrated; all13 local app/test files matched verified release SHA256 again.
+  Continue using original Milkyway repo; no reset/overwrite of local code. Temporary
+  checkout was not pushed and is only a fallback. Final commit occurs in original.

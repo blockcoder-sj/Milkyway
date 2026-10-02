@@ -3,20 +3,8 @@
 Report evidence/figures are separate from Korean narrative. Exact relationships
 retain project and historical scope; no inferred issuer-to-issuer trade edges.
 """
-import json
-from pathlib import Path
-
+from .company_energy_sources import REPORTS, report, fact
 from .company_research_notes import profile, relation, source
-
-REPORTS = json.loads(Path(__file__).with_name('company_energy_reports.json').read_text())
-
-
-def report(symbol, period='annual'):
-    return {key:REPORTS[symbol][period][key] for key in ('label','url','as_of','level')}
-
-
-def fact(title, detail, origin):
-    return dict(title=title, detail=detail, source=origin)
 
 
 CVX, COP, VLO = (report(symbol) for symbol in ('CVX','COP','VLO'))

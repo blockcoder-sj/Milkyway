@@ -2,7 +2,7 @@
 (() => {
   const esc = value => window.MilkywayResearchView.escape(value);
   const fmt = (value, digits = 0) => window.MilkywayFormat.number(value, digits);
-  const groups = Object.freeze({product: '제품·서비스', segment: '보고 사업 부문', end_market: '최종 사용 시장', geography: '지역', revenue_type: '제품 매출·서비스 매출 구분'});
+  const groups = Object.freeze({product: '제품·서비스', segment: '보고 사업 부문', end_market: '최종 사용 시장', geography: '지역', revenue_type: '매출 유형·포함 항목'});
   const levels = {primary: '공시·기업 원문', provider: '정보 제공사·공개 조사'};
   const metrics = Object.freeze({'us-gaap:Revenues': '매출', 'us-gaap:SalesRevenueNet': '순매출',
     'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': '계약 고객 매출(부과세 제외)',
@@ -10,6 +10,7 @@
   const revenueBasis = row => JSON.stringify([row.start, row.end, row.unit, row.metric, row.source.url.split('#')[0]]);
   const revenueShare = row => !row.includes_intersegment && Number.isFinite(row.total) && row.total > 0
     && Number.isFinite(row.value) && row.value >= 0 && row.value <= row.total ? row.value / row.total * 100 : null;
+  const revenuePercent = share => share > 0 && share < 0.01 ? '0.01% 미만' : fmt(share, 2) + '%';
   function accepted(source) {
     try {
       const url = new URL(source?.url);
@@ -109,11 +110,11 @@
         ${rows.some(row => row.includes_intersegment) ? '<p class="company-revenue-note">부문 간 내부 거래가 포함된 공시입니다. 연결 매출과 범위가 달라 비중을 산출하지 않습니다.</p>' : ''}
         <div class="company-revenue-highlights" aria-label="규모순 주요 매출 항목">${roots.slice(0, 3).map(row => {
           const share = revenueShare(row);
-          return `<article><strong>${esc(row.label)}</strong><span>${share === null ? fmt(row.value) + ' ' + esc(row.unit) : fmt(share, 2) + '%'}</span><small>${share === null ? '공시 항목 매출' : '동일 지표 연결 매출 대비'} ${cite(row.source)}</small></article>`;
+          return `<article><strong>${esc(row.label)}</strong><span>${share === null ? fmt(row.value) + ' ' + esc(row.unit) : revenuePercent(share)}</span><small>${share === null ? '공시 항목 매출' : '동일 지표 연결 매출 대비'} ${cite(row.source)}</small></article>`;
         }).join('')}</div>
         <div class="research-table"><table><thead><tr><th>${esc(groups[group])}</th><th>매출</th><th>같은 매출 지표 내 비중</th><th>근거</th></tr></thead><tbody>${sorted.map(row => {
           const share = revenueShare(row), child = row.parent && rows.some(parent => parent.member === row.parent);
-          return `<tr${child ? ' class="company-revenue-child"' : ''}><td>${child ? '<span aria-label="상위 항목에 포함">↳ </span>' : ''}${esc(row.label)}</td><td>${fmt(row.value)} ${esc(row.unit)}</td><td>${share === null ? (row.includes_intersegment ? '내부 거래 포함 · 산출 제외' : '분모 미확인') : fmt(share, 2) + '%'}</td><td>${cite(row.source)}</td></tr>`;
+          return `<tr${child ? ' class="company-revenue-child"' : ''}><td>${child ? '<span aria-label="상위 항목에 포함">↳ </span>' : ''}${esc(row.label)}</td><td>${fmt(row.value)} ${esc(row.unit)}</td><td>${share === null ? (row.includes_intersegment ? '내부 거래 포함 · 산출 제외' : '분모 미확인') : revenuePercent(share)}</td><td>${cite(row.source)}</td></tr>`;
         }).join('')}</tbody></table></div>
         <details class="company-revenue-method"><summary>매출 구성 계산 방법·포함 관계</summary><p>비중 = 해당 항목 매출 ÷ 같은 공시·매출 지표·기간·통화의 연결 매출 × 100. 분모가 정확히 일치할 때만 계산합니다. 내부 거래를 포함하는 사업 부문 매출은 연결 매출로 나누지 않습니다. 지표에 따라 금융업의 전체 수익 등과 범위가 다를 수 있습니다. 시장점유율이나 이익 비중이 아닙니다. 제품·사업 부문·최종 시장·지역은 서로 다른 구분이며 더하지 않습니다. ↳ 행은 상위 항목에 포함되므로 다시 합산하지 않습니다. 다른 항목도 중복될 수 있어 화면 전체의 합계를 만들지 않습니다.</p><dl>${rows.map(row => `<dt>${esc(row.label)}</dt><dd>공시 식별자 ${esc(row.member)} · 지표 ${esc(row.metric)}${row.includes_intersegment ? ' · 내부 거래 포함 · 비중 산출 제외' : row.total ? ' · 비중 분모 ' + fmt(row.total) + ' ' + esc(row.unit) : ' · 일치하는 분모 미확인'} ${cite(row.source)}</dd>`).join('')}</dl></details>`;
     }

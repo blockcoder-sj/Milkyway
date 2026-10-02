@@ -45,6 +45,31 @@ for _symbol, _cik, _mapping in [
         'country:CA':'캐나다', 'vlo:UnitedKingdomAndIrelandMember':'영국·아일랜드',
         'vlo:MexicoAndPeruMember':'멕시코·페루', 'vlo:OtherCountriesMember':'기타 국가',
     }),
+    ('MPC', 1510295, {
+        'mpc:RefiningAndMarketingMember':'정유·판매', 'mpc:MidstreamMember':'물류·가스처리',
+        'mpc:RenewableDieselMember':'재생 디젤', 'us-gaap:CorporateNonSegmentMember':'본사·기타',
+    }),
+    ('PSX', 1534701, {
+        'psx:MarketingSpecialitySegmentMember':'판매·특수제품', 'psx:MidstreamSegmentMember':'물류·가스처리',
+        'psx:RefiningSegmentMember':'정유', 'psx:RenewableFuelsMember':'재생연료',
+        'us-gaap:CorporateNonSegmentMember':'본사·기타',
+        'psx:OtherProductLineMember':'서비스·기타',
+        'psx:RefinedPetroleumProductsAndRenewableFuelsMember':'정유제품·재생연료',
+        'srt:CrudeOilMember':'매입 원유 재판매', 'srt:NaturalGasLiquidsReservesMember':'NGL·천연가스',
+        'country:DE':'독일', 'country:GB':'영국', 'psx:OtherGeographicalAreasMember':'기타 국가',
+    }),
+    ('DINO', 1915657, {
+        'dino:AsphaltFuelOilAndOtherProductsMember':'아스팔트·연료유·기타 제품',
+        'dino:LubricantsAndSpecialtyProductsMember':'윤활유·특수제품',
+        'dino:RefinedProductMember':'정유제품 매출 소계',
+        'dino:RenewableIdentificationNumbersRINsMember':'RIN 매각 · 기타 매출의 일부',
+        'dino:TransportationAndLogisticServicesMember':'운송·물류 서비스',
+        'dino:TransportationFuelsMember':'수송용 연료', 'srt:CrudeOilMember':'잉여 매입 원유 재판매',
+        'us-gaap:ProductAndServiceOtherMember':'기타 매출',
+        'dino:LubricantsAndSpecialtiesSegmentMember':'윤활유·특수제품',
+        'dino:MarketingSegmentMember':'브랜드 연료 판매', 'dino:MidstreamSegmentMember':'물류',
+        'dino:RefiningSegmentMember':'정유', 'dino:RenewablesSegmentMember':'재생연료',
+    }),
 ]:
     for _member, _label in _mapping.items():
         LABELS[(_symbol, _cik, _member)] = _label
@@ -58,10 +83,18 @@ HIERARCHIES = {
         'cop:TotalSegmentsMember': ['cop:AlaskaSegmentMember','cop:LowerFortyEightSegmentMember',
             'cop:CanadaOperatingSegmentMember','cop:EuropeMiddleEastAndNorthAfricaSegmentMember',
             'cop:AsiaPacificOperatingSegmentMember']},
+    ('DINO', 1915657, 'product'): {
+        'dino:RefinedProductMember': ['dino:TransportationFuelsMember',
+            'dino:LubricantsAndSpecialtyProductsMember', 'dino:AsphaltFuelOilAndOtherProductsMember']},
 }
 
 
 def dimensions(pairs, symbol, cik):
+    # These issuers put external corporate revenue on a consolidation axis.
+    # Never accept the operating-segment totals or elimination coordinates here.
+    if ((symbol, cik) in {('MPC', 1510295), ('PSX', 1534701)}
+            and pairs == [('srt:ConsolidationItemsAxis', 'us-gaap:CorporateNonSegmentMember')]):
+        return 'segment', 'us-gaap:CorporateNonSegmentMember'
     if len(pairs) != 2 or len(set(pairs)) != 2:
         return None
     return COORDINATES.get((symbol, cik, frozenset(pairs)))
@@ -69,3 +102,13 @@ def dimensions(pairs, symbol, cik):
 
 def compound_member(member, symbol, cik):
     return '/' in member and (symbol, cik, member) in LABELS
+
+
+def separate_revenue_type(row, symbol, cik):
+    # A narrative subset of Other revenues is not an additional product bucket.
+    # Bound this reading to the reviewed filing/period, including old cached rows.
+    return (symbol == 'DINO' and cik == 1915657 and row['group'] == 'product'
+            and row['member'] == 'dino:RenewableIdentificationNumbersRINsMember'
+            and row['start'] == '2025-01-01' and row['end'] == '2025-12-31'
+            and row['source']['url'].split('#')[0] ==
+            'https://www.sec.gov/Archives/edgar/data/1915657/000191565726000016/dino-20251231.htm')

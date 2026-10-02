@@ -212,6 +212,8 @@ def present_revenue(rows, symbol):
                     or ISSUER_LABELS.get((symbol, cik), {}).get(row['member']))
         if override or local in LABELS:
             row['label'] = override or LABELS[local]
+        if energy.separate_revenue_type(row, symbol, cik):
+            row['group'], row['parent'] = 'revenue_type', None
         if symbol == 'ADI' and cik == 6281 and row['group'] == 'segment' and row['member'] in ADI_END_MARKETS:
             row['group'] = 'end_market'
         if symbol == 'INTC' and cik == 50863 and row['group'] == 'segment':

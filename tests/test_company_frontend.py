@@ -32,6 +32,10 @@ assert(footer.includes('SEC &lt;report&gt;'));assert(footer.includes('https://tr
 assert(revenue.includes('150,000,000 USD'));assert(revenue.includes('75%'));assert(revenue.includes('company-revenue-child'));
 assert(revenue.includes('분모 미확인'));assert(revenue.includes('다시 합산하지 않습니다'));assert(!revenue.includes('미국'));
 assert.equal(reading.groups.length,2);assert(!revenue.includes('href="https:'));
+const tiny=view.create({revenue_mix:[{...base,value:5000000,total:132699000000}]}).revenue('product');
+assert(tiny.includes('0.01% 미만'));assert(!tiny.includes('>0%</'));
+const zero=view.create({revenue_mix:[{...base,value:0}]}).revenue('product');
+assert(zero.includes('>0%</'));assert(!zero.includes('0.01% 미만'));
 assert.equal(view.accepted({url:'javascript:alert(1)',level:'primary'}),false);
 assert.equal(view.accepted({url:'https://user:pass@www.sec.gov/',level:'primary'}),false);
 assert.equal(view.accepted({url:'https://www.sec.gov/',level:'encyclopedia'}),false);
@@ -75,6 +79,11 @@ const selected=view.select(rows,'business');
 assert.equal(selected.length,4);assert(!selected.some(row=>['owner','holding'].includes(row.kind)));
 assert.equal(selected[0].target_id,rows[5].target_id);assert.equal(selected[1].kind,'customer');
 assert.equal(view.select(rows,'all').length,6);assert.equal(view.select(rows,'owner')[0].index,0);
+const identified={...edge('subsidiary',9,primary),name:'Z Operating subsidiary',business:{detail:'검토된 윤활유 사업',source:primary}};
+const shell={...edge('subsidiary',8,primary),name:'123 Legal entity'};
+const ranked=view.select([shell,identified,edge('supplier',7,primary)],'business');
+assert.equal(ranked[0].kind,'supplier');assert.equal(ranked[1].name,identified.name);
+assert.equal(ranked[2].name,shell.name);assert.equal(view.select([shell,identified],'subsidiary')[0].name,identified.name);
 assert.equal(view.lead(rows[5]).detail,'Laser <component> supplied');assert.equal(rows[5].evidence[0].detail,'Generic');
 assert.equal(view.lead({evidence:[{detail:'Old',source:{level:'primary',as_of:'2025-01-26'}},
  {detail:'Current',source:{level:'primary',as_of:'2026-02-25'}},
