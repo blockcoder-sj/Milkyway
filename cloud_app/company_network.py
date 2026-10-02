@@ -34,7 +34,7 @@ def _node(entity):
 
 def _statement(edge):
     value = {key:edge.get(key) for key in ('name', 'target_id', 'symbol', 'kind',
-                                          'detail', 'reverse', 'reported_by', 'source')}
+                                          'detail', 'reverse', 'reported_by', 'source', 'business')}
     evidence = [row for row in edge.get('evidence', [edge]) if not forbidden(row['source'])]
     value['evidence'] = evidence[:EVIDENCE_LIMIT]
     value['evidence_total'] = len(evidence)

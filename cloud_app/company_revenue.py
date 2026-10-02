@@ -1,6 +1,6 @@
 """Bounded annual revenue slices from the issuer's inline XBRL, without AI.
 
-Only standard revenue metrics and one-dimensional contexts are supported. A
+Only standard revenue metrics and checked dimension combinations are supported. A
 denominator must be the same document/metric/currency/period, with no dimensions.
 Displayed slices are not summed: products, segments and regions can overlap.
 """
@@ -14,6 +14,7 @@ from .company_filings import document
 METRICS = (
     'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax',
     'us-gaap:Revenues', 'us-gaap:SalesRevenueNet', 'ifrs-full:Revenue',
+    'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax',
 )
 AXES = {
     'srt:ProductOrServiceAxis': 'product',
@@ -52,7 +53,167 @@ LABELS = {
     'JP': '일본', 'GreaterChina': '중화권', 'RestOfAsiaPacific': '기타 아시아태평양',
     'OtherCountries': '기타 국가', 'Other': '기타',
     'NonUs': '미국 외 지역',
+    'SG': '싱가포르', 'KR': '한국', 'DE': '독일', 'GB': '영국',
+    'Datacenter': '데이터센터', 'ClientAndGaming': '클라이언트·게이밍',
+    'Client': '클라이언트', 'Embedded': '임베디드',
+    'SemiconductorSolutions': '반도체 솔루션', 'InfrastructureSoftware': '인프라 소프트웨어',
+    'Qct': 'QCT · 반도체 제품', 'QCT': 'QCT · 반도체 제품',
+    'Qtl': 'QTL · 기술 라이선스', 'QTL': 'QTL · 기술 라이선스',
+    'Qsi': 'QSI · 전략 투자', 'QSI': 'QSI · 전략 투자',
+    'Handsets': '스마트폰', 'IoT': '사물인터넷', 'Iot': '사물인터넷',
+    'ClientComputingGroupDatacenterAndAIAndNetworkAndEdge': 'Intel Products · 제품 사업 합계',
+    'ClientComputingGroup': '클라이언트 컴퓨팅', 'DatacenterAndAI': '데이터센터·AI',
+    'IntelFoundry': 'Intel Foundry · 제조', 'AllOtherSegments': '기타 사업',
+    'ClientSolutions': '클라이언트 솔루션', 'InfrastructureSolutionsGroup': '인프라 솔루션',
+    'AppliedGlobalServicesSegment': '설치 장비 서비스',
+    'SemiconductorSystemsSegment': '반도체 제조 시스템',
+    'CloudApplications': '클라우드 애플리케이션', 'CloudInfrastructure': '클라우드 인프라',
+    'CloudRevenues': '클라우드 매출 합계', 'SoftwareRevenues': '소프트웨어 매출 합계',
+    'SoftwareLicense': '소프트웨어 라이선스', 'SoftwareSupport': '소프트웨어 지원',
+    'Hardware': '하드웨어', 'SubscriptionAndSupport': '구독·지원 합계',
+    'Agentforce360PlatformSlackAndOther': 'Agentforce 360 플랫폼·Slack·기타',
+    'IntegrationAndAnalytics': '시스템 연동·분석', 'MarketingAndCommerce': '마케팅·커머스',
+    'Sales': '영업', 'ProfessionalServicesAndOther': '전문 서비스·기타',
+    'ProfessionalServices': '전문 서비스', 'SubscriptionAndCirculation': '구독',
+    'Subscription': '구독', 'Support': '지원', 'SubscriptionsAndServices': '구독·서비스',
+    'DigitalMedia': '디지털 미디어', 'DigitalExperience': '디지털 경험',
+    'PublishingAndAdvertising': '출판·광고', 'LicenseAndService': '라이선스·서비스',
+    'TechnologyService': '기술 서비스',
+    'FinancialServices': '금융 서비스', 'HybridCloud': '하이브리드 클라우드',
+    'Server': '서버', 'CorporateInvestmentsAndOther': '본사 투자·기타',
+    'CustomerSupportAndOther': '고객 지원·기타', 'System': '장비 시스템',
+    'WaferInspection': '웨이퍼 검사', 'Patterning': '패턴 공정 관리',
+    'SpecialtySemiconductorProcess': '특수 반도체 공정',
+    'PCBAndComponentInspection': 'PCB·부품 검사',
+    'Industrial': '산업용', 'Consumer': '소비자용', 'Communications': '통신',
+    'ReportedSegment': '단일 보고 부문 합계', 'Analog': '아날로그',
+    'EmbeddedProcessing': '임베디드 처리',
+    'SubscriptionsandServices': '구독·서비스',
+    'SubscriptionandSupport': '구독·지원 합계',
+    'AgentforceIntegrationAndAgentforceAnalytics': 'Agentforce 연동·분석',
+    'AgentforceMarketingAndAgentforceCommerce': 'Agentforce 마케팅·커머스',
+    'AgentforceSales': 'Agentforce 영업', 'AgentforceService': 'Agentforce 고객 서비스',
+    'ProfessionalServicesandOther': '전문 서비스·기타',
+    'SubscriptionRevenue': '구독', 'HybridCloudSegment': '하이브리드 클라우드',
+    'ServerSegment': '서버', 'CorporateAndOther': '본사·기타',
+    'CustomerSupportandOther': '고객 지원·기타', 'OtherRevenue': '기타 매출',
+    'ReportableSegment': '단일 보고 부문 합계',
 }
+
+ISSUER_LABELS = {
+    ('NOW', 1373715): {'us-gaap:LicenseAndServiceMember': '구독 서비스',
+                     'us-gaap:TechnologyServiceMember': '전문 서비스·기타'},
+}
+ADI_END_MARKETS = {'adi:' + member + 'Member' for member in
+                   ('Industrial', 'Automotive', 'Communications', 'Consumer')}
+
+# Checked against these issuers' filed annual segment tables on 2026-10-02.
+# OperatingSegmentsMember is an explicit presentation qualifier, not permission
+# to collapse arbitrary customer, region, elimination or product dimensions.
+OPERATING_SEGMENTS = {'AMD': 2488, 'INTC': 50863, 'DELL': 1571996, 'AMAT': 6951, 'QCOM': 804328}
+HIERARCHIES = {
+    ('NVDA', 1045810, 'product'): {'nvda:DataCenterMember': ['nvda:ComputeMember', 'nvda:NetworkingMember']},
+    ('AMD', 2488, 'segment'): {'amd:ClientAndGamingMember': ['amd:ClientMember', 'amd:GamingMember']},
+    ('INTC', 50863, 'segment'): {'intc:ClientComputingGroupDatacenterAndAIAndNetworkAndEdgeMember':
+                              ['intc:ClientComputingGroupMember', 'intc:DatacenterAndAIMember']},
+    ('ORCL', 1341439, 'product'): {
+        'orcl:CloudRevenuesMember': ['orcl:CloudApplicationsMember', 'orcl:CloudInfrastructureMember'],
+        'orcl:SoftwareRevenuesMember': ['orcl:SoftwareLicenseMember', 'orcl:SoftwareSupportMember']},
+    ('CRM', 1108524, 'product'): {'crm:SubscriptionandSupportMember': [
+        'crm:Agentforce360PlatformSlackAndOtherMember',
+        'crm:AgentforceIntegrationAndAgentforceAnalyticsMember',
+        'crm:AgentforceMarketingAndAgentforceCommerceMember',
+        'crm:AgentforceSalesMember', 'crm:AgentforceServiceMember']},
+}
+
+
+def source_cik(origin):
+    """An issuer's reviewed rules cannot be activated by a lookalike URL."""
+    try:
+        parsed = urlsplit(origin.get('url', ''))
+        valid = (parsed.scheme == 'https' and parsed.hostname in {'www.sec.gov', 'sec.gov'}
+                 and not parsed.username and not parsed.password and parsed.port in (None, 443))
+    except ValueError:
+        return None
+    if not valid:
+        return None
+    match = re.fullmatch(r'/Archives/edgar/data/(\d{1,10})/\d{18}/[A-Za-z0-9_.-]+', parsed.path)
+    return int(match[1]) if match else None
+
+
+def basis(row):
+    return (row['group'], row['start'], row['end'], row['unit'], row['metric'],
+            row['source']['url'].split('#')[0])
+
+
+def dimensions(members, symbol, cik):
+    pairs = [(item.get('dimension'), item.get_text(strip=True)) for item in members]
+    if len(pairs) == 2 and OPERATING_SEGMENTS.get(symbol) == cik:
+        qualifier = ('srt:ConsolidationItemsAxis', 'us-gaap:OperatingSegmentsMember')
+        if qualifier in pairs:
+            remainder = [item for item in pairs if item != qualifier]
+            if len(remainder) == 1 and remainder[0][0] == 'us-gaap:StatementBusinessSegmentsAxis':
+                return 'segment', remainder[0][1]
+        if symbol == 'AMD':
+            # Exact product/segment pairs from AMD's FY2025 table, not a generic
+            # multi-axis rule. Its Client and Gaming rows reconcile below.
+            for product, segment in [('amd:ClientMember', 'amd:ClientAndGamingMember'),
+                                     ('amd:GamingMember', 'amd:GamingMember')]:
+                if set(pairs) == {('srt:ProductOrServiceAxis', product),
+                                  ('us-gaap:StatementBusinessSegmentsAxis', segment)}:
+                    return 'segment', product
+    if len(pairs) > 1 or (pairs and pairs[0][0] not in AXES):
+        return None
+    if not pairs:
+        return None, ''
+    axis, member = pairs[0]
+    group = AXES[axis]
+    if group == 'product' and member in {'us-gaap:ProductMember', 'us-gaap:ServiceMember', 'us-gaap:ServiceOtherMember'}:
+        group = 'revenue_type'
+    return group, member
+
+
+def hierarchy(rows, symbol, cik):
+    """Set only reviewed parent links whose actual reported values reconcile."""
+    for (issuer, identity, group), mapping in HIERARCHIES.items():
+        if (issuer, identity) != (symbol, cik):
+            continue
+        by_basis = {}
+        for row in rows:
+            if row['group'] == group and source_cik(row['source']) == cik:
+                by_basis.setdefault(basis(row), {}).setdefault(row['member'], []).append(row)
+                if any(row['member'] in names for names in mapping.values()):
+                    row['parent'] = None
+        for candidates in by_basis.values():
+            # Ambiguous cached duplicates are not a basis for a parent link.
+            lookup = {name: values[0] for name, values in candidates.items() if len(values) == 1}
+            for name, child_names in mapping.items():
+                parent, children = lookup.get(name), [lookup.get(key) for key in child_names]
+                if parent and all(children) and abs(sum(Decimal(str(row['value'])) for row in children)
+                                                   - Decimal(str(parent['value']))) <= 1:
+                    for row in children:
+                        row['parent'] = name
+    return rows
+
+
+def present_revenue(rows, symbol):
+    """Apply checked labels/bases to old caches too, without fetching or changing values."""
+    result = []
+    for value in rows:
+        row = dict(value)
+        cik = source_cik(row['source'])
+        local = re.sub(r'Member$', '', row['member'].split(':')[-1])
+        override = ISSUER_LABELS.get((symbol, cik), {}).get(row['member'])
+        if override or local in LABELS:
+            row['label'] = override or LABELS[local]
+        if symbol == 'ADI' and cik == 6281 and row['group'] == 'segment' and row['member'] in ADI_END_MARKETS:
+            row['group'] = 'end_market'
+        if symbol == 'INTC' and cik == 50863 and row['group'] == 'segment':
+            row['includes_intersegment'], row['total'] = True, None
+        result.append(row)
+    for cik in {source_cik(row['source']) for row in result} - {None}:
+        hierarchy(result, symbol, cik)
+    return result
 
 
 def label(member):
@@ -98,10 +259,9 @@ def number(fact):
 def parse_revenue(raw, origin, symbol, today=None):
     soup = document(raw)
     today = today or dt.datetime.now(dt.timezone.utc).date()
-    match = re.fullmatch(r'/Archives/edgar/data/(\d{1,10})/\d{18}/[A-Za-z0-9_.-]+', urlsplit(origin['url']).path)
-    if not match:
+    expected_cik = source_cik(origin)
+    if expected_cik is None:
         return []
-    expected_cik = int(match[1])
     contexts, units = {}, {}
     for unit in soup.find_all('xbrli:unit', limit=200):
         measures = unit.find_all('xbrli:measure')
@@ -126,14 +286,10 @@ def parse_revenue(raw, origin, symbol, today=None):
         if not 300 <= (last - first).days <= 400 or last > today:
             continue
         members = ctx.find_all('xbrldi:explicitmember')
-        if len(members) > 1 or (members and members[0].get('dimension') not in AXES):
+        classified = dimensions(members, symbol, expected_cik)
+        if classified is None:
             continue
-        group = AXES[members[0]['dimension']] if members else None
-        member = members[0].get_text(strip=True) if members else ''
-        if group == 'product' and member in {'us-gaap:ProductMember', 'us-gaap:ServiceMember', 'us-gaap:ServiceOtherMember'}:
-            # An alternate product/service split is not a child of every named
-            # product family. Keep it in its own view instead of double counting.
-            group = 'revenue_type'
+        group, member = classified
         if member and not re.fullmatch(r'[A-Za-z0-9_.-]{1,30}:[A-Za-z0-9_.-]{1,150}', member):
             continue
         contexts[ctx.get('id')] = (start.text, end.text, group, member)
@@ -165,18 +321,11 @@ def parse_revenue(raw, origin, symbol, today=None):
             if key[:4] != prefix:
                 continue
             value = clean[key]
-            denominator = total if total and value <= total else None
+            internal = symbol == 'INTC' and expected_cik == 50863 and group == 'segment'
+            denominator = total if total and value <= total and not internal else None
             result.append(dict(group=group, member=key[5], label=label(key[5]),
                 value=float(value), unit=key[1], start=key[2], end=key[3],
                 total=float(denominator) if denominator else None, metric=key[0], parent=None,
+                includes_intersegment=internal,
                 source={**origin, 'url': origin['url'] + ('#' + anchors[key] if key in anchors else '')}))
-    # Verified hierarchy of NVIDIA's disclosed product table, only if the reported
-    # annual values themselves reconcile. Other overlapping slices stay ungrouped.
-    if symbol == 'NVDA':
-        product = {row['member']: row for row in result if row['group'] == 'product'}
-        parent = product.get('nvda:DataCenterMember')
-        children = [product.get('nvda:ComputeMember'), product.get('nvda:NetworkingMember')]
-        if parent and all(children) and abs(sum(row['value'] for row in children) - parent['value']) <= 1:
-            for row in children:
-                row['parent'] = parent['member']
-    return result[:80]
+    return present_revenue(result, symbol)[:80]

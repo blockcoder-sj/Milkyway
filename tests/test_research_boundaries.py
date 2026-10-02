@@ -56,6 +56,16 @@ const spec={symbols:['NVDA','MSFT'],factors:[{kind:'mean_reversion',lookback:20,
  filters:{min_price:5,min_average_volume:200000,history_days:60}};
 const rules=window.MilkywayResearchView.executionRules(spec);
 for(const text of ['100,000','70.00%','40.00%','10달력일','20거래일','수익률 낮은 순','RSI 낮은 순','200,000','평균 매입단가'])assert(rules.includes(text),text);
+const allocation={...spec,symbols:['AAPL','MSFT','NVDA','AMD','AVGO'],portfolio:{...spec.portfolio,max_positions:5,investment_fraction:0.8,max_position_fraction:0.2}};
+const allocationRules=window.MilkywayResearchView.executionRules(allocation);
+assert(allocationRules.includes('전체 자산 기준 종목당 16.00% · 현금 20.00%'));
+assert(allocationRules.includes('종목당 목표 상한 20.00%'));
+assert(allocationRules.includes('휴장일에는 다음 거래 가능 시점'));
+const cappedRules=window.MilkywayResearchView.executionRules({...allocation,portfolio:{...allocation.portfolio,max_position_fraction:0.1,rebalance_weights:false}});
+assert(cappedRules.includes('전체 자산 기준 종목당 10.00% · 현금 50.00%'));
+assert(cappedRules.includes('유지 종목의 수량 유지'));
+assert(cappedRules.includes('비용 반영 전'));
+assert(!window.MilkywayResearchView.executionRules({...allocation,symbols:[]}).includes('비중 계산 예시'));
 room.turns[0].status='completed';room.turns[0].strategy_id='v1';room.turns[0].response.strategy={...spec,symbols:[payload]};
 room.versions[0].spec=spec;view.invalidate();view.render(room,false);
 assert(element('#researchTurns').innerHTML.includes('NVDA, MSFT'),'Execution rules come from the saved version');

@@ -2,7 +2,7 @@
 import datetime as dt
 import unittest
 
-from cloud_app.company_revenue import parse_revenue
+from cloud_app.company_revenue import parse_revenue, present_revenue, source_cik
 from cloud_app.company_schemas import CompanyKnowledge
 from cloud_app.company_retention import preserve_previous
 
@@ -96,6 +96,98 @@ class RevenueTests(unittest.TestCase):
     def test_slice_larger_than_consolidated_total_has_no_percentage(self):
         raw = doc(context('total') + context('p', 'nvda:DataCenterMember'), fact('total', '100') + fact('p', '150'))
         self.assertIsNone(self.parse(raw)[0]['total'])
+
+    def test_amd_reported_operating_qualifier_and_product_children(self):
+        origin = {**ORIGIN, 'url': 'https://www.sec.gov/Archives/edgar/data/2488/000000248826000018/amd-20251227.htm'}
+        qualifier = '<xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>'
+        contexts = context('total', cik='2488')
+        facts = fact('total', '34,639')
+        for key, member, value in [('dc', 'Datacenter', '16,635'), ('cg', 'ClientAndGaming', '14,550'), ('e', 'Embedded', '3,454')]:
+            contexts += context(key, 'amd:' + member + 'Member', axis='us-gaap:StatementBusinessSegmentsAxis', extra=qualifier, cik='2488')
+            facts += fact(key, value)
+        for key, member, segment, value in [('c', 'Client', 'ClientAndGaming', '10,640'), ('g', 'Gaming', 'Gaming', '3,910')]:
+            extra = '<xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">amd:' + segment + 'Member</xbrldi:explicitMember>'
+            contexts += context(key, 'amd:' + member + 'Member', extra=extra, cik='2488')
+            facts += fact(key, value)
+        raw = doc(contexts, facts)
+        rows = parse_revenue(raw, origin, 'AMD')
+        self.assertEqual(len(rows), 5)
+        self.assertEqual({row['group'] for row in rows}, {'segment'})
+        roots = [row for row in rows if not row['parent']]
+        self.assertEqual(sum(row['value'] for row in roots), 34639000000)
+        self.assertEqual(len(roots), 3)
+        self.assertEqual({row['parent'] for row in rows if row['label'] in {'클라이언트', '게이밍'}}, {'amd:ClientAndGamingMember'})
+        self.assertEqual(parse_revenue(raw, origin, 'OTHER'), [])
+        self.assertEqual(parse_revenue(raw.replace('OperatingSegmentsMember', 'EliminationsMember'), origin, 'AMD')[0]['parent'], None)
+        self.assertEqual(parse_revenue(raw, {**origin, 'url': origin['url'].replace('www.sec.gov', 'example.com')}, 'AMD'), [])
+
+    def test_intel_internal_segment_revenue_has_no_consolidated_percentage(self):
+        origin = {**ORIGIN, 'url': 'https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm'}
+        qualifier = '<xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>'
+        raw = doc(context('total', cik='50863') + context('foundry', 'intc:IntelFoundryMember',
+            axis='us-gaap:StatementBusinessSegmentsAxis', extra=qualifier, cik='50863'),
+            fact('total', '52,853') + fact('foundry', '17,826'))
+        row, = parse_revenue(raw, origin, 'INTC')
+        self.assertTrue(row['includes_intersegment'])
+        self.assertIsNone(row['total'])
+        # Old caches receive the same presentation correction without a refresh.
+        cached = {**row, 'includes_intersegment': False, 'total': 52853000000}
+        self.assertIsNone(present_revenue([cached], 'INTC')[0]['total'])
+        self.assertIsNotNone(cached['total'])
+
+    def test_reviewed_qcom_qualifier_preserves_missing_matching_denominator(self):
+        origin = {**ORIGIN, 'url': 'https://www.sec.gov/Archives/edgar/data/804328/000080432825000085/qcom-20250928.htm'}
+        qualifier = '<xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>'
+        contexts = context('total', cik='804328', start='2024-09-29', end='2025-09-28')
+        for key in ['Qct', 'Qtl']:
+            contexts += context(key, 'qcom:' + key + 'Member', axis='us-gaap:StatementBusinessSegmentsAxis',
+                start='2024-09-30', end='2025-09-28', extra=qualifier, cik='804328')
+        raw = doc(contexts, fact('total', '44,284') + fact('Qct', '38,367') + fact('Qtl', '5,582'))
+        rows = parse_revenue(raw, origin, 'QCOM')
+        self.assertEqual({row['label'] for row in rows}, {'QCT · 반도체 제품', 'QTL · 기술 라이선스'})
+        self.assertTrue(all(row['total'] is None for row in rows))
+        self.assertEqual(parse_revenue(raw, origin, 'OTHER'), [])
+        for url in ['https://www.sec.gov:bad/report', 'https://[bad', 'https://www.sec.gov.evil.test/Archives/edgar/data/804328/000080432825000085/qcom.htm']:
+            self.assertIsNone(source_cik({'url': url}))
+
+    def test_including_tax_metric_and_adi_end_markets_are_not_operating_segments(self):
+        origin = {**ORIGIN, 'url': 'https://www.sec.gov/Archives/edgar/data/1535527/000153552726000010/crwd-20260131.htm'}
+        metric = 'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax'
+        raw = doc(context('total', cik='1535527') + context('sub', 'us-gaap:SubscriptionAndCirculationMember', cik='1535527'),
+                  fact('total', '4,812,005', metric=metric, scale=3) + fact('sub', '4,564,683', metric=metric, scale=3))
+        row, = parse_revenue(raw, origin, 'CRWD')
+        self.assertEqual(row['value'], 4564683000)
+        self.assertEqual(row['total'], 4812005000)
+        adi = {**row, 'group': 'segment', 'member': 'adi:IndustrialMember', 'source': {**origin,
+            'url': 'https://www.sec.gov/Archives/edgar/data/6281/000000628125000153/adi-20251101.htm'}}
+        aggregate = {**adi, 'member': 'adi:ReportableSegmentMember'}
+        rows = present_revenue([adi, aggregate], 'ADI')
+        self.assertEqual([row['group'] for row in rows], ['end_market', 'segment'])
+        self.assertEqual(rows[1]['label'], '단일 보고 부문 합계')
+        self.assertEqual(CompanyKnowledge(symbol='ADI', name='Analog Devices', revenue_mix=rows).revenue_mix[0].group, 'end_market')
+
+    def test_cached_hierarchies_require_same_report_period_currency_metric_and_unique_rows(self):
+        raw = doc(context('p', 'nvda:DataCenterMember') + context('c', 'nvda:ComputeMember')
+            + context('n', 'nvda:NetworkingMember'), fact('p', '150') + fact('c', '100') + fact('n', '50'))
+        baseline = self.parse(raw)
+        for change in [dict(unit='EUR'), dict(end='2025-01-25'), dict(metric='us-gaap:SalesRevenueNet'),
+                       dict(source={**ORIGIN, 'url': ORIGIN['url'].replace('nvda-20260125', 'other-document')})]:
+            with self.subTest(change=change):
+                rows = [dict(row) for row in baseline]
+                rows[0].update(change)
+                self.assertFalse(any(row['parent'] for row in present_revenue(rows, 'NVDA')))
+        self.assertFalse(any(row['parent'] for row in present_revenue(baseline + [baseline[0]], 'NVDA')))
+
+    def test_oracle_product_subtotals_are_not_double_counted(self):
+        origin = {**ORIGIN, 'url': 'https://www.sec.gov/Archives/edgar/data/1341439/000119312526277521/orcl-20260531.htm'}
+        contexts, facts = '', ''
+        for key, value in [('CloudRevenues', '33,989'), ('CloudApplications', '15,888'), ('CloudInfrastructure', '18,101'),
+                           ('SoftwareRevenues', '24,541'), ('SoftwareLicense', '4,737'), ('SoftwareSupport', '19,804')]:
+            contexts += context(key, 'orcl:' + key + 'Member', cik='1341439')
+            facts += fact(key, value)
+        rows = parse_revenue(doc(contexts, facts), origin, 'ORCL')
+        self.assertEqual(len([row for row in rows if row['parent']]), 4)
+        self.assertEqual(len([row for row in rows if not row['parent']]), 2)
 
     def test_failed_annual_report_preserves_old_revenue_only(self):
         raw = doc(context('total') + context('p', 'nvda:DataCenterMember'), fact('total', '200') + fact('p', '150'))

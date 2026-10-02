@@ -2,10 +2,14 @@
 (() => {
   const esc = value => window.MilkywayResearchView.escape(value);
   const fmt = (value, digits = 0) => window.MilkywayFormat.number(value, digits);
-  const groups = Object.freeze({product: '제품·서비스', segment: '보고 사업 부문', geography: '지역', revenue_type: '제품 매출·서비스 매출 구분'});
+  const groups = Object.freeze({product: '제품·서비스', segment: '보고 사업 부문', end_market: '최종 사용 시장', geography: '지역', revenue_type: '제품 매출·서비스 매출 구분'});
   const levels = {primary: '공시·기업 원문', provider: '정보 제공사·공개 조사'};
   const metrics = Object.freeze({'us-gaap:Revenues': '매출', 'us-gaap:SalesRevenueNet': '순매출',
-    'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': '계약 고객 매출(부과세 제외)', 'ifrs-full:Revenue': 'IFRS 매출'});
+    'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': '계약 고객 매출(부과세 제외)',
+    'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax': '계약 고객 매출(부과세 포함)', 'ifrs-full:Revenue': 'IFRS 매출'});
+  const revenueBasis = row => JSON.stringify([row.start, row.end, row.unit, row.metric, row.source.url.split('#')[0]]);
+  const revenueShare = row => !row.includes_intersegment && Number.isFinite(row.total) && row.total > 0
+    && Number.isFinite(row.value) && row.value >= 0 && row.value <= row.total ? row.value / row.total * 100 : null;
   function accepted(source) {
     try {
       const url = new URL(source?.url);
@@ -40,6 +44,7 @@
       }
     }
     for (const edge of data.relations || []) {
+      add(edge.business?.source, edge.name + ' · 주요 사업');
       for (const row of edge.evidence?.length ? edge.evidence : [edge]) {
         add(row.source, edge.name + ' · 관계 근거');
         if (row.original && accepted(row.source)) excerpts.set(edge.name + '|' + row.original,
@@ -54,6 +59,7 @@
     function registerNetwork(network) {
       for (const node of [network.root, network.via]) for (const row of node?.brief || []) add(row.source, node.name + ' · ' + row.title);
       for (const edge of [...(network.direct || []), ...(network.rows || [])]) {
+        add(edge.business?.source, edge.name + ' · 주요 사업');
         for (const row of edge.evidence?.length ? edge.evidence : [edge]) {
           add(row.source, edge.name + ' · 업계 연결 근거');
           if (row.original && accepted(row.source)) excerpts.set(edge.name + '|' + row.original,
@@ -72,6 +78,10 @@
       if (!accepted(row.source)) return '';
       return `<article class="company-fact"><h4>${esc(row.title)} ${cite(row.source)}</h4>${row.detail ? `<p>${esc(row.detail)}</p>` : ''}${original(row.original)}</article>`;
     }
+    function business(edge) {
+      const row = edge.business;
+      return row?.detail && accepted(row.source) ? `<p class="company-business-context"><strong>기업 사업</strong> ${esc(row.detail)} ${cite(row.source)}</p>` : '';
+    }
     function essentials() {
       const cards = (data.brief || []).filter(row => row.detail && accepted(row.source));
       return cards.length ? cards.map(fact).join('')
@@ -80,16 +90,32 @@
     function revenue(group) {
       const rows = (data.revenue_mix || []).filter(row => row.group === group && accepted(row.source));
       if (!rows.length) return '<p class="fineprint">동일 공시의 연간 매출 구성 수치를 확인하지 못했습니다. 임의 비중은 계산하지 않습니다.</p>';
-      const sorted = rows.filter(row => !row.parent).sort((a, b) => b.value - a.value)
-        .flatMap(row => [row, ...rows.filter(child => child.parent === row.member).sort((a, b) => b.value - a.value)]);
-      sorted.push(...rows.filter(row => row.parent && !rows.some(parent => parent.member === row.parent)));
+      const sets = new Map();
+      for (const row of rows) {
+        const key = revenueBasis(row);
+        if (!sets.has(key)) sets.set(key, []);
+        sets.get(key).push(row);
+      }
+      return [...sets.values()].sort((a, b) => b[0].end.localeCompare(a[0].end)).map(rows => revenueTable(rows, group)).join('');
+    }
+    function revenueTable(rows, group) {
+      const roots = rows.filter(row => !row.parent || !rows.some(parent => parent.member === row.parent)).sort((a, b) => b.value - a.value);
+      const sorted = roots.flatMap(row => [row, ...rows.filter(child => child.parent === row.member).sort((a, b) => b.value - a.value)]);
+      // Malformed/orphaned cached parent references must not hide a revenue row.
+      sorted.push(...rows.filter(row => !sorted.includes(row)));
       const first = rows[0];
       return `<p class="company-revenue-period">연간 ${esc(first.start)} ~ ${esc(first.end)} · ${esc(first.unit)} · 지표: ${esc(metrics[first.metric] || first.metric)}</p>
+        ${group === 'end_market' ? '<p class="fineprint">제품이 사용되는 고객 산업별 매출입니다. 회사의 운영 사업 부문 구분과 다릅니다.</p>' : ''}
+        ${rows.some(row => row.includes_intersegment) ? '<p class="company-revenue-note">부문 간 내부 거래가 포함된 공시입니다. 연결 매출과 범위가 달라 비중을 산출하지 않습니다.</p>' : ''}
+        <div class="company-revenue-highlights" aria-label="규모순 주요 매출 항목">${roots.slice(0, 3).map(row => {
+          const share = revenueShare(row);
+          return `<article><strong>${esc(row.label)}</strong><span>${share === null ? fmt(row.value) + ' ' + esc(row.unit) : fmt(share, 2) + '%'}</span><small>${share === null ? '공시 항목 매출' : '동일 지표 연결 매출 대비'} ${cite(row.source)}</small></article>`;
+        }).join('')}</div>
         <div class="research-table"><table><thead><tr><th>${esc(groups[group])}</th><th>매출</th><th>같은 매출 지표 내 비중</th><th>근거</th></tr></thead><tbody>${sorted.map(row => {
-          const share = Number.isFinite(row.total) && row.total > 0 && row.value <= row.total ? row.value / row.total * 100 : null;
-          return `<tr${row.parent ? ' class="company-revenue-child"' : ''}><td>${row.parent ? '<span aria-label="상위 항목에 포함">↳ </span>' : ''}${esc(row.label)}</td><td>${fmt(row.value)} ${esc(row.unit)}</td><td>${share === null ? '분모 미확인' : fmt(share, 2) + '%'}</td><td>${cite(row.source)}</td></tr>`;
+          const share = revenueShare(row), child = row.parent && rows.some(parent => parent.member === row.parent);
+          return `<tr${child ? ' class="company-revenue-child"' : ''}><td>${child ? '<span aria-label="상위 항목에 포함">↳ </span>' : ''}${esc(row.label)}</td><td>${fmt(row.value)} ${esc(row.unit)}</td><td>${share === null ? (row.includes_intersegment ? '내부 거래 포함 · 산출 제외' : '분모 미확인') : fmt(share, 2) + '%'}</td><td>${cite(row.source)}</td></tr>`;
         }).join('')}</tbody></table></div>
-        <details class="company-revenue-method"><summary>매출 구성 계산 방법·포함 관계</summary><p>비중 = 해당 항목 매출 ÷ 같은 공시·매출 지표·기간·통화의 연결 매출 × 100. 분모가 정확히 일치할 때만 계산합니다. 지표에 따라 금융업의 전체 수익 등과 범위가 다를 수 있습니다. 시장점유율이나 이익 비중이 아닙니다. 제품·사업 부문·지역은 서로 다른 구분이며 더하지 않습니다. ↳ 행은 상위 항목에 포함되므로 다시 합산하지 않습니다. 다른 항목도 중복될 수 있어 화면 전체의 합계를 만들지 않습니다.</p><dl>${rows.map(row => `<dt>${esc(row.label)}</dt><dd>공시 식별자 ${esc(row.member)} · 지표 ${esc(row.metric)}${row.total ? ' · 비중 분모 ' + fmt(row.total) + ' ' + esc(row.unit) : ' · 일치하는 분모 미확인'} ${cite(row.source)}</dd>`).join('')}</dl></details>`;
+        <details class="company-revenue-method"><summary>매출 구성 계산 방법·포함 관계</summary><p>비중 = 해당 항목 매출 ÷ 같은 공시·매출 지표·기간·통화의 연결 매출 × 100. 분모가 정확히 일치할 때만 계산합니다. 내부 거래를 포함하는 사업 부문 매출은 연결 매출로 나누지 않습니다. 지표에 따라 금융업의 전체 수익 등과 범위가 다를 수 있습니다. 시장점유율이나 이익 비중이 아닙니다. 제품·사업 부문·최종 시장·지역은 서로 다른 구분이며 더하지 않습니다. ↳ 행은 상위 항목에 포함되므로 다시 합산하지 않습니다. 다른 항목도 중복될 수 있어 화면 전체의 합계를 만들지 않습니다.</p><dl>${rows.map(row => `<dt>${esc(row.label)}</dt><dd>공시 식별자 ${esc(row.member)} · 지표 ${esc(row.metric)}${row.includes_intersegment ? ' · 내부 거래 포함 · 비중 산출 제외' : row.total ? ' · 비중 분모 ' + fmt(row.total) + ' ' + esc(row.unit) : ' · 일치하는 분모 미확인'} ${cite(row.source)}</dd>`).join('')}</dl></details>`;
     }
     function footer() {
       const external = (label, url) => window.MilkywayMarketDirectory.link(label, url);
@@ -97,7 +123,7 @@
       return `<ol class="company-source-list">${rows.map(row => `<li id="company-source-${row.number}"><strong>${external(row.label, row.url)}</strong><small>${esc(levels[row.level] || '출처')} · ${esc(row.as_of ? '자료 기준 ' + row.as_of : '원자료 기준일 미제공')}</small><small>${esc(new URL(row.url).hostname)}</small>${row.locations.size ? `<details class="company-source-locations"><summary>이 자료의 근거 위치 · ${fmt(row.locations.size)}개</summary><ul>${[...row.locations].map(([url, title]) => `<li>${external(title, url)}</li>`).join('')}</ul></details>` : ''}</li>`).join('')}</ol>
         ${excerpts.size ? `<details class="company-translations"><summary>영문 발췌 한글로 읽기 · 무료 외부 번역</summary><p class="fineprint">선택한 공개 발췌문만 Google 번역 새 창으로 보냅니다. 자동 호출은 없으며 기계 번역은 검토된 한글 요약과 다릅니다.</p><ul>${[...excerpts.values()].map(row => `<li>${external(row.title, 'https://translate.google.com/?sl=en&tl=ko&op=translate&text=' + encodeURIComponent(row.text))} ${cite(row.source)}</li>`).join('')}</ul></details>` : ''}`;
     }
-    return Object.freeze({cite, fact, original, essentials, revenue, footer, registerNetwork, registerPrice, get count() { return sources.size; },
+    return Object.freeze({cite, fact, business, original, essentials, revenue, footer, registerNetwork, registerPrice, get count() { return sources.size; },
       groups: Object.keys(groups).filter(key => (data.revenue_mix || []).some(row => row.group === key)), quoteSource});
   }
   window.MilkywayCompanyResearchView = Object.freeze({create, accepted, groups});

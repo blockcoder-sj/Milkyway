@@ -22,6 +22,10 @@
   function create({api,getState,target,footer}) {
     let context = null, reading = null, epoch = 0, pending = null, watchAt = 0, latest = null;
     function clear() {context=null;reading=null;latest=null;++epoch;target.innerHTML='';}
+    function useReading(nextReading) {
+      reading=nextReading;
+      if(latest&&reading){reading.registerPrice(latest);target.innerHTML=html(latest,reading.cite);}
+    }
     function setContext(data,nextReading) {
       reading=nextReading;
       if (!valid(data.entity_key) || !data.symbol) {clear();target.innerHTML='<p class="fineprint">비상장·시세 종목 미등록 기업</p>';return;}
@@ -46,7 +50,7 @@
       finally {if(pending===token)pending=null;}
     }
     setInterval(refresh,2000);
-    return Object.freeze({setContext,clear,refresh});
+    return Object.freeze({setContext,useReading,clear,refresh});
   }
   window.MilkywayCompanyPrice=Object.freeze({create,html});
 })();

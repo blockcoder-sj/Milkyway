@@ -127,6 +127,33 @@ class ProvenanceTests(unittest.TestCase):
         self.assertEqual(named('Samsung and Merck are mentioned.', 'TEST'), [])
         self.assertIn(('Samsung Electronics','005930.KS'), named('Samsung Electronics supplies products.', 'TEST'))
 
+    def test_semiconductor_suppliers_have_exact_identities_and_separate_business_evidence(self):
+        from cloud_app.company_context import business_context
+        from cloud_app.company_semiconductor_catalog import SAMSUNG_LIST, SAMSUNG_SUPPLIERS
+        with patch('socket.create_connection', side_effect=AssertionError('Network forbidden')):
+            seed_research(self.settings)
+            samsung = self.graph.by_symbol('005930.KS')
+            rows = self.graph.relations(samsung['id'])
+        listed = [row for row in rows if row['kind'] == 'supplier' and any(
+            item['source']['url'] == SAMSUNG_LIST['url'] for item in row['evidence'])]
+        self.assertEqual(len(listed), len(SAMSUNG_SUPPLIERS))
+        self.assertEqual(len(listed), 37)
+        self.assertTrue(all(row['business'] for row in listed))
+        self.assertTrue(all(row['business']['source']['url'] != SAMSUNG_LIST['url'] for row in listed))
+        self.assertIn('232140.KQ', {row['symbol'] for row in listed})
+        self.assertNotIn('112290.KQ', {row['symbol'] for row in listed})
+        operating = next(row for row in listed if row['name'] == 'ASML Netherlands B.V.')
+        self.assertIsNone(operating['symbol'])
+        self.assertNotEqual(operating['target_id'], self.graph.by_symbol('ASML')['id'])
+        wonik = next(row for row in listed if row['symbol'] == '240810.KQ')
+        self.assertIn('증착', wonik['business']['detail'])
+        self.assertTrue(any(row['kind'] == 'customer' and row['target_id'] == samsung['id']
+                            for row in self.graph.relations(wonik['target_id'])))
+        context = business_context(registry='kyec')
+        context['source']['url'] = 'https://example.test/modified'
+        self.assertNotEqual(context, business_context(registry='kyec'))
+        self.assertIsNone(business_context(registry='not-a-reviewed-identity'))
+
 
 if __name__ == '__main__':
     unittest.main()

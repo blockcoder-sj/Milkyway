@@ -7,6 +7,45 @@ import unittest
 
 class CompanyPriceFrontendTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for frontend checks')
+    def test_network_pages_and_live_prices_share_one_bounded_citation_registry(self):
+        script=r"""
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const elements=new Map();let poll,calls=0,reading,footerText='',page=1;
+const el=id=>{if(!elements.has(id))elements.set(id,{innerHTML:'',addEventListener(){}});return elements.get(id);};
+const ctx=vm.createContext({window:{MilkywayResearchView:{escape}},document:{hidden:false,querySelector:el},setInterval(fn){poll=fn;},URL,Intl,Date,encodeURIComponent});
+for(const file of ['format.js','market-directory.js','company-research-view.js','company-price.js','company-network.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+file,'utf8'),ctx);
+const key='c_'+'a'.repeat(32),via='c_'+'b'.repeat(32),leaf='c_'+'c'.repeat(32),state={workspace:'company',me:{id:'owner'}};
+const origin={label:'Root filing',url:'https://www.sec.gov/report',level:'primary'};
+const root={entity_key:key,symbol:'AAA',name:'Root',sources:[origin],relations:[{target_id:via,kind:'supplier',source:origin}]};
+const quote={symbol:'AAA',value:100,currency:'USD',source:'Yahoo',source_url:'https://finance.yahoo.com/quote/AAA/',status:'closed',observed_at:'2026-10-02T00:00:00Z',fetched_at:'2026-10-02T00:00:01Z'};
+reading=ctx.window.MilkywayCompanyResearchView.create(root);
+const target={innerHTML:''},footer=next=>{if(next)reading=next;footerText=reading.footer();};
+const prices=ctx.window.MilkywayCompanyPrice.create({api:async(_,options)=>{calls++;return options?{}:quote;},getState:()=>state,target,footer});
+const network=ctx.window.MilkywayCompanyNetwork.create({getState:()=>state,footer,prepareReading:next=>prices.useReading(next),
+ api:async()=>({root:{id:key,name:'Root'},via:{id:via,name:'Via'},direct:[],kind:'all',counts:{supplier:1},total:2,page,pages:2,
+ rows:[{name:'Leaf',target_id:leaf,kind:'supplier',detail:'Recorded supply',source:{...origin,url:'https://issuer.example/claim-'+page},
+ business:{detail:'한글 제품 정리',source:{...origin,url:'https://issuer.example/products-'+page}}}]})});
+const tick=()=>new Promise(setImmediate);
+(async()=>{
+ prices.setContext(root,reading);await tick();network.setContext(root,reading);
+ assert.equal(calls,2);assert(target.innerHTML.includes('data-company-citation="2"'));
+ await network.open(via);
+ assert.equal(calls,2);assert.equal(reading.count,4);
+ assert(footerText.includes('id="company-source-2"><strong><a href="https://finance.yahoo.com/quote/AAA/"'));
+ assert(target.innerHTML.includes('data-company-citation="2"'));assert(el('#companyNetwork').innerHTML.includes('data-company-citation="3"'));
+ poll();await tick();assert.equal(calls,3);assert.equal(reading.count,4);assert(footerText.includes('claim-1'));
+ page=2;await network.open(via,'all',2);
+ assert.equal(calls,3);assert.equal(reading.count,4);assert(!footerText.includes('claim-1'));assert(footerText.includes('claim-2'));
+ assert(target.innerHTML.includes('data-company-citation="2"'));assert(footerText.includes('id="company-source-2"><strong><a href="https://finance.yahoo.com/quote/AAA/"'));
+ prices.clear();
+})().catch(e=>{console.error(e);process.exitCode=1;});
+"""
+        root=Path(__file__).resolve().parents[1]/'cloud_app/static'
+        result=subprocess.run([shutil.which('node'),'-e',script,str(root)],capture_output=True,text=True,timeout=20)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for frontend checks')
     def test_numbers_sources_owner_navigation_visibility_and_failure(self):
         script=r"""
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');

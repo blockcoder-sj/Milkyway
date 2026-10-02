@@ -28,7 +28,7 @@
     const networkSection=document.createElement('section');networkSection.className='company-network-section';
     networkSection.innerHTML='<h3>업계 연결 탐색</h3><div id="companyNetwork" aria-live="polite"></div>';
     $('#companyRelationsSection').append(networkSection);
-    network=window.MilkywayCompanyNetwork.create({api:(...args)=>hooks.api(...args),getState:()=>hooks.getState(),footer});
+    network=window.MilkywayCompanyNetwork.create({api:(...args)=>hooks.api(...args),getState:()=>hooks.getState(),footer,prepareReading:next=>prices.useReading(next)});
     $('#companyBack').addEventListener('click',()=>{if(history.state?.parentCompany){history.back();return;}const target=sector;leave();if(target)window.MilkywayMarketDetail.open(target);else hooks.openWorkspace('market');});
     $('#companyCollect').addEventListener('click',collect);
     $('#companyRelationFilter').addEventListener('change',()=>{relationPage=1;selected=null;relations();});
@@ -58,7 +58,7 @@
     const edge=data?.relations[selected];
     if(!edge){$('#companyRelationFocus').innerHTML='<h4>관계 확인</h4><p>관계도나 아래 목록에서 기업을 선택하세요.</p>';return;}
     const evidence=edge.evidence?.length?edge.evidence:[edge];
-    $('#companyRelationFocus').innerHTML=`<small>${esc(kinds[edge.kind])} · 근거 ${fmt(evidence.length,0)}건</small><h4>${esc(edge.name)}</h4>${evidence.map(item=>`<div class="company-relation-evidence"><p>${esc(item.detail||'등록된 관계의 세부 조건은 원문을 확인하세요.')} ${source(item.source)}</p>${item.reverse?`<p class="company-reverse-note">${esc(item.reported_by)} 자료에 기록된 관계를 반대 방향에서 표시합니다. 설명과 출처는 원래 진술의 내용입니다.</p>`:''}${reading.original(item.original)}</div>`).join('')}<p>${companyLink(edge,edge.name+' 기업 상세')}</p>${['supplier','customer','partner','competitor'].includes(edge.kind)?`<button class="ghost compact" data-network-via="${esc(edge.target_id)}">업계 연결</button>`:''}`;
+    $('#companyRelationFocus').innerHTML=`<small>${esc(kinds[edge.kind])} · 근거 ${fmt(evidence.length,0)}건</small><h4>${esc(edge.name)}</h4>${reading.business(edge)}<strong>확인된 관계</strong>${evidence.map(item=>`<div class="company-relation-evidence"><p>${esc(item.detail||'등록된 관계의 세부 조건은 원문을 확인하세요.')} ${source(item.source)}</p>${item.reverse?`<p class="company-reverse-note">${esc(item.reported_by)} 자료에 기록된 관계를 반대 방향에서 표시합니다. 설명과 출처는 원래 진술의 내용입니다.</p>`:''}${reading.original(item.original)}</div>`).join('')}<p>${companyLink(edge,edge.name+' 기업 상세')}</p>${['supplier','customer','partner','competitor'].includes(edge.kind)?`<button class="ghost compact" data-network-via="${esc(edge.target_id)}">업계 연결</button>`:''}`;
   }
   function relations(){
     if(!data)return;
@@ -67,7 +67,7 @@
     $('#companyRelationSummary').textContent=`${filter==='business'?'사업 관계':filter==='all'?'전체 관계':kinds[filter]} ${fmt(rows.length,0)}개 · 현재 페이지 ${fmt(result.rows.length,0)}개 · 자료에 등록된 기업만 표시`;
     for(const option of $('#companyRelationFilter').options){if(kinds[option.value])option.textContent=`${kinds[option.value]} (${fmt(relationView.select(data.relations,option.value).length,0)})`;}
     $('#companyGraph').innerHTML=relationView.draw(data.name,data.symbol,result.rows)||'<p class="fineprint company-graph-empty">이 조건에서 출처를 확인한 사업 관계가 아직 등록되지 않았습니다. 관계 종류를 바꾸거나 기업 공시·자료 수집 상태를 확인하세요.</p>';
-    $('#companyRelationList').innerHTML=result.rows.map(edge=>{const item=relationView.lead(edge);return `<div class="company-relation-row"><span class="relation-kind relation-${esc(edge.kind)}">${esc(kinds[edge.kind])}</span><div class="company-relation-business"><strong>${companyLink(edge)}</strong><p>${esc(item.detail||'사업 역할 설명 미등록')}</p></div><small>${esc(item.source.as_of||'기준일 미제공')} · ${esc(level[item.source.level])}${item.reverse?' · 역방향 표시':''}${edge.evidence?.length>1?' · 근거 '+fmt(edge.evidence.length,0)+'건':''}</small><button class="ghost compact" type="button" data-relation-index="${edge.index}" aria-label="${esc(edge.name)} 관계·출처">관계·출처</button>${['supplier','customer','partner','competitor'].includes(edge.kind)?`<button class="ghost compact" data-network-via="${esc(edge.target_id)}" aria-label="${esc(edge.name)} 업계 연결">업계 연결</button>`:''}</div>`;}).join('');
+    $('#companyRelationList').innerHTML=result.rows.map(edge=>{const item=relationView.lead(edge);return `<div class="company-relation-row"><span class="relation-kind relation-${esc(edge.kind)}">${esc(kinds[edge.kind])}</span><div class="company-relation-business"><strong>${companyLink(edge)}</strong>${reading.business(edge)}<p><span class="fineprint">관계 근거</span> ${esc(item.detail||'사업 역할 설명 미등록')}</p></div><small>${esc(item.source.as_of||'기준일 미제공')} · ${esc(level[item.source.level])}${item.reverse?' · 역방향 표시':''}${edge.evidence?.length>1?' · 근거 '+fmt(edge.evidence.length,0)+'건':''}</small><button class="ghost compact" type="button" data-relation-index="${edge.index}" aria-label="${esc(edge.name)} 관계·출처">관계·출처</button>${['supplier','customer','partner','competitor'].includes(edge.kind)?`<button class="ghost compact" data-network-via="${esc(edge.target_id)}" aria-label="${esc(edge.name)} 업계 연결">업계 연결</button>`:''}</div>`;}).join('');
     $('#companyRelationPages').innerHTML=window.MilkywayPaging.controls(result,'data-relation-page');
     selected??=result.rows[0]?.index;focus();
   }

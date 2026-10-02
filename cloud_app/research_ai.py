@@ -54,10 +54,20 @@ filters; long-only equal target allocations, 1..20 stocks, calendar-day rebalanc
 investment_fraction (portfolio exposure target), max_position_fraction (per-stock
 target cap), rebalance_weights (trim/top up retained positions if true), percentage
 stop and per-side costs. Fractions are 0..1, not percentages; remaining capital stays
-in cash. New drafts should normally set rebalance_weights=true; preserve a selected
+in cash. Both investment_fraction and max_position_fraction use TOTAL portfolio
+equity as their denominator, never just the invested sleeve. For N selected stocks,
+each target is min(investment_fraction / N, max_position_fraction). For example,
+80% exposure over five stocks with a 20% cap targets 16% of total equity per stock
+and 20% cash before costs; the 20% cap is NOT binding. A 10% cap instead targets
+10% each and 50% cash. Label the denominator and distinguish a target from a cap.
+Costs, price changes and unchanged existing quantities can alter realized weights.
+New drafts should normally set rebalance_weights=true; preserve a selected
 version's choice. With false only replaced stocks trade and retained weights drift.
 RSI is ranked high for positive weights and low
 for negative weights. Lookbacks are trading sessions; rebalance_days is calendar days.
+Rebalancing becomes due after that many calendar days since the last rebalance;
+on a market holiday it waits until the NEXT executable trading session, never a
+previous or vaguely 'nearest' session. A 30-day interval is not calendar month-end.
 Unsupported: arbitrary Python, intraday indicators, news/fundamentals, sector rotation,
 shorting, leverage, options, Boolean indicator thresholds and order-book execution.
 Do not silently approximate unsupported rules. Explain limitations and ask the user.

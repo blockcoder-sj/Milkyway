@@ -646,4 +646,6 @@ def enrich(value):
     for edge in data['relations']:
         if not edge.get('symbol') and not edge.get('registry_id') and edge['name'] in PRIVATE_NAMES:
             edge['registry_id'] = PRIVATE_NAMES[edge['name']]
+    from .company_revenue import present_revenue
+    data['revenue_mix'] = present_revenue(data['revenue_mix'], data['symbol'])
     return CompanyKnowledge.model_validate(data)

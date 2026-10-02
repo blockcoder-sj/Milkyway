@@ -28,12 +28,17 @@
     const rows = [
       ["대상 종목", spec.symbols.join(", ")],
       ["초기 자금", `${number(p.initial_cash,2)} USD`],
-      ["보유·배분", `최대 ${number(p.max_positions)}종목 · 전체 투자 목표 ${percent(p.investment_fraction)} · 종목당 목표 상한 ${percent(p.max_position_fraction)} · 남는 자금은 현금`],
-      ["리밸런싱", `${number(p.rebalance_days)}달력일 간격 · ${p.rebalance_weights ? "동일 목표 비중으로 재조정" : "교체 종목만 거래 · 유지 종목의 수량 유지"}`],
+      ["보유·배분", `전체 자산 기준 · 최대 ${number(p.max_positions)}종목 · 전체 투자 목표 ${percent(p.investment_fraction)} · 종목당 목표 상한 ${percent(p.max_position_fraction)} · 남는 자금은 현금`],
+      ["리밸런싱", `${number(p.rebalance_days)}달력일 간격 · ${p.rebalance_weights ? "동일 목표 비중으로 재조정" : "교체 종목만 거래 · 유지 종목의 수량 유지"} · 휴장일에는 다음 거래 가능 시점에 실행`],
       ["손절", p.stop_loss_pct===null ? "사용 안 함" : `현재 평균 매입단가 대비 ${percent(Math.abs(p.stop_loss_pct))} 하락 기준`],
       ["거래 비용", `매수·매도 각각 ${percent(p.cost_per_side)}`],
       ["종목 필터", `가격 ${number(f.min_price,2)} USD 이상 · ${number(f.history_days)}거래일 이력 · 해당 기간 평균 거래량 ${number(f.min_average_volume)}주 이상`],
     ];
+    const count = Math.min(p.max_positions, spec.symbols.length);
+    if (count > 0 && Number.isFinite(p.investment_fraction) && Number.isFinite(p.max_position_fraction)) {
+      const target = Math.min(p.investment_fraction / count, p.max_position_fraction);
+      rows.splice(3, 0, ["비중 계산 예시", `${number(count)}종목이 모두 편입되면 전체 자산 기준 종목당 ${percent(target)} · 현금 ${percent(Math.max(0,1-count*target))} (비용 반영 전). 실제 비중은 체결 비용·가격 변동 및 기존 수량 유지 여부에 따라 달라집니다.`]);
+    }
     const factors = spec.factors.map(factor => {
       const labels = factorNames[factor.kind] || [factor.kind,"높은 순","낮은 순"];
       return `<li>${escape(labels[0])} · ${escape(number(factor.lookback))}거래일 · 가중치 ${escape(number(factor.weight,2))} · ${escape(factor.weight===0 ? "점수에 반영 안 함" : labels[factor.weight>0 ? 1 : 2])}</li>`;

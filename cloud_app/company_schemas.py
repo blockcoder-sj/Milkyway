@@ -66,7 +66,7 @@ class Financial(BaseModel):
 
 class RevenueLine(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
-    group: Literal['product', 'segment', 'geography', 'revenue_type']
+    group: Literal['product', 'segment', 'geography', 'revenue_type', 'end_market']
     member: str = Field(min_length=1, max_length=190)
     label: str = Field(min_length=1, max_length=160)
     value: float = Field(ge=0, le=1e16)
@@ -76,6 +76,7 @@ class RevenueLine(BaseModel):
     total: float | None = Field(default=None, gt=0, le=1e16)
     metric: str = Field(min_length=1, max_length=120)
     parent: str | None = Field(default=None, max_length=190)
+    includes_intersegment: bool = False
     source: Source
 
     @model_validator(mode='after')

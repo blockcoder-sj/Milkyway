@@ -37,6 +37,22 @@ assert.equal(view.accepted({url:'https://user:pass@www.sec.gov/',level:'primary'
 assert.equal(view.accepted({url:'https://www.sec.gov/',level:'encyclopedia'}),false);
 assert.equal(view.accepted({url:'https://x.wikidata.org/wiki/X',level:'primary'}),false);
 assert(view.create({}).essentials().includes('아직 검토되지 않았습니다'));
+const internal=view.create({revenue_mix:[{...base,group:'segment',includes_intersegment:true}]}).revenue('segment');
+assert(internal.includes('내부 거래 포함'));assert(!internal.includes('75%'));assert(internal.includes('150,000,000 USD'));
+const periods=view.create({revenue_mix:[base,{...base,start:'2024-01-27',end:'2025-01-25'},
+ {...base,unit:'KRW'},{...base,source:{...src,url:'https://www.sec.gov/another.htm'}},
+ {...base,metric:'us-gaap:SalesRevenueNet'}]}).revenue('product');
+assert.equal((periods.match(/<table>/g)||[]).length,5);
+const market=view.create({revenue_mix:[{...base,group:'end_market'}]});
+assert.equal(market.groups[0],'end_market');assert(market.revenue('end_market').includes('고객 산업별'));
+const edge={name:'공급 업체',source:src,business:{detail:'<script>장비 제조</script>',source:{...src,url:'https://issuer.example.test/products'}}};
+const contextual=view.create({relations:[edge]});
+assert.equal(contextual.count,2);assert(contextual.business(edge).includes('기업 사업'));
+assert(contextual.business(edge).includes('&lt;script&gt;'));assert(!contextual.business(edge).includes('<script>'));
+assert(contextual.business(edge).includes('data-company-citation="1"'));assert(!contextual.business(edge).includes('href="https:'));
+assert.equal(contextual.business({...edge,business:{detail:'Bad',source:rejected}}),'');
+const network=view.create({});network.registerNetwork({rows:[edge]});
+assert.equal(network.count,2);assert(network.business(edge).includes('data-company-citation='));
 """
         root = Path(__file__).resolve().parents[1] / 'cloud_app/static'
         result = subprocess.run([shutil.which('node'), '-e', script, str(root)],
@@ -140,6 +156,7 @@ const result={symbol:'AAPL',name:'<script>Apple</script>',description:'descripti
  products:Array.from({length:12},(_,i)=>({title:`<img Product ${i}>`,detail:'safe',source:src})),
  relations:Array.from({length:12},(_,i)=>({name:`Company <${i}>`,target_id:'c_'+String(i+1).padStart(32,'0'),kind:i===0?'supplier':'subsidiary',symbol:i===0?'MSFT':null,detail:'Source-backed relation',source:src}))};
 let delayed=false,response=result;
+result.relations[0].business={title:'기업 사업',detail:'<script>검사 장비</script>',source:src};
 const ctx=vm.createContext({window:{MilkywayResearchView:{escape},MilkywayCompanyPrice:{create:()=>({setContext(){},clear(){}})},getSelection:()=>null},
  document:{querySelector:el,createElement:()=>panel,addEventListener(kind,fn){documentHandlers[kind]=fn;}},
  history:{state:null,pushState(value){this.state=value;},back(){}},setInterval(fn){poll=fn;},Intl,Date,Number,Math,Map,Set,URL,encodeURIComponent});
@@ -158,6 +175,8 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
  click('data-relation-page',2);assert(el('#companyRelationSummary').textContent.includes('현재 페이지 4개'));
  el('#companyRelationFilter').value='supplier';el('#companyRelationFilter').change();
  assert(el('#companyRelationFocus').innerHTML.includes(result.relations[0].target_id));assert(!el('#companyRelationList').innerHTML.includes('&lt;1&gt;'));
+ assert(el('#companyRelationFocus').innerHTML.includes('기업 사업'));assert(el('#companyRelationList').innerHTML.includes('&lt;script&gt;검사 장비'));
+ assert(!el('#companyRelationFocus').innerHTML.includes('<script>'));assert(!el('#companyRelationList').innerHTML.includes('<script>'));
  response={...result,relations:[...result.relations.slice(1),result.relations[0]]};poll();await new Promise(setImmediate);
  assert(el('#companyRelationFocus').innerHTML.includes(result.relations[0].target_id));assert(!el('#companyRelationFocus').innerHTML.includes(result.relations[1].target_id));
  response=result;poll();await new Promise(setImmediate);

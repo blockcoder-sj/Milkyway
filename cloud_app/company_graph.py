@@ -14,6 +14,7 @@ import uuid
 
 from .company_schemas import CompanyKnowledge, Source
 from .company_provenance import forbidden
+from .company_context import business_context
 
 ENTITY_KEY = re.compile(r"c_[a-f0-9]{32}")
 QID = re.compile(r"Q\d{1,12}")
@@ -547,6 +548,8 @@ class CompanyGraph:
                     source=evidence["source"],
                     evidence=[evidence],
                 )
+                relation['business'] = business_context(relation['symbol'], next(
+                    (a['value'] for a in aliases if a['namespace'] == 'registry'), None))
                 groups[group_key] = relation
                 result.append(relation)
             return result

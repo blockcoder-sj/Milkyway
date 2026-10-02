@@ -670,3 +670,189 @@ resuming; no paid AI regression approval has arrived.
   scope is still eight KOSPI entries; verified KIS master has24KOSPI/22KOSDAQ.
 - Five newly requested real GPT-5.4-mini/reasoningnone tests still await explicit
   approval; new paid provider calls remain0. No harness authorized.
+
+## User paused work — 2026-10-02
+
+- Explicit latest request: "작업 잠시 중단". Stop implementation, tests, browser
+  actions and deployment until the user requests resumption. Existing app services
+  remain running; no request to shut down the app or remove personal data.
+- Price milestone committed/pushed as `8931bdd74cb5b1dc9ba135d69e16bb351cf92370`.
+  GitHub CI36963462532 completed successfully for that exact commit.
+- User asked whether Toss is essential. Explained that encyclopedia/display,
+  strategy development and backtesting can use free sources; current Yahoo
+  quotes are display-only. A separately labelled one-minute reference-price
+  paper feed would need implementation. Do not imply it already executes paper
+  trades or silently substitute display caches into the execution ledger.
+- UNCOMMITTED and UNVERIFIED after that milestone: new
+  `cloud_app/company_it_research.py` with17 issuer-based Korean business/product/
+  customer/input/competition briefs and3 operating-condition notes each; curated
+  AMD/AVGO/QCOM/INTC/CRWD/LRCX/CRM relation statements; imports/merges in
+  `company_research_catalog.py`. These are not in the deployed image or GitHub yet.
+- Also unverified: `company_revenue.py` supports checked operating-segment
+  presentation qualifiers for AMD2488/INTC50863/DELL1571996/AMAT6951, exact AMD
+  product/segment pairs, the standard including-assessed-tax revenue metric,
+  Korean labels and value-reconciled AMD/Intel parent links. `company_schemas.py`
+  adds RevenueLine.includes_intersegment. Tests, further review, complete label
+  mapping and UI presentation remain undone. Do not report this as finished.
+- Actual primary annual XML showed missing business figures were a parser gap:
+  AMD3 segments use srt:ConsolidationItemsAxis=us-gaap:OperatingSegmentsMember plus
+  the business segment axis. AMD Client10,640/Gaming3,910 million sum to
+  ClientAndGaming14,550; DataCenter16,635 and Embedded3,454; total34,639.
+  Intel/Dell/AMAT have the same qualifier; Intel has internal Foundry transactions
+  and a Products subtotal. CRWD uses the including-assessed-tax revenue tag.
+- Public temporary issuer documents: host `/tmp/milkyway-amd-annual-2025.html`;
+  company-data container `/tmp/milkyway-it-primary/{INTC,DELL,AMAT,CRWD}.html`.
+  Copy these public documents before replacing that container if needed.
+  App container `/tmp/milkyway-it-members.json` holds existing IT revenue rows.
+- Complete translations/hierarchies still needed for exact observed members:
+  avgo:SubscriptionsandServices; CRM AgentforceIntegrationAndAgentforceAnalytics,
+  AgentforceMarketingAndAgentforceCommerce, AgentforceSales, AgentforceService,
+  ProfessionalServicesandOther, SubscriptionandSupport; adbe:SubscriptionRevenue;
+  hpe:HybridCloudSegment/ServerSegment, us-gaap:CorporateAndOther;
+  lrcx:CustomerSupportandOther; klac:OtherRevenue; adi:ReportableSegment. ADI is
+  one reporting segment with4 end markets, which should be presented accurately.
+- Source source-checks: PANW issuer copy
+  https://investors.paloaltonetworks.com/node/20811/html (FY2026 July31), includes
+  CyberArk acquisition2026-02-11 and Chronosphere2026-01-29, Prisma/Cortex/identity/
+  observability. HPE issuer FY2025 PDF verifies Juniper acquisition2025-07-02.
+  LRCX FY2026 explicitly names MU/Samsung/SK hynix/TSMC customers. QCOM FY2025
+  names TSMC/Samsung/GFS foundries, ASE/Amkor/SPIL/STATSChipPAC ATMP, and
+  Apple/Samsung/Xiaomi each >=10% consolidated customer/licensee revenues.
+- Samsung supplier-list expansion remains unimplemented. KIS official current
+  master verified exact Korean stock identities (avoid guessing YC): Daeduck
+  Electronics353200.KS; Dongjin005290.KQ; Wonik Holdings030530.KQ; Wonik
+  Materials104830.KQ; Wonik IPS240810.KQ; PSK319660.KQ; Soulbrain357780.KQ;
+  YC232140.KQ. 112290.KQ is YC Chem, a different company. Master snapshots at
+  `/tmp/milkyway-kospi-master.txt` and `/tmp/milkyway-kosdaq-master.txt`; downloaded
+  with verified TLS, without running the issuer sample's unsafe TLS override.
+  Official parsing code filenames are kis_kospi_code_mst.py/kis_kosdaq_code_mst.py
+  under koreainvestment/open-trading-api/stocks_info (not kosdaq_code.py).
+- New primary materials: Dongjin official business/semiconductor.php and
+  en/company/be_overseas.php (explicit Xi'an Samsung supply relationship);
+  Soulbrain en/m33.php semiconductor chemicals; Salesforce official2025-10-17
+  Google Workspace/Gemini partnership. Research used no new Chrome tab, paid
+  API, AI or harness. No new development verification job remains running.
+
+## Resumed M6 — US IT summaries and semiconductor supply chains, 2026-10-02
+
+- User explicitly resumed with "이어서 진행" and asked whether work was active.
+  The prior pause is revoked. Focus remains deeper US IT coverage, semiconductor
+  partners/suppliers, accurate processed Korean information, and local operation.
+- Added 17 issuer-report IT briefs (business/revenue/products/customers/inputs/
+  competition and three operating-condition cards each). Added Samsung's37 exact
+  official supplier-list entities with their own Korean business sources. Separate
+  dated Dongjin/Wonik customer evidence; AMD Tongfu/KYEC and other annual-report
+  trade roles. Curated symbol profiles100, registry profiles59, symbol-catalogue
+  relationship statements252. These include stock classes/scoped notes, not159
+  equally complete company analyses or252 current contracts. Samsung list scope
+  is publication-time80% procurement with consent; no publication date is given.
+- New data lives in company_it_research.py and company_semiconductor_catalog.py.
+  Exact ticker/registry business context is cached/bounded and copied for graph
+  responses. It has a distinct source from a supplier-list/trade statement.
+  YC232140 is not YC Chem112290; PSK/Soulbrain/Daeduck operating tickers and the
+  ASML Netherlands operating legal entity are distinct from their holding companies.
+- Revenue parser now accepts exact reviewed operating-segment qualifier pairs
+  for AMD/Intel/Dell/AMAT/QCOM and AMD product children. Adds including-tax standard
+  revenue, Korean labels, value-tied Oracle/CRM/AMD/Intel hierarchy, ADI end-market
+  distinction, strict official-SEC CIK, and cached-row normalization. Intel internal
+  segment revenue has no consolidated share. Different documents/periods/currencies/
+  metrics or duplicate members cannot support subtotal links or denominator mixing.
+- Display adds major-revenue cards, same-basis tables, child indentation and folded
+  calculation details. Source-backed business context accompanies relationship
+  lists/focus/two-hop neighbours. Actual6 free annual HTMLs were parsed and their
+  public cache revenue rows updated (AMD10,INTC10,DELL6,AMAT10,CRWD6,QCOM2), without
+  changing private data or broad profile collection timestamps. Collector was stopped
+  briefly to avoid write races and restarted. Provider collection later uses the
+  same parser. Public originals/parsed JSON remain under /tmp/milkyway-it-*.
+- Focused47/1.018s passed after detecting/filling3 missing supplier descriptions.
+  First full505 test run had4 errors because disposable /app/runtime was read-only;
+  add a private tmpfs, never a user volume. Recheck505/29.033s OK(skipped14), host16
+  /0.853s OK, native8 stages OK. Chrome found a pre-existing price/network citation
+  registry collision. Added useReading/prepareReading and a real combined Node
+  regression covering page switches, price ticks, bounded sources and no extra calls.
+  Corrected code image full506/45.935s OK(skipped15), host17/1.683s OK, native8 OK.
+- Chrome also retained an older company-price.js after reload, causing useReading
+  missing. All7 company JS/CSS asset versions are now20261002-6. Final release
+  image/retest/deployment and final visible citation verification are recorded below.
+- Actual annual single parses405.15–824.79ms at1CPU; active public DB Samsung→Wonik
+  network30reads median5.16ms/p955.49ms,6,537bytes. These exclude external latency.
+  Public DB at inspection:3754 profiles,integrityok,FK0,encyclopedia sources0;
+  Samsung49 business relations/38 suppliers,37 official-list suppliers all with their
+  own business-source context. Existing personal runtime/backup volumes preserved.
+- Direct scoped source/security review, Python AST13/JS syntax4, credential patterns0
+  and diff checks passed; .env remains ignored. No new dependency, CodeRabbit,
+  harness, actual AI provider call or order. Extra check containers auto-remove.
+  Chrome extension remains unavailable but native Chrome control works on the
+  existing single Milkyway tab. AMD current price/brief/revenue and internal link to
+  Samsung, pages1→2 and Samsung→Wonik→SK hynix/GFS were visibly exercised.
+- DB and workers healthy; readyHTTP200 but dataset/data_gate remainfalse. This is
+  not completed paper-feed/data readiness. Toss IP denial remains unresolved; Yahoo
+  current prices are display-only and a separate free reference-price paper feed
+  is not implemented. Korean24KOSPI/22KOSDAQ taxonomy expansion and broad company
+  depth remain. Samsung quantitative annual revenue still has no reviewed rows.
+- New actual GPT-5.4-mini/reasoningnone5-call approval remains unanswered. The earlier
+  five-call authorization was consumed. Do not call a paid provider or say five new
+  tests passed. Details: docs/IT_SEMICONDUCTOR_REVIEW_20261002.md.
+
+## Resumed final release and new five-call approval — 2026-10-02
+
+- The user paused again, then explicitly said "작업 이어서 진행". Work resumed from
+  the saved M6 tree. The user then authorized five additional actual AI calls.
+  This supersedes the earlier pending-approval entries above.
+- Deployed company asset revision20261002-6 with image139a6bc24497. Its full suite
+  was506/103.842s OK(skipped15), native8 passed. Chrome existing single tab verified
+  Samsung page2→Wonik→GFS/SK hynix. No useReading error; price/source registry remained
+  separate from the additional network sources. No new browser tab was opened.
+- Exactly5 actual OpenAI calls ran through Chrome preview/approve in the new room
+  `AI 기능 재검증 · 2026-10-02 · 승인 5회`. Modelgpt-5.4-mini, reasoningnone,
+  outputcap4000, noretry. All5 completed, no error/blank/schema/save failure.
+  Call durations7.704/8.357/8.564/7.538/7.790seconds from DB approval→finish;
+  tokens10888input/2164output/13052total. No price/billing claim was inferred.
+  This five-call authorization is now fully consumed; further real AI needs approval.
+- First vague hypothesis prompted3questions. Second saved60-session momentum across
+  AAPL/MSFT/NVDA/AMD/AVGO/ORCL/CRM/ADBE, top5, cash100000, exposure1/cap.25,
+  calendar30, rebalance_weights=true, stop-.05, per-sidecost.003, filters5/200000/60.
+  Third changed only exposure.8/cap.2/calendar7. Fourth changed only stop-.08/cost.001.
+  Fifth explained unsupported private order values/5minRSI without saving/changing
+  the selected v3. Exact execution-field comparisons and3export AST/spec checks passed.
+- Call3 prose confused the20% invested-sleeve weight with a20% total-equity cap;
+  saved spec was correct. Call2 holiday wording was ambiguous. Updated SYSTEM to
+  explain total-equity min(exposure/N,cap),16%/20%cash versus10%/50%cash, and next
+  executable session. Calls4/5 used this update, with16%,cash20%,nonbinding20%cap,
+  4percentage-point difference and next trading day correctly explained in call4.
+  No new harness. Existing reply history is retained as evidence, not rewritten.
+- Added a deterministic allocation example to saved execution-rule tables, including
+  caps/cash/cost caveats and holiday timing. Host Node regression covers uncapped,
+  capped, retain-quantity and empty-universe cases. Chrome confirmed16%/20%,stop8%,
+  fee0.1%. Final visual pass also corrected narrow table header wrapping via CSS.
+- AI/source imageb020ce40eb6b full506/86.765s OK(skipped15); host17/2.220s OK;
+  AST15/JS5/credentialpatterns0 and diff passed. Native first run failed worker
+  start25sec under normal public collection (company-data~101%CPU afterward).
+  With company-data/market-details stopped, sameCPU1/RAM768MiB/time limits passed
+  all8 stages. One intermediate runner invocation omitted writable/tmp and failed
+  before startup; final run used an isolated temporary volume for evidence, removed
+  with its disposable container. Do not hide the normal-load startup limitation.
+  Native evidence:/tmp/milkyway-it-ai-native-report-20261002.json and matchinglog.
+- Executed final v3 using the ordinary app research experiment API, no AI call.
+  Actual backtest worker completed2025-10-01..2026-03-31(development151trades) and
+  2026-04-01..2026-10-01(validation148trades), sameYahoo generation fingerprint
+  2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b.
+  Request→completion observed5.223s with5s polling. This is exploratory current
+  universe data, not unbiased performance or proof of profitability. No paper account
+  activated and no real brokerage order. Test room/versions remain visible for review.
+- Current runtime observations supersede old unconditional Toss-IP claims: Chrome
+  showed SamsungToss realtime-trade price and credential confirmed in this session.
+  Later healthreadyHTTP200 still has dataset/data_gate=false; completed historical
+  bars supported the backtest but today's corporate-action/forward gate is pending.
+  No uninterrupted provider/paper-feed success is claimed. Yahoo display data still
+  does not automatically become an execution feed. Korean taxonomy/all-company depth
+  remain open. See docs/AI_CHAT_REGRESSION_20261002.md for the full bounded results.
+- Final CSS image952c974691a25469c4036a2fb16f20a365eb75a92e5a87a000bf05e05891acc7
+  deployed to all8 existing services; both paused collectors restored, apphealthy.
+  Changed20Python/JS files match full-testedimageb020/workspace/deployedimage bySHA256.
+  Final host17/2.623s OK, Chrome final v3 calculation table headings now stay on one
+  line. One existing Milkyway tab remains showing this test conversation/controls.
+  No disposable check containers remain. Personal runtime and backup volumes intact.
+- This milestone is ready for the normal branch commit/push after direct review.
+  Record/confirm exact GitHub head and CI in the next handoff; do not infer CI success
+  from the prior commit8931bdd's run. Main scope/remaining limits are documented above.
