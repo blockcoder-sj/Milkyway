@@ -856,3 +856,50 @@ resuming; no paid AI regression approval has arrived.
 - This milestone is ready for the normal branch commit/push after direct review.
   Record/confirm exact GitHub head and CI in the next handoff; do not infer CI success
   from the prior commit8931bdd's run. Main scope/remaining limits are documented above.
+
+
+## 2026-10-02 · one US session paper operation armed (follow-up)
+
+- Latest request: run today’s US regular session with the best existing strategy;
+  compare backtests and explain survivorship bias. Additional AI authorization was
+  already consumed in the prior milestone. This follow-up made 0 AI calls.
+- Prior milestone is committed/pushed at 044056c8b880ce6e6242701bb40713c6d4ab7372;
+  GitHub CI36998426773 succeeded. This supersedes the older “ready to commit” line.
+- 8 saved strategies → 6 distinct specs; 18 app backtests (full year plus two
+  separate half-years) completed on the same dataset fingerprint. C2/C3 got
+  separate 0.1% cost comparison copies; original specs preserved. Full-year
+  Sharpe selected C5, existing strategy9ac37176f4bc4feea965f6f065957ad3.
+  2025-10-01..2026-10-01: return10.9586%, Sharpe0.873964, MDD-11.4524%.
+  First half-1.6043%, second half+8.5307%; half runs restart cash independently.
+  No untouched holdout/PIT/profitability claim. See docs/PAPER_SESSION_20261002.md
+  and docs/PAPER_COMPARISON_20261002.json for all candidates/job IDs.
+- Added durable personal_paper_sessions table (local ResearchBase), optional
+  account session_date, US holiday/DST/early-close bounds, per-fill date guard,
+  expiry before provider I/O, immutable last-known summary, expired resume denial.
+  No fake closing sale; retained holdings are not proof of official closing value.
+- Actual account b1042a427dec4e1991be17f24f8becc8 created11:44UTC, active, no fills.
+  Name: 미국장 하루 검증 · 2026-10-02 · Momentum LowVol.
+  $100,000; 60% invested in top3 out of AAPL/MSFT/NVDA/AMZN/GOOGL/META;
+  momentum60weight.6 + lowvol20weight.4; 7calendar day rebalance; stop-5%; fee.1%.
+  Open13:30UTC / first rebalance13:35UTC / end20:00UTC (KST22:30/22:35/05:00).
+  It is armed for the upcoming real session, NOT a completed day of trading.
+- Toss quote-only preflight11:37UTC returned all6 US symbols in5.855s. Current
+  completed daily history through10-01 exists; today's action check awaits open.
+  Personal data worker retries every60s; paper refuses missing/stale quotes and
+  unverified actions. Do not bypass those gates to manufacture fills.
+- caffeinate PID25591 prevents idle sleep until20:10UTC/05:10KST, automatically
+  exits. Does not protect against lid/manual sleep/power/network/Docker shutdown.
+  Later restart expires the dated account before new fills, never resumes Monday.
+- Final local full suite517/70.232s OK(skipped16Node); host18/12.038s OK. Initial
+  full run had1 existing provider warmup10s timeout under concurrent collector
+  load; repeat with company/detail collectors temporarily stopped passed at same
+  1CPU/768MiB. Both collectors restored; no timeout weakened. Direct scoped
+  security/code review done; no full public scan claim; no new dependencies.
+- Deployed image097f64ade4b15072d52754d4f2293ceb8dceb9724bf0a635ed97bb6312d4927d
+  in all8 existing services, runtime/backup volumes retained. Median of5account
+  API reads25.275ms. Browser now has unrelated user Docs/Drive tabs; did not
+  navigate/close them or add tabs. New account visible at local portfolio view.
+- Must confirm final push/CI and current paper worker heartbeat before finalizing.
+  At market close, read account.paper_session.summary plus full fills/history;
+  report actual fills or specific waiting/error state. Never describe premarket
+  setup as successful full-day paper operation.

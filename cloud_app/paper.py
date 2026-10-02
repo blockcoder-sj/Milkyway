@@ -562,6 +562,8 @@ def _fill(
     reason: str,
     dedupe_key: str,
 ) -> bool:
+    if reason in {"rebalance", "stop_loss"} and not _session_allows_execution(session, account):
+        return False
     if not all(math.isfinite(float(value)) for value in (shares, price, fee_rate)):
         raise ValueError("Non-finite paper fill input")
     if shares <= 1e-9 or price <= 0:
@@ -634,11 +636,20 @@ def _account_positions(session: Session, account_id: str) -> dict[str, PaperPosi
     return {row.ticker: row for row in rows}
 
 
+def _session_allows_execution(session, account):
+    if not getattr(get_settings(), "personal_local_mode", False):
+        return True
+    from .paper_sessions import session_allows_execution
+    return session_allows_execution(session, account, utcnow())
+
+
 def mark_and_stop_accounts(session: Session) -> int:
     accounts = session.scalars(select(PaperAccount).where(PaperAccount.status == "active")).all()
     fills = 0
     now = utcnow()
     for account in accounts:
+        if not _session_allows_execution(session, account):
+            continue
         try:
             spec = _spec(account)
         except ValueError:
@@ -755,6 +766,8 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
     accounts = session.scalars(select(PaperAccount).where(PaperAccount.status == "active")).all()
     fill_count = 0
     for account in accounts:
+        if not _session_allows_execution(session, account):
+            continue
         try:
             spec = _spec(account)
         except ValueError:
@@ -809,7 +822,10 @@ def account_snapshot(session: Session, account: PaperAccount) -> dict:
     positions = _account_positions(session, account.id)
     equity = account.cash + sum(row.shares * row.last_price for row in positions.values())
     execution = {}
+    run = None
     if getattr(get_settings(), "personal_local_mode", False):
+        from .paper_sessions import session_payload
+        run = session_payload(session, account, utcnow())
         row = session.get(RuntimeHeartbeat, "paper-account:" + account.id)
         if row:
             try:
@@ -826,7 +842,10 @@ def account_snapshot(session: Session, account: PaperAccount) -> dict:
         execution = {"status": "configuration_required", "detail": "전략과 시세 연결 설정을 확인하세요"}
     elif account.status == "active" and not regular_market_open() and execution.get("status") in {None, "active", "waiting_session"}:
         execution = {"status": "market_closed", "detail": "미국 정규장 시작을 기다리고 있습니다"}
+    if run and (run["expired"] or run["completed_at"]):
+        execution = {"status": "session_finished", "detail": "지정 거래일 종료 · 추가 체결 중지. 잔고와 마지막 확인 평가액은 보존하며 공식 종가와 다를 수 있습니다."}
     return {
+        "paper_session": run,
         "execution_status": execution.get("status", "waiting_session"),
         "execution_detail": execution.get("detail", "미국 정규장 또는 데이터 준비 대기 중입니다"),
         "id": account.id,

@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from cloud_app.database import Base, BacktestJob, EquityPoint, MarketDataConnection, MemberQuote, PaperAccount, PaperFill, PaperPosition, RuntimeHeartbeat, Strategy, User
 from cloud_app import paper, worker
 from cloud_app.strategies import StrategySpec
+from cloud_app.research_models import ResearchBase
 
 
 class PersonalPaperTests(unittest.TestCase):
@@ -22,6 +23,7 @@ class PersonalPaperTests(unittest.TestCase):
         self.directory = TemporaryDirectory()
         self.engine = create_engine('sqlite:///' + str(Path(self.directory.name) / 'ledger.sqlite3'))
         Base.metadata.create_all(self.engine)
+        ResearchBase.metadata.create_all(self.engine)
         self.sessions = sessionmaker(bind=self.engine, autoflush=False, expire_on_commit=False)
         self.settings = SimpleNamespace(personal_local_mode=True, member_credentials_enabled=True,
             quote_provider='member', authority_enabled=False, quote_max_age_seconds=180,

@@ -1,0 +1,598 @@
+{
+  "method": "Existing six unique specifications; common 0.1% per side; same full year; rank full-year Sharpe, inspect subperiod stability and MDD; no untouched holdout claim. Original universes/allocations retained.",
+  "candidates": [
+    {
+      "label": "C1",
+      "source_id": "eddc3c8d99bf43f3a1bafa0244f49d89",
+      "strategy_id": "eddc3c8d99bf43f3a1bafa0244f49d89",
+      "name": "US Mega Cap 60D Momentum Top 5",
+      "spec": {
+        "schema_version": 1,
+        "name": "US Mega Cap 60D Momentum Top 5",
+        "description": "AAPL, MSFT, NVDA, AMD, AVGO, ORCL, CRM, ADBE 중 60거래일 모멘텀 순위 상위 5종목을 매수하고, 7달력일마다 동일비중으로 재조정하는 장기 모멘텀 전략. 아직 성과 검증 전인 초안.",
+        "symbols": [
+          "AAPL",
+          "MSFT",
+          "NVDA",
+          "AMD",
+          "AVGO",
+          "ORCL",
+          "CRM",
+          "ADBE"
+        ],
+        "factors": [
+          {
+            "kind": "momentum",
+            "lookback": 60,
+            "weight": 1.0
+          }
+        ],
+        "filters": {
+          "min_price": 5.0,
+          "min_average_volume": 200000.0,
+          "history_days": 60
+        },
+        "portfolio": {
+          "initial_cash": 100000.0,
+          "max_positions": 5,
+          "rebalance_days": 7,
+          "cost_per_side": 0.001,
+          "stop_loss_pct": -0.08,
+          "investment_fraction": 0.8,
+          "max_position_fraction": 0.2,
+          "rebalance_weights": true
+        }
+      }
+    },
+    {
+      "label": "C2",
+      "source_id": "29047b28fa9043fa9ebeb0307b575097",
+      "strategy_id": "b068aa7f090b44f9a288d79c304f7a09",
+      "name": "C2 비용 통일 · US Mega Cap 60D Momentum Top 5",
+      "spec": {
+        "schema_version": 1,
+        "name": "C2 비용 통일 · US Mega Cap 60D Momentum Top 5",
+        "description": "AAPL, MSFT, NVDA, AMD, AVGO, ORCL, CRM, ADBE 중 60거래일 모멘텀 순위 상위 5종목을 매수하고, 7달력일마다 동일비중으로 재조정하는 장기 모멘텀 전략. 아직 성과 검증 전인 초안. 비교 실험용 복사본: 편도 거래비용만 0.1%로 통일.",
+        "symbols": [
+          "AAPL",
+          "MSFT",
+          "NVDA",
+          "AMD",
+          "AVGO",
+          "ORCL",
+          "CRM",
+          "ADBE"
+        ],
+        "factors": [
+          {
+            "kind": "momentum",
+            "lookback": 60,
+            "weight": 1.0
+          }
+        ],
+        "filters": {
+          "min_price": 5.0,
+          "min_average_volume": 200000.0,
+          "history_days": 60
+        },
+        "portfolio": {
+          "initial_cash": 100000.0,
+          "max_positions": 5,
+          "rebalance_days": 7,
+          "cost_per_side": 0.001,
+          "stop_loss_pct": -0.05,
+          "investment_fraction": 0.8,
+          "max_position_fraction": 0.2,
+          "rebalance_weights": true
+        }
+      }
+    },
+    {
+      "label": "C3",
+      "source_id": "5e240ef4893041dfa438bb27e644f644",
+      "strategy_id": "a8fbfb118d0c435a8813d0e20e5f83ff",
+      "name": "C3 비용 통일 · US Mega Cap 60D Momentum Top 5",
+      "spec": {
+        "schema_version": 1,
+        "name": "C3 비용 통일 · US Mega Cap 60D Momentum Top 5",
+        "description": "AAPL, MSFT, NVDA, AMD, AVGO, ORCL, CRM, ADBE 중 60거래일 모멘텀 순위 상위 5종목을 매수하고, 30달력일마다 동일비중으로 재조정하는 장기 모멘텀 전략. 아직 성과 검증 전인 초안. 비교 실험용 복사본: 편도 거래비용만 0.1%로 통일.",
+        "symbols": [
+          "AAPL",
+          "MSFT",
+          "NVDA",
+          "AMD",
+          "AVGO",
+          "ORCL",
+          "CRM",
+          "ADBE"
+        ],
+        "factors": [
+          {
+            "kind": "momentum",
+            "lookback": 60,
+            "weight": 1.0
+          }
+        ],
+        "filters": {
+          "min_price": 5.0,
+          "min_average_volume": 200000.0,
+          "history_days": 60
+        },
+        "portfolio": {
+          "initial_cash": 100000.0,
+          "max_positions": 5,
+          "rebalance_days": 30,
+          "cost_per_side": 0.001,
+          "stop_loss_pct": -0.05,
+          "investment_fraction": 1.0,
+          "max_position_fraction": 0.25,
+          "rebalance_weights": true
+        }
+      }
+    },
+    {
+      "label": "C4",
+      "source_id": "b755d74f8e4c47ddacdc229cb0fe0719",
+      "strategy_id": "b755d74f8e4c47ddacdc229cb0fe0719",
+      "name": "Tech Momentum LowVol Top3",
+      "spec": {
+        "schema_version": 1,
+        "name": "Tech Momentum LowVol Top3",
+        "description": "미국 대형 기술주 6종목 중 60거래일 모멘텀과 20거래일 저변동성의 가중 합으로 상위 3개를 선별해 45%만 투자하는 롱온리 분산 전략. 기존 보유도 매 리밸런스마다 동일비중으로 재조정한다.",
+        "symbols": [
+          "AAPL",
+          "MSFT",
+          "NVDA",
+          "AMZN",
+          "GOOGL",
+          "META"
+        ],
+        "factors": [
+          {
+            "kind": "momentum",
+            "lookback": 60,
+            "weight": 0.6
+          },
+          {
+            "kind": "low_volatility",
+            "lookback": 20,
+            "weight": 0.4
+          }
+        ],
+        "filters": {
+          "min_price": 5.0,
+          "min_average_volume": 200000.0,
+          "history_days": 60
+        },
+        "portfolio": {
+          "initial_cash": 100000.0,
+          "max_positions": 3,
+          "rebalance_days": 10,
+          "cost_per_side": 0.001,
+          "stop_loss_pct": -0.05,
+          "investment_fraction": 0.45,
+          "max_position_fraction": 0.2,
+          "rebalance_weights": true
+        }
+      }
+    },
+    {
+      "label": "C5",
+      "source_id": "9ac37176f4bc4feea965f6f065957ad3",
+      "strategy_id": "9ac37176f4bc4feea965f6f065957ad3",
+      "name": "Tech Momentum LowVol Top3",
+      "spec": {
+        "schema_version": 1,
+        "name": "Tech Momentum LowVol Top3",
+        "description": "미국 대형 기술주 6종목 중 60거래일 모멘텀과 20거래일 저변동성의 가중 합으로 상위 3개를 선별해 60%만 투자하는 롱온리 분산 전략. 기존 보유도 매 리밸런스마다 동일비중으로 재조정한다.",
+        "symbols": [
+          "AAPL",
+          "MSFT",
+          "NVDA",
+          "AMZN",
+          "GOOGL",
+          "META"
+        ],
+        "factors": [
+          {
+            "kind": "momentum",
+            "lookback": 60,
+            "weight": 0.6
+          },
+          {
+            "kind": "low_volatility",
+            "lookback": 20,
+            "weight": 0.4
+          }
+        ],
+        "filters": {
+          "min_price": 5.0,
+          "min_average_volume": 200000.0,
+          "history_days": 60
+        },
+        "portfolio": {
+          "initial_cash": 100000.0,
+          "max_positions": 3,
+          "rebalance_days": 7,
+          "cost_per_side": 0.001,
+          "stop_loss_pct": -0.05,
+          "investment_fraction": 0.6,
+          "max_position_fraction": 0.25,
+          "rebalance_weights": true
+        }
+      }
+    },
+    {
+      "label": "C6",
+      "source_id": "a8dd0de0024346c5a0c1549a130db1a6",
+      "strategy_id": "a8dd0de0024346c5a0c1549a130db1a6",
+      "name": "LargeCapTech_Momentum_LowVol_3",
+      "spec": {
+        "schema_version": 1,
+        "name": "LargeCapTech_Momentum_LowVol_3",
+        "description": "AAPL, MSFT, NVDA, AMZN, GOOGL, META 중에서 최근 60거래일 모멘텀과 20거래일 저변동성을 함께 반영해 상위 3개를 선택하는 롱온리 전략입니다. 투자 비중은 총 45%로 제한하고, 10달력일마다 동일 비중으로 재조정합니다. 손절과 거래비용을 반영하며, 최소 가격·거래량·히스토리 필터를 사용합니다. 성과는 미검증입니다.",
+        "symbols": [
+          "AAPL",
+          "MSFT",
+          "NVDA",
+          "AMZN",
+          "GOOGL",
+          "META"
+        ],
+        "factors": [
+          {
+            "kind": "momentum",
+            "lookback": 60,
+            "weight": 0.6
+          },
+          {
+            "kind": "low_volatility",
+            "lookback": 20,
+            "weight": 0.4
+          }
+        ],
+        "filters": {
+          "min_price": 5.0,
+          "min_average_volume": 200000.0,
+          "history_days": 60
+        },
+        "portfolio": {
+          "initial_cash": 100000.0,
+          "max_positions": 3,
+          "rebalance_days": 10,
+          "cost_per_side": 0.001,
+          "stop_loss_pct": -0.05,
+          "investment_fraction": 0.5,
+          "max_position_fraction": 0.2,
+          "rebalance_weights": true
+        }
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "label": "C1",
+      "segment": "full",
+      "id": "d7aee6487f6242058aff996a16e77edd",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 119370.08616642097,
+        "return_pct": 19.370086166420975,
+        "annual_return_pct": 19.45432098186004,
+        "annual_volatility_pct": 23.93559254406753,
+        "sharpe": 0.8619226250676705,
+        "mdd_pct": -23.713413644469203,
+        "annual_turnover_pct": 496.2327603984865,
+        "trade_count": 294
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C2",
+      "segment": "full",
+      "id": "aab7ce282a1340d887933704375e8101",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 116458.38162716526,
+        "return_pct": 16.458381627165263,
+        "annual_return_pct": 16.52909647314955,
+        "annual_volatility_pct": 23.51650860234101,
+        "sharpe": 0.7676042889050109,
+        "mdd_pct": -22.970872834426686,
+        "annual_turnover_pct": 548.334639430119,
+        "trade_count": 307
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C3",
+      "segment": "full",
+      "id": "3809e3dbaf8a474680f27a1b3bd07763",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 120625.1500533947,
+        "return_pct": 20.62515005339469,
+        "annual_return_pct": 20.715300619618947,
+        "annual_volatility_pct": 26.013760782893353,
+        "sharpe": 0.8531518475889448,
+        "mdd_pct": -21.088997004499024,
+        "annual_turnover_pct": 370.6708309006086,
+        "trade_count": 91
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C4",
+      "segment": "full",
+      "id": "dd0cad31c6c34d639a062d2fb378604e",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 105807.32222720668,
+        "return_pct": 5.807322227206679,
+        "annual_return_pct": 5.8311208179329554,
+        "annual_volatility_pct": 9.320427200202715,
+        "sharpe": 0.654528715468025,
+        "mdd_pct": -8.206587989617493,
+        "annual_turnover_pct": 280.952363032587,
+        "trade_count": 131
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C5",
+      "segment": "full",
+      "id": "dd9b1f727d9c4b9b8f118ff90bd01771",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 110958.56182335451,
+        "return_pct": 10.958561823354508,
+        "annual_return_pct": 11.004540298173527,
+        "annual_volatility_pct": 12.89367409268007,
+        "sharpe": 0.8739641783896597,
+        "mdd_pct": -11.452447037859505,
+        "annual_turnover_pct": 479.5998538113298,
+        "trade_count": 186
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C6",
+      "segment": "full",
+      "id": "4f41881cb1f6444ea36592073c0abd86",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 106416.37559223987,
+        "return_pct": 6.416375592239865,
+        "annual_return_pct": 6.44274522663395,
+        "annual_volatility_pct": 10.352968165535291,
+        "sharpe": 0.6546886166154989,
+        "mdd_pct": -9.083104336490074,
+        "annual_turnover_pct": 311.7779200125526,
+        "trade_count": 131
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C1",
+      "segment": "first_half",
+      "id": "213be62e4a614460b7a2d1d0770ab574",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 86694.597364552,
+        "return_pct": -13.305402635448004,
+        "annual_return_pct": -25.185838827235674,
+        "annual_volatility_pct": 22.409453974964883,
+        "sharpe": -1.1827880314165768,
+        "mdd_pct": -23.713413644469203,
+        "annual_turnover_pct": 531.6143628187638,
+        "trade_count": 151
+      },
+      "error": null,
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b"
+    },
+    {
+      "label": "C2",
+      "segment": "first_half",
+      "id": "b701b7c093a74763b4a17d13da845b37",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 84970.17073734305,
+        "return_pct": -15.029829262656946,
+        "annual_return_pct": -28.179031751745363,
+        "annual_volatility_pct": 21.65263609870261,
+        "sharpe": -1.420001186450124,
+        "mdd_pct": -22.970872834426686,
+        "annual_turnover_pct": 637.6782542081324,
+        "trade_count": 162
+      },
+      "error": null,
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b"
+    },
+    {
+      "label": "C3",
+      "segment": "first_half",
+      "id": "62f7eabb695a4af78a1ced408844c0c1",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 86864.5931861556,
+        "return_pct": -13.135406813844398,
+        "annual_return_pct": -24.887404898184627,
+        "annual_volatility_pct": 20.341464697302573,
+        "sharpe": -1.304980580498417,
+        "mdd_pct": -21.088997004499024,
+        "annual_turnover_pct": 367.9077993312685,
+        "trade_count": 50
+      },
+      "error": null,
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b"
+    },
+    {
+      "label": "C4",
+      "segment": "first_half",
+      "id": "2a109009a1434aedaa545b46b1ca43d5",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 99420.12019918935,
+        "return_pct": -0.5798798008106565,
+        "annual_return_pct": -1.1749385597758844,
+        "annual_volatility_pct": 8.765421936566423,
+        "sharpe": -0.09137386483524221,
+        "mdd_pct": -8.206587989617493,
+        "annual_turnover_pct": 169.5244489747945,
+        "trade_count": 61
+      },
+      "error": null,
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b"
+    },
+    {
+      "label": "C5",
+      "segment": "first_half",
+      "id": "470ca9daacd44dfd80f21bdb3fa39ff2",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 98395.66685768639,
+        "return_pct": -1.6043331423136076,
+        "annual_return_pct": -3.233425974008708,
+        "annual_volatility_pct": 11.773116426578502,
+        "sharpe": -0.22076506285663877,
+        "mdd_pct": -11.452447037859505,
+        "annual_turnover_pct": 451.6652050877528,
+        "trade_count": 91
+      },
+      "error": null,
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b"
+    },
+    {
+      "label": "C6",
+      "segment": "first_half",
+      "id": "12126f9d0f58472389eeb2dc62f0c2cd",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 99336.78189931635,
+        "return_pct": -0.6632181006836491,
+        "annual_return_pct": -1.343216957525628,
+        "annual_volatility_pct": 9.737604202013847,
+        "sharpe": -0.09059486969345841,
+        "mdd_pct": -9.083104336490074,
+        "annual_turnover_pct": 188.02341174673163,
+        "trade_count": 61
+      },
+      "error": null,
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b"
+    },
+    {
+      "label": "C1",
+      "segment": "second_half",
+      "id": "d5ad096c10f64934b28ed2c6bfe8ddf2",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 137442.15410599616,
+        "return_pct": 37.44215410599616,
+        "annual_return_pct": 88.90345725296397,
+        "annual_volatility_pct": 25.865339784104595,
+        "sharpe": 2.5901504237012913,
+        "mdd_pct": -14.453603848185084,
+        "annual_turnover_pct": 439.4503567884327,
+        "trade_count": 148
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C2",
+      "segment": "second_half",
+      "id": "d095ef6af06b4690b6f87b3ad1140673",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 134377.78687920776,
+        "return_pct": 34.37778687920776,
+        "annual_return_pct": 80.57389606553782,
+        "annual_volatility_pct": 25.421726071034957,
+        "sharpe": 2.453245891959069,
+        "mdd_pct": -15.097410532989288,
+        "annual_turnover_pct": 469.9977120334365,
+        "trade_count": 152
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C3",
+      "segment": "second_half",
+      "id": "04e0aeacbb214b4f8963ee3043ee1b7e",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 143797.03392991703,
+        "return_pct": 43.79703392991703,
+        "annual_return_pct": 106.77586967041708,
+        "annual_volatility_pct": 30.61944492451108,
+        "sharpe": 2.527248066267126,
+        "mdd_pct": -15.897900171868272,
+        "annual_turnover_pct": 240.2301584351012,
+        "trade_count": 39
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C4",
+      "segment": "second_half",
+      "id": "81c72a9a412549ff9e838c2ed62f2619",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 105150.73639953721,
+        "return_pct": 5.1507363995372035,
+        "annual_return_pct": 10.566773653649575,
+        "annual_volatility_pct": 9.306091949165292,
+        "sharpe": 1.1257208145934143,
+        "mdd_pct": -7.116848048118326,
+        "annual_turnover_pct": 334.620827652098,
+        "trade_count": 70
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C5",
+      "segment": "second_half",
+      "id": "035cb1b270854b0dacb84ec64d0c427c",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 108530.66012932552,
+        "return_pct": 8.530660129325529,
+        "annual_return_pct": 17.78904188107171,
+        "annual_volatility_pct": 12.648781505096615,
+        "sharpe": 1.3574754177039037,
+        "mdd_pct": -9.396686454401806,
+        "annual_turnover_pct": 712.2319007495172,
+        "trade_count": 102
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    },
+    {
+      "label": "C6",
+      "segment": "second_half",
+      "id": "dae77f162b5b4a6e93f2ee8a52abaf33",
+      "status": "completed",
+      "metrics": {
+        "ending_equity": 105702.46884105491,
+        "return_pct": 5.70246884105492,
+        "annual_return_pct": 11.730119190941867,
+        "annual_volatility_pct": 10.338848634113443,
+        "sharpe": 1.1242684702583137,
+        "mdd_pct": -7.8910160432493965,
+        "annual_turnover_pct": 371.34057900172326,
+        "trade_count": 70
+      },
+      "fingerprint": "2b94e4422026c4eed80ffb00b19c3664c31ea7a5c58b9c9ca695e8f78ec9527b",
+      "error": null
+    }
+  ]
+}

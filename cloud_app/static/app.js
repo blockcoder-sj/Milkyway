@@ -215,12 +215,15 @@ function accountCards(rows) {
   }
   element.className = "account-grid";
   element.innerHTML = rows.map((account) => {
-    const label = account.status === "active" ? "운용 허용 · 상태 확인 필요" : ["review_required", "configuration_required"].includes(account.status) ? "전략·보유 종목 검토 필요" : "일시정지";
-    const control = ["review_required", "configuration_required"].includes(account.status)
+    const run = account.paper_session;
+    const finished = run && (run.expired || run.completed_at);
+    const label = finished ? "지정 거래일 종료" : account.status === "active" ? "운용 허용 · 상태 확인 필요" : ["review_required", "configuration_required"].includes(account.status) ? "전략·보유 종목 검토 필요" : "일시정지";
+    const control = finished ? '<span class="status-pill">종료</span>' : ["review_required", "configuration_required"].includes(account.status)
       ? '<span class="status-pill warn">REVIEW</span>'
       : `<button class="ghost compact account-toggle" data-id="${escapeHtml(account.id)}" data-status="${account.status === "active" ? "paused" : "active"}">${account.status === "active" ? "정지" : "재개"}</button>`;
-    const positions = account.positions.map((position) => `<span class="chip">${escapeHtml(position.ticker)} ${pct(position.pnl_pct)}</span>`).join("") || '<span class="chip">첫 리밸런싱 대기</span>';
-    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div>${control}</div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div><p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button></div>`;
+    const positions = account.positions.map((position) => `<span class="chip">${escapeHtml(position.ticker)} ${pct(position.pnl_pct)}</span>`).join("") || `<span class="chip">${finished ? "보유 종목 없음" : "첫 리밸런싱 대기"}</span>`;
+    const schedule = run ? `<p class="fineprint">미국 거래일 ${escapeHtml(run.session_date)} · 자동 중지 ${escapeHtml(new Date(run.closes_at).toLocaleString("ko-KR"))}${run.summary ? `<br>체결 ${number(run.summary.fill_count, 0)}건 · 종료 시 마지막 확인 평가액 ${money(run.summary.last_known_equity)} (공식 종가 미확인)` : ""}</p>` : "";
+    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div>${control}</div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div>${schedule}<p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button></div>`;
   }).join("");
   $$('.account-toggle').forEach((button) => button.addEventListener("click", () => toggleAccount(button.dataset.id, button.dataset.status)));
   $$('.account-history-open').forEach((button) => button.addEventListener("click", () => openAccountHistory(button.dataset.id)));
@@ -484,6 +487,8 @@ function openBacktest(id) {
 
 function openAccount(id) {
   $("#accountForm").strategy_id.value = id;
+  $("#accountForm").elements.session_date.value = "";
+  $("#paperSessionField").classList.toggle("hidden", !state.config?.personal_local_mode);
   $("#accountDialog").showModal();
 }
 
@@ -697,7 +702,9 @@ $("#accountForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = event.target.querySelector("button[type=submit]");
   button.disabled = true;
-  try { await api("/api/accounts", {method: "POST", body: JSON.stringify(formObject(event.target))}); $("#accountDialog").close(); toast("페이퍼 계좌를 만들었습니다"); await refresh(); }
+  const body = formObject(event.target);
+  if (!body.session_date) delete body.session_date;
+  try { await api("/api/accounts", {method: "POST", body: JSON.stringify(body)}); $("#accountDialog").close(); toast("페이퍼 계좌를 만들었습니다"); await refresh(); }
   catch (error) { toast(error.message, true); }
   finally { button.disabled = false; }
 });

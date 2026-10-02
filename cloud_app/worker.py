@@ -730,6 +730,11 @@ def run_paper_tick(provider, settings=None) -> None:
             # Publish the lease before network I/O so another worker cannot start
             # the same paper tick while this one is collecting member quotes.
             session.commit()
+            if getattr(settings, "personal_local_mode", False):
+                from .paper_sessions import expire_sessions
+                expire_sessions(session, utcnow())
+                # Expiry must survive a subsequent data/provider failure.
+                session.commit()
             personal_actions = apply_personal_corporate_actions(session, settings)
             terminal = apply_terminal_events(session)
             quote_count = 0

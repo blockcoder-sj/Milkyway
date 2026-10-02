@@ -4,11 +4,22 @@ from __future__ import annotations
 import datetime as dt
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from .database import new_id, utcnow
+from .database import PaperAccount, new_id, utcnow
 
 
 class ResearchBase(DeclarativeBase):
     pass
+
+
+class PersonalPaperSession(ResearchBase):
+    """One regular US session; kept outside the public deployment schema."""
+    __tablename__ = "personal_paper_sessions"
+    account_id: Mapped[str] = mapped_column(ForeignKey(PaperAccount.id, ondelete="CASCADE"), primary_key=True)
+    session_date: Mapped[dt.date] = mapped_column(Date)
+    opens_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+    closes_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), index=True)
+    completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    summary_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class ResearchSession(ResearchBase):

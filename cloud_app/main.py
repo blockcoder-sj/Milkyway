@@ -188,6 +188,7 @@ class BacktestBody(BaseModel):
 class AccountBody(BaseModel):
     strategy_id: str
     name: str = Field(min_length=2, max_length=100)
+    session_date: dt.date | None = None
 
 
 class StatusBody(BaseModel):
@@ -1593,6 +1594,16 @@ def _ensure_personal_quote_capacity(session: Session, user_id: str, spec: Strate
 def _account_creation(body, user, session):
     strategy = _owned_strategy(session, user, body.strategy_id)
     spec = StrategySpec.model_validate_json(strategy.spec_json)
+    day = getattr(body, "session_date", None)
+    bounds = None
+    if day is not None:
+        if not settings.personal_local_mode or settings.production:
+            raise HTTPException(422, "거래일 지정은 개인 로컬 모드에서만 지원합니다")
+        from .paper_sessions import session_bounds
+        try:
+            bounds = session_bounds(day, utcnow())
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
     with quota_allocation(session, "accounts", "global"):
         with quota_allocation(session, "accounts", user.id):
             count = session.scalar(
@@ -1613,6 +1624,11 @@ def _account_creation(body, user, session):
             )
             session.add(row)
             session.flush()
+            if bounds is not None:
+                from .research_models import PersonalPaperSession
+                session.add(PersonalPaperSession(account_id=row.id, session_date=day,
+                    opens_at=bounds[0], closes_at=bounds[1]))
+                session.flush()
             yield row
             session.commit()
 
@@ -1653,6 +1669,11 @@ def update_account(
             detail="상장 이탈/corporate action 검토가 필요해 사용자가 재개할 수 없습니다",
         )
     with quota_allocation(session, "accounts", "global"):
+        if settings.personal_local_mode and body.status == "active":
+            from .paper_sessions import session_payload
+            run = session_payload(session, row, utcnow())
+            if run and (run["expired"] or run["completed_at"]):
+                raise HTTPException(409, "지정한 거래일이 종료되었습니다. 새 페이퍼 계좌를 만들어 주세요")
         if row.status != "active" and body.status == "active":
             spec = StrategySpec.model_validate_json(row.strategy.spec_json)
             _ensure_shared_quote_capacity(

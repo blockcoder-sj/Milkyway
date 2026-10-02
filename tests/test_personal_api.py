@@ -24,6 +24,7 @@ from sqlalchemy.orm import sessionmaker
 from cloud_app import config, main
 from cloud_app.database import Base, BacktestJob, EquityPoint, PaperAccount, PaperFill, RuntimeHeartbeat, Strategy, User, utcnow
 from cloud_app.strategies import StrategySpec
+from cloud_app.research_models import ResearchBase
 
 
 async def consume(response):
@@ -40,6 +41,7 @@ class PersonalApiTests(unittest.TestCase):
         self.root = Path(self.directory.name)
         self.engine = create_engine("sqlite:///" + str(self.root / "test.sqlite3"))
         Base.metadata.create_all(self.engine)
+        ResearchBase.metadata.create_all(self.engine)
         self.session = sessionmaker(bind=self.engine, expire_on_commit=False)()
         self.settings = replace(config.get_settings(), personal_local_mode=True, local_demo_data=False,
                                 dataset_dir=self.root / "data", quote_provider="member", credential_backend="local",

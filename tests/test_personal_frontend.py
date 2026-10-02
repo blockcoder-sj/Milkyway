@@ -10,6 +10,36 @@ STATIC = ROOT / "cloud_app" / "static"
 
 class PersonalFrontendTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("node"), "Node is needed for UI checks")
+    def test_one_session_account_shows_schedule_and_disables_resume_after_expiry(self):
+        script = r'''
+const assert = require("node:assert/strict"), fs = require("node:fs"), vm = require("node:vm");
+const source = fs.readFileSync(process.argv[1] + "/app.js", "utf8");
+const part = source.slice(source.indexOf("function accountCards("), source.indexOf("async function toggleAccount("));
+const element = {}, count = {};
+const ctx = vm.createContext({$: id => id === "#accountCards" ? element : count, $$: () => [],
+  money: x => String(x), pct: x => String(x), number: x => String(x), escapeHtml: x => String(x).replaceAll("<", "&lt;")});
+vm.runInContext(part, ctx);
+const row = {id:"a", name:"one day", status:"active", positions:[], equity:100000, initial_cash:100000, cash:100000, return_pct:0,
+  paper_session:{session_date:"2026-10-02", closes_at:"2026-10-02T20:00:00Z", expired:false}};
+ctx.rows = [row]; vm.runInContext("accountCards(rows)", ctx);
+assert.match(element.innerHTML, /미국 거래일 2026-10-02/);
+assert.match(element.innerHTML, /자동 중지/);
+assert.match(element.innerHTML, /account-toggle/);
+row.status="paused"; row.paper_session.expired=true;
+row.paper_session.summary={fill_count:0,last_known_equity:100000};
+vm.runInContext("accountCards(rows)", ctx);
+assert.doesNotMatch(element.innerHTML, /account-toggle/);
+assert.match(element.innerHTML, /지정 거래일 종료/);
+assert.match(element.innerHTML, /체결 0건/);
+assert.match(element.innerHTML, /공식 종가 미확인/);
+row.paper_session=null; vm.runInContext("accountCards(rows)", ctx);
+assert.match(element.innerHTML, /재개/);
+'''
+        result = subprocess.run([shutil.which("node"), "-e", script, str(STATIC)],
+                                capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for UI checks")
     def test_local_entry_uses_only_local_session_endpoint(self):
         script = r'''
 const assert = require("node:assert/strict"), fs = require("node:fs"), vm = require("node:vm");
