@@ -1101,3 +1101,28 @@ resuming; no paid AI regression approval has arrived.
   FGPR/RSRVOTC; AMEN/UNTC absentindexbutnotthereforeinactive.
 - Continue fullEnergy; do not final after thiscommit. Next wholeissuerregistry,
   currentXOMsuccessorCIKfix, restmidstream/compression/LNG/E&P/services/etc.
+
+### Services and issuer directory continuation
+
+- ee911c59c86bf4542a0e894715675b74855fcbc4 pushed; CI37037198451 SUCCESS.
+- Added DTM/AM/KNTK/CQP/SUN/USAC/KGS/AROC edited primary notes and19context records.
+  Expanded26mainprofiles are NOT complete across all criteria. Do not stop after thisbatch.
+- Added187issuer research roster, SEC current ticker/exchange identity plus official
+  AMEN/UNTC IR; official disclosed sectors override research navigation. Business groups
+  are not GICS. Pending classifications remain explicit. API list1100/static500 bound.
+- AM customer relationship amortization negative adjustment preserved; KNTKserviceMVC
+  subset, CQPexact2axes party/product; acquisition/current/planned states are distinct.
+  Ariel package-provider listing only proves KGS/AROCpartner role, not purchase value.
+- SEC contract revenue label corrected without changing source/value/period; current
+  XOMsuccessor CIK2115436 used while historical filing identity remains original.
+- Full555tests91.998s OK(skipped18Node); host10frontend4.828s OK; postprecision11/0.093s OK.
+  Offline p95directory2.186ms/merge5.797ms/SQLite snapshot20.106ms/RSS55.1MiB.
+- App-only deployment with workers/volumes retained; startupready. Native Chromeexisting
+  one tab verified187displayed roster/group filter/USACedited business+equipment suppliers.
+  No paidAIcalls, no CodeRabbit, no additional agents. docs/ENERGY_SERVICES_REVIEW_20261003.md.
+- Finalapp5a337842418fdabca30d6e3aa7902f02ad00b3382b7d6a4a3741e96a14d8c66f;
+  18app/testfileSHA256 matched. Postlayout host10tests1.377s passed. Prior16:08 appimage
+  observed529acc6640d2, correcting the older81cddnote as a dated observation.
+- Next active research EOG/FANG/OXY/DVN/EQT/EXE/AR/RRC. Originallatestquarter: Devon+Coterra
+  closedMay7,2026; OxyChem soldJan2,2026; EQTMVPConEd3.94%stakeboughtMar30; EXENG3CO2
+  delivery to Exxon beganFeb2026. Check exactoriginals before curating, not stale2025scope.

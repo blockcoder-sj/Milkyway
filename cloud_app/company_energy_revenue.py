@@ -197,6 +197,61 @@ for _symbol, _cik, _mapping in [
         LABELS[(_symbol, _cik, _member)] = _label
 
 
+for _party, _label in [('us-gaap:NonrelatedPartyMember', 'LNG · 제3자 판매'),
+                       ('us-gaap:SubsidiaryOfCommonParentMember', 'LNG · Cheniere 계열 판매')]:
+    _member = 'cqp:LiquefiedNaturalGasMember/' + _party
+    COORDINATES[('CQP', 1383650, frozenset([
+        ('srt:ProductOrServiceAxis', 'cqp:LiquefiedNaturalGasMember'),
+        ('us-gaap:RelatedPartyTransactionsByRelatedPartyAxis', _party),
+    ]))] = ('product', _member)
+    LABELS[('CQP', 1383650, _member)] = _label
+
+for _symbol, _cik, _mapping in [
+    ('DTM', 1842022, {'dtm:GatheringSegmentMember': '생산지 집하', 'dtm:PipelineSegmentMember': '배관·저장'}),
+    ('AM', 1623925, {
+        'am:NaturalGasGatheringTransportationMarketingAndProcessingAffiliateMember': 'Antero 집하·압축 · 고객 관계 상각 전',
+        'am:NaturalGasWaterHandlingAndTreatmentAffiliateMember': 'Antero 물 서비스 · 고객 관계 상각 전',
+        'am:NaturalGasWaterHandlingAndTreatmentMember': '제3자 물 서비스 · 고객 관계 상각 전',
+    }),
+    ('KNTK', 1692787, {
+        'apa:GatheringAndProcessingServicesMember': '집하·처리 서비스',
+        'apa:MinimumVolumeCommitmentsMember': '최소 물량 미달 대가 · 서비스 매출에 포함',
+        'apa:NaturalGasNGLsAndCondensateSalesMember': '가스·NGL·콘덴세이트 판매',
+        'apa:ProductAndServiceMember': '제품·서비스 매출 소계',
+    }),
+    ('CQP', 1383650, {'cqp:RegasificationServiceMember': '재기화 서비스',
+                    'cqp:LiquefiedNaturalGasMember': 'LNG 매출 소계'}),
+    ('SUN', 1552275, {'sun:LeaseRevenueMember': '임대', 'sun:SalesRevenueMember': '연료·상품 판매',
+                     'sun:ServiceRevenueMember': '물류·기타 서비스', 'country:CA': '캐나다',
+                     'country:US': '미국', 'sun:ForeignMember': '미국·캐나다 외'}),
+    ('USAC', 1522727, {'usac:ContractOperationsRevenueMember': '계약 압축 서비스',
+                      'usac:RetailPartsAndServicesMember': '부품·정비 서비스'}),
+    ('KGS', 1767042, {'kgs:ContractServicesMember': '계약 압축 서비스 · 2025년 부문',
+                     'kgs:OtherServicesMember': '기타 서비스 · 2025년 부문'}),
+    ('AROC', 1389050, {'aroc:AftermarketServicesSegmentMember': '고객 소유 장비 · 정비·부품',
+                      'aroc:ContractOperationsSegmentMember': '회사 소유 장비 · 계약 운영'}),
+]:
+    for _member, _label in _mapping.items():
+        LABELS[(_symbol, _cik, _member)] = _label
+
+HIERARCHIES[('KNTK', 1692787, 'product')] = {
+    'apa:ProductAndServiceMember': ['apa:GatheringAndProcessingServicesMember',
+                                  'apa:NaturalGasNGLsAndCondensateSalesMember']}
+
+
+def _documented_subset(rows, group, child_name, parent_name, document):
+    for child in rows:
+        if (child['group'] != group or child['member'] != child_name
+                or child['source']['url'].split('#')[0] != document
+                or child['end'] != '2025-12-31'):
+            continue
+        parents = [row for row in rows if row['group'] == group and row['member'] == parent_name
+                   and all(row[key] == child[key] for key in ('start', 'end', 'unit', 'metric'))
+                   and row['source']['url'].split('#')[0] == document and child['value'] <= row['value']]
+        if len(parents) == 1:
+            child['parent'] = parents[0]['member']
+
+
 def annotate(rows, symbol, cik):
     """Period-bound presentation notes; preserve source values and metric scope."""
     if (symbol, cik) == ('TRGP', 1389170):
@@ -207,20 +262,19 @@ def annotate(rows, symbol, cik):
                 row['share_exclusion'] = ('두 부문의 외부 매출 합계에는 기타 조정 −530만 달러가 필요합니다. '
                     '음수 조정과 양수 매출을 100% 구성비로 표시하지 않습니다.')
     if (symbol, cik) == ('LNG', 3570):
-        for child in rows:
-            if (child['group'] != 'product' or child['member'] != 'lng:LiquefiedNaturalGasProcuredFromThirdPartiesMember'
-                    or child['source']['url'].split('#')[0] !=
-                    'https://www.sec.gov/Archives/edgar/data/3570/000000357026000005/lng-20251231.htm'):
-                continue
-            parents = [row for row in rows if row['group'] == 'product'
-                and row['member'] == 'lng:LiquefiedNaturalGasMember'
-                and all(row[key] == child[key] for key in ('start', 'end', 'unit', 'metric'))
-                and row['source']['url'].split('#')[0] == child['source']['url'].split('#')[0]
-                and row['end'] == '2025-12-31' and child['value'] <= row['value']]
-            if len(parents) == 1:
-                # The filing explicitly calls this a subset; it is not a full
-                # reconciliation of all LNG sales into named subcategories.
-                child['parent'] = parents[0]['member']
+        _documented_subset(rows, 'product', 'lng:LiquefiedNaturalGasProcuredFromThirdPartiesMember',
+            'lng:LiquefiedNaturalGasMember',
+            'https://www.sec.gov/Archives/edgar/data/3570/000000357026000005/lng-20251231.htm')
+    if (symbol, cik) == ('KNTK', 1692787):
+        _documented_subset(rows, 'product', 'apa:MinimumVolumeCommitmentsMember',
+            'apa:GatheringAndProcessingServicesMember',
+            'https://www.sec.gov/Archives/edgar/data/1692787/000169278726000048/apa-20251231.htm')
+    if (symbol, cik) == ('AM', 1623925):
+        for row in rows:
+            if (row['end'] == '2025-12-31' and row['source']['url'].split('#')[0] ==
+                    'https://www.sec.gov/Archives/edgar/data/1623925/000110465926013380/am-20251231x10k.htm'):
+                row['share_exclusion'] = ('이 항목은 고객 관계 상각 전 매출입니다. 합계 12억5,909만8,000 달러에서 '
+                    '7,067만2,000 달러를 차감한 연결 매출 11억8,842만6,000 달러와 범위가 달라 구성비를 계산하지 않습니다.')
     return rows
 
 

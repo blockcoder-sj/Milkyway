@@ -66,6 +66,12 @@ def company_row(settings, sector, symbol):
             source=notes["description_source"]["label"],
             url=notes["description_source"]["url"],
         )
+    from .energy_issuers import company_row as research_row
+    from .sector_classifications import read_view
+    verified = next((row.sector for row in read_view(settings).rows if row.symbol == symbol), None)
+    row = research_row(symbol, sector, verified)
+    if row:
+        return row
     raise HTTPException(404, "현재 섹터 기업 목록에 없는 종목입니다")
 
 

@@ -64,4 +64,9 @@ def lookup(settings, symbols, preferred_sector=None):
         if rows:
             sector, name = next((row for row in rows if row[0] == preferred_sector), rows[0])
             found[symbol] = {'sector': sector, 'name': name}
+    from .energy_issuers import navigation
+    for symbol in wanted - found.keys():
+        row = navigation(symbol)
+        if row:
+            found[symbol] = row
     return found

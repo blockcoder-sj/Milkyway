@@ -37,6 +37,8 @@ class CompanyRow(BaseModel):
     url:str=Field(max_length=2000)
     displayed_share_pct:float|None=Field(default=None,ge=0,le=100)
     classification:Classification|None=None
+    directory_basis:str|None=Field(default=None,max_length=200)
+    directory_group:str|None=Field(default=None,max_length=80)
 
 
 class NewsRow(BaseModel):
@@ -99,7 +101,12 @@ def classified_companies(settings, identity, cache=None):
     part = (cache or read_cache(settings, identity)).companies
     if not identity.startswith('us_'):
         return part, None
-    rows, audit = reconcile([row.model_dump(mode='json') for row in part.rows], identity, read_view(settings))
+    view = read_view(settings)
+    rows, audit = reconcile([row.model_dump(mode='json') for row in part.rows], identity, view)
+    if identity == 'us_10' and settings.personal_local_mode and not settings.production:
+        from .energy_issuers import augment
+        rows, added, omitted = augment(rows, identity, view)
+        audit = {**audit, 'research_added': added, 'omitted': audit.get('omitted', 0) + omitted}
     return DetailPart[CompanyRow](**{**part.model_dump(mode='json'), 'rows': rows}), audit
 
 
@@ -143,6 +150,8 @@ def detail_snapshot(settings,identity,now=None):
     if identity == 'us_10':
         from .energy_guide import snapshot as energy_guide
         result['industry_guide'] = energy_guide()
+        from .energy_issuers import summary as issuer_summary
+        result['issuer_directory'] = issuer_summary()
     return {**result,'id':identity,'label':instrument.label,'symbol':instrument.symbol,'unit':instrument.unit,
             'group':instrument.group,'market':instrument.market,'context':context_for(identity),
             'refresh_seconds':REFRESH_SECONDS,'maximum_years':3}

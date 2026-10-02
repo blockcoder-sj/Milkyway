@@ -542,7 +542,7 @@ CIKS = {
     "AVGO": "1730168",
     "AMD": "2488",
     "INTC": "50863",
-    "XOM": "34088",
+    "XOM": "2115436",
     "CVX": "93410",
     "LIN": "1707925",
     "CAT": "18230",
@@ -577,6 +577,11 @@ def editorial_for(symbol):
         value[key] = rows + value.get(key, []) if isinstance(rows, list) else rows
     if symbol in CIKS:
         value["cik"] = CIKS[symbol]
+    else:
+        from .energy_issuers import issuer
+        entry = issuer(symbol)
+        if entry and entry.cik:
+            value['cik'] = entry.cik
     if symbol in {"TSM", "005930.KS"}:
         share = "72.5%" if symbol == "TSM" else "5.9%"
         value["market_shares"] = [
@@ -663,4 +668,6 @@ def enrich(value):
             edge['registry_id'] = PRIVATE_NAMES[edge['name']]
     from .company_revenue import present_revenue
     data['revenue_mix'] = present_revenue(data['revenue_mix'], data['symbol'])
+    from .company_financial_labels import presented
+    data['financials'] = presented(data['financials'])
     return CompanyKnowledge.model_validate(data)

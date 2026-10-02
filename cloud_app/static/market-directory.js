@@ -4,12 +4,18 @@
   const time=v=>v?new Date(v).toLocaleString('ko-KR'):'수신 대기';
   const safeUrl=v=>{try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password&&(!u.port||u.port==='443')?u.href:null;}catch{return null;}};
   const link=(label,url)=>safeUrl(url)?`<a href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`:esc(label);
-  let data=null,companyPage=1,newsPage=1,query='';
-  function companyRows(){return data.companies.rows.filter(row=>`${row.name} ${row.symbol}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));}
+  let data=null,companyPage=1,newsPage=1,query='',companyGroup='';
+  function companyRows(){return data.companies.rows.filter(row=>(!companyGroup||row.directory_group===companyGroup)&&`${row.name} ${row.symbol} ${row.directory_group||''}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));}
+  function companyBasis(row){
+    const group=row.directory_group?`<small>${esc(row.directory_group)}</small>`:'';
+    if(row.classification)return `<span>공식 구성 공시 대조</span><small>${esc(row.classification.source.as_of)} · ${esc(row.classification.basis)}</small>${group}`;
+    if(row.directory_basis)return `<span>${esc(row.directory_basis)}</span>${group}`;
+    return data.id.startsWith('us_')?'<span>공식 분류 미확인</span><small>Yahoo 분류 · 별도 확인 필요</small>':'<span>KOSPI 업종 예시</span>';
+  }
   function companies(){
     const all=data.companies.rows,result=window.MilkywayPaging.slice(companyRows(),companyPage);companyPage=result.page;
-    $('#detailCompanyCount').textContent=`수집 ${fmt(all.length,0)}개 · 검색 ${fmt(result.total,0)}개 · ${result.page}/${result.pages}페이지`;
-    $('#detailCompanyRows').innerHTML=result.rows.length?`<div class="research-table"><table><thead><tr><th>기업</th><th>시가총액</th><th>수집 기업 내 비중</th><th>분류 확인</th></tr></thead><tbody>${result.rows.map(row=>`<tr class="company-table-row" data-company-symbol="${esc(row.symbol)}" data-company-sector="${esc(data.id)}"><td><a class="company-open" data-company-symbol="${esc(row.symbol)}" data-company-sector="${esc(data.id)}" href="#company/${encodeURIComponent(data.id)}/${encodeURIComponent(row.symbol)}">${esc(row.name)}</a><small>${esc(row.symbol)}</small></td><td>${fmt(row.market_cap,0)} ${esc(row.currency)}</td><td>${fmt(row.displayed_share_pct)}${Number.isFinite(row.displayed_share_pct)?'%':''}${window.MilkywayMarketMethods.company(row,all)}${Number.isFinite(row.displayed_share_pct)?`<div class="detail-share-bar"><i style="width:${Math.min(100,Math.max(0,row.displayed_share_pct))}%"></i></div>`:''}</td><td>${row.classification?`<span>공식 구성 공시 대조</span><small>${esc(row.classification.source.as_of)} · ${esc(row.classification.basis)}</small>`:data.id.startsWith('us_')?'<span>공식 분류 미확인</span><small>Yahoo 분류 · 별도 확인 필요</small>':'<span>KOSPI 업종 예시</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<p class="fineprint">검색 조건에 맞는 기업이 없습니다.</p>';
+    $('#detailCompanyCount').textContent=`표시 ${fmt(all.length,0)}개 · 검색 ${fmt(result.total,0)}개 · ${result.page}/${result.pages}페이지`;
+    $('#detailCompanyRows').innerHTML=result.rows.length?`<div class="research-table"><table><thead><tr><th>기업</th><th>시가총액</th><th>수집 기업 내 비중</th><th>분류·사업 범위</th></tr></thead><tbody>${result.rows.map(row=>`<tr class="company-table-row" data-company-symbol="${esc(row.symbol)}" data-company-sector="${esc(data.id)}"><td><a class="company-open" data-company-symbol="${esc(row.symbol)}" data-company-sector="${esc(data.id)}" href="#company/${encodeURIComponent(data.id)}/${encodeURIComponent(row.symbol)}">${esc(row.name)}</a><small>${esc(row.symbol)}</small></td><td>${fmt(row.market_cap,0)} ${esc(row.currency)}</td><td>${fmt(row.displayed_share_pct)}${Number.isFinite(row.displayed_share_pct)?'%':''}${window.MilkywayMarketMethods.company(row,all)}${Number.isFinite(row.displayed_share_pct)?`<div class="detail-share-bar"><i style="width:${Math.min(100,Math.max(0,row.displayed_share_pct))}%"></i></div>`:''}</td><td>${companyBasis(row)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="fineprint">검색 조건에 맞는 기업이 없습니다.</p>';
     $('#detailCompanyPages').innerHTML=window.MilkywayPaging.controls(result,'data-company-page');
   }
   function news(){
@@ -19,20 +25,26 @@
   function sources(){
     const context=data.context,all=[...context.sources,...data.companies.rows.map(row=>({label:row.name+' · '+row.source,url:row.url,kind:'기업'})),...data.companies.rows.filter(row=>row.classification).map(row=>({label:row.classification.source.label,url:row.classification.source.url,kind:'분류 · '+row.classification.source.as_of})),...(context.market_share||[]).map(row=>({label:row.provider+' · '+row.title,url:row.url,kind:'시장점유율'})),...data.news.rows.map(row=>({label:row.publisher+' · '+row.title,url:row.url,kind:'보도'}))];
     const guideSources=Object.entries(data.industry_guide?.sources||{}).map(([id,row])=>({...row,id:/^[a-z][a-z0-9-]{0,30}$/.test(id)?'energy-source-'+id:null}));
-    const unique=[...new Map([...all,...guideSources].map(row=>[row.url,row])).values()];
+    const directorySource=data.issuer_directory?.identity_source;
+    const unique=[...new Map([...all,...guideSources,...(directorySource?[directorySource]:[])].map(row=>[row.url,row])).values()];
     $('#detailSourceCount').textContent=`출처 모음 · ${fmt(unique.length,0)}개`;
     $('#detailSources').innerHTML=unique.map(row=>`<p${row.id?` id="${esc(row.id)}"`:''}><small>${esc(row.kind)}</small> ${link(row.label,row.url)}</p>`).join('');
   }
   function render(next){
-    if(data?.id!==next.id){companyPage=newsPage=1;query='';}data=next;
+    if(data?.id!==next.id){companyPage=newsPage=1;query=companyGroup='';}data=next;
     const all=data.companies.rows;
-    $('#detailCompanies').innerHTML=all.length?`<p class="fineprint">비중 = 기업 시총 ÷ 현재 수집한 ${fmt(all.length,0)}개 기업 시총 합계. 페이지·검색을 바꿔도 분모는 같습니다. 제품·매출 시장점유율이나 공식 지수 비중과는 다릅니다.</p><div class="company-list-tools"><input id="detailCompanySearch" type="search" placeholder="기업명 또는 종목 코드 검색" aria-label="섹터 기업 검색" value="${esc(query)}"><span id="detailCompanyCount"></span></div><div id="detailCompanyRows"></div><div id="detailCompanyPages"></div>`:data.group==='sectors'?'<p class="fineprint">기업 수치 수신 대기 · 출처 모음에서 원자료를 확인하세요.</p>':data.context.sources.filter(row=>row.kind!=='시세').map(row=>`<p>${link(row.label,row.url)}</p>`).join('');
+    const groups=[...new Set(all.map(row=>row.directory_group).filter(Boolean))].sort();
+    if(!groups.includes(companyGroup))companyGroup='';
+    const groupControl=data.id==='us_10'?`<select id="detailCompanyGroup" aria-label="에너지 기업 사업별 탐색"><option value="">모든 사업</option>${groups.map(group=>`<option value="${esc(group)}"${companyGroup===group?' selected':''}>${esc(group)}</option>`).join('')}</select>`:'';
+    $('#detailCompanies').innerHTML=all.length?`<p class="fineprint">비중 = 기업 시총 ÷ 현재 수집한 ${fmt(all.length,0)}개 기업 시총 합계. 페이지·검색을 바꿔도 분모는 같습니다. 시총이 없는 기업이 포함되면 비중을 계산하지 않습니다. 제품·매출 시장점유율이나 공식 지수 비중과는 다릅니다.</p><div class="company-list-tools"><input id="detailCompanySearch" type="search" placeholder="기업명 또는 종목 코드 검색" aria-label="섹터 기업 검색" value="${esc(query)}">${groupControl}<span id="detailCompanyCount"></span></div><div id="detailCompanyRows"></div><div id="detailCompanyPages"></div>`:data.group==='sectors'?'<p class="fineprint">기업 수치 수신 대기 · 출처 모음에서 원자료를 확인하세요.</p>':data.context.sources.filter(row=>row.kind!=='시세').map(row=>`<p>${link(row.label,row.url)}</p>`).join('');
     const audit=data.companies.classification_audit;
     if(audit){const note=document.createElement('p');note.className='fineprint';note.textContent=`분류 대조: 기존 ${fmt(audit.checked,0)}개 확인 · 공시 대조 ${fmt(audit.matched,0)}개 · 미확인 ${fmt(audit.unverified,0)}개 · 다른 섹터로 정정 ${fmt(audit.moved.length,0)}개${audit.stale?' · 분류 공시 갱신 필요':''}${audit.omitted?' · 표시 상한 초과 '+fmt(audit.omitted,0)+'개':''}. ${audit.method}`;$('#detailCompanies').prepend(note);}
+    if(data.issuer_directory){const note=document.createElement('p');note.className='fineprint';note.textContent=`발행기업 조사 목록 ${fmt(data.issuer_directory.research_issuers,0)}개 · ${data.issuer_directory.checked_at}. ${data.issuer_directory.method}`;$('#detailCompanies').prepend(note);}
     if(all.length)companies();news();sources();
   }
   function initialize(){
     $('#detailCompanies').addEventListener('input',event=>{if(event.target.id==='detailCompanySearch'){query=event.target.value;companyPage=1;companies();}});
+    $('#detailCompanies').addEventListener('change',event=>{if(event.target.id==='detailCompanyGroup'){companyGroup=event.target.value;companyPage=1;companies();}});
     $('#detailCompanies').addEventListener('click',event=>{const b=event.target.closest('[data-company-page]');if(b){companyPage=Number(b.dataset.companyPage);companies();}});
     $('#detailNews').addEventListener('click',event=>{const b=event.target.closest('[data-news-page]');if(b){newsPage=Number(b.dataset.newsPage);news();$('#detailNewsSection').scrollIntoView({behavior:'smooth',block:'start'});}});
   }

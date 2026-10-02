@@ -10,6 +10,7 @@ from .bounded_io import read_requests_json, read_requests_bytes
 from .market_broker_feed import FixedSession
 from .company_schemas import CompanyKnowledge
 from .company_revenue import parse_revenue
+from .company_financial_labels import label as financial_label
 from .company_catalog import editorial_for
 from .company_filings import document, parse_report, parse_subsidiaries, subsidiary_document
 
@@ -201,7 +202,7 @@ def parse_sec(submissions, facts, symbol, now):
             )
             financials.append(
                 dict(
-                    label=label,
+                    label=financial_label(tag, label),
                     value=row["val"],
                     unit="USD",
                     period=(row.get("start", "") + " ~ " if row.get("start") else "")
