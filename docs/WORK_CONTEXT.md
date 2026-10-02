@@ -1126,3 +1126,30 @@ resuming; no paid AI regression approval has arrived.
 - Next active research EOG/FANG/OXY/DVN/EQT/EXE/AR/RRC. Originallatestquarter: Devon+Coterra
   closedMay7,2026; OxyChem soldJan2,2026; EQTMVPConEd3.94%stakeboughtMar30; EXENG3CO2
   delivery to Exxon beganFeb2026. Check exactoriginals before curating, not stale2025scope.
+
+### Upstream and supplier-source continuation
+
+- Previous services milestone a9827017d76561c184b7d72a6979a7ce3974a22a pushed;
+  CI37043161067 SUCCESS. No final at a milestone; whole Energy request remains active.
+- Added EOG/FANG/OXY/DVN/EQT/EXE/AR/RRC notes,27context profiles,16original receipts.
+  Main expanded34 are NOT certified complete across all required fields.
+- DVN exact product/location axes; OXY gross segments/own E&P products exclude whole
+  percentages; EQT exact segment metric and equivalent production subtotal de-duplication;
+  FANG/EXE own production vsresale hierarchy. Exact years/source/CIK retained.
+- EXE Twin Eagle CLOSED Sep16,2026; Delfin Apr22 SPA FIDconditional and oldGunvor
+  terminated. AR Utica sale CLOSED Feb23. Supplier originalPUMP/LBRT/SND shows actual
+  EOG/OXY/EQT/XOM/PR services. Range own drilling/completions page has namedroles but
+  unknown publication/currentcontractduration. Do not treat these as verified2026newdeals.
+- Flowco FLOC is NOT ProFrac. PrimarySEC ProFracACDC/CIK1881487 annualMar13/latestQAug6
+  foundmissingroster. Next own providerbatch must addit+resolve Rangecontextpublicalias.
+- Focused48 tests1.000s; host21tests16.456s OK. Final fullsuite/deployment pending;
+  first final discover command without -s tests discovered0 and is NOT validation evidence.
+- Offline EOG performancep95 merge3.209ms/graph48.687ms/RSS55.6MiB; directory1.772ms.
+  No actual AI calls; CodeRabbit unused; no new agents; serial heavyweight jobs.
+- docs/ENERGY_UPSTREAM_REVIEW_20261003.md records scope,calculations,current gaps.
+  Continue providers,allremainingroster,fieldaudit. Preserve five necessaryservices and
+  paper sessionexpires20:00UTC; caffeinate25591 until20:10UTC. Otherworkers remainstopped.
+- Final full562tests65.979s OK(skipped18Node,host21alreadypassed). App-only image
+  9e5a53050a179da3ccd305b50d7e19e75c82088ecbfbc7284563fb893910f80a ready;
+  10source/testSHA matched; appDB+graphDBquick_checkOK. Existingone Chrome tab confirmed
+  directoryCSSrowalignment and EXEown/revenue/latestactualcontracts+Keydetailclickthrough.

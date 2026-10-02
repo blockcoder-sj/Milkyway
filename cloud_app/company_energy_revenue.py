@@ -238,6 +238,105 @@ HIERARCHIES[('KNTK', 1692787, 'product')] = {
     'apa:ProductAndServiceMember': ['apa:GatheringAndProcessingServicesMember',
                                   'apa:NaturalGasNGLsAndCondensateSalesMember']}
 
+# FY2025 E&P tables distinguish own production, resale and gross segment sales.
+# Every multi-axis coordinate is an exact issuer/CIK pair, not a generic fallback.
+for _product, _label in [('srt:OilReservesMember', '원유'), ('dvn:GasMember', '천연가스'),
+                         ('dvn:NGLMember', 'NGL')]:
+    for _location, _prefix in [('dvn:OilGasAndNGLSalesMember', '자체 생산'),
+                               ('dvn:MarketingAndMidstreamRevenuesMember', '판매·중류')]:
+        _member = _product + '/' + _location
+        COORDINATES[('DVN', 1090012, frozenset([
+            ('srt:ProductOrServiceAxis', _product),
+            ('us-gaap:IncomeStatementLocationAxis', _location),
+        ]))] = ('product', _member)
+        LABELS[('DVN', 1090012, _member)] = _prefix + ' · ' + _label
+
+for _product, _label in [('srt:OilReservesMember', '원유'),
+                         ('srt:NaturalGasLiquidsReservesMember', 'NGL'),
+                         ('srt:NaturalGasReservesMember', '천연가스'),
+                         ('us-gaap:ProductAndServiceOtherMember', '기타')]:
+    _member = _product + '/oxy:OilAndGasSegmentMember'
+    COORDINATES[('OXY', 797468, frozenset([
+        ('srt:ConsolidationItemsAxis', 'us-gaap:OperatingSegmentsMember'),
+        ('srt:ProductOrServiceAxis', _product),
+        ('us-gaap:StatementBusinessSegmentsAxis', 'oxy:OilAndGasSegmentMember'),
+    ]))] = ('product', _member)
+    LABELS[('OXY', 797468, _member)] = '탐사·생산 · ' + _label
+
+for _segment in ('oxy:OilAndGasSegmentMember', 'oxy:MidstreamAndMarketingMember'):
+    # These are gross net-sales rows; eliminations remain a separate adjustment.
+    COORDINATES[('OXY', 797468, frozenset([
+        ('srt:ConsolidationItemsAxis', 'oxy:OtherOperatingSegmentsAndIntersegmentEliminationsMember'),
+        ('us-gaap:StatementBusinessSegmentsAxis', _segment),
+    ]))] = ('segment', _segment)
+
+for _segment in ('eqt:UpstreamSegmentMember', 'eqt:GatheringSegmentMember', 'eqt:TransmissionSegmentMember'):
+    COORDINATES[('EQT', 33213, frozenset([
+        ('srt:ConsolidationItemsAxis', 'us-gaap:OperatingSegmentsMember'),
+        ('us-gaap:StatementBusinessSegmentsAxis', _segment),
+    ]))] = ('segment', _segment)
+for _product in ('eqt:NaturalGasSalesMember', 'eqt:NGLsSalesMember', 'eqt:OilSalesMember'):
+    COORDINATES[('EQT', 33213, frozenset([
+        ('srt:ConsolidationItemsAxis', 'us-gaap:OperatingSegmentsMember'),
+        ('srt:ProductOrServiceAxis', _product),
+        ('us-gaap:StatementBusinessSegmentsAxis', 'eqt:UpstreamSegmentMember'),
+    ]))] = ('product', _product)
+
+for _symbol, _cik, _mapping in [
+    ('EOG', 821189, {'us-gaap:OilAndCondensateMember': '원유·콘덴세이트',
+        'srt:NaturalGasLiquidsReservesMember': 'NGL', 'us-gaap:NaturalGasProductionMember': '천연가스',
+        'us-gaap:NaturalGasGatheringTransportationMarketingAndProcessingMember': '집하·처리·재판매',
+        'eog:UnitedStatesOfAmericaSegmentMember': '미국 · 영업매출·기타',
+        'eog:TrinidadMember': '트리니다드 · 영업매출·기타', 'eog:OtherInternationalMember': '기타 해외 · 영업매출·기타'}),
+    ('FANG', 1539838, {'fang:OilExplorationandProductionMember': '자체 생산 · 원유',
+        'us-gaap:NaturalGasProductionMember': '자체 생산 · 천연가스',
+        'fang:NaturalGasLiquidsProductionMember': '자체 생산 · NGL',
+        'fang:OilNaturalGasAndNaturalGasLiquidMember': '자체 생산품 판매 소계',
+        'fang:OilPurchasedMember': '매입 원유 재판매'}),
+    ('OXY', 797468, {'oxy:OilAndGasSegmentMember': '탐사·생산 · 내부거래 제거 전',
+        'oxy:MidstreamAndMarketingMember': '중류·판매 · 내부거래 제거 전',
+        'oxy:OutsideOfNorthAmericaMember': '북미 외 · 고객 계약 매출'}),
+    ('DVN', 1090012, {'dvn:OilGasAndNGLSalesMember': '자체 생산품 판매 소계',
+        'dvn:MarketingAndMidstreamRevenuesMember': '매입 상품 판매·중류 소계'}),
+    ('EQT', 33213, {'eqt:UpstreamSegmentMember': '탐사·생산 · 내부거래 제거 전',
+        'eqt:GatheringSegmentMember': '집하 · 내부거래 제거 전',
+        'eqt:TransmissionSegmentMember': '간선 수송 · 내부거래 제거 전',
+        'eqt:NaturalGasSalesMember': '자체 생산 · 천연가스', 'eqt:NGLsSalesMember': '자체 생산 · NGL',
+        'eqt:OilSalesMember': '자체 생산 · 원유',
+        'eqt:SalesOfNaturalGasNGLsAndOilAtProductionMember': '자체 생산품 판매 소계',
+        'eqt:RevenuesFromContractWithCustomersMember': '고객 계약 매출 소계'}),
+    ('EXE', 895126, {'us-gaap:OilAndGasMember': '자체 생산품 판매 소계',
+        'us-gaap:NaturalGasGatheringTransportationMarketingAndProcessingMember': '외부 상품 재판매 소계',
+        'exe:NaturalGasSalesMember': '자체 생산 · 천연가스', 'exe:OilSalesMember': '자체 생산 · 원유',
+        'exe:NaturalGasLiquidsSalesMember': '자체 생산 · NGL',
+        'exe:NaturalGasMarketingSalesMember': '재판매 · 천연가스', 'exe:OilMarketingSalesMember': '재판매 · 원유',
+        'exe:NaturalGasLiquidsMarketingSalesMember': '재판매 · NGL'}),
+    ('AR', 1433270, {'us-gaap:NaturalGasProductionMember': '천연가스 판매',
+        'ar:NaturalGasLiquidsSalesMember': 'NGL 판매', 'us-gaap:OilAndCondensateMember': '원유·콘덴세이트 판매',
+        'ar:MarketingsMember': '판매·수송 용량 활용',
+        'ar:CommodityDerivativeFairValueGainsLossesMember': '파생상품 공정가치 손익',
+        'ar:AmortizationOfDeferredRevenueVppMember': '과거 생산 대가 이연매출 상각',
+        'ar:OtherRevenueAndIncomeMember': '기타 매출·수익'}),
+    ('RRC', 315852, {'rrc:NaturalGasNaturalGasLiquidsAndOilSalesMember': '자체 생산품 판매',
+        'rrc:BrokeredNaturalGasAndMarketingMember': '매입 가스 재판매·마케팅'}),
+]:
+    for _member, _label in _mapping.items():
+        LABELS[(_symbol, _cik, _member)] = _label
+
+HIERARCHIES[('FANG', 1539838, 'product')] = {
+    'fang:OilNaturalGasAndNaturalGasLiquidMember': ['fang:OilExplorationandProductionMember',
+        'us-gaap:NaturalGasProductionMember', 'fang:NaturalGasLiquidsProductionMember']}
+HIERARCHIES[('DVN', 1090012, 'product')] = {
+    _parent: [_child + '/' + _parent for _child in ('srt:OilReservesMember', 'dvn:GasMember', 'dvn:NGLMember')]
+    for _parent in ('dvn:OilGasAndNGLSalesMember', 'dvn:MarketingAndMidstreamRevenuesMember')}
+HIERARCHIES[('EXE', 895126, 'product')] = {
+    'us-gaap:OilAndGasMember': ['exe:NaturalGasSalesMember', 'exe:OilSalesMember', 'exe:NaturalGasLiquidsSalesMember'],
+    'us-gaap:NaturalGasGatheringTransportationMarketingAndProcessingMember': [
+        'exe:NaturalGasMarketingSalesMember', 'exe:OilMarketingSalesMember', 'exe:NaturalGasLiquidsMarketingSalesMember']}
+HIERARCHIES[('EQT', 33213, 'product')] = {
+    'eqt:SalesOfNaturalGasNGLsAndOilAtProductionMember': [
+        'eqt:NaturalGasSalesMember', 'eqt:NGLsSalesMember', 'eqt:OilSalesMember']}
+
 
 def _documented_subset(rows, group, child_name, parent_name, document):
     for child in rows:
@@ -275,7 +374,57 @@ def annotate(rows, symbol, cik):
                     'https://www.sec.gov/Archives/edgar/data/1623925/000110465926013380/am-20251231x10k.htm'):
                 row['share_exclusion'] = ('이 항목은 고객 관계 상각 전 매출입니다. 합계 12억5,909만8,000 달러에서 '
                     '7,067만2,000 달러를 차감한 연결 매출 11억8,842만6,000 달러와 범위가 달라 구성비를 계산하지 않습니다.')
+    for issuer, identity, document, explanation in [
+        ('OXY', 797468, 'https://www.sec.gov/Archives/edgar/data/797468/000162828026009059/oxy-20251231.htm',
+         '두 영업 부문은 내부거래 제거 전입니다. 연결 매출로 맞추려면 5억8,800만 달러의 내부거래 제거가 필요하며 제품 표는 탐사·생산 부문만 포함하므로 전체 연결 구성비를 계산하지 않습니다.'),
+        ('EQT', 33213, 'https://www.sec.gov/Archives/edgar/data/33213/000003321326000018/eqt-20251231.htm',
+         '집하·수송의 내부 매출을 포함하는 부문 표입니다. 12억5,353만2,000 달러의 내부거래·기타 제거가 필요하므로 전체 연결 구성비를 계산하지 않습니다.'),
+    ]:
+        if (symbol, cik) == (issuer, identity):
+            for row in rows:
+                if (_reviewed_year(row, document)
+                        and (row['group'] == 'segment' or (symbol == 'OXY' and row['group'] == 'product'))):
+                    row['share_exclusion'] = explanation
+                    if row['group'] == 'segment':
+                        row['includes_intersegment'], row['total'] = True, None
     return rows
+
+
+def _reviewed_year(row, document):
+    return (row['start'] == '2025-01-01' and row['end'] == '2025-12-31'
+            and row['source']['url'].split('#')[0] == document)
+
+
+def canonical_revenue(rows, symbol):
+    """EQT repeats one production subtotal under two tags; keep its specific row.
+
+    Do not delete facts in another report, period, metric, currency or value.
+    This also normalizes legacy caches without fetching or modifying numbers.
+    """
+    document = 'https://www.sec.gov/Archives/edgar/data/33213/000003321326000018/eqt-20251231.htm'
+    if symbol != 'EQT':
+        return rows
+    kept = []
+    for row in rows:
+        duplicate = (row['group'] == 'product' and row['member'] == 'us-gaap:OilAndGasMember'
+                     and _reviewed_year(row, document) and any(
+                         candidate['member'] == 'eqt:SalesOfNaturalGasNGLsAndOilAtProductionMember'
+                         and candidate['group'] == row['group'] and _reviewed_year(candidate, document)
+                         and all(candidate[key] == row[key] for key in ('start', 'end', 'unit', 'metric', 'value'))
+                         for candidate in rows))
+        if not duplicate:
+            kept.append(row)
+    return kept
+
+
+def metric_allowed(tag, group, start, end, origin, symbol, cik):
+    # EQT's segment view has a Revenues-tag Upstream row but contract-revenue
+    # rows only for Gathering/Transmission. Selecting the latter drops Upstream.
+    if ((symbol, cik, group, start, end) == ('EQT', 33213, 'segment', '2025-01-01', '2025-12-31')
+            and origin['url'].split('#')[0] ==
+            'https://www.sec.gov/Archives/edgar/data/33213/000003321326000018/eqt-20251231.htm'):
+        return tag == 'us-gaap:Revenues'
+    return True
 
 
 def dimensions(pairs, symbol, cik):
@@ -296,6 +445,9 @@ def compound_member(member, symbol, cik):
 def separate_revenue_type(row, symbol, cik):
     # A narrative subset of Other revenues is not an additional product bucket.
     # Bound this reading to the reviewed filing/period, including old cached rows.
+    if (symbol, cik) == ('EQT', 33213):
+        return (row['group'] == 'product' and row['member'] == 'eqt:RevenuesFromContractWithCustomersMember'
+                and _reviewed_year(row, 'https://www.sec.gov/Archives/edgar/data/33213/000003321326000018/eqt-20251231.htm'))
     return (symbol == 'DINO' and cik == 1915657 and row['group'] == 'product'
             and row['member'] == 'dino:RenewableIdentificationNumbersRINsMember'
             and row['start'] == '2025-01-01' and row['end'] == '2025-12-31'

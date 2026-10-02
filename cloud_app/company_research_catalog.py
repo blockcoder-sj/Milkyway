@@ -170,6 +170,9 @@ PRIVATE_COMPANIES.update(MLP_PRIVATE)
 from .company_energy_services import PUBLIC as SERVICES_PUBLIC, PRIVATE as SERVICES_PRIVATE, EDGES as SERVICES_EDGES
 PUBLIC_COMPANIES.update(SERVICES_PUBLIC)
 PRIVATE_COMPANIES.update(SERVICES_PRIVATE)
+from .company_energy_upstream import PUBLIC as UPSTREAM_PUBLIC, PRIVATE as UPSTREAM_PRIVATE, EDGES as UPSTREAM_EDGES
+PUBLIC_COMPANIES.update(UPSTREAM_PUBLIC)
+PRIVATE_COMPANIES.update(UPSTREAM_PRIVATE)
 
 
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
@@ -234,6 +237,8 @@ for _symbol, _edges in MIDSTREAM_EDGES.items():
 for _symbol, _edges in MLP_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in SERVICES_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in UPSTREAM_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

@@ -222,7 +222,7 @@ def present_revenue(rows, symbol):
     for cik in {source_cik(row['source']) for row in result} - {None}:
         hierarchy(result, symbol, cik)
         energy.annotate([row for row in result if source_cik(row['source']) == cik], symbol, cik)
-    return result
+    return energy.canonical_revenue(result, symbol)
 
 
 def label(member):
@@ -320,7 +320,8 @@ def parse_revenue(raw, origin, symbol, today=None):
     clean = {key: next(iter(rows)) for key, rows in values.items() if len(rows) == 1}
     result = []
     for group in ('product', 'segment', 'geography', 'revenue_type'):
-        candidates = [key for key in clean if key[4] == group]
+        candidates = [key for key in clean if key[4] == group and
+                      energy.metric_allowed(key[0], group, key[2], key[3], origin, symbol, expected_cik)]
         if not candidates:
             continue
         # One matching metric/currency/period per view. No mixing current and prior years.

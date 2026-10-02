@@ -93,7 +93,7 @@
       "name": "ANTERO RESOURCES Corp",
       "cik": "1433270",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -663,7 +663,7 @@
       "name": "EQT Corp",
       "cik": "33213",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -708,7 +708,7 @@
       "name": "EXPAND ENERGY Corp",
       "cik": "895126",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2073,7 +2073,7 @@
       "name": "RANGE RESOURCES CORP",
       "cik": "315852",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
