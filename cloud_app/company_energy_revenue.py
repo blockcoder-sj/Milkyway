@@ -136,6 +136,66 @@ for _member in ('trgp:GatheringAndProcessingMember', 'trgp:LogisticsAndTransport
         ('us-gaap:StatementBusinessSegmentsAxis', _member),
     ]))] = ('segment', _member)
 
+# Energy Transfer's segment table explicitly distinguishes external customers
+# from intersegment transactions on a third axis. Admit only external rows.
+for _member, _label in {
+    'et:IntrastateTransportationAndStorageMember':'주내 가스 운송·저장 · 외부 매출',
+    'et:InterstateTransportationAndStorageMember':'주간 가스 운송·저장 · 외부 매출',
+    'et:MidstreamMember':'생산지 집하·처리 · 외부 매출',
+    'et:NGLandrefinedproductstransportationandservicesMember':'NGL·정유제품 물류 · 외부 매출',
+    'et:CrudeoiltransportationandservicesMember':'원유 물류 · 외부 매출',
+    'et:InvestmentInSunocoLPMember':'Sunoco 연결 사업 · 외부 매출',
+    'et:InvestmentInUSACMember':'압축 서비스 · 외부 매출',
+    'us-gaap:AllOtherSegmentsMember':'기타 연결 사업 · 외부 매출',
+}.items():
+    COORDINATES[('ET', 1276187, frozenset([
+        ('srt:ConsolidationItemsAxis', 'us-gaap:OperatingSegmentsMember'),
+        ('us-gaap:RelatedPartyTransactionsByRelatedPartyAxis', 'et:ExternalCustomersMember'),
+        ('us-gaap:StatementBusinessSegmentsAxis', _member),
+    ]))] = ('segment', _member)
+    LABELS[('ET', 1276187, _member)] = _label
+
+for _member, _label in {
+    'hesm:GatheringMember':'가스·원유·생산수 집하',
+    'hesm:ProcessingAndStorageMember':'가스 처리·NGL 분별·저장',
+    'hesm:TerminalingAndExportMember':'원유 터미널·출하',
+}.items():
+    COORDINATES[('HESM', 1789832, frozenset([
+        ('srt:ConsolidationItemsAxis', 'us-gaap:OperatingSegmentsMember'),
+        ('us-gaap:StatementBusinessSegmentsAxis', _member),
+    ]))] = ('segment', _member)
+    LABELS[('HESM', 1789832, _member)] = _label
+
+for _symbol, _cik, _mapping in [
+    ('EPD', 1061219, {
+        'epd:NglPipelinesAndServicesMember':'NGL 파이프라인·서비스 · 내부거래 제거 후',
+        'epd:OnshoreCrudeOilPipelinesAndServicesMember':'원유 파이프라인·서비스 · 내부거래 제거 후',
+        'epd:OnshoreNaturalGasPipelinesAndServicesMember':'천연가스 파이프라인·서비스 · 내부거래 제거 후',
+        'epd:PetrochemicalAndRefinedProductsServicesMember':'석유화학·정유제품 서비스 · 내부거래 제거 후',
+    }),
+    ('ET', 1276187, {
+        'et:NGLsalesMember':'NGL 판매', 'et:NaturalgassalesMember':'천연가스 판매',
+        'us-gaap:NaturalGasMidstreamMember':'운송·집하·처리 등 서비스',
+        'us-gaap:OilAndGasMember':'원유 판매',
+        'us-gaap:OilAndGasRefiningAndMarketingMember':'정유제품 판매',
+        'us-gaap:ProductAndServiceOtherMember':'기타 상품·서비스',
+    }),
+    ('MPLX', 1552000, {
+        'mplx:CrudeOilAndProductsLogisticsMember':'원유·정유제품 물류 · 고객 계약',
+        'mplx:NaturalGasAndNGLServicesMember':'천연가스·NGL 서비스 · 고객 계약',
+    }),
+    ('WES', 1423902, {
+        'wes:ServiceFeeBasedMember':'고정 수수료 기반 서비스',
+        'wes:ServiceProductBasedMember':'상품 가격 기반 서비스',
+    }),
+    ('HESM', 1789832, {
+        'hesm:AffiliateServicesMember':'관계사 서비스 · 고객 계약',
+        'hesm:ThirdPartyServicesMember':'제3자 서비스 · 고객 계약',
+    }),
+]:
+    for _member, _label in _mapping.items():
+        LABELS[(_symbol, _cik, _member)] = _label
+
 
 def annotate(rows, symbol, cik):
     """Period-bound presentation notes; preserve source values and metric scope."""
@@ -170,7 +230,7 @@ def dimensions(pairs, symbol, cik):
     if ((symbol, cik) in {('MPC', 1510295), ('PSX', 1534701)}
             and pairs == [('srt:ConsolidationItemsAxis', 'us-gaap:CorporateNonSegmentMember')]):
         return 'segment', 'us-gaap:CorporateNonSegmentMember'
-    if len(pairs) != 2 or len(set(pairs)) != 2:
+    if len(pairs) not in (2, 3) or len(set(pairs)) != len(pairs):
         return None
     return COORDINATES.get((symbol, cik, frozenset(pairs)))
 

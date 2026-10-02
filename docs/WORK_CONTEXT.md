@@ -1085,3 +1085,19 @@ resuming; no paid AI regression approval has arrived.
   scope needs actual review before editing. XOM current CIK2115436 successor Jul1.
 - Temporary original documents/evidence in /tmp/milkyway-energy-research; exact source
   manifests/SHA retained. No user secrets/runtime copied. No additional AI approval.
+
+### MLP milestone continuing work
+
+- 0b84a52b09cbb9c36d388770683e3c2ceae86c03 pushed; GitHub CI37033177582 SUCCESS
+  verify+postgres-integration. Local app remains gas/NGL/LNG image until next release.
+- New EPD/ET/MPLX/PAA/PAGP/WES/HESM notes, exact original tables and7context records.
+  58focused tests passed1.051s. ExactET3axes external-only,HESM2axes; no generic widening.
+- WES4.281744b is acquisition PRO FORMA, actual3.843403b revenue+other; don't confuse
+  it with a second registrant. HESMcontract1.6172b vssegment1.6213b. MPC48% excludes
+  significantnoncashitems. ActualSeaway supplier payments andMPCITengineering supplier
+  roles added. Latestbriefsources boundtoquarter whereannualdoesnotcover2026facts.
+- Wholeissueridentity audit discovered APC=ARKOPetroleum(current), not oldAnadarko;
+  SMC=SummitMidstream, SUNC=SunocoCorp. SECexchangeindexOct3 downloadedpublicly;
+  FGPR/RSRVOTC; AMEN/UNTC absentindexbutnotthereforeinactive.
+- Continue fullEnergy; do not final after thiscommit. Next wholeissuerregistry,
+  currentXOMsuccessorCIKfix, restmidstream/compression/LNG/E&P/services/etc.
