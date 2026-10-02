@@ -306,7 +306,7 @@ for _key, _name, _business, _origin in [
     ('vitol-us', 'Vitol Inc.', '원유·에너지 상품을 구매·유통하는 거래 법인입니다. 2025년 Diamondback 매출 11%의 구매자이며 전체 Vitol 시장 점유율이 아닙니다.', ANNUAL['FANG']),
     ('remuda-midstream', 'Remuda Midstream Holdings', 'Diamondback의 비운영 투자 JV입니다. WTG Midstream 운영 자회사는 2024년 ET에 매각됐으며 현재 지분과 과거 운영망을 구별합니다.', ANNUAL['FANG']),
     ('worley-energy', 'Worley', '산업 설비의 엔지니어링·조달·시공을 제공합니다. STRATOS의 실제 EPC 수행을 1PointFive가 확인했고 설비 운영·가스 생산자는 아닙니다.', STRATOS),
-    ('adnoc-gas-context', 'ADNOC / Shah gas', 'UAE의 가스 생산·처리 공동사업 상대입니다. Shah/Al Hosn에서 OXY 40% 참여와 gas·NGL·condensate 생산을 연결합니다.', ANNUAL['OXY']),
+    ('adnoc-gas-context', 'ADNOC', 'UAE의 원유·가스 생산 그룹입니다. 이 출처에서는 Shah/Al Hosn 공동사업의 생산·처리 역할을 확인하며 OXY 40% 참여와 gas·NGL·condensate 생산을 연결합니다.', ANNUAL['OXY']),
     ('dolphin-energy', 'Dolphin Energy', 'Qatar 가스 생산을 UAE·Oman 배관 수요와 연결합니다. 생산·배관의 두 경제적 지분과 배관 전체 능력·실수송량을 구별합니다.', ANNUAL['OXY']),
     ('1pointfive', '1PointFive', 'OXY 계열의 탄소 제거·저장 개발·판매 기업입니다. STRATOS에서 포집·지중 저장한 탄소에 대한 크레딧을 고객에게 공급하는 계약을 체결합니다.', BAIN),
     ('carbon-engineering', 'Carbon Engineering', '액체 흡수제를 사용하는 DAC 기술과 설계 혁신을 개발합니다. OXY가 취득한 기술 계열이며 STRATOS 시공사 Worley와 다른 역할입니다.', STRATOS),

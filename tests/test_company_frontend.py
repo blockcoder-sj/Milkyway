@@ -65,6 +65,13 @@ assert(contextual.business(edge).includes('data-company-citation="1"'));assert(!
 assert.equal(contextual.business({...edge,business:{detail:'Bad',source:rejected}}),'');
 const network=view.create({});network.registerNetwork({rows:[edge]});
 assert.equal(network.count,2);assert(network.business(edge).includes('data-company-citation='));
+const scopeData={financial_context:[{title:'연결 범위',detail:'지배기업 변경 <script>',source:src}]};
+const scope=view.create(scopeData);
+assert.equal(scope.count,1);assert(scope.footer().includes('연결 범위'));
+assert(scope.fact(scopeData.financial_context[0]).includes('data-company-citation="1"'));
+assert(scope.fact(scopeData.financial_context[0]).includes('&lt;script&gt;'));
+assert(!scope.fact(scopeData.financial_context[0]).includes('<script>'));
+assert.equal(view.create({financial_context:[{...scopeData.financial_context[0],source:rejected}]}).count,0);
 """
         root = Path(__file__).resolve().parents[1] / 'cloud_app/static'
         result = subprocess.run([shutil.which('node'), '-e', script, str(root)],

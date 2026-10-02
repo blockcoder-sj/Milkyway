@@ -174,8 +174,11 @@ from .company_energy_upstream import PUBLIC as UPSTREAM_PUBLIC, PRIVATE as UPSTR
 PUBLIC_COMPANIES.update(UPSTREAM_PUBLIC)
 PRIVATE_COMPANIES.update(UPSTREAM_PRIVATE)
 from .company_energy_providers import PUBLIC as PROVIDER_PUBLIC, PRIVATE as PROVIDER_PRIVATE, EDGES as PROVIDER_EDGES
+from .company_energy_equipment import PUBLIC as EQUIPMENT_PUBLIC, PRIVATE as EQUIPMENT_PRIVATE, EDGES as EQUIPMENT_EDGES
 PUBLIC_COMPANIES.update(PROVIDER_PUBLIC)
 PRIVATE_COMPANIES.update(PROVIDER_PRIVATE)
+PUBLIC_COMPANIES.update(EQUIPMENT_PUBLIC)
+PRIVATE_COMPANIES.update(EQUIPMENT_PRIVATE)
 
 # Explicitly reviewed brand/issuer mapping. Similar names never create aliases.
 # Range names the ProFrac service group; its listed parent is ACDC, not FLOC.
@@ -248,6 +251,8 @@ for _symbol, _edges in SERVICES_EDGES.items():
 for _symbol, _edges in UPSTREAM_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in PROVIDER_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in EQUIPMENT_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

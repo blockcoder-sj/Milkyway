@@ -1187,3 +1187,47 @@ resuming; no paid AI regression approval has arrived.
   pendingQ4; FTKLithium/ProFrac saleleaseback and NINEfreshstart require own review.
   Also fill financials currently absent for newly added providers, field audit,
   foreignADR/newOTC inventory audit and all remaining industrial groups.
+
+### Equipment and original-financial continuation · 2026-10-03
+
+- Whole Energy remains active. User explicitly rejects stopping at partial batches.
+  Do not final after this milestone/commit/deploy. No actual AI calls or new agents.
+- Added12 equipment/drilling/water/completion dossiers and34 context profiles;
+  receipts58/mainedited58 are NOT all-field completion counts. Registry190, twelve
+  source-based business navigation groups updated independently of official GICS.
+- Original annual financial archive182receipts:173populated/1344values. ExactCIK,
+  consolidatedcontext/annualduration/currency/unit/declaredDEIperiod validated;
+  signedloss/OCF kept. Reuse alreadyfetchedannual ifcompanyfactsfail; no new call.
+  9empty PBA/SOBO/TRP/GFR40Fattachments andAPC/CRT/NRT/PBT/SBRplaintables remain.
+- XOMold34088annual/new2115436holdco, HOS2025Helix/2026combinedgroup, NINEpredecessor/
+  successor andACDC68.8m mezzanine preferredstock(notNCI) scope cards added.
+- WTTRdetailed1.420376b−13.032m=1.407344b; notgrosssegment1.421047b/13.703m.
+  NBR Saudi1b isinsideNonUS; FTKothercountries excludesUAE. Exactdocument/year
+  qualifiers avoid applying these FY2025 adjustments to other reports.
+- FTKPREPAofficialterminationAug18 confirmedlaterAug19 8K; norevenue/payment/
+  equipmentdeployment. PowerExpectationsidentityhasseparateearlierreceipt.
+  WFRDNCSclosedSep1, domicileIrishcourt/Q4pending. RNGR AWSclosedNov7,2025;
+  HessECHO3rigs delivery2027. TTI FIDMay28 andactualDCDconstructioncounterparty.
+- ActualUI foundoldEX21two-name-columns parsedasjurisdiction, geographiclegalforms
+  asfakecompanies. Newboundedcompany_subsidiaries parser andlegacycleanup fixthis.
+  Matchingcompanyfactsfigureonlycorroboratedwhenissuer/tag/currency/period/date/value
+  exactlyagree; API sourcekeptbelow, differentfigures/dates/documentspreserved.
+- Final602tests85.857s OK(skipped18Node); host21frontend/statictests1.915s OK.
+  A host attemptincludingHTTPtestmodule failedmissinghttpx, notsuccess evidence.
+  Screenregressions73/2.136s andfinalfocused65/1.471s OK.
+  512MiB/1CPUcoldseed551entities4.031s/RSS61.1MiB/SQLitequick_checkOK;
+  directoryp953.828ms/FTKmerge7.271ms/graph119.393ms(p5034.577)/RSS61.5MiB.
+- App-onlyfinal8793551c7805ace9acd01ecc46faae4b568179717021ad900d0c8f50ac9afc68,
+  22appSHA match, startupready. NativeChromeoneexistingtab verifiedFTKsinglefinancial
+  row/noTexasCorp-or-OklahomaLegalFormlinks; NINEfinancialscope; graph→NewGen
+  detailandreversetoNine. Fournecessarycontainersonly; paperworkerpaused/stopped.
+- Next: missingUSlistedforeignShell/BP/TTE/E/EQNR/PBR/EC/YPF/SU/CNQ/IMO/CVE/BTE/
+  VET/OBE +TS/PDS/SSL andnuclearCCJ/DNN/NXE/EU/UUUU currentidentity/originalaudit.
+  Collectorprepared /tmp/milkyway-energy-equipment-review/global-collect.py,
+  Useexistingissuer-exchanges-20261003.json; nofakequarterfor6Kcovers. Submissions23
+  received. Initialtempcollector rejectedzero-paddedstringCIK vsint andstoppedbefore
+  annualdownloads; exactnumericCIKcheckfixedandannualsearchnotlimitedby12recent6Ks.
+  Restartcorrectedcollector; do NOTcount23annualreceiptsascollectedyet.
+  Thenremainingwhole roster/fieldaudit/namedlinks. FTKEX21actual4subsverifiedfreeSEC;
+  newcollectorwillreadfourcorrectly; cachedtwojurisgenericcorrectedbutneedsreviewed
+  fullfour-sourceupdatewhencontinuingdossiers. Do notlose thisfollowup.

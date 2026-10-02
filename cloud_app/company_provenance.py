@@ -29,7 +29,7 @@ def clean(value):
                 result['entity_id'] = match[1]
                 break
     for field in ('facts', 'products', 'segments', 'market_shares', 'drivers',
-                  'relations', 'financials', 'brief', 'revenue_mix'):
+                  'relations', 'financials', 'financial_context', 'brief', 'revenue_mix'):
         if field in result:
             rows = result[field]
             result[field] = [row for row in rows if not forbidden(
@@ -64,6 +64,17 @@ def clean(value):
             and not (legacy_wiki_failure and re.search(r'\bwiki\b', message, re.I))]
     if 'unavailable_sources' in result:
         result['unavailable_sources'] = [item for item in result['unavailable_sources'] if item != 'wikidata']
+    if 'relations' in result:
+        from .company_subsidiaries import repair_legacy
+        old_count = len(result['relations'])
+        result['relations'] = repair_legacy(result['relations'])
+        removed = old_count - len(result['relations'])
+        if removed and result.get('report_analysis'):
+            item = result['report_analysis']
+            report = dict(item) if isinstance(item, dict) else item.model_dump()
+            report['detail'] = (report.get('detail', '') +
+                f' 기존 자회사 표에서 관할·법인 형태를 기업명으로 잘못 읽은 {removed:,}건은 관계에서 제외했습니다.')[:1500]
+            result['report_analysis'] = report
     from .company_relation_validation import legacy_rejections
     rejected = legacy_rejections(result)
     if rejected:

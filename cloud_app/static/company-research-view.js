@@ -37,7 +37,7 @@
     for (const source of [...(data.sources || []), ...(data.filings || []), data.description_source,
       data.report_analysis?.source, quoteSource(data.quote, data.quote_basis?.fetched_at),
       ...(data.peers || []).map(row => quoteSource(row, data.quote_basis?.fetched_at))]) add(source);
-    for (const key of ['brief', 'products', 'segments', 'facts', 'drivers', 'market_shares', 'financials', 'revenue_mix']) {
+    for (const key of ['brief', 'products', 'segments', 'facts', 'drivers', 'market_shares', 'financials', 'financial_context', 'revenue_mix']) {
       for (const row of data[key] || []) {
         add(row.source, row.title || row.label);
         if (row.original && accepted(row.source)) excerpts.set(row.title + '|' + row.original,

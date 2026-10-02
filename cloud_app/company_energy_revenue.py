@@ -5,9 +5,10 @@ XBRL member names in a composite key; never silently drop a geographic dimension
 Valero's product facts are qualified by the associated reported segment.
 """
 from . import company_energy_provider_revenue as providers
+from . import company_energy_equipment_revenue as equipment
 
-COORDINATES = dict(providers.COORDINATES)
-LABELS = dict(providers.LABELS)
+COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES}
+LABELS = {**providers.LABELS, **equipment.LABELS}
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -129,6 +130,7 @@ HIERARCHIES = {
         'oke:ServicesMember': ['oke:ExchangeServicesAndNaturalGasGatheringAndProcessingRevenueMember',
                              'oke:TransportationandStorageRevenueMember', 'oke:OtherMember']},
 }
+HIERARCHIES.update(equipment.HIERARCHIES)
 
 # Targa's external segment rows use this exact two-axis coordinate. Its nearby
 # MaterialReconcilingItems and IntersegmentElimination rows must not be admitted.
@@ -355,6 +357,10 @@ def _documented_subset(rows, group, child_name, parent_name, document):
 
 def annotate(rows, symbol, cik):
     """Period-bound presentation notes; preserve source values and metric scope."""
+    equipment.annotate(rows, symbol, cik)
+    if (symbol, cik) == ('NBR', 1163739):
+        _documented_subset(rows, 'geography', 'country:SA', 'us-gaap:NonUsMember',
+            equipment.DOCUMENTS[('NBR', 1163739)])
     if (symbol, cik) == ('TRGP', 1389170):
         for row in rows:
             if (row['group'] == 'segment' and row['end'] == '2025-12-31'
@@ -405,6 +411,9 @@ def canonical_revenue(rows, symbol):
     """
     document = 'https://www.sec.gov/Archives/edgar/data/33213/000003321326000018/eqt-20251231.htm'
     rows = providers.canonical_revenue(rows, symbol)
+    from .company_revenue import source_cik
+    for cik in {source_cik(row['source']) for row in rows} - {None}:
+        rows = equipment.canonical(rows, symbol, cik)
     if symbol != 'EQT':
         return rows
     kept = []
@@ -436,6 +445,9 @@ def dimensions(pairs, symbol, cik):
     reviewed = providers.dimensions(pairs, symbol, cik)
     if reviewed:
         return reviewed
+    reviewed = equipment.dimensions(pairs, symbol, cik)
+    if reviewed:
+        return reviewed
     # These issuers put external corporate revenue on a consolidation axis.
     # Never accept the operating-segment totals or elimination coordinates here.
     if ((symbol, cik) in {('MPC', 1510295), ('PSX', 1534701)}
@@ -447,7 +459,9 @@ def dimensions(pairs, symbol, cik):
 
 
 def presentation_group(row, symbol, cik):
-    return providers.presentation_group(row, symbol, cik)
+    group = providers.presentation_group(row, symbol, cik)
+    row['group'] = group
+    return equipment.presentation_group(row, symbol, cik)
 
 
 def compound_member(member, symbol, cik):

@@ -107,6 +107,7 @@ class CompanyKnowledge(BaseModel):
     drivers: list[Fact] = Field(default_factory=list, max_length=30)
     relations: list[Relation] = Field(default_factory=list, max_length=100)
     financials: list[Financial] = Field(default_factory=list, max_length=30)
+    financial_context: list[Fact] = Field(default_factory=list, max_length=8)
     filings: list[Source] = Field(default_factory=list, max_length=12)
     sources: list[Source] = Field(default_factory=list, max_length=200)
     report_analysis: Fact | None = None

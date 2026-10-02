@@ -291,32 +291,8 @@ def parse_report(raw, symbol, origin, name_index=None):
 
 def parse_subsidiaries(raw, origin):
     """Exhibit 21 table names remain source-local identities, never name-based merges."""
-    soup = document(raw)
-    if not re.search(r"subsidiar", soup.get_text(" ", strip=True)[:4000], re.I):
-        raise ValueError("Not a subsidiary exhibit")
-    result, seen = [], set()
-    for tr in soup.find_all("tr")[:2000]:
-        cells = tr.find_all("td", recursive=False)
-        if len(cells) < 2:
-            continue
-        values = [re.sub(r"\s+", " ", cell.get_text(" ", strip=True)).strip() for cell in cells]
-        values = [value for value in values if value]
-        if len(values) < 2:
-            continue
-        name = values[0]
-        if not 3 <= len(name) <= 160 or re.search(r"(?:subsidiar|jurisdiction|\bname\b|exhibit|^state$|^December \d)", name, re.I):
-            continue
-        if name in seen or not re.search(r"[A-Za-z]", name):
-            continue
-        jurisdiction = " ".join(values[1:])
-        if not jurisdiction or len(jurisdiction) > 200:
-            continue
-        seen.add(name)
-        result.append(dict(name=name, kind="subsidiary", symbol=None,
-            detail="공시 자회사 명세서 · 설립·등록 관할: " + jurisdiction + " · 표에 기재된 관계이며 지분율·현재 거래 규모는 추정하지 않습니다.", source=origin))
-        if len(result) >= 80:
-            break
-    return result
+    from .company_subsidiaries import parse
+    return parse(document(raw), origin)
 
 
 def subsidiary_document(raw, annual_url):

@@ -96,7 +96,7 @@
       const rows=(data[key]||[]).filter(row=>key==='facts'||!row.original);$('#'+id).innerHTML=rows.length?rows.map(fact).join(''):`<p class="fineprint">${message}</p>`;
     }
     for(const [id,key] of [['companySegmentOriginals','segments'],['companyDriverOriginals','drivers']])$('#'+id).innerHTML=(data[key]||[]).filter(row=>row.original).map(fact).join('')||'<p class="fineprint">확보한 발췌 없음</p>';
-    $('#companyFinancials').innerHTML=data.financials.length?`<div class="research-table"><table><thead><tr><th>공시 항목</th><th>보고값</th><th>보고 기간·기말</th><th>원자료</th></tr></thead><tbody>${data.financials.map(row=>`<tr><td>${esc(row.label)}</td><td>${fmt(row.value,0)} ${esc(row.unit)}</td><td>${esc(row.period)}</td><td>${source(row.source)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="fineprint">현재 확인된 공시 재무 수치가 없습니다. 아래 기업 공시 원문을 확인하세요.</p>';
+    $('#companyFinancials').innerHTML=(data.financial_context||[]).map(fact).join('')+(data.financials.length?`<div class="research-table"><table><thead><tr><th>공시 항목</th><th>보고값</th><th>보고 기간·기말</th><th>원자료</th></tr></thead><tbody>${data.financials.map(row=>`<tr><td>${esc(row.label)}</td><td>${fmt(row.value,0)} ${esc(row.unit)}</td><td>${esc(row.period)}</td><td>${source(row.source)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="fineprint">현재 확인된 공시 재무 수치가 없습니다. 아래 기업 공시 원문을 확인하세요.</p>');
     $('#companyFilings').innerHTML=data.filings.length?`<p class="fineprint">확보한 공시 ${fmt(data.filings.length,0)}건 · 원문 링크와 기준일은 하단 출처 모음에서 확인할 수 있습니다.</p>`:'';
     network.setContext(data,reading);prices.setContext(data,reading);footer();
   }

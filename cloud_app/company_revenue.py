@@ -232,7 +232,7 @@ def label(member):
     return LABELS.get(local, re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', local))[:160]
 
 
-def number(fact):
+def number(fact, *, signed=False):
     """Conservative support for numeric inline transformations, never eval."""
     raw = fact.get_text('', strip=True).replace('\u00a0', '').strip()
     transform = fact.get('format', '')
@@ -259,7 +259,8 @@ def number(fact):
         value = Decimal(raw) * (Decimal(10) ** int(scale))
         if fact.get('sign') == '-':
             value = -value
-        if not value.is_finite() or not 0 <= value <= Decimal('1e16'):
+        lower = Decimal('-1e16') if signed else Decimal(0)
+        if not value.is_finite() or not lower <= value <= Decimal('1e16'):
             return None
         return value
     except (InvalidOperation, ValueError, OverflowError):

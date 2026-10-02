@@ -264,6 +264,19 @@ def sec_company(symbol, cik):
                 raise ValueError("Unsupported filing document format")
             raw = get(annual["url"], maximum=24 * 1024 * 1024, html=True)
             parsed_document = document(raw)
+            from .company_annual_financials import parse_annual_financials
+            from .company_financial_coordinates import coordinate, corroborates
+            annual_figures = parse_annual_financials(parsed_document, annual, cik)
+            reviewed_figures = {coordinate(row) for row in annual_figures} - {None}
+            retained = []
+            for row in result['financials']:
+                if coordinate(row) in reviewed_figures:
+                    continue
+                if any(corroborates(item, row) for item in annual_figures):
+                    result['sources'].append(row['source'])
+                else:
+                    retained.append(row)
+            result['financials'] = annual_figures + retained
             result['revenue_mix'] = parse_revenue(parsed_document, annual, symbol)
             try:
                 sec_identity('__INDEX_ONLY__')
@@ -447,6 +460,7 @@ def collect_company(payload, _configuration):
         "drivers",
         "relations",
         "financials",
+        "financial_context",
         "revenue_mix",
         "filings",
         "sources",
@@ -460,6 +474,7 @@ def collect_company(payload, _configuration):
                 "market_shares": 30,
                 "relations": 100,
                 "financials": 30,
+                "financial_context": 8,
                 "revenue_mix": 80,
                 "filings": 12,
                 "sources": 200,

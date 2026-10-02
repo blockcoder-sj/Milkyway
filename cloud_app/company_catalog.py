@@ -573,6 +573,9 @@ def editorial_for(symbol):
     value = deepcopy(CATALOG.get(symbol, {}))
     from .company_research_catalog import enrichment
     extra = enrichment(symbol)
+    from .company_energy_financial_archive import editorial as financial_editorial
+    for key, rows in financial_editorial(symbol).items():
+        extra[key] = rows + extra.get(key, [])
     for key, rows in extra.items():
         value[key] = rows + value.get(key, []) if isinstance(rows, list) else rows
     if symbol in CIKS:
@@ -643,9 +646,17 @@ def enrich(value):
                 from .company_revenue import basis, present_revenue
                 previous_rows = present_revenue(previous_rows, data['symbol'])
                 reviewed_revenue = {(*basis(row), row['member']) for row in normalized[key]}
+            if key == 'financials':
+                from .company_financial_coordinates import coordinate, corroborates
+                reviewed_financials = {coordinate(row) for row in normalized[key]} - {None}
             previous = []
             for row in previous_rows:
                 if key == 'revenue_mix' and (*basis(row), row['member']) in reviewed_revenue:
+                    continue
+                if key == 'financials' and coordinate(row) in reviewed_financials:
+                    continue
+                if key == 'financials' and any(corroborates(item, row) for item in normalized[key]):
+                    data['sources'].append(row['source'])
                     continue
                 if key == 'segments':
                     row = {**row, 'title': SEGMENT_KO.get(row['title'], row['title'])}

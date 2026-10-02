@@ -38,7 +38,8 @@ def bootstrap(settings):
     paths = [path for path in sorted(root(settings).glob('*.json')) if SYMBOL.fullmatch(path.stem)]
     directory = related_directory(settings, [path.stem for path in paths])
     from .company_research_catalog import PUBLIC_COMPANIES, RELATIONS
-    reviewed = set(CATALOG) | set(PUBLIC_COMPANIES) | set(RELATIONS)
+    from .company_energy_financial_archive import symbols as financial_symbols
+    reviewed = set(CATALOG) | set(PUBLIC_COMPANIES) | set(RELATIONS) | financial_symbols()
     # Read only comparison fields; do not load each entity's 200 sources
     # or open thousands of SQLite connections during a repeated startup.
     with graph.connection() as db:
@@ -82,7 +83,8 @@ def seed_research(settings):
     from .company_research_catalog import PUBLIC_COMPANIES, RELATIONS, PRIVATE_COMPANIES, private_profile, REGISTERED_TICKERS
     from .company_service import related_directory, read_company
     graph = CompanyGraph(settings)
-    symbols = sorted(set(CATALOG) | set(PUBLIC_COMPANIES) | set(RELATIONS))
+    from .company_energy_financial_archive import symbols as financial_symbols
+    symbols = sorted(set(CATALOG) | set(PUBLIC_COMPANIES) | set(RELATIONS) | financial_symbols())
     directory = related_directory(settings, symbols)
     for symbol in symbols:
         old = read_company(settings, symbol)

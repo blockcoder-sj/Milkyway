@@ -67,6 +67,51 @@ class FilingExtractionTests(unittest.TestCase):
         result = parse_report(raw, "NVDA", SOURCE)
         self.assertEqual({r["symbol"] for r in result["relations"]}, {"AMZN", "MSFT"})
 
+    def test_parallel_name_and_legal_form_rows_do_not_create_geographic_companies(self):
+        raw = '''<h1>List of Subsidiaries</h1><table>
+        <tr><td>Flotek Chemistry, LLC</td><td></td><td>JP3 Measurement, LLC</td></tr>
+        <tr><td>Oklahoma Limited Liability Company</td><td></td><td>Texas Limited Liability Company</td></tr>
+        <tr><td>Flotek Paymaster, Inc.</td><td></td><td>PWRtek, LLC</td></tr>
+        <tr><td>Texas Corporation</td><td></td><td>Texas Limited Liability Company</td></tr></table>'''
+        rows=parse_subsidiaries(raw,SOURCE)
+        self.assertEqual([r['name'] for r in rows],['Flotek Chemistry, LLC','JP3 Measurement, LLC',
+                                                  'Flotek Paymaster, Inc.','PWRtek, LLC'])
+        self.assertIn('관할: Oklahoma',rows[0]['detail'])
+        self.assertIn('관할: Texas',rows[1]['detail'])
+        self.assertFalse(any('관할: JP3' in r['detail'] or '관할: PWRtek' in r['detail'] for r in rows))
+
+    def test_header_spacer_cells_ownership_columns_and_unknown_places_are_conservative(self):
+        raw='''<h1>Subsidiaries</h1><table>
+        <tr><th>Name</th><th></th><th>Ownership</th><th>Jurisdiction of incorporation</th></tr>
+        <tr><td>Alpha Services</td><td></td><td>100%</td><td>Delaware</td></tr>
+        <tr><td>Beta</td><td></td><td>50%</td><td>Unsupported place</td></tr></table>'''
+        rows=parse_subsidiaries(raw,SOURCE)
+        self.assertEqual([r['name'] for r in rows],['Alpha Services','Beta'])
+        self.assertIn('관할: Delaware',rows[0]['detail'])
+        self.assertIn('관할 미확인',rows[1]['detail'])
+        self.assertNotIn('50%',str(rows))
+
+    def test_legacy_bad_jurisdiction_is_repaired_without_mutating_good_business_notes(self):
+        from copy import deepcopy
+        origin={**SOURCE,'label':'SEC · Exhibit 21 자회사 명세서'}
+        rows=[dict(name=name,kind='subsidiary',source=origin,
+              detail='공시 자회사 명세서 · 설립·등록 관할: '+place+' · 원문') for name,place in [
+              ('Flotek Chemistry, LLC','JP3 Measurement, LLC'),
+              ('Texas Corporation','Texas Limited Liability Company'),('Good Subsidiary','Delaware')]]
+        business=dict(name='Texas Corporation',kind='customer',detail='명시된 거래 상대',source=SOURCE)
+        raw=deepcopy(rows+[business]); value=CompanyKnowledge(name='Issuer',relations=raw)
+        self.assertEqual(raw,rows+[business])
+        self.assertEqual([r.name for r in value.relations],['Flotek Chemistry, LLC','Good Subsidiary','Texas Corporation'])
+        self.assertIn('관할을 확인하지 못했습니다',value.relations[0].detail)
+        self.assertIn('Delaware',value.relations[1].detail)
+        self.assertEqual(value.relations[2].detail,'명시된 거래 상대')
+        self.assertEqual(CompanyKnowledge.model_validate(value.model_dump()).model_dump(),value.model_dump())
+
+    def test_subsidiary_table_extraction_stops_at_eighty_names(self):
+        raw='<h1>Subsidiaries</h1><table><tr><th>Name</th><th>Jurisdiction</th></tr>'+''.join(
+            f'<tr><td>Child {i} LLC</td><td>Delaware</td></tr>' for i in range(2500))+'</table>'
+        self.assertEqual(len(parse_subsidiaries(raw,SOURCE)),80)
+
     def test_subsidiary_link_cannot_leave_sec_or_switch_issuer(self):
         for href in ("https://evil.test/report.htm", "https://www.sec.gov/Archives/edgar/data/2/000000000126000001/ex21.htm", "https://www.sec.gov/private.htm"):
             raw = f'<a href="{href}">Subsidiaries of Registrant</a>'.encode()

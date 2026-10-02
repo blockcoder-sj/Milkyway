@@ -106,6 +106,36 @@ class CompanyFeedTests(unittest.TestCase):
         self.assertEqual(result["financials"], [])
         self.assertTrue(result["errors"])
 
+    def test_already_fetched_annual_recovers_figures_after_companyfacts_failure(self):
+        from tests.test_company_annual_financials import annual
+        from tests.test_company_revenue import context, fact
+        origin = submissions()
+        raw = annual(context('year', cik='320193', start='2024-09-29', end='2025-09-27'),
+                     fact('year', '400', anchor='annual-sales'), period='2025-09-27')
+        raw = raw.replace('</html>', '<p>Apple annual filing body.</p></html>')
+        with patch.object(feed, 'get', side_effect=[origin, TimeoutError(), raw, {}]) as network, \
+                patch.object(feed, 'sec_identity', side_effect=TimeoutError()):
+            result = feed.sec_company('AAPL', '320193')
+        self.assertEqual(network.call_count, 4)  # submissions, facts, annual, exhibit index
+        self.assertEqual(len(result['financials']), 1)
+        self.assertEqual(result['financials'][0]['value'], 400000000)
+        self.assertTrue(result['financials'][0]['source']['url'].endswith('#annual-sales'))
+        self.assertIn('sec_financials', result['unavailable_sources'])
+        self.assertNotIn('sec_report', result['unavailable_sources'])
+        self.assertTrue(any('SEC 재무 수치' in error for error in result['errors']))
+
+    def test_annual_fallback_rejects_another_issuer_context(self):
+        from tests.test_company_annual_financials import annual
+        from tests.test_company_revenue import context, fact
+        raw = annual(context('year', cik='789019', start='2024-09-29', end='2025-09-27'),
+                     fact('year', '400'), period='2025-09-27')
+        raw = raw.replace('</html>', '<p>Annual filing body.</p></html>')
+        with patch.object(feed, 'get', side_effect=[submissions(), TimeoutError(), raw, {}]), \
+                patch.object(feed, 'sec_identity', side_effect=TimeoutError()):
+            result = feed.sec_company('AAPL', '320193')
+        self.assertEqual(result['financials'], [])
+        self.assertIn('sec_financials', result['unavailable_sources'])
+
     def test_high_volume_issuer_filings_do_not_hide_annual_report(self):
         data = submissions()
         recent = data["filings"]["recent"]

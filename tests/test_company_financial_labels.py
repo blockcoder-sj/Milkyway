@@ -25,8 +25,9 @@ class FinancialLabelTests(unittest.TestCase):
         original = deepcopy(row)
         result = enrich(dict(symbol='LNG', name='Cheniere', financials=[row]))
         self.assertEqual(row, original)
-        self.assertEqual(result.financials[0].value, 19464000000)
-        self.assertIn('고객 계약', result.financials[0].label)
+        retained = next(item for item in result.financials if item.source.url == row['source']['url'])
+        self.assertEqual(retained.value, 19464000000)
+        self.assertIn('고객 계약', retained.label)
         self.assertEqual(enrich(result).model_dump(), result.model_dump())
 
     def test_unrelated_metrics_and_current_exxon_identity(self):

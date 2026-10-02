@@ -855,7 +855,7 @@
       "name": "TechnipFMC plc",
       "cik": "1681459",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "equipment",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -870,7 +870,7 @@
       "name": "FLOTEK INDUSTRIES INC/CN/",
       "cik": "928054",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1095,7 +1095,7 @@
       "name": "Helmerich & Payne, Inc.",
       "cik": "46765",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "drilling",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1536,7 +1536,7 @@
       "name": "NABORS INDUSTRIES LTD",
       "cik": "1163739",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "drilling",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1671,7 +1671,7 @@
       "name": "Nine Energy Service, Inc.",
       "cik": "1532286",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1701,7 +1701,7 @@
       "name": "NOV Inc.",
       "cik": "1021860",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "equipment",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2076,7 +2076,7 @@
       "name": "RPC INC",
       "cik": "742278",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2121,7 +2121,7 @@
       "name": "Ranger Energy Services, Inc.",
       "cik": "1699039",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2541,7 +2541,7 @@
       "name": "TETRA TECHNOLOGIES INC",
       "cik": "844965",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2757,7 +2757,7 @@
       "name": "Weatherford International plc",
       "cik": "1603923",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2772,7 +2772,7 @@
       "name": "Cactus, Inc.",
       "cik": "1699136",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "equipment",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2847,7 +2847,7 @@
       "name": "Select Water Solutions, Inc.",
       "cik": "1693256",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

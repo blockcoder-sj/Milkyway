@@ -3,7 +3,8 @@ from urllib.parse import urlsplit
 
 LIST_LIMITS = {
     "facts": 30, "brief": 8, "products": 60, "segments": 30, "market_shares": 30,
-    "drivers": 30, "relations": 100, "financials": 30, "revenue_mix": 80, "filings": 12, "sources": 200,
+    "drivers": 30, "relations": 100, "financials": 30, "financial_context": 8,
+    "revenue_mix": 80, "filings": 12, "sources": 200,
 }
 
 
@@ -16,7 +17,7 @@ def belongs_to_failed_source(item, field, failures):
         return False
     if "sec" in failures:
         return True
-    if "sec_financials" in failures and field == "financials":
+    if "sec_financials" in failures and field in {"financials", "financial_context"}:
         return True
     exhibit = origin.label.startswith("SEC · Exhibit 21")
     if "sec_subsidiaries" in failures and exhibit:
