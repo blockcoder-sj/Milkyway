@@ -32,6 +32,8 @@ FTK_PREPA_PARTY = source('SEC · Flotek Puerto Rico 과거 계약 상대·중지
     'https://www.sec.gov/Archives/edgar/data/928054/000092805426000082/ftk-20260817.htm', '2026-08-18')
 FTK_LOAN = source('Flotek · Elda River 자금 조달 계약',
     'https://ir.flotekind.com/2026-09-23-Flotek-Secures-120-Million-Senior-Secured-Term-Loan-to-Support-Continued-Strategic-Growth', '2026-09-23')
+FTK_SUBS = source('SEC · Exhibit 21.1 · Flotek 자회사 명세',
+    'https://www.sec.gov/Archives/edgar/data/928054/000092805426000020/ex211subsdiaries-q42025.htm', '2026-03-16')
 NINE_NEWGEN = source('Nine · NewGen REGEN 재파쇄 시스템',
     'https://www.nineenergyservice.com/nine-rethink-refrac', '열람 2026-10-03')
 NINE_MORPH = source('Nine · MorphPackers 북미 판매 계약',
@@ -383,3 +385,32 @@ PRIVATE['power-expectations']['brief'].append(fact('관련 프로젝트의 후�
 PRIVATE['power-expectations']['description'] = 'Flotek 공시에서 확인한 과거 Puerto Rico 전력 컨소시엄 협력 상대입니다. 현재 상태는 아래 후속 공시에서 확인합니다.'
 PRIVATE['power-expectations']['brief'][0]['detail'] = PRIVATE['power-expectations']['description']
 PUBLIC['RNGR']['segments'][-1]['source'] = QUARTER['RNGR']
+
+# Exhibit 21 has two parallel company columns and legal-form rows underneath.
+# These names and jurisdictions are read from that exact table, never inferred
+# from the parent address or confused with legal forms such as Texas Corporation.
+for _key, _name, _place, _role in [
+    ('flotek-chemistry', 'Flotek Chemistry, LLC', 'Oklahoma',
+     'Flotek의 약품 사업 법인입니다. 그룹 사업 부문과 이 법인 단독 매출을 구분합니다.'),
+    ('jp3-measurement', 'JP3 Measurement, LLC', 'Texas',
+     'Flotek의 탄화수소 계측·데이터 분석 사업 법인입니다.'),
+    ('flotek-paymaster', 'Flotek Paymaster, Inc.', 'Texas',
+     'Flotek의 공시 자회사 명세에 기재된 법인입니다. 명칭만으로 외부 고객·급여 거래액을 추정하지 않습니다.'),
+    ('pwrtek', 'PWRtek, LLC', 'Texas',
+     'Flotek의 공시 자회사 명세에 기재된 법인입니다. 그룹 발전 사업 매출 전체를 이 법인 매출로 대입하지 않습니다.'),
+]:
+    if _key not in PRIVATE:
+        PRIVATE[_key] = profile(_name, FTK_SUBS, _role,
+            '2025년 말 자회사 명세의 법인 범위입니다. 법인별 매출·계약 금액은 이 명세에 공개되지 않습니다.')
+    PRIVATE[_key]['brief'].append(fact('공시 법인명·설립 관할',
+        _name + ' · 설립·등록 관할: ' + _place + ' · 2025년 말 Exhibit 21.1 기준입니다.', FTK_SUBS))
+    EDGES['FTK'].append(relation(_name, None, 'subsidiary',
+        '공시 자회사 명세서 · 설립·등록 관할: ' + _place + ' · 2025년 말 명세; 법인별 지분율·매출은 별도 확인.',
+        FTK_SUBS, _key))
+
+# Exhibit 21 proves the legal identity only. The annual contract index is the
+# separate evidence for Chemistry's actual chemical-supply business role.
+PRIVATE['flotek-chemistry']['description_source'] = ANNUAL['FTK']
+PRIVATE['flotek-chemistry']['brief'][0]['source'] = ANNUAL['FTK']
+PRIVATE['flotek-chemistry']['products'] = [fact('약품 공급 계약',
+    '2025년 연차 공시 계약 목록은 ProFrac Services와 2022년 체결한 Chemical Products Supply Agreement 및 후속 변경 계약을 명시합니다. 법인별 전체 매출·현재 계약 금액과는 구분합니다.', ANNUAL['FTK'])]

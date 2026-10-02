@@ -15,6 +15,8 @@ from . import company_energy_revenue as energy
 METRICS = (
     'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax',
     'us-gaap:Revenues', 'us-gaap:SalesRevenueNet', 'ifrs-full:Revenue',
+    'ifrs-full:RevenueFromContractsWithCustomers',
+    'ifrs-full:RevenueAndOperatingIncome',
     'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax',
 )
 AXES = {

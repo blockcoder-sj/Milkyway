@@ -28,7 +28,7 @@
     }
     function setContext(data,nextReading) {
       reading=nextReading;
-      if (!valid(data.entity_key) || !data.symbol) {clear();target.innerHTML='<p class="fineprint">비상장·시세 종목 미등록 기업</p>';return;}
+      if (!valid(data.entity_key) || !data.symbol) {clear();target.innerHTML='<p class="fineprint">시세 종목 미연결 기업·기관</p>';return;}
       const key=data.entity_key+'|'+data.symbol+'|'+getState().me?.id;
       if (context?.key!==key) {context={key,entity:data.entity_key,symbol:data.symbol,actor:getState().me?.id};++epoch;watchAt=0;latest=null;target.innerHTML='<p class="fineprint">현재 주가 수신 대기</p>';}
       if(latest){reading.registerPrice(latest);target.innerHTML=html(latest,reading.cite);}

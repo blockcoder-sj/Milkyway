@@ -22,7 +22,9 @@ from .energy_issuers import issuer
 class Receipt(Source):
     as_of: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
     sha256: str = Field(pattern=r'^[a-f0-9]{64}$')
-    bytes: int = Field(gt=0, le=24 * 1024 * 1024)
+    # Receipt metadata is small. The separately reviewed BP annual original is
+    # 29.3 MB; this does not enlarge the app's network collection or JSON limits.
+    bytes: int = Field(gt=0, le=48 * 1024 * 1024)
     blocks: int = Field(ge=0, le=100000)
     collected_at: AwareDatetime
 

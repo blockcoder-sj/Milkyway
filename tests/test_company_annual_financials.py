@@ -60,6 +60,25 @@ class AnnualFinancialTests(unittest.TestCase):
         self.assertEqual(self.parse(raw, cik=True), [])
         self.assertEqual(self.parse(raw, origin={**ORIGIN, 'url': ORIGIN['url'].replace('www.sec.gov', 'evil.test')}), [])
 
+    def test_ifrs_customer_contract_tag_keeps_its_reported_scope(self):
+        raw = annual(context('year'), fact('year', '90',
+                     metric='ifrs-full:RevenueFromContractsWithCustomers'))
+        row, = self.parse(raw)
+        self.assertEqual(row['label'], '고객 계약 매출 · IFRS')
+        total = raw.replace('</html>', fact('year','100',metric='ifrs-full:Revenue')+'</html>')
+        row, = self.parse(total)
+        self.assertEqual(row['value'],100000000)
+
+    def test_day_month_year_and_nested_fiscal_year_end_are_supported_without_guessing(self):
+        raw = annual(context('year'),fact('year','100'),period=
+            '<ix:nonNumeric name="dei:CurrentFiscalYearEndDate">25 January</ix:nonNumeric> 2026',
+            attrs='format="ixt:date-day-monthname-year-en"')
+        self.assertEqual(len(self.parse(raw)),1)
+        self.assertEqual(len(self.parse(raw.replace('January','Jan'))),1)
+        self.assertEqual(self.parse(raw.replace('25 January','35 January')),[])
+        self.assertEqual(self.parse(raw.replace('25 January','25 NotAMonth')),[])
+        self.assertEqual(self.parse(raw.replace('date-day-monthname-year-en','unknown')),[])
+
     def test_segments_subsidiaries_typed_axes_and_quarters_never_become_annual_total(self):
         for member, extra in [
             ('us-gaap:ProductMember', ''),

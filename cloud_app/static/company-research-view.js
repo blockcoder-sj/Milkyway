@@ -6,7 +6,9 @@
   const levels = {primary: '공시·기업 원문', provider: '정보 제공사·공개 조사'};
   const metrics = Object.freeze({'us-gaap:Revenues': '매출', 'us-gaap:SalesRevenueNet': '순매출',
     'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': '계약 고객 매출(부과세 제외)',
-    'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax': '계약 고객 매출(부과세 포함)', 'ifrs-full:Revenue': 'IFRS 매출'});
+    'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax': '계약 고객 매출(부과세 포함)', 'ifrs-full:Revenue': 'IFRS 매출',
+    'ifrs-full:RevenueFromContractsWithCustomers': 'IFRS 고객 계약 매출',
+    'ifrs-full:RevenueAndOperatingIncome': 'IFRS 매출·영업 수익'});
   const revenueBasis = row => JSON.stringify([row.start, row.end, row.unit, row.metric, row.source.url.split('#')[0]]);
   const revenueShare = row => !row.includes_intersegment && !row.share_exclusion && Number.isFinite(row.total) && row.total > 0
     && Number.isFinite(row.value) && row.value >= 0 && row.value <= row.total ? row.value / row.total * 100 : null;

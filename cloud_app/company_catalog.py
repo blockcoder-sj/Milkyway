@@ -577,7 +577,13 @@ def editorial_for(symbol):
     for key, rows in financial_editorial(symbol).items():
         extra[key] = rows + extra.get(key, [])
     for key, rows in extra.items():
-        value[key] = rows + value.get(key, []) if isinstance(rows, list) else rows
+        if key == 'brief' and rows:
+            # Edited summaries replace the old summary before schema validation.
+            # Retain the old citations in the source appendix, not duplicate cards.
+            value.setdefault('sources', []).extend(row['source'] for row in value.get(key, []))
+            value[key] = rows
+        else:
+            value[key] = rows + value.get(key, []) if isinstance(rows, list) else rows
     if symbol in CIKS:
         value["cik"] = CIKS[symbol]
     else:
@@ -604,6 +610,7 @@ def editorial_for(symbol):
 def enrich(value):
     """Apply reviewed reading notes to cached profiles without losing raw evidence."""
     from .company_schemas import CompanyKnowledge
+    from .company_subsidiaries import replaced_by_reviewed
     from .company_research_catalog import private_profile, PRIVATE_NAMES, PRIVATE_COMPANIES, REGISTERED_TICKERS, PUBLIC_COMPANIES
     data = CompanyKnowledge.model_validate(value).model_dump(mode="json")
     if data.get('registry_id') and data['registry_id'] not in PRIVATE_COMPANIES:
@@ -634,6 +641,7 @@ def enrich(value):
             continue
         if isinstance(rows, list):
             if key == 'brief' and normalized[key]:
+                data['sources'].extend(row['source'] for row in data[key] + normalized[key])
                 data[key] = normalized[key]
                 continue
             seen, merged = set(), []
@@ -651,6 +659,11 @@ def enrich(value):
                 reviewed_financials = {coordinate(row) for row in normalized[key]} - {None}
             previous = []
             for row in previous_rows:
+                if key == 'relations':
+                    if not row.get('symbol') and not row.get('registry_id') and row['name'] in PRIVATE_NAMES:
+                        row = {**row, 'registry_id': PRIVATE_NAMES[row['name']]}
+                    if replaced_by_reviewed(row, normalized[key]):
+                        continue
                 if key == 'revenue_mix' and (*basis(row), row['member']) in reviewed_revenue:
                     continue
                 if key == 'financials' and coordinate(row) in reviewed_financials:
@@ -690,4 +703,8 @@ def enrich(value):
     data['revenue_mix'] = present_revenue(data['revenue_mix'], data['symbol'])
     from .company_financial_labels import presented
     data['financials'] = presented(data['financials'])
+    # Old summary and corroborating figure citations may be promoted after the
+    # source-list merge. Deduplicate once at the end, preserving full provenance.
+    data['sources'] = list({json.dumps(row, sort_keys=True, ensure_ascii=False): row
+                            for row in data['sources']}.values())[:200]
     return CompanyKnowledge.model_validate(data)

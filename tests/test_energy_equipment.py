@@ -141,3 +141,25 @@ class EnergyEquipmentTests(unittest.TestCase):
             newgen=next(row for row in edges if row['target_id']==targets['newgen-systems'] and row['kind']=='supplier')
             self.assertTrue(graph.entity(newgen['target_id'])['profile']['brief'])
             self.assertTrue(any(row['target_id']==root for row in graph.relations(newgen['target_id'])))
+
+    def test_flotek_four_actual_subsidiaries_replace_only_matching_generic_exhibit_rows(self):
+        from cloud_app.company_energy_equipment import FTK_SUBS
+        from cloud_app.company_subsidiaries import replaced_by_reviewed
+        reviewed=[r for r in EDGES['FTK'] if r['kind']=='subsidiary' and r['source']==FTK_SUBS]
+        self.assertEqual({r['registry_id'] for r in reviewed},
+                         {'flotek-chemistry','jp3-measurement','flotek-paymaster','pwrtek'})
+        generic=dict(name='JP3 Measurement, LLC',kind='subsidiary',symbol=None,
+            detail='공시 자회사 명세서 · 설립·등록 관할: Texas',source=FTK_SUBS)
+        result=enrich(CompanyKnowledge(symbol='FTK',name='Flotek',relations=[generic]))
+        self.assertEqual(len([r for r in result.relations if r.registry_id=='jp3-measurement'
+                              and r.source.url==FTK_SUBS['url'] and r.kind=='subsidiary']),1)
+        self.assertEqual(enrich(result).model_dump(),result.model_dump())
+        aliased={**generic,'registry_id':'jp3-measurement'}
+        self.assertTrue(replaced_by_reviewed(aliased,reviewed))
+        for change in ('date','document','kind','detail'):
+            value=deepcopy(aliased)
+            if change=='date':value['source']['as_of']='2025-03-16'
+            if change=='document':value['source']['url']=FTK_SUBS['url'].replace('ex211','another')
+            if change=='kind':value['kind']='supplier'
+            if change=='detail':value['detail']='공시에 기재된 제품 공급 역할'
+            self.assertFalse(replaced_by_reviewed(value,reviewed),change)

@@ -78,7 +78,7 @@ const tick=()=>new Promise(setImmediate),key='c_'+'a'.repeat(32),other='c_'+'b'.
  resolvers[0]({...quote,value:9999});await tick();assert(!target.innerHTML.includes('9,999'));
  state={...state,workspace:'market'};resolvers[1](quote);await tick();assert(!target.innerHTML.includes('1,234.50'));
  state={...state,workspace:'company'};delayed=false;control.setContext({entity_key:key,symbol:null},reading);
- assert(target.innerHTML.includes('비상장'));const count=calls.length;poll();await tick();assert.equal(calls.length,count);
+ assert(target.innerHTML.includes('시세 종목 미연결'));assert(!target.innerHTML.includes('비상장'));const count=calls.length;poll();await tick();assert.equal(calls.length,count);
  control.setContext({entity_key:'../secret',symbol:'AAPL'},reading);await tick();assert.equal(calls.length,count);
 })().catch(e=>{console.error(e);process.exitCode=1;});
 """

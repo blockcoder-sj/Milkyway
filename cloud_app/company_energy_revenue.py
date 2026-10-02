@@ -6,9 +6,10 @@ Valero's product facts are qualified by the associated reported segment.
 """
 from . import company_energy_provider_revenue as providers
 from . import company_energy_equipment_revenue as equipment
+from . import company_energy_major_revenue as majors
 
-COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES}
-LABELS = {**providers.LABELS, **equipment.LABELS}
+COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES}
+LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS}
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -395,7 +396,7 @@ def annotate(rows, symbol, cik):
                     row['share_exclusion'] = explanation
                     if row['group'] == 'segment':
                         row['includes_intersegment'], row['total'] = True, None
-    return providers.annotate(rows, symbol, cik)
+    return majors.annotate(providers.annotate(rows, symbol, cik), symbol, cik)
 
 
 def _reviewed_year(row, document):
@@ -436,7 +437,7 @@ def metric_allowed(tag, group, start, end, origin, symbol, cik):
             and origin['url'].split('#')[0] ==
             'https://www.sec.gov/Archives/edgar/data/33213/000003321326000018/eqt-20251231.htm'):
         return tag == 'us-gaap:Revenues'
-    return True
+    return majors.metric_allowed(tag, group, start, end, origin, symbol, cik)
 
 
 def dimensions(pairs, symbol, cik):
@@ -446,6 +447,9 @@ def dimensions(pairs, symbol, cik):
     if reviewed:
         return reviewed
     reviewed = equipment.dimensions(pairs, symbol, cik)
+    if reviewed:
+        return reviewed
+    reviewed = majors.dimensions(pairs, symbol, cik)
     if reviewed:
         return reviewed
     # These issuers put external corporate revenue on a consolidation axis.
@@ -461,7 +465,8 @@ def dimensions(pairs, symbol, cik):
 def presentation_group(row, symbol, cik):
     group = providers.presentation_group(row, symbol, cik)
     row['group'] = group
-    return equipment.presentation_group(row, symbol, cik)
+    row['group'] = equipment.presentation_group(row, symbol, cik)
+    return majors.presentation_group(row, symbol, cik)
 
 
 def compound_member(member, symbol, cik):

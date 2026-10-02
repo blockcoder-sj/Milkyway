@@ -11,11 +11,20 @@ from cloud_app.company_schemas import CompanyKnowledge
 class EnergyFinancialArchiveTests(unittest.TestCase):
     def test_all_original_coordinates_and_issuer_identities_validate(self):
         records = archive()
-        self.assertEqual(len(records), 182)
-        self.assertEqual(sum(bool(r['financials']) for r in records.values()), 173)
-        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1344)
+        self.assertEqual(len(records), 190)
+        self.assertEqual(sum(bool(r['financials']) for r in records.values()), 181)
+        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1408)
         self.assertEqual(records['STNG']['financials'][0]['value'], 938222000)
         self.assertFalse(records['PBA']['financials'])
+
+    def test_large_bp_receipt_metadata_does_not_bypass_size_bound_or_original_identity(self):
+        raw={'BP':deepcopy(archive()['BP'])}
+        self.assertEqual(raw['BP']['annual']['bytes'],29303585)
+        self.assertEqual(raw['BP']['financials'][0]['value'],192549000000)
+        self.assertTrue(validate_archive(raw))
+        raw['BP']['annual']['bytes']=48*1024*1024+1
+        with self.assertRaises(ValueError):
+            validate_archive(raw)
 
     def test_foreign_source_or_unverified_issuer_is_rejected(self):
         raw = {'ACDC': deepcopy(archive()['ACDC'])}

@@ -179,6 +179,9 @@ PUBLIC_COMPANIES.update(PROVIDER_PUBLIC)
 PRIVATE_COMPANIES.update(PROVIDER_PRIVATE)
 PUBLIC_COMPANIES.update(EQUIPMENT_PUBLIC)
 PRIVATE_COMPANIES.update(EQUIPMENT_PRIVATE)
+from .company_energy_majors import PUBLIC as MAJOR_PUBLIC, PRIVATE as MAJOR_PRIVATE, EDGES as MAJOR_EDGES
+PUBLIC_COMPANIES.update(MAJOR_PUBLIC)
+PRIVATE_COMPANIES.update(MAJOR_PRIVATE)
 
 # Explicitly reviewed brand/issuer mapping. Similar names never create aliases.
 # Range names the ProFrac service group; its listed parent is ACDC, not FLOC.
@@ -187,7 +190,8 @@ REGISTERED_TICKERS = {'range-profrac': 'ACDC'}
 
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
 PRIVATE_NAMES.update({'Foxconn':'foxconn', 'Hon Hai Precision Industry':'foxconn',
-                      'Wistron Corporation':'wistron', 'SPIL':'spil'})
+                      'Wistron Corporation':'wistron', 'SPIL':'spil',
+                      'JP3 Measurement, LLC':'jp3-measurement'})
 
 
 RELATIONS = {
@@ -253,6 +257,8 @@ for _symbol, _edges in UPSTREAM_EDGES.items():
 for _symbol, _edges in PROVIDER_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in EQUIPMENT_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in MAJOR_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

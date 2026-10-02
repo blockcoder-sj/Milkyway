@@ -15,6 +15,7 @@ from .company_revenue import number, source_cik
 METRICS = (
     ('매출', ('us-gaap:Revenues', 'us-gaap:SalesRevenueNet',
              'ifrs-full:Revenue',
+             'ifrs-full:RevenueFromContractsWithCustomers',
              'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax',
              'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax'), False),
     ('영업이익', ('us-gaap:OperatingIncomeLoss',
@@ -33,6 +34,7 @@ METRICS = (
                            'ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities'), False),
 )
 LABELS = {
+    'ifrs-full:RevenueFromContractsWithCustomers': '고객 계약 매출 · IFRS',
     'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': '고객 계약 매출 · 부과세 제외',
     'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax': '고객 계약 매출 · 부과세 포함',
     'us-gaap:NetIncomeLoss': '지배기업 귀속 순이익',
@@ -50,14 +52,20 @@ def _period_date(fact):
     transform = fact.get('format', '').lower()
     if not transform:
         return dt.date.fromisoformat(text)
-    if transform in {'ixt:date-monthname-day-year-en', 'ixt:datemonthdayyearen'}:
+    if transform in {'ixt:date-monthname-day-year-en', 'ixt:datemonthdayyearen',
+                     'ixt:date-day-monthname-year-en', 'ixt:datedaymonthyearen'}:
         match = re.fullmatch(r'([A-Za-z]+)\s+(\d{1,2})\s*,?\s+(\d{4})', text)
+        if transform in {'ixt:date-day-monthname-year-en', 'ixt:datedaymonthyearen'}:
+            match = re.fullmatch(r'(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})', text)
         months = ('january', 'february', 'march', 'april', 'may', 'june',
                   'july', 'august', 'september', 'october', 'november', 'december')
         names = {name: index + 1 for index, name in enumerate(months)}
         names.update({name[:3]: index + 1 for index, name in enumerate(months)})
-        if match and match[1].lower() in names:
-            return dt.date(int(match[3]), names[match[1].lower()], int(match[2]))
+        if match:
+            day_first = transform in {'ixt:date-day-monthname-year-en', 'ixt:datedaymonthyearen'}
+            month, day = (match[2], match[1]) if day_first else (match[1], match[2])
+            if month.lower() in names:
+                return dt.date(int(match[3]), names[month.lower()], int(day))
     raise ValueError('Unsupported annual period date')
 
 

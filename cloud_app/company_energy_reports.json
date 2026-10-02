@@ -9492,5 +9492,2618 @@
         }
       }
     ]
+  },
+  "XOM": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm",
+      "as_of": "2026-02-18",
+      "level": "primary",
+      "sha256": "3e9abf60999d143301960c0a4f060e9e1ec625b3ef992b49860737d1e4bd57e5",
+      "bytes": 5591176,
+      "blocks": 2066,
+      "collected_at": "2026-10-02T15:34:56.387898+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/2115436/000003408826000093/xom-20260630.htm",
+      "as_of": "2026-08-03",
+      "level": "primary",
+      "sha256": "3b2f9639f381c67043022e14c19d53a880abbf73e4458eb950ce1f4f9e3b53e7",
+      "bytes": 3118937,
+      "blocks": 3765,
+      "collected_at": "2026-10-02T15:34:59.869714+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "xom:ChemicalProductsMember/country:US",
+        "label": "화학 제품 · 미국 외부 판매",
+        "value": 7594000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-519",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문별 외부 판매이며 총 수익과 범위가 다릅니다. 8개 행 합계 323,820,000,000 USD와 본사 판매 85,000,000 USD를 합친 판매 수익 323,905,000,000 USD는 지분법 이익·기타 수익을 포함한 332,238,000,000 USD와 구별합니다."
+      },
+      {
+        "group": "segment",
+        "member": "xom:ChemicalProductsMember/us-gaap:NonUsMember",
+        "label": "화학 제품 · 미국 외 외부 판매",
+        "value": 14615000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-520",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문별 외부 판매이며 총 수익과 범위가 다릅니다. 8개 행 합계 323,820,000,000 USD와 본사 판매 85,000,000 USD를 합친 판매 수익 323,905,000,000 USD는 지분법 이익·기타 수익을 포함한 332,238,000,000 USD와 구별합니다."
+      },
+      {
+        "group": "segment",
+        "member": "xom:EnergyProductsMember/country:US",
+        "label": "연료·에너지 제품 · 미국 외부 판매",
+        "value": 99073000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-517",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문별 외부 판매이며 총 수익과 범위가 다릅니다. 8개 행 합계 323,820,000,000 USD와 본사 판매 85,000,000 USD를 합친 판매 수익 323,905,000,000 USD는 지분법 이익·기타 수익을 포함한 332,238,000,000 USD와 구별합니다."
+      },
+      {
+        "group": "segment",
+        "member": "xom:EnergyProductsMember/us-gaap:NonUsMember",
+        "label": "연료·에너지 제품 · 미국 외 외부 판매",
+        "value": 145378000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-518",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문별 외부 판매이며 총 수익과 범위가 다릅니다. 8개 행 합계 323,820,000,000 USD와 본사 판매 85,000,000 USD를 합친 판매 수익 323,905,000,000 USD는 지분법 이익·기타 수익을 포함한 332,238,000,000 USD와 구별합니다."
+      },
+      {
+        "group": "segment",
+        "member": "xom:SpecialtyProductsMember/country:US",
+        "label": "특수 제품 · 미국 외부 판매",
+        "value": 5502000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-521",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문별 외부 판매이며 총 수익과 범위가 다릅니다. 8개 행 합계 323,820,000,000 USD와 본사 판매 85,000,000 USD를 합친 판매 수익 323,905,000,000 USD는 지분법 이익·기타 수익을 포함한 332,238,000,000 USD와 구별합니다."
+      },
+      {
+        "group": "segment",
+        "member": "xom:SpecialtyProductsMember/us-gaap:NonUsMember",
+        "label": "특수 제품 · 미국 외 외부 판매",
+        "value": 12269000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-522",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문별 외부 판매이며 총 수익과 범위가 다릅니다. 8개 행 합계 323,820,000,000 USD와 본사 판매 85,000,000 USD를 합친 판매 수익 323,905,000,000 USD는 지분법 이익·기타 수익을 포함한 332,238,000,000 USD와 구별합니다."
+      },
+      {
+        "group": "segment",
+        "member": "xom:UpstreamMember/country:US",
+        "label": "상류 · 미국 외부 판매",
+        "value": 25396000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-515",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문별 외부 판매이며 총 수익과 범위가 다릅니다. 8개 행 합계 323,820,000,000 USD와 본사 판매 85,000,000 USD를 합친 판매 수익 323,905,000,000 USD는 지분법 이익·기타 수익을 포함한 332,238,000,000 USD와 구별합니다."
+      },
+      {
+        "group": "segment",
+        "member": "xom:UpstreamMember/us-gaap:NonUsMember",
+        "label": "상류 · 미국 외 외부 판매",
+        "value": 13993000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-516",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문별 외부 판매이며 총 수익과 범위가 다릅니다. 8개 행 합계 323,820,000,000 USD와 본사 판매 85,000,000 USD를 합친 판매 수익 323,905,000,000 USD는 지분법 이익·기타 수익을 포함한 332,238,000,000 USD와 구별합니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "xom:IncomeFromEquityAffiliatesMember",
+        "label": "지분법 관계기업 이익",
+        "value": 5064000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 332238000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-71",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "xom:OtherRevenueMember",
+        "label": "기타 수익",
+        "value": 3269000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 332238000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-74",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "xom:SalesAndOtherOperatingRevenueMember",
+        "label": "판매·기타 영업 수익",
+        "value": 323905000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 332238000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm#f-68",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "SHEL": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm",
+      "as_of": "2026-03-12",
+      "level": "primary",
+      "sha256": "269824101e2f76bb6b551d8b0a218c8b290324f28c6e32a619f37b181967dd60",
+      "bytes": 10268535,
+      "blocks": 7838,
+      "collected_at": "2026-10-02T22:22:12.885799+00:00"
+    },
+    "interim": {
+      "label": "SEC · 6-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026050763/shel-20260630_d2.htm",
+      "as_of": "2026-07-30",
+      "level": "primary",
+      "sha256": "9e031cf2c46489483ef64078755c1309f5b3208064ab1c70fe1686fecd3b3c06",
+      "bytes": 13366,
+      "blocks": 33,
+      "collected_at": "2026-10-02T22:22:13.822006+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "shel:ChemicalsAndProductsSegmentMember",
+        "label": "화학·정유 제품",
+        "value": 77071000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-1359",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "shel:CorporateSegment1Member",
+        "label": "본사·기타",
+        "value": 39000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-1361",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "shel:IntegratedGasMember",
+        "label": "통합 가스·LNG·GTL",
+        "value": 38457000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-1356",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "shel:MarketingSegmentMember",
+        "label": "판매 · 연료·윤활유",
+        "value": 111855000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-1358",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "shel:RenewablesAndEnergySolutionsSegmentMember",
+        "label": "재생에너지·전력·가스 거래",
+        "value": 34359000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-1360",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "shel:UpstreamMember",
+        "label": "상류 · 탐사·생산",
+        "value": 5105000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-1357",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:GB",
+        "label": "영국 · 유럽 안의 항목",
+        "value": 28746000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "srt:EuropeMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-2229",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 57728000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-2221",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "shel:AsiaOceaniaAndAfricaMember",
+        "label": "아시아·오세아니아·아프리카",
+        "value": 90838000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-2220",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "shel:OtherAmericasMember",
+        "label": "기타 미주",
+        "value": 26512000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-2222",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:EuropeMember",
+        "label": "유럽",
+        "value": 91808000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 266886000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm#f-2219",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "BP": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm",
+      "as_of": "2026-03-06",
+      "level": "primary",
+      "bytes": 29303585,
+      "sha256": "a4ec813a5ef8dec4c714dfa37449f855e80375e3e93fbcae7c9bd3c8a8a9e541",
+      "blocks": 25000,
+      "collected_at": "2026-10-02T22:38:35.820813+00:00"
+    },
+    "interim": {
+      "label": "SEC · 6-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000016/bp-20260630.htm",
+      "as_of": "2026-08-04",
+      "level": "primary",
+      "bytes": 1642979,
+      "sha256": "7b17d6bb6ea4fa11c5a4ffa1a9c4edd248752a2a483178801054e1f960db1901",
+      "blocks": 631,
+      "collected_at": "2026-10-02T22:38:37.908724+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "bp:NaturalGasProductsMember",
+        "label": "천연가스",
+        "value": 27477000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 158879000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1377",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "bp:OilAndGasCrudeOilMember",
+        "label": "원유",
+        "value": 2063000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 158879000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1371",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "bp:OilandGasOilProductsMember",
+        "label": "석유제품",
+        "value": 114207000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 158879000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1374",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "bp:ProductAndServiceOther1Member",
+        "label": "기타 제품·서비스",
+        "value": 15132000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 158879000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1380",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "bp:CustomersProductsMember",
+        "label": "연료·윤활유·고객·제품",
+        "value": 148740000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 189335000000.0,
+        "metric": "ifrs-full:RevenueAndOperatingIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1124",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "bp:GasLowCarbonEnergyMember",
+        "label": "가스·저탄소 에너지",
+        "value": 38501000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 189335000000.0,
+        "metric": "ifrs-full:RevenueAndOperatingIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1122",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "bp:OilProductionOperationsMember",
+        "label": "원유 생산·운영",
+        "value": 1651000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 189335000000.0,
+        "metric": "ifrs-full:RevenueAndOperatingIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1123",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "bp:OtherBusinessAndCorporateNonSegmentMember",
+        "label": "기타 사업·본사",
+        "value": 443000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 189335000000.0,
+        "metric": "ifrs-full:RevenueAndOperatingIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1125",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "bp:NonUSMember",
+        "label": "미국 외",
+        "value": 132632000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 189335000000.0,
+        "metric": "ifrs-full:RevenueAndOperatingIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1337",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 56703000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 189335000000.0,
+        "metric": "ifrs-full:RevenueAndOperatingIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1336",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ifrs-full:CountryOfDomicileMember",
+        "label": "영국 · 미국 외 지역 안의 항목",
+        "value": 28714000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 189335000000.0,
+        "metric": "ifrs-full:RevenueAndOperatingIncome",
+        "parent": "bp:NonUSMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm#f-1345",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "TTE": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm",
+      "as_of": "2026-03-27",
+      "level": "primary",
+      "sha256": "23c80eb9bc8b920472d4c7867d8c9b2d95eb6a64a59c923d1a640a989fe35853",
+      "bytes": 19719649,
+      "blocks": 25000,
+      "collected_at": "2026-10-02T22:22:32.106119+00:00"
+    },
+    "interim": {
+      "label": "SEC · 6-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926086078/tot-20260630x6k.htm",
+      "as_of": "2026-07-23",
+      "level": "primary",
+      "sha256": "89d896ce7be303dacb454672016e13af6416023f0bf7c3a7fc7c4b61115a0724",
+      "bytes": 24687,
+      "blocks": 95,
+      "collected_at": "2026-10-02T22:22:32.976544+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "tot:CorporateSegmentMember",
+        "label": "본사",
+        "value": 8000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_Fq1v_tPyXkOCWZYBlPSoOw_4_12",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tot:ExplorationAndProductionSegmentMember",
+        "label": "탐사·생산",
+        "value": 5590000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_OJIhYWEw_km9jv_zEIf4QQ_4_2",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tot:IntegratedLngSegmentMember",
+        "label": "통합 LNG",
+        "value": 10096000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_0KQmQ-KajEKHHTTnOoXRLA_4_4",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tot:IntegratedPowerSegmentMember",
+        "label": "통합 전력",
+        "value": 19587000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_dVRb4GLCr0mcaaQO8TvuaQ_4_6",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tot:MarketingAndServicesSegmentMember",
+        "label": "판매·서비스",
+        "value": 78708000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_0904dKylX0CiyF0e8eDlXQ_4_10",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tot:RefiningAndChemicalsSegmentMember",
+        "label": "정유·화학",
+        "value": 87207000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_QfDESUd9c0G-O5BfC7ATZA_4_8",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ifrs-full:CountryOfDomicileMember",
+        "label": "프랑스",
+        "value": 45866000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_d9OBKJdo4E-t7rRI9upYzA_4_2",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:AfricaMember",
+        "label": "아프리카",
+        "value": 20012000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_6h6y3e41kUirNmiGUALICA_4_8",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:NorthAmericaMember",
+        "label": "북미",
+        "value": 14463000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_ObLfb-9koUmuKDzRmgHybg_4_6",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "tot:RestOfEuropeExcludingFranceMember",
+        "label": "프랑스 외 유럽",
+        "value": 90558000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_g0i_kB3g00KPf9BuTxQWrw_4_4",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "tot:RestOfWorldExcludingEuropeNorthAmericaAndAfricaMember",
+        "label": "유럽·북미·아프리카 외",
+        "value": 30297000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 201196000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm#Tc_I1SbALSVm0GgQzaHUxR4ng_4_10",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "E": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm",
+      "as_of": "2026-03-23",
+      "level": "primary",
+      "sha256": "614dca9828a7bbcfbbbaf65ab3733069cf15889b3cd02f9d6023fd5d832d22ba",
+      "bytes": 18556769,
+      "blocks": 23844,
+      "collected_at": "2026-10-02T22:22:54.364566+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "e:CorporateAndOtherActivitiesMember",
+        "label": "본사·기타",
+        "value": 262000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag142",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "e:EniliveSegmentMember",
+        "label": "Enilive · 재생연료·연료 판매",
+        "value": 16337000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag131",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "e:ExplorationAndProductionSegmentMember",
+        "label": "탐사·생산",
+        "value": 37109000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag1190",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "e:GlobalGasAndLngPortfolioAndPowerSegmentMember",
+        "label": "도매 가스·LNG·전력",
+        "value": 13102000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag119",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "e:PlenitudeSegmentMember",
+        "label": "Plenitude · 전력·가스·충전",
+        "value": 10118000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag136",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "e:RefiningAndChemicalsSegmentMember",
+        "label": "정유·화학",
+        "value": 5223000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag125",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:IT",
+        "label": "이탈리아",
+        "value": 28647000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag5994",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "e:OtherAreasMember",
+        "label": "기타 지역",
+        "value": 38000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag6000",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "e:OtherEuropeanMember",
+        "label": "기타 EU",
+        "value": 15979000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag5995",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "e:RestOfEuropeMember",
+        "label": "EU 외 유럽",
+        "value": 14866000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag5996",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:AfricaMember",
+        "label": "아프리카",
+        "value": 6731000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag5999",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:AmericasMember",
+        "label": "미주",
+        "value": 6215000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag5997",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:AsiaMember",
+        "label": "아시아",
+        "value": 9675000000.0,
+        "unit": "EUR",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 82151000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm#Tag5998",
+          "as_of": "2026-03-23",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "EQNR": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm",
+      "as_of": "2026-03-19",
+      "level": "primary",
+      "sha256": "f3eb2cb47fbbb51b645dcdb2f89ab79fa87fa898471ca94f5d32894587c8f4c1",
+      "bytes": 8805560,
+      "blocks": 12991,
+      "collected_at": "2026-10-02T22:23:08.198070+00:00"
+    },
+    "interim": {
+      "label": "SEC · 6-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000025/equinorfinancialstatements.htm",
+      "as_of": "2026-07-22",
+      "level": "primary",
+      "sha256": "73c1fcc475e36c6ce30f45871fd9206932a5478196df7a2afaadd7920736075f",
+      "bytes": 5453397,
+      "blocks": 9106,
+      "collected_at": "2026-10-02T22:23:17.152553+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "eqnr:NaturalGasLiquidsMember",
+        "label": "NGL",
+        "value": 7035000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 105242000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-1359",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "eqnr:NaturalGasMember",
+        "label": "천연가스",
+        "value": 25288000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 105242000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-1344",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "eqnr:OtherProductsMember",
+        "label": "기타 제품",
+        "value": 778000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 105242000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-1368",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "eqnr:PowerMember",
+        "label": "전력",
+        "value": 2103000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 105242000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-1362",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "eqnr:RefinedProductsMember",
+        "label": "정유제품",
+        "value": 10380000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 105242000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-1356",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "eqnr:TrasnsportationMember",
+        "label": "운송",
+        "value": 1262000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 105242000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-1365",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "srt:CrudeOilMember",
+        "label": "원유",
+        "value": 58396000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 105242000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-1341",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "eqnr:ExplorationAndProductionInternationalMember",
+        "label": "탐사·생산 · 기타 해외",
+        "value": 5102000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-922",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 합계 148,883,000,000 USD는 내부 거래 포함입니다. 42,421,000,000 USD를 제거한 연결 매출 106,462,000,000 USD와 구분하며 비중을 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "eqnr:ExplorationAndProductionNorwayMember",
+        "label": "탐사·생산 · 노르웨이",
+        "value": 34392000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-921",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 합계 148,883,000,000 USD는 내부 거래 포함입니다. 42,421,000,000 USD를 제거한 연결 매출 106,462,000,000 USD와 구분하며 비중을 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "eqnr:ExplorationAndProductionUsaMember",
+        "label": "탐사·생산 · 미국",
+        "value": 4296000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-923",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 합계 148,883,000,000 USD는 내부 거래 포함입니다. 42,421,000,000 USD를 제거한 연결 매출 106,462,000,000 USD와 구분하며 비중을 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "eqnr:MarketingMidstreamAndProcessingMember",
+        "label": "판매·물류·처리",
+        "value": 104769000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-924",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 합계 148,883,000,000 USD는 내부 거래 포함입니다. 42,421,000,000 USD를 제거한 연결 매출 106,462,000,000 USD와 구분하며 비중을 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "eqnr:RenewablesMember",
+        "label": "재생에너지 · 2025년 부문",
+        "value": 192000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-925",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 합계 148,883,000,000 USD는 내부 거래 포함입니다. 42,421,000,000 USD를 제거한 연결 매출 106,462,000,000 USD와 구분하며 비중을 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "ifrs-full:AllOtherSegmentsMember",
+        "label": "기타",
+        "value": 132000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm#f-926",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 합계 148,883,000,000 USD는 내부 거래 포함입니다. 42,421,000,000 USD를 제거한 연결 매출 106,462,000,000 USD와 구분하며 비중을 계산하지 않습니다."
+      }
+    ]
+  },
+  "PBR": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm",
+      "as_of": "2026-04-09",
+      "level": "primary",
+      "sha256": "a3f2e5b12ca8a9db1edd9a4514b7215aaaf51ede5a880ad9f2e8b8494c216620",
+      "bytes": 9588568,
+      "blocks": 3694,
+      "collected_at": "2026-10-02T22:23:25.251652+00:00"
+    },
+    "interim": {
+      "label": "SEC · 6-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426004304/pbr20260820_6k.htm",
+      "as_of": "2026-08-20",
+      "level": "primary",
+      "sha256": "6b315bf8d26a1a8f27f2f4bc44642c04ffe7d69a1e62d1efb90b9edaa6551592",
+      "bytes": 302631,
+      "blocks": 159,
+      "collected_at": "2026-10-02T22:23:26.314945+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "pbr:BreakageMember/pbr:DomesticMarketMember",
+        "label": "브라질 · 미사용 고객 권리 대가",
+        "value": 184000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001374",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:CrudeOilsMember/pbr:DomesticMarketMember",
+        "label": "브라질 · 원유",
+        "value": 4377000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001362",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:CrudeOilsMember/pbr:ForeignMarketMember",
+        "label": "해외 · 원유 수출",
+        "value": 19839000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ExportsMember/pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001404",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:DieselMember",
+        "label": "브라질 · 경유",
+        "value": 26870000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:SubtotalOilProductsMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001308",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:ElectricitiesMember/pbr:DomesticMarketMember",
+        "label": "브라질 · 전력",
+        "value": 741000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001380",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:ExportsMember/pbr:ForeignMarketMember",
+        "label": "해외 · 수출 합계",
+        "value": 25572000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001398",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:FuelOiIincludingBunkerFuelMember",
+        "label": "브라질 · 연료유·벙커유",
+        "value": 591000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:SubtotalOilProductsMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001338",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:FuelOiIincludingBunkerFuelMember/pbr:ForeignMarketMember",
+        "label": "해외 · 연료유·벙커유 수출",
+        "value": 4557000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ExportsMember/pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001410",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:GasolineMember",
+        "label": "브라질 · 휘발유",
+        "value": 12325000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:SubtotalOilProductsMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001314",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:JetFuelMember",
+        "label": "브라질 · 항공유",
+        "value": 4422000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:SubtotalOilProductsMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001326",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:LiquefiedPetroleumGasMember",
+        "label": "브라질 · LPG",
+        "value": 3393000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:SubtotalOilProductsMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001320",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:NaphthaMember",
+        "label": "브라질 · 나프타",
+        "value": 1580000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:SubtotalOilProductsMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001332",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:NaturalGasMember/pbr:DomesticMarketMember",
+        "label": "브라질 · 천연가스",
+        "value": 3850000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001356",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:OtherOilProductsMember",
+        "label": "브라질 · 기타 석유제품",
+        "value": 3632000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:SubtotalOilProductsMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001344",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:OtherOilProductsMember/pbr:ForeignMarketMember",
+        "label": "해외 · 기타 석유제품 수출",
+        "value": 1176000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ExportsMember/pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001416",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:RenewablesAndNitrogenProductsMember/pbr:DomesticMarketMember",
+        "label": "브라질 · 재생에너지·질소 제품",
+        "value": 261000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001368",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:SalesAbroadMember/pbr:ForeignMarketMember",
+        "label": "해외 · 해외 현지 판매",
+        "value": 685000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001422",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:ServicesAgencyAndOthersMember/pbr:DomesticMarketMember",
+        "label": "브라질 · 서비스·대행·기타",
+        "value": 712000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001386",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pbr:SubtotalOilProductsMember",
+        "label": "브라질 석유제품 판매 합계",
+        "value": 52813000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001350",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "pbr:CorporateAndOtherBusinessMember",
+        "label": "본사·기타",
+        "value": 338000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001859",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출은 내부 거래를 포함합니다. 63,540,000,000 USD의 제거 후 연결 매출은 89,195,000,000 USD입니다."
+      },
+      {
+        "group": "segment",
+        "member": "pbr:ExplorationAndProductionMember",
+        "label": "탐사·생산",
+        "value": 59537000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001856",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출은 내부 거래를 포함합니다. 63,540,000,000 USD의 제거 후 연결 매출은 89,195,000,000 USD입니다."
+      },
+      {
+        "group": "segment",
+        "member": "pbr:GasAndLowCarbonEnergiesMember",
+        "label": "가스·저탄소 에너지",
+        "value": 8695000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001858",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출은 내부 거래를 포함합니다. 63,540,000,000 USD의 제거 후 연결 매출은 89,195,000,000 USD입니다."
+      },
+      {
+        "group": "segment",
+        "member": "pbr:RefiningTransportationAndMarketingMember",
+        "label": "정유·운송·판매",
+        "value": 84165000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001857",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출은 내부 거래를 포함합니다. 63,540,000,000 USD의 제거 후 연결 매출은 89,195,000,000 USD입니다."
+      },
+      {
+        "group": "geography",
+        "member": "pbr:CountryAmericasMember",
+        "label": "미국 외 미주",
+        "value": 3607000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001454",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pbr:CountryAsiaMember",
+        "label": "중국·싱가포르 외 아시아",
+        "value": 4315000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001466",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pbr:CountryChinaMember",
+        "label": "중국",
+        "value": 9679000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001448",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pbr:CountryEuropeMember",
+        "label": "유럽",
+        "value": 3657000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001460",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pbr:CountrySingaporeMember",
+        "label": "싱가포르",
+        "value": 2641000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001478",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pbr:CountryUnitedStatesMember",
+        "label": "미국",
+        "value": 1940000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001472",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pbr:DomesticMarketMember",
+        "label": "브라질",
+        "value": 62938000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001392",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pbr:ForeignMarketMember",
+        "label": "해외",
+        "value": 26257000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001428",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pbr:OthersCountriesMember",
+        "label": "기타 해외 국가",
+        "value": 418000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 89195000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": "pbr:ForeignMarketMember",
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm#Fact001484",
+          "as_of": "2026-04-09",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "EC": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm",
+      "as_of": "2026-04-30",
+      "level": "primary",
+      "sha256": "58b4721c37c792d548e268da13c6a97cf9862297134eb3ca0f5ff86caa5ed6cd",
+      "bytes": 17886969,
+      "blocks": 25000,
+      "collected_at": "2026-10-02T22:23:39.983384+00:00"
+    },
+    "interim": {
+      "label": "SEC · 6-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1444406/000129281426004040/ecpr2q26_6k.htm",
+      "as_of": "2026-08-04",
+      "level": "primary",
+      "sha256": "d511979187f5054ce9988b8e9e0e9d52b62b25d1ffa6aac2368b917b061e87a7",
+      "bytes": 14369,
+      "blocks": 23,
+      "collected_at": "2026-10-02T22:23:40.997214+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "ec:ElectricPowerTransmissionAndTollRoadsConcessionsMember",
+        "label": "송전·유료 도로",
+        "value": 16029000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_YH4sOvsVuEC8kAep_o7rcQ_7_8",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ec:ExplorationAndProductionMember",
+        "label": "탐사·생산",
+        "value": 44828000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_egibpyWQIk6kNy5-Qk10IA_7_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ec:RefiningAndPetrochemicalsMember",
+        "label": "정유·석유화학",
+        "value": 56195000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_H0JQGrDVKEyacKdxdydSXg_7_4",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ec:TransportationAndLogisticsMember",
+        "label": "운송·물류",
+        "value": 2642000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_s9hr4zjD1Em5uhJm41cDqQ_7_6",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:BR",
+        "label": "브라질",
+        "value": 6977000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_jW99JZSiK0qXcQN2IJBPaA_6_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CL",
+        "label": "칠레",
+        "value": 2208000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_htn8ZAcXoUW2uz2lmvS75A_10_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CN",
+        "label": "중국",
+        "value": 7708000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_Mfq26jbFcUaS8jG7TVPkpA_5_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CO",
+        "label": "콜롬비아",
+        "value": 58038000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_2l42R5FJwUGri_KBPbnl7w_3_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:IN",
+        "label": "인도",
+        "value": 6025000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_6BXrEe4I7E-AgFSfJxXTTQ_7_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:PE",
+        "label": "페루",
+        "value": 2359000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_UGu3e1eh6USmfXCKxmuRaQ_9_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 27379000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_J7-zx9KlpEutWXWfCWdEUw_4_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ec:CentralAmericaAndCaribbeanMember",
+        "label": "중미·카리브",
+        "value": 691000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_bllPDoQgCU26ny38lR4Ckw_12_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ec:OtherSouthAmericaCountriesMember",
+        "label": "기타 남미",
+        "value": 1961000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_6epHK07EC0GN82KsD3b5pA_11_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ec:SingaporeAndOtherAsianCountriesMember",
+        "label": "싱가포르·기타 아시아",
+        "value": 5925000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_3VnhV89y60OCDI6W7TY90g_8_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:EuropeMember",
+        "label": "유럽",
+        "value": 423000000000.0,
+        "unit": "COP",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 119694000000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm#Tc_9e5p00kvWUa5AZwwbd01NQ_13_2",
+          "as_of": "2026-04-30",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "YPF": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm",
+      "as_of": "2026-03-26",
+      "level": "primary",
+      "sha256": "a76cc50d228acf69275f09e2a20120ed29549e5807c08bf389ba4c05eb3d9380",
+      "bytes": 10948465,
+      "blocks": 8390,
+      "collected_at": "2026-10-02T22:23:55.072925+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "ypf:CentralAdministrationAndOthersMember",
+        "label": "본사·기타",
+        "value": 1846000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-122471",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출 합계 27,567,000,000 USD에서 내부 거래 9,119,000,000 USD를 제거합니다. 연결 매출 18,448,000,000 USD로 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "ypf:LNGandIntegratedGasMember",
+        "label": "LNG·통합 가스",
+        "value": 1965000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-122469",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출 합계 27,567,000,000 USD에서 내부 거래 9,119,000,000 USD를 제거합니다. 연결 매출 18,448,000,000 USD로 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "ypf:MidstreamAndDownstreamMember",
+        "label": "물류·정유·판매",
+        "value": 15338000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-122468",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출 합계 27,567,000,000 USD에서 내부 거래 9,119,000,000 USD를 제거합니다. 연결 매출 18,448,000,000 USD로 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "ypf:NewEnergiesMember",
+        "label": "신에너지",
+        "value": 843000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-122470",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출 합계 27,567,000,000 USD에서 내부 거래 9,119,000,000 USD를 제거합니다. 연결 매출 18,448,000,000 USD로 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "ypf:UpstreamMember",
+        "label": "상류 · 탐사·생산",
+        "value": 7575000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-122467",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "2025년 부문 매출 합계 27,567,000,000 USD에서 내부 거래 9,119,000,000 USD를 제거합니다. 연결 매출 18,448,000,000 USD로 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "geography",
+        "member": "country:AR",
+        "label": "아르헨티나",
+        "value": 15662000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 18448000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-125250",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ifrs-full:ForeignCountriesMember",
+        "label": "기타 해외",
+        "value": 851000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 18448000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-125259",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:EuropeMember",
+        "label": "유럽",
+        "value": 307000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 18448000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-125256",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ypf:MercosurAndAssociatesCountriesMember",
+        "label": "Mercosur·연관국",
+        "value": 1628000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 18448000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm#ixv-125253",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      }
+    ]
   }
 }

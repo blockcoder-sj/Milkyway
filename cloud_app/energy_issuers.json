@@ -200,6 +200,27 @@
       }
     },
     {
+      "symbol": "BP",
+      "name": "BP PLC",
+      "cik": "313807",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/313807/000031380726000006/bp-20251231.htm",
+        "as_of": "2026-03-06",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0000313807.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "BSM",
       "name": "Black Stone Minerals, L.P.",
       "cik": "1621434",
@@ -211,6 +232,27 @@
         "label": "SEC · 10-K",
         "url": "https://www.sec.gov/Archives/edgar/data/1621434/000162143426000018/bsm-20251231.htm",
         "as_of": "2026-02-24",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "BTE",
+      "name": "BAYTEX ENERGY CORP.",
+      "cik": "1279495",
+      "exchange": "NYSE",
+      "group": "upstream",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231.htm",
+        "as_of": "2026-03-05",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001279495.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -241,6 +283,27 @@
         "label": "SEC · 10-K",
         "url": "https://www.sec.gov/Archives/edgar/data/1538849/000119312526071870/capl-20251231.htm",
         "as_of": "2026-02-25",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "CCJ",
+      "name": "CAMECO CORP",
+      "cik": "1009001",
+      "exchange": "NYSE",
+      "group": "nuclear-fuel",
+      "scope": "context",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605d40f.htm",
+        "as_of": "2026-03-19",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001009001.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -316,6 +379,27 @@
         "label": "SEC · 10-K",
         "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm",
         "as_of": "2026-02-24",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "CNQ",
+      "name": "CANADIAN NATURAL RESOURCES Ltd",
+      "cik": "1017413",
+      "exchange": "NYSE",
+      "group": "upstream",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1017413/000101741326000018/cnq-20251231.htm",
+        "as_of": "2026-03-26",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001017413.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -440,6 +524,27 @@
       }
     },
     {
+      "symbol": "CVE",
+      "name": "CENOVUS ENERGY INC.",
+      "cik": "1475260",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231_d2.htm",
+        "as_of": "2026-02-19",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001475260.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "CVI",
       "name": "CVR ENERGY INC",
       "cik": "1376139",
@@ -560,6 +665,27 @@
       }
     },
     {
+      "symbol": "DNN",
+      "name": "DENISON MINES CORP.",
+      "cik": "1063259",
+      "exchange": "NYSE",
+      "group": "nuclear-fuel",
+      "scope": "context",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231x40f.htm",
+        "as_of": "2026-03-30",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001063259.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "DTI",
       "name": "Drilling Tools International Corp",
       "cik": "1884516",
@@ -607,6 +733,48 @@
         "label": "SEC · 10-K",
         "url": "https://www.sec.gov/Archives/edgar/data/1090012/000119312526056485/dvn-20251231.htm",
         "as_of": "2026-02-18",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "E",
+      "name": "ENI SPA",
+      "cik": "1002242",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1002242/000155485526000390/e-20251231.htm",
+        "as_of": "2026-03-23",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001002242.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "EC",
+      "name": "ECOPETROL S.A.",
+      "cik": "1444406",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1444406/000110465926053172/ec-20251231x20f.htm",
+        "as_of": "2026-04-30",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001444406.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -701,6 +869,27 @@
       }
     },
     {
+      "symbol": "EQNR",
+      "name": "EQUINOR ASA",
+      "cik": "1140625",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm",
+        "as_of": "2026-03-19",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001140625.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "EQT",
       "name": "EQT Corp",
       "cik": "33213",
@@ -742,6 +931,27 @@
         "label": "SEC · 10-K",
         "url": "https://www.sec.gov/Archives/edgar/data/1276187/000127618726000013/et-20251231.htm",
         "as_of": "2026-02-19",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "EU",
+      "name": "enCore Energy Corp.",
+      "cik": "1500881",
+      "exchange": "Nasdaq",
+      "group": "nuclear-fuel",
+      "scope": "context",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 10-K",
+        "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm",
+        "as_of": "2026-03-31",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001500881.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -1132,6 +1342,27 @@
         "label": "SEC · 10-K",
         "url": "https://www.sec.gov/Archives/edgar/data/813762/000110465926019821/tmb-20251231x10k.htm",
         "as_of": "2026-02-26",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "IMO",
+      "name": "IMPERIAL OIL LTD",
+      "cik": "49938",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 10-K",
+        "url": "https://www.sec.gov/Archives/edgar/data/49938/000004993826000009/imo-20251231.htm",
+        "as_of": "2026-02-18",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0000049938.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -1787,6 +2018,48 @@
       }
     },
     {
+      "symbol": "NXE",
+      "name": "NexGen Energy Ltd.",
+      "cik": "1698535",
+      "exchange": "NYSE",
+      "group": "nuclear-fuel",
+      "scope": "context",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755d40f.htm",
+        "as_of": "2026-03-04",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001698535.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "OBE",
+      "name": "OBSIDIAN ENERGY LTD.",
+      "cik": "1334388",
+      "exchange": "NYSE",
+      "group": "upstream",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-20251231.htm",
+        "as_of": "2026-02-19",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001334388.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "OII",
       "name": "OCEANEERING INTERNATIONAL INC",
       "cik": "73756",
@@ -1937,6 +2210,27 @@
       }
     },
     {
+      "symbol": "PBR",
+      "name": "PETROBRAS - PETROLEO BRASILEIRO SA",
+      "cik": "1119639",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1119639/000129281426002168/pbrform20f_2025.htm",
+        "as_of": "2026-04-09",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001119639.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "PBT",
       "name": "PERMIAN BASIN ROYALTY TRUST",
       "cik": "319654",
@@ -1948,6 +2242,27 @@
         "label": "SEC · 10-K",
         "url": "https://www.sec.gov/Archives/edgar/data/319654/000119312526128561/pbt_10-k_2025-12-31.htm",
         "as_of": "2026-03-27",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "PDS",
+      "name": "PRECISION DRILLING Corp",
+      "cik": "1013605",
+      "exchange": "NYSE",
+      "group": "drilling",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-20251231.htm",
+        "as_of": "2026-03-09",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001013605.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -2237,6 +2552,27 @@
       }
     },
     {
+      "symbol": "SHEL",
+      "name": "Shell plc",
+      "cik": "1306965",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1306965/000162828026017024/shel-20251231.htm",
+        "as_of": "2026-03-12",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001306965.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "SLB",
       "name": "SLB LIMITED/NV",
       "cik": "87347",
@@ -2342,6 +2678,27 @@
       }
     },
     {
+      "symbol": "SSL",
+      "name": "SASOL LTD",
+      "cik": "314590",
+      "exchange": "NYSE",
+      "group": "diversified",
+      "scope": "context",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630x20f.htm",
+        "as_of": "2026-09-01",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0000314590.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "STNG",
       "name": "Scorpio Tankers Inc.",
       "cik": "1483934",
@@ -2353,6 +2710,27 @@
         "label": "SEC · 20-F",
         "url": "https://www.sec.gov/Archives/edgar/data/1483934/000148393426000021/stng-20251231.htm",
         "as_of": "2026-03-20",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "SU",
+      "name": "SUNCOR ENERGY INC",
+      "cik": "311337",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231x40f.htm",
+        "as_of": "2026-02-26",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0000311337.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -2537,6 +2915,48 @@
       }
     },
     {
+      "symbol": "TS",
+      "name": "TENARIS SA",
+      "cik": "1190723",
+      "exchange": "NYSE",
+      "group": "equipment",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1190723/000155485526000490/ts-20251231.htm",
+        "as_of": "2026-03-31",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001190723.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "TTE",
+      "name": "TotalEnergies SE",
+      "cik": "879764",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/879764/000110465926035876/tot-20251231x20f.htm",
+        "as_of": "2026-03-27",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0000879764.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "TTI",
       "name": "TETRA TECHNOLOGIES INC",
       "cik": "844965",
@@ -2633,6 +3053,27 @@
       }
     },
     {
+      "symbol": "UUUU",
+      "name": "ENERGY FUELS INC",
+      "cik": "1385849",
+      "exchange": "NYSE",
+      "group": "nuclear-fuel",
+      "scope": "context",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 10-K",
+        "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm",
+        "as_of": "2026-02-26",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001385849.json",
+        "as_of": "2026-10-03",
+        "level": "primary"
+      }
+    },
+    {
       "symbol": "VAL",
       "name": "Valaris Ltd",
       "cik": "314808",
@@ -2644,6 +3085,27 @@
         "label": "SEC · 10-K",
         "url": "https://www.sec.gov/Archives/edgar/data/314808/000031480826000029/val-20251231.htm",
         "as_of": "2026-02-20",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "VET",
+      "name": "VERMILION ENERGY INC.",
+      "cik": "1293135",
+      "exchange": "NYSE",
+      "group": "upstream",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 40-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231x40f.htm",
+        "as_of": "2026-03-04",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0001293135.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     },
@@ -2884,6 +3346,27 @@
         "label": "SEC · 10-Q",
         "url": "https://www.sec.gov/Archives/edgar/data/2126198/000143774926024670/xprol20260630_10q.htm",
         "as_of": "2026-07-28",
+        "level": "primary"
+      }
+    },
+    {
+      "symbol": "YPF",
+      "name": "YPF SOCIEDAD ANONIMA",
+      "cik": "904851",
+      "exchange": "NYSE",
+      "group": "integrated",
+      "scope": "research",
+      "sector_hint": "us_10",
+      "report_source": {
+        "label": "SEC · 20-F",
+        "url": "https://www.sec.gov/Archives/edgar/data/904851/000119312526126363/d95578d20f.htm",
+        "as_of": "2026-03-26",
+        "level": "primary"
+      },
+      "identity_source": {
+        "label": "SEC · 법인·종목 식별",
+        "url": "https://data.sec.gov/submissions/CIK0000904851.json",
+        "as_of": "2026-10-03",
         "level": "primary"
       }
     }

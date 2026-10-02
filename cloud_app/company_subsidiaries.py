@@ -119,3 +119,19 @@ def repair_legacy(rows):
                     '지분율·거래 규모는 별도로 확인합니다.'}
         result.append(row)
     return result
+
+
+def replaced_by_reviewed(row, reviewed):
+    """Replace a generic cache entry only in the same verified exhibit/entity."""
+    origin = row.get('source', {})
+    if (row.get('kind') != 'subsidiary'
+            or not origin.get('label', '').startswith('SEC · Exhibit 21')
+            or not row.get('detail', '').startswith('공시 자회사 명세서')):
+        return False
+    identity = row.get('registry_id') or row.get('symbol') or row.get('name')
+    document = origin.get('url', '').split('#')[0]
+    return any(item.get('kind') == 'subsidiary'
+               and (item.get('registry_id') or item.get('symbol') or item.get('name')) == identity
+               and item.get('source', {}).get('url', '').split('#')[0] == document
+               and item.get('source', {}).get('as_of') == origin.get('as_of')
+               for item in reviewed)

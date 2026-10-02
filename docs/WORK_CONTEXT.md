@@ -1231,3 +1231,49 @@ resuming; no paid AI regression approval has arrived.
   Thenremainingwhole roster/fieldaudit/namedlinks. FTKEX21actual4subsverifiedfreeSEC;
   newcollectorwillreadfourcorrectly; cachedtwojurisgenericcorrectedbutneedsreviewed
   fullfour-sourceupdatewhencontinuingdossiers. Do notlose thisfollowup.
+
+### Integrated major continuation · 2026-10-03
+
+- Whole US Energy objective is still unfinished and active. User explicitly asks
+  to continue until the whole sector is researched and edited. Never end at a
+  partial batch, commit, test run, or deployment. Listing/receipts are not completion.
+- SEC identity audit and annual collector completed 23 foreign US listed issuers;
+  BP 29,303,585-byte annual needed separate bounded research download. Actual
+  originals, SHA, access dates in /tmp/milkyway-energy-research. No fake 6-K quarters.
+- Registry 213 now; added nine edited profiles XOM/SHEL/BP/TTE/E/EQNR/PBR/EC/YPF,
+  35 contextual counterpart pages, named project/supply links, 72 annual financial
+  values and 126 revenue rows. 190 receipts/181 populated/1,408 figures are coverage
+  counts, not full company/sector analysis. docs/ENERGY_MAJOR_REVIEW_20261003.md
+  records exact dimensions, gross elimination, currencies, date/scope limits.
+- BP day-first DEI date and IFRS customer-contract revenue fixed. Revenue axes
+  remain issuer/CIK/document/period bounded. PBR product subtotal/geography nesting,
+  EC external third-party axes and COP billions, XOM sales vs income, EQNR gross
+  148883m minus internal42421m, BP three denominators separately verified.
+- Actual FTK Exhibit21 four entities/jurisdictions now reviewed; same generic cached
+  entries replaced only for exact identity/date/document/kind. New edited brief
+  replaces old cards before schema limit, preserves citations; enrich idempotent.
+- Source-bound updates: Shell ARC closedSep2; LNGCanada Phase2 FIDSep29 future28Mtpa,
+  five partners' own gas/lifting vs JGC/Fluor EPC. Eni Plenitude joint-control Oct1
+  deconsolidation despite65.03%; BP Castrol completion not proven. XOM Baytown paused,
+  active named CCS distinct; YPF local common split != ADR split. No anonymous buyers.
+- Final actual image617tests34.540s OK(skipped18Node); host9modules21tests1.196sOK;
+  focused63/0.776s, offline70/0.682s. Source16SHA matched final actual image
+  000037b7d025b715a4e81cee90aabf862f659566039cfed0e58cebbe1deb4867.
+  App-only personal update completed; startupready(web+DB)/healthy confirmed.
+  Existing Chrome1tab verified Shell brief/revenue/financials, relationpage2,
+  graphclick→LNGCanada detail with two EPC and five partners. Four existing services.
+- Offline512MiB/1CPU cold592entityseed1.330s/RSS63.8MiB/SQLitequick_checkOK;
+  directoryp950.822ms/merge2.625ms/SHELgraph12.722ms/RSS64.2MiB. No network/UI RAM claim.
+- Direct bounded code/security review; no dependencies, permissions, SQL or order
+  changes. No CodeRabbit, actual AI provider calls(0), or new agents. Whole public
+  scan still needs managedworkspace; no OCI/KMS or whole-repo scan claim.
+- NEXT immediately continue Canadians SU/CNQ/IMO/CVE/OBE/BTE/VET and PDS, then
+  TS/SSL/nuclear/context+whole remaining roster. Newly completed FREE observed
+  attachments collector /tmp/milkyway-energy-equipment-review/canada-collect.py
+  fetched26AIF/MD&A/auditedfinancial originals(60,966,841bytes), same parent SEC
+  accession only, original SHA receipts in canada-attachment-manifest.json.
+  CNQ/IMO originals already full; 40-F cover absence does not mean no financials.
+  Need exact attachment/parent association parser, no injected DEI/fake XBRL label.
+  PDS main annual contains AIF rather than guessed extra URL. Read actual source.
+  Then named suppliers/customers/current JV, essential KO notes, all-field audit.
+  This milestone still needs commit/push+new CI confirmation; continue after it.
