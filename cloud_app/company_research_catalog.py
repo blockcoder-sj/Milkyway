@@ -188,10 +188,13 @@ PRIVATE_COMPANIES.update(CANADA_PRIVATE)
 from .company_energy_infrastructure import PUBLIC as INFRA_PUBLIC, PRIVATE as INFRA_PRIVATE, EDGES as INFRA_EDGES
 PUBLIC_COMPANIES.update(INFRA_PUBLIC)
 PRIVATE_COMPANIES.update(INFRA_PRIVATE)
-from .company_energy_materials import PUBLIC as MATERIAL_PUBLIC, PRIVATE as MATERIAL_PRIVATE, EDGES as MATERIAL_EDGES, COMMON_CONTEXT
+from .company_energy_materials import PUBLIC as MATERIAL_PUBLIC, PRIVATE as MATERIAL_PRIVATE, EDGES as MATERIAL_EDGES, COMMON_CONTEXT as MATERIAL_COMMON_CONTEXT
 PUBLIC_COMPANIES.update(MATERIAL_PUBLIC)
 PRIVATE_COMPANIES.update(MATERIAL_PRIVATE)
-for _registry, _notes in COMMON_CONTEXT.items():
+from .company_energy_nuclear import PUBLIC as NUCLEAR_PUBLIC, PRIVATE as NUCLEAR_PRIVATE, EDGES as NUCLEAR_EDGES, COMMON_CONTEXT as NUCLEAR_COMMON_CONTEXT
+PUBLIC_COMPANIES.update(NUCLEAR_PUBLIC)
+PRIVATE_COMPANIES.update(NUCLEAR_PRIVATE)
+for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT}.items():
     _existing = PRIVATE_COMPANIES[_registry]
     for _field, _value in _notes.items():
         if isinstance(_value, list):
@@ -281,6 +284,8 @@ for _symbol, _edges in CANADA_EDGES.items():
 for _symbol, _edges in INFRA_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in MATERIAL_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in NUCLEAR_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

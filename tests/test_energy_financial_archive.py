@@ -11,9 +11,9 @@ from cloud_app.company_schemas import CompanyKnowledge
 class EnergyFinancialArchiveTests(unittest.TestCase):
     def test_all_original_coordinates_and_issuer_identities_validate(self):
         records = archive()
-        self.assertEqual(len(records), 200)
-        self.assertEqual(sum(bool(r['financials']) for r in records.values()), 194)
-        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1503)
+        self.assertEqual(len(records), 205)
+        self.assertEqual(sum(bool(r['financials']) for r in records.values()), 199)
+        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1545)
         self.assertEqual(records['STNG']['financials'][0]['value'], 938222000)
         self.assertEqual(records['PBA']['financials'][0]['value'], 7778000000)
 

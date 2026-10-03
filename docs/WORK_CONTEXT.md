@@ -1368,3 +1368,34 @@ resuming; no paid AI regression approval has arrived.
   fuelcustomer guessed. UUUU actualChemoursmonazite and POSCO1.7tonsample notlarge
   commercialrecurringpurchase; Astron9.48%actual2025 vsfuture49%earn-in separate.
   URG/enCore vendors still need freeprimary deeperresearch; no guesses to fill holes.
+
+### Nuclear original-source continuation · 2026-10-03
+
+- Whole Energy stays active and unfinished: 213 entries, 90 edited main companies,
+  123 remaining plus all-field depth audit. NEVER final/stop at a partial milestone.
+- Added CCJ/DNN/NXE/UEC/EU/URG/LEU/LTBR/UUUU Korean dossiers, 30 role counterparts.
+  205 financial receipts/199 populated/1545 values; 24 original files bytes/SHA
+  verified. docs/ENERGY_NUCLEAR_REVIEW_20261003.md records original scope and stages.
+- Bounded nuclear revenue coordinates: actual issuer/CIK/doc/year/full axes; LEU
+  erroneous461.1m tech member is whole business before12.4m elimination, not division.
+  UUUU Austria/UAE country-product errors only exact source/year/value/unit corrected;
+  raw members preserved. CCJ contract-vs-IFRS revenue not forced to one denominator.
+- Current LEU X-energy/Radiant/Antares actual contracts future delivery. UUUU ASM
+  Aug28 closed vs VAC pending; POSCO sample capital cost offset not annual sales.
+  URG Aug19 first Shirley resin shipment verified, EU anonymous buyers not named.
+  Nuclear context entries do NOT make a GICS assignment or complete every field.
+- Actual image653tests52.499s OK(18skip); focus73/1.270s; hostNode21/1.989s OK.
+  Offline512MiB/1CPU seed722entities1.406s/RSS63.9MiB/quick_checkOK; directoryp95
+  1.717ms/LEUmerge6.8ms/detail44.957ms/RSS64.2MiB;81focus0.929sOK. Not network/UI RAM.
+- App-only image59e4cae2ae9a5ba30340a505a4d877a8ecfe16758b35253e41f660abf81fd19e
+  healthy/startup200(webDB), ready503(existingpaper/backtestpaused); four existing
+  services and volumes preserved. Chromeoneexistingtab LEU cards/financials/graph
+  ->X-energy detail reverseCentrus confirmed. LEU quote pending, not live-verified.
+- Direct scoped code/security review, no new deps/auth/schema/orders/network/model;
+  actual AI calls0, no CodeRabbit/new agents/paiddata/publicscan/OCI-KMS claims.
+  Infrastructure7b92a5d5c9849ea7c2ed3ae9a1bcdb00d06d0431 pushed, CI37091087956SUCCESS.
+- NEXT immediately continue producers APA/CHRD/OVV/MGY/MTDR/PR/SM/CRC/CRGY/GPOR/
+  CRK/CNX/BKV/MUR/NOG/VTS. Offline source reader completed16 actual originals at
+  /tmp/milkyway-energy-research/producer-read.json; annual+quarter manifests reused.
+  Need human table/metric review, current primary updates, named counterpart roles.
+  Then whole remaining roster (remaining-nuclear-20261003.json) and depth audit.

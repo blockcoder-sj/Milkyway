@@ -4896,6 +4896,7 @@
     "financial_context": []
   },
   "UEC": {
+    "cik": "1334933",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1334933/000143774926031414/uec20260731_10k.htm",
@@ -5016,8 +5017,18 @@
         }
       }
     ],
-    "cik": "1334933",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "2026 회계연도·재고 판매",
+        "detail": "기간은 2025-08-01~2026-07-31입니다. 연결 매출 37,250,000 USD는 재고 우라늄 판매로 태그·본문이 확인됩니다. 채굴·처리 생산량은 판매량과 다르며 지분법 투자 전체 실적은 연결 매출에 합산하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1334933/000143774926031414/uec20260731_10k.htm",
+          "as_of": "2026-09-29",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "WHD": {
     "annual": {
@@ -7072,6 +7083,7 @@
     "financial_context": []
   },
   "LEU": {
+    "cik": "1065059",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm",
@@ -7192,8 +7204,18 @@
         }
       }
     ],
-    "cik": "1065059",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "공시 태그와 본문·내부 매출 제거",
+        "detail": "2025년 외부 SWU 298,700,000 + 우라늄 47,500,000 + 기술 솔루션 102,500,000 = 448,700,000 USD입니다. 본문 전체 제거 전 합계 461,100,000에 기술 솔루션 태그가 잘못 붙어 있습니다. 내부 매출 12,400,000을 제거하며 전체 합계를 한 사업부 매출로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm",
+          "as_of": "2026-02-11",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "WTTR": {
     "annual": {
@@ -10319,6 +10341,7 @@
     "financial_context": []
   },
   "URG": {
+    "cik": "1375205",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1375205/000110465926025923/urg-20251231x10k.htm",
@@ -10427,8 +10450,18 @@
         }
       }
     ],
-    "cik": "1375205",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "제품·고객·가동 기간",
+        "detail": "2025년 매출 27,207,000 USD는 우라늄 정광 27,179,000과 처리 수수료 28,000입니다. 고객 A/B 매출은 집중도이며 추가 제품 수입이 아닙니다. 2026년 Shirley Basin 생산·원료 운송은 2025년 매출 표와 기간이 다릅니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1375205/000110465926025923/urg-20251231x10k.htm",
+          "as_of": "2026-03-10",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "OIS": {
     "annual": {
@@ -11275,6 +11308,7 @@
     "financial_context": []
   },
   "LTBR": {
+    "cik": "1084554",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1084554/000147793226001076/ltbr_10k.htm",
@@ -11359,8 +11393,18 @@
         }
       }
     ],
-    "cik": "1084554",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연구 기업·실제 0 매출",
+        "detail": "2025년 손익계산서의 0 USD 매출 좌표를 그대로 보존합니다. 연료 조사·연구·설계 계약과 미래 상업 연료 판매는 다르며 연구 자금 조달·보유 현금을 매출로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1084554/000147793226001076/ltbr_10k.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "WTI": {
     "annual": {
@@ -21744,5 +21788,677 @@
       "collected_at": "2026-10-02T22:24:31.743825+00:00"
     },
     "annual_period_end": "2026-06-30"
+  },
+  "CCJ": {
+    "cik": "1009001",
+    "annual": {
+      "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+      "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm",
+      "as_of": "2026-03-19",
+      "level": "primary",
+      "sha256": "311cab3a9757fbd002954343ab6416ca24ba7c2265f565913a6751a69e6c6917",
+      "bytes": 2249195,
+      "blocks": 5552,
+      "collected_at": "2026-10-02T23:40:47.652771+00:00"
+    },
+    "financials": [
+      {
+        "label": "매출",
+        "value": 3481933000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Revenue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_599",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업이익",
+        "value": 618142000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:ProfitLossFromOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_137",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "지배기업 귀속 순이익",
+        "value": 589577000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:ProfitLossAttributableToOwnersOfParent",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_1019",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총자산",
+        "value": 10301282000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_371",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "자본 합계 · 비지배지분 포함",
+        "value": 6903378000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Equity",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_1035",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "현금·현금성 자산",
+        "value": 1114860000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:CashAndCashEquivalents",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_1034AAA",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업활동 현금흐름",
+        "value": 1408432000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:CashFlowsFromUsedInOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_1345",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "유형자산 취득 현금",
+        "value": 333025000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_127",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      }
+    ],
+    "financial_context": [
+      {
+        "title": "연결 범위·통화·고객 소재지",
+        "detail": "2025년 연결 매출 3,481,933,000 CAD는 우라늄·연료 서비스·기타입니다. Westinghouse·Inkai 지분법 사업 전체 매출과 내부 관리용 비례 매출은 연결 총매출에 합산하지 않습니다. 고객 소재지 지역 표와 법인 소재지 국가 표는 분모가 같아도 별도 분류입니다.",
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      }
+    ],
+    "parent_annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605d40f.htm",
+      "as_of": "2026-03-19",
+      "level": "primary",
+      "sha256": "a57214cd8dbd91891ce3a16be77854e038691cbc6c9ff92df9e9345813c2a985",
+      "bytes": 609394,
+      "blocks": 217,
+      "collected_at": "2026-10-02T22:24:32.950756+00:00"
+    },
+    "annual_period_end": "2025-12-31"
+  },
+  "DNN": {
+    "cik": "1063259",
+    "annual": {
+      "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+      "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm",
+      "as_of": "2026-03-30",
+      "level": "primary",
+      "sha256": "465d39892302c9cf3f0d3ce547cc3f4f77281eb305c343d1a1c3ea50bdec9dd4",
+      "bytes": 2755859,
+      "blocks": 6961,
+      "collected_at": "2026-10-02T23:40:54.047716+00:00"
+    },
+    "financials": [
+      {
+        "label": "매출",
+        "value": 4918000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Revenue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc_yx32d71FQkKK_mPDAd0Tfw_5_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업이익",
+        "value": -61354000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:ProfitLossFromOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc__oFNFNyyckO5R7KwQw98tg_14_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "순이익 · 비지배지분 포함",
+        "value": -217288000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:ProfitLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc_fAQ0t7flw0-d1Wq1AM4UXw_23_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총자산",
+        "value": 1106074000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc_1zZJmQ8uqUqYoIFsKTrlxA_24_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총부채",
+        "value": 737704000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Liabilities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc_YKIMVFrWWEy0gQpU3Zvbxg_40_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "자본 합계 · 비지배지분 포함",
+        "value": 368370000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Equity",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Narr_NcKMgi7ChU2coLgzF05dKg",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "현금·현금성 자산",
+        "value": 465918000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:CashAndCashEquivalents",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc_-wDSY3xJWEy_9n5vM-IpuQ_7_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업활동 현금흐름",
+        "value": -68148000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:CashFlowsFromUsedInOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc_8ANsmjGaCkuMEzPKydyLZw_30_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "유형자산 취득 현금",
+        "value": 50496000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc_bOBf0me1ZUq7WKJL0yw2og_33_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      }
+    ],
+    "financial_context": [
+      {
+        "title": "처리 수입·개발 지분·평가 손익",
+        "detail": "2025년 매출 4,918,000 CAD는 기존 광업·처리 수입입니다. Phoenix는 개발 단계이며 직접 지분 90%에 JCU의 10% 중 50% 간접분을 더한 유효 지분은 95%입니다. 우라늄·워런트 평가 등 손익은 처리 매출·현금흐름과 구분합니다.",
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      }
+    ],
+    "parent_annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231x40f.htm",
+      "as_of": "2026-03-30",
+      "level": "primary",
+      "sha256": "12d0624177678d3641d753eceecd4155086f448edf70fea19bc69b1c900cde8a",
+      "bytes": 400449,
+      "blocks": 372,
+      "collected_at": "2026-10-02T22:24:33.976147+00:00"
+    },
+    "annual_period_end": "2025-12-31"
+  },
+  "NXE": {
+    "cik": "1698535",
+    "annual": {
+      "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+      "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "sha256": "54f8b288bfb79a761e05400b8dd8dee22cd20e9d80e463e39ffcb7606636147b",
+      "bytes": 1038862,
+      "blocks": 1115,
+      "collected_at": "2026-10-02T23:40:58.355860+00:00"
+    },
+    "financials": [
+      {
+        "label": "영업이익",
+        "value": -295568000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:ProfitLossFromOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm#ixv-11893",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "순이익 · 비지배지분 포함",
+        "value": -309676000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:ProfitLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm#ixv-11897",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총자산",
+        "value": 2472933000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm#ixv-11829",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총부채",
+        "value": 640825000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Liabilities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm#ixv-11847",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "자본 합계 · 비지배지분 포함",
+        "value": 1832108000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Equity",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm#ixv-11857",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업활동 현금흐름",
+        "value": -47512000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:CashFlowsFromUsedInOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm#ixv-11951",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "유형자산 취득 현금",
+        "value": 505000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm#ixv-11955",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      }
+    ],
+    "financial_context": [
+      {
+        "title": "건설 단계·매출 원문 좌표",
+        "detail": "2025년 감사 재무제표의 확인된 손익·자산·부채·자본·현금흐름 좌표를 보존합니다. 매출 좌표가 확인되지 않아 임의로 0 값을 생성하지 않습니다. Rook I 자원량·장기 판매 약정·건설 허가는 현재 상업 인도 매출이 아닙니다.",
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      }
+    ],
+    "parent_annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755d40f.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "sha256": "f6f46c9f547dfc6949a9d8d263f54a6e086f640f907d1751c5a75900228b3aa3",
+      "bytes": 234976,
+      "blocks": 130,
+      "collected_at": "2026-10-02T22:24:35.030075+00:00"
+    },
+    "annual_period_end": "2025-12-31"
+  },
+  "EU": {
+    "cik": "1500881",
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm",
+      "as_of": "2026-03-31",
+      "level": "primary",
+      "sha256": "1db740c6ca62d079fbdedb38eb09c9f012b97077eb7127f9e7664c1899158fd6",
+      "bytes": 2379595,
+      "blocks": 2388,
+      "collected_at": "2026-10-02T22:24:38.207311+00:00"
+    },
+    "financials": [
+      {
+        "label": "매출",
+        "value": 43155000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Revenues",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-128",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업이익",
+        "value": -65766000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:OperatingIncomeLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-144",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "지배기업 귀속 순이익",
+        "value": -56856000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:NetIncomeLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-166",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총자산",
+        "value": 430422000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-82",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총부채",
+        "value": 172042000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Liabilities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-102",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "자본 합계 · 비지배지분 포함",
+        "value": 258380000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-124",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "현금·현금성 자산",
+        "value": 52403000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-56",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업활동 현금흐름",
+        "value": -24992000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:NetCashProvidedByUsedInOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-222",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "유형자산 취득 현금",
+        "value": 19997000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm#f-224",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      }
+    ],
+    "financial_context": [
+      {
+        "title": "우라늄 판매·연결과 고객 집중도",
+        "detail": "2025년 연결 매출 43,155,000 USD는 우라늄 판매입니다. 익명 고객 3곳의 27,231,000·10,980,000·4,944,000 USD는 집중도 표로 제품 구성에 다시 더하지 않습니다. Alta Mesa는 enCore 70% 지배·연결 및 Boss 30% 비지배지분 구조입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "UUUU": {
+    "cik": "1385849",
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "sha256": "ee0ef4d0de7b6804cf53d02d86dda93bd71a191f48b9d38871d4e9b1de383222",
+      "bytes": 5180944,
+      "blocks": 3948,
+      "collected_at": "2026-10-02T22:24:43.148688+00:00"
+    },
+    "financials": [
+      {
+        "label": "매출",
+        "value": 65922000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Revenues",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1478",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업이익",
+        "value": -101155000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:OperatingIncomeLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-88",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "지배기업 귀속 순이익",
+        "value": -85634000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:NetIncomeLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-115",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총자산",
+        "value": 1411852000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-168",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총부채",
+        "value": 729282000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Liabilities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-186",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "자본 합계 · 비지배지분 포함",
+        "value": 682570000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-202",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "현금·현금성 자산",
+        "value": 64736000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-142",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업활동 현금흐름",
+        "value": -89480000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:NetCashProvidedByUsedInOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-408",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "유형자산 취득 현금",
+        "value": 19261000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-411",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ],
+    "financial_context": [
+      {
+        "title": "제품 구성·태그 오류·검증 샘플",
+        "detail": "2025년 48,234,000 + 15,821,000 + 1,867,000 = 65,922,000 USD입니다. 지역 표의 Austria 광물사 348,000과 UAE 광물사 195,000은 XBRL 국가·사업부 태그가 본문과 달라 본문 이름으로 주석 표시하며 원래 좌표를 보존합니다. POSCO NdPr 샘플 80,000 USD는 시운전 원가 차감이며 연결 매출에 더하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   }
 }

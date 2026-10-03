@@ -2991,7 +2991,7 @@
       "name": "URANIUM ENERGY CORP",
       "cik": "1334933",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "nuclear-fuel",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3027,7 +3027,7 @@
       "name": "UR-ENERGY INC",
       "cik": "1375205",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "nuclear-fuel",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

@@ -14924,5 +14924,936 @@
       "blocks": 2,
       "collected_at": "2026-10-03T01:32:02.703411+00:00"
     }
+  },
+  "CCJ": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605d40f.htm",
+      "as_of": "2026-03-19",
+      "level": "primary",
+      "sha256": "a57214cd8dbd91891ce3a16be77854e038691cbc6c9ff92df9e9345813c2a985",
+      "bytes": 609394,
+      "blocks": 217,
+      "collected_at": "2026-10-02T22:24:32.950756+00:00"
+    },
+    "aif": {
+      "label": "SEC · 40-F 첨부 · 2025 사업·연차 정보",
+      "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex991.htm",
+      "as_of": "2026-03-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605d40f.htm",
+      "sha256": "3ac9242cfcdb8225f7c62290df779ce20fa3037c47fe605d4a60767a25bb4732",
+      "bytes": 1797864,
+      "blocks": 3559,
+      "collected_at": "2026-10-02T23:40:45.723916+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+      "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm",
+      "as_of": "2026-03-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605d40f.htm",
+      "sha256": "311cab3a9757fbd002954343ab6416ca24ba7c2265f565913a6751a69e6c6917",
+      "bytes": 2249195,
+      "blocks": 5552,
+      "collected_at": "2026-10-02T23:40:47.652771+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · 2025 경영진 사업·재무 논의",
+      "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex993.htm",
+      "as_of": "2026-03-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605d40f.htm",
+      "sha256": "646ad9414699792dc20875a3320a95cb84a7fa9bb642f9aad53ca1f6f6d66b01",
+      "bytes": 1514377,
+      "blocks": 1900,
+      "collected_at": "2026-10-02T23:40:49.754089+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "ccj:FuelServicesMember",
+        "label": "우라늄 정련·전환·연료 서비스",
+        "value": 562421000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_690",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ccj:OtherSegmentMember",
+        "label": "기타 연결 사업",
+        "value": 45562000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_691",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ccj:UraniumMember",
+        "label": "우라늄 생산·구매·판매",
+        "value": 2873950000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_689",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:AsiaPacificMember",
+        "label": "아시아태평양 고객",
+        "value": 777146000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_676",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:EuropeMember",
+        "label": "유럽 고객",
+        "value": 889917000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_675",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:NorthAmericaMember",
+        "label": "북미 고객",
+        "value": 1814870000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_674",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "ccj:MarketpricecontractsmemberMember",
+        "label": "시장 가격 연동 계약",
+        "value": 2198434000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_719",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "ifrs-full:FixedpriceContractsMember",
+        "label": "고정 가격 계약",
+        "value": 1283499000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1009001/000119312526116229/d34605dex992.htm#ID_718",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "DNN": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231x40f.htm",
+      "as_of": "2026-03-30",
+      "level": "primary",
+      "sha256": "12d0624177678d3641d753eceecd4155086f448edf70fea19bc69b1c900cde8a",
+      "bytes": 400449,
+      "blocks": 372,
+      "collected_at": "2026-10-02T22:24:33.976147+00:00"
+    },
+    "aif": {
+      "label": "SEC · 40-F 첨부 · 2025 사업·연차 정보",
+      "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d1.htm",
+      "as_of": "2026-03-30",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231x40f.htm",
+      "sha256": "4e1f6fbc072af519780df9f7d622b41c4e187e2494389f2ad52944eb8347d102",
+      "bytes": 2094982,
+      "blocks": 4756,
+      "collected_at": "2026-10-02T23:40:51.882024+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+      "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm",
+      "as_of": "2026-03-30",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231x40f.htm",
+      "sha256": "465d39892302c9cf3f0d3ce547cc3f4f77281eb305c343d1a1c3ea50bdec9dd4",
+      "bytes": 2755859,
+      "blocks": 6961,
+      "collected_at": "2026-10-02T23:40:54.047716+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · 2025 경영진 사업·재무 논의",
+      "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d2.htm",
+      "as_of": "2026-03-30",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231x40f.htm",
+      "sha256": "8b58ea482d43621cb888f526a937cf059e9304f460d169adf020b71da5cbf0b0",
+      "bytes": 1094083,
+      "blocks": 3034,
+      "collected_at": "2026-10-02T23:40:55.653406+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "dnn:MiningMember",
+        "label": "광업 · 주로 타사 광석 처리",
+        "value": 4918000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4918000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+          "url": "https://www.sec.gov/Archives/edgar/data/1063259/000110465926036912/dnn-20251231xex99d3.htm#Tc_dh9AjbnfHEiW7w_RIChOHw_7_3",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "NXE": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755d40f.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "sha256": "f6f46c9f547dfc6949a9d8d263f54a6e086f640f907d1751c5a75900228b3aa3",
+      "bytes": 234976,
+      "blocks": 130,
+      "collected_at": "2026-10-02T22:24:35.030075+00:00"
+    },
+    "aif": {
+      "label": "SEC · 40-F 첨부 · 2025 사업·연차 정보",
+      "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex991.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755d40f.htm",
+      "sha256": "2064ca82a35845f3b54b31bceed98a05e53d64eb16927f468734914bf82023d8",
+      "bytes": 600005,
+      "blocks": 932,
+      "collected_at": "2026-10-02T23:40:56.940918+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · 2025 감사 재무제표",
+      "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755d40f.htm",
+      "sha256": "54f8b288bfb79a761e05400b8dd8dee22cd20e9d80e463e39ffcb7606636147b",
+      "bytes": 1038862,
+      "blocks": 1115,
+      "collected_at": "2026-10-02T23:40:58.355860+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · 2025 경영진 사업·재무 논의",
+      "url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex992.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755d40f.htm",
+      "sha256": "b69f8be3b9f4fcfbc8c146bcaacf3f07a1904715a4a362518e0328221257efba",
+      "bytes": 316531,
+      "blocks": 508,
+      "collected_at": "2026-10-02T23:40:59.555787+00:00"
+    },
+    "revenue_mix": []
+  },
+  "UEC": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1334933/000143774926031414/uec20260731_10k.htm",
+      "as_of": "2026-09-29",
+      "level": "primary",
+      "sha256": "698ac8fe8f687767267aabfca48e357a26292cc5959bea95620cbf0077145f83",
+      "bytes": 5612632,
+      "blocks": 12436,
+      "collected_at": "2026-10-02T15:25:51.781570+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1334933/000143774926019889/uec20260430_10q.htm",
+      "as_of": "2026-06-09",
+      "level": "primary",
+      "sha256": "aa3a7319fb321db0becf07ba38caec95fd5681a966fb7a4116b4a98bf4c327f8",
+      "bytes": 2393076,
+      "blocks": 2320,
+      "collected_at": "2026-10-02T15:25:54.518549+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "uec:SaleOfInventoryMember",
+        "label": "재고 우라늄 판매",
+        "value": 37250000.0,
+        "unit": "USD",
+        "start": "2025-08-01",
+        "end": "2026-07-31",
+        "total": 37250000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1334933/000143774926031414/uec20260731_10k.htm#c151402941",
+          "as_of": "2026-09-29",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "EU": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026022507/encr-20251231.htm",
+      "as_of": "2026-03-31",
+      "level": "primary",
+      "sha256": "1db740c6ca62d079fbdedb38eb09c9f012b97077eb7127f9e7664c1899158fd6",
+      "bytes": 2379595,
+      "blocks": 2388,
+      "collected_at": "2026-10-02T22:24:38.207311+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1500881/000162828026056452/encr-20260630.htm",
+      "as_of": "2026-08-13",
+      "level": "primary",
+      "sha256": "d7bc309c5e082cbc69919bf7faed48ebb31429bf9fc36aae8ed978d72d883b0a",
+      "bytes": 1202678,
+      "blocks": 749,
+      "collected_at": "2026-10-02T22:24:39.505673+00:00"
+    },
+    "revenue_mix": []
+  },
+  "URG": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1375205/000110465926025923/urg-20251231x10k.htm",
+      "as_of": "2026-03-10",
+      "level": "primary",
+      "sha256": "911ab5c7a8e4c7007666de8ff48f4ba9be013a0d13de6bf555992a9f595d9caa",
+      "bytes": 3779374,
+      "blocks": 10833,
+      "collected_at": "2026-10-02T15:30:20.646363+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1375205/000110465926093458/urg-20260630x10q.htm",
+      "as_of": "2026-08-10",
+      "level": "primary",
+      "sha256": "ca83ea4851af4e418804830ddb6a5b57c4f1e4daf61241343c4ba470c7c2705b",
+      "bytes": 2607303,
+      "blocks": 7848,
+      "collected_at": "2026-10-02T15:30:24.019524+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "urg:DisposalFeesMember",
+        "label": "처리·폐기 수수료",
+        "value": 28000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 27207000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1375205/000110465926025923/urg-20251231x10k.htm#Tc_KWO07ZURK0-1XEK8JMpryg_11_2",
+          "as_of": "2026-03-10",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "urg:UThreeOEightSalesMember",
+        "label": "우라늄 정광 판매",
+        "value": 27179000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 27207000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1375205/000110465926025923/urg-20251231x10k.htm#Tc_0JxPY-pCH02hB3mbIq5v_A_9_2",
+          "as_of": "2026-03-10",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "LEU": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm",
+      "as_of": "2026-02-11",
+      "level": "primary",
+      "sha256": "e7acf347fac90812736d7089bbdbbd797dc8f6b7bb5177af24b3425389b8c0e5",
+      "bytes": 2784441,
+      "blocks": 1881,
+      "collected_at": "2026-10-02T15:27:28.299953+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026053863/leu-20260630.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "49d83a66a39bfb14f2a806a7fd2bd3cc5643f7d279459ce15df3c9b821926ec2",
+      "bytes": 1468750,
+      "blocks": 740,
+      "collected_at": "2026-10-02T15:27:30.048009+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "leu:SeparativeWorkUnitsMember",
+        "label": "농축 서비스 · SWU",
+        "value": 298700000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 448700000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm#f-153",
+          "as_of": "2026-02-11",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "leu:UraniumMember",
+        "label": "우라늄 판매",
+        "value": 47500000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 448700000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm#f-156",
+          "as_of": "2026-02-11",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ServiceMember/leu:ContractServicesSegmentMember",
+        "label": "기술 솔루션 · 외부 서비스",
+        "value": 102500000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 448700000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm#f-159",
+          "as_of": "2026-02-11",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "leu:ContractServicesSegmentMember",
+        "label": "전체 사업 · 내부 제거 전",
+        "value": 461100000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm#f-1660",
+          "as_of": "2026-02-11",
+          "level": "primary"
+        },
+        "share_exclusion": "본문의 전체 사업 합계 461,100,000 USD에 기술 솔루션 사업부 태그가 잘못 연결돼 있습니다. 내부 매출 12,400,000 USD 제거 후 연결 매출은 448,700,000 USD이며 실제 외부 기술 솔루션 매출은 102,500,000 USD입니다."
+      },
+      {
+        "group": "geography",
+        "member": "country:JP",
+        "label": "일본",
+        "value": 102700000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 448700000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm#f-1612",
+          "as_of": "2026-02-11",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 335300000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 448700000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm#f-1609",
+          "as_of": "2026-02-11",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "leu:OtherForeignMember",
+        "label": "기타 해외",
+        "value": 10700000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 448700000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1065059/000162828026007117/leu-20251231.htm#f-1618",
+          "as_of": "2026-02-11",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "LTBR": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1084554/000147793226001076/ltbr_10k.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "sha256": "452751e7d26ecb2b0ce5c6647265d8d8cca6a44d286d5b1b16d21e99b09957db",
+      "bytes": 1098845,
+      "blocks": 1417,
+      "collected_at": "2026-10-02T15:31:20.123973+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1084554/000147793226004756/ltbr_10q.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "0a5a105d5eedfb9d4c300c5bfc9a0d7df01950e7b713ab2ab852f809f03ffacb",
+      "bytes": 822590,
+      "blocks": 789,
+      "collected_at": "2026-10-02T15:31:22.574027+00:00"
+    },
+    "revenue_mix": []
+  },
+  "UUUU": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "sha256": "ee0ef4d0de7b6804cf53d02d86dda93bd71a191f48b9d38871d4e9b1de383222",
+      "bytes": 5180944,
+      "blocks": 3948,
+      "collected_at": "2026-10-02T22:24:43.148688+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000029/efr-20260630.htm",
+      "as_of": "2026-08-05",
+      "level": "primary",
+      "sha256": "9d43d11afaef64339272291f86caebd112dab8b19ea651a6275aced1d65d6d30",
+      "bytes": 2056752,
+      "blocks": 997,
+      "collected_at": "2026-10-02T22:24:45.153657+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "efr:RevenuesAlternateFeedMaterialsProcessingAndOtherMember",
+        "label": "대체 원료 처리·기타",
+        "value": 1867000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1475",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "efr:RevenuesHeavyMineralSandsMember",
+        "label": "광물사 · 티타늄·지르콘 제품",
+        "value": 15821000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1469",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "efr:RevenuesUraniumConcentratesMember",
+        "label": "우라늄 정광",
+        "value": 48234000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1463",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "efr:HeavyMineralSandsSegmentMember",
+        "label": "광물사",
+        "value": 15821000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1590",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "efr:UraniumSegmentMember",
+        "label": "우라늄·바나듐·대체 원료 처리",
+        "value": 50101000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1588",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:AE/efr:UraniumSegmentMember",
+        "label": "아랍에미리트 · 광물사 · 본문 기준",
+        "value": 195000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1558",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "원문 매출 지역 표의 국가·제품 이름을 표시했습니다. XBRL의 국가 또는 사업부 태그는 본문과 일치하지 않으며 원래 태그·금액·출처를 보존합니다. 이 표는 고객 소재지와 제품을 함께 나눈 표입니다."
+      },
+      {
+        "group": "geography",
+        "member": "country:CA/efr:UraniumSegmentMember",
+        "label": "캐나다 · 우라늄",
+        "value": 15365000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1516",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CN/efr:HeavyMineralSandsSegmentMember",
+        "label": "중국 · 광물사",
+        "value": 3061000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1522",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:EE/efr:RareEarthElementsSegmentMember",
+        "label": "오스트리아 · 광물사 · 본문 기준",
+        "value": 348000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1555",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "원문 매출 지역 표의 국가·제품 이름을 표시했습니다. XBRL의 국가 또는 사업부 태그는 본문과 일치하지 않으며 원래 태그·금액·출처를 보존합니다. 이 표는 고객 소재지와 제품을 함께 나눈 표입니다."
+      },
+      {
+        "group": "geography",
+        "member": "country:JP/efr:HeavyMineralSandsSegmentMember",
+        "label": "일본 · 광물사",
+        "value": 2751000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1525",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:JP/efr:UraniumSegmentMember",
+        "label": "일본 · 우라늄",
+        "value": 1308000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1528",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:KR/efr:HeavyMineralSandsSegmentMember",
+        "label": "한국 · 광물사",
+        "value": 505000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1546",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:SA/efr:HeavyMineralSandsSegmentMember",
+        "label": "사우디아라비아 · 광물사",
+        "value": 3457000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1519",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US/efr:HeavyMineralSandsSegmentMember",
+        "label": "미국 · 광물사",
+        "value": 5504000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1513",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US/efr:UraniumSegmentMember",
+        "label": "미국 · 우라늄",
+        "value": 33428000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65922000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1385849/000138584926000009/efr-20251231.htm#f-1510",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   }
 }
