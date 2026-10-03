@@ -292,7 +292,7 @@ class CompanyGraph:
 
     def _entity(self, db, name, symbol=None, qid=None, reference=None, sector=None, registry=None):
         if registry:
-            from .company_research_catalog import PRIVATE_COMPANIES, REGISTERED_TICKERS
+            from .company_research_catalog import PRIVATE_COMPANIES, REGISTERED_TICKERS, PRIVATE_NAMES
             expected = REGISTERED_TICKERS.get(registry)
             if registry not in PRIVATE_COMPANIES or (symbol and symbol != expected):
                 raise ValueError("Unknown primary-source company registry")
@@ -311,7 +311,11 @@ class CompanyGraph:
             if reference:
                 # Upgrade an earlier source-local alias only after manual registry
                 # verification; this keeps existing links to that evidence alive.
-                aliases.append(("reference", digest(reference + "|" + name.casefold().strip())))
+                # Only manually verified names in this exact evidence document
+                # can upgrade older source-local bookmarks. No fuzzy matching.
+                names = [name] + [n for n, key in PRIVATE_NAMES.items() if key == registry]
+                aliases.extend(("reference", digest(reference + "|" + n.casefold().strip()))
+                               for n in dict.fromkeys(names))
         if not aliases:
             if not reference:
                 raise ValueError("Company identity requires evidence")

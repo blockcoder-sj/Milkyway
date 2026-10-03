@@ -84,7 +84,7 @@
       "name": "APA Corp",
       "cik": "1841666",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -189,7 +189,7 @@
       "name": "BKV Corp",
       "cik": "1838406",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -312,7 +312,7 @@
       "name": "Chord Energy Corp",
       "cik": "1486159",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -423,7 +423,7 @@
       "name": "CNX Resources Corp",
       "cik": "1070412",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -468,7 +468,7 @@
       "name": "California Resources Corp",
       "cik": "1609253",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -483,7 +483,7 @@
       "name": "Crescent Energy Co",
       "cik": "1866175",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -498,7 +498,7 @@
       "name": "COMSTOCK RESOURCES INC",
       "cik": "23194",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1185,7 +1185,7 @@
       "name": "GULFPORT ENERGY CORP",
       "cik": "874499",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1632,7 +1632,7 @@
       "name": "Magnolia Oil & Gas Corp",
       "cik": "1698990",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1707,7 +1707,7 @@
       "name": "Matador Resources Co",
       "cik": "1520006",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1722,7 +1722,7 @@
       "name": "MURPHY OIL CORP",
       "cik": "717423",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1917,7 +1917,7 @@
       "name": "NORTHERN OIL & GAS, INC.",
       "cik": "1104485",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2109,7 +2109,7 @@
       "name": "Ovintiv Inc.",
       "cik": "1792580",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2301,7 +2301,7 @@
       "name": "Permian Resources Corp",
       "cik": "1658566",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2592,7 +2592,7 @@
       "name": "SM Energy Co",
       "cik": "893538",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3174,7 +3174,7 @@
       "name": "Vitesse Energy, Inc.",
       "cik": "1944558",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

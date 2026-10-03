@@ -194,7 +194,10 @@ PRIVATE_COMPANIES.update(MATERIAL_PRIVATE)
 from .company_energy_nuclear import PUBLIC as NUCLEAR_PUBLIC, PRIVATE as NUCLEAR_PRIVATE, EDGES as NUCLEAR_EDGES, COMMON_CONTEXT as NUCLEAR_COMMON_CONTEXT
 PUBLIC_COMPANIES.update(NUCLEAR_PUBLIC)
 PRIVATE_COMPANIES.update(NUCLEAR_PRIVATE)
-for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT}.items():
+from .company_energy_producers import PUBLIC as PRODUCER_PUBLIC, PRIVATE as PRODUCER_PRIVATE, EDGES as PRODUCER_EDGES, COMMON_CONTEXT as PRODUCER_COMMON_CONTEXT
+PUBLIC_COMPANIES.update(PRODUCER_PUBLIC)
+PRIVATE_COMPANIES.update(PRODUCER_PRIVATE)
+for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT}.items():
     _existing = PRIVATE_COMPANIES[_registry]
     for _field, _value in _notes.items():
         if isinstance(_value, list):
@@ -210,7 +213,11 @@ REGISTERED_TICKERS = {'range-profrac': 'ACDC'}
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
 PRIVATE_NAMES.update({'Foxconn':'foxconn', 'Hon Hai Precision Industry':'foxconn',
                       'Wistron Corporation':'wistron', 'SPIL':'spil',
-                      'JP3 Measurement, LLC':'jp3-measurement'})
+                      'JP3 Measurement, LLC':'jp3-measurement',
+                      # Same Comstock operating legal entity in the reviewed
+                      # Exhibit 21 and June 2026 Pinnacle investment statement.
+                      'Pinnacle Gas Services LLC':'pinnacle-comstock',
+                      'Pinnacle Gas Services LLC (1)':'pinnacle-comstock'})
 
 
 RELATIONS = {
@@ -286,6 +293,8 @@ for _symbol, _edges in INFRA_EDGES.items():
 for _symbol, _edges in MATERIAL_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in NUCLEAR_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in PRODUCER_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

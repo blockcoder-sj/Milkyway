@@ -1399,3 +1399,48 @@ resuming; no paid AI regression approval has arrived.
   /tmp/milkyway-energy-research/producer-read.json; annual+quarter manifests reused.
   Need human table/metric review, current primary updates, named counterpart roles.
   Then whole remaining roster (remaining-nuclear-20261003.json) and depth audit.
+
+
+### Producer continuation and real exhibit repair · 2026-10-03
+
+- Whole Energy remains active, unfinished: 213 entries /106 edited main /107 left
+  plus whole all-field depth audit. NEVER final or stop at this commit/batch.
+- APA CHRD OVV MGY MTDR PR SM CRC CRGY GPOR CRK CNX BKV MUR NOG VTS Korean
+  business/current contract dossiers;36 role counterparts,76 revenue coordinates.
+  Financial205 receipts /199 populated /1550 values.33 annual/quarter/ex21 originals
+  bytes+SHA verified. docs/ENERGY_PRODUCERS_REVIEW_20261003.md has exact scopes.
+- Actual Murphy Exhibit21 td ordinal parser broke on indentation/colspans;fixed
+  physical column ranges, item prefixes/cross references and registrant exclusion.
+  Actual original51 names, immediate-parent stakes not fabricated ultimate stakes.
+  Scoped legacy generated-row repair, manually reviewed claims preserved. Runtime
+  MUR57edges=51subs+6business, enum/registrant0. Pinnacle exact verified LLC aliases
+  share one registry ID/2evidence preserving oldbookmarks; GasTreating separate.
+- Final actual image667tests40.593sOK18Node skips;host9modules21tests1.660sOK.
+  Fourteen edited app/data/test SHA matched. Initial nonexistentmodule names and
+  Dockerfile.personal failed; corrected actualtestlist and Dockerfile, not successes.
+- Offline512MiB/1CPU seed809entities1.682s/RSS66.4MiB/quick_checkOK; directoryp95
+  .912ms/BKVmerge1.759ms/detail11.766ms/RSS66.7MiB;83focused/.740sOK.
+- App imagea3712836e8c99316abb57c3da82c78a0acccef47058cceb341c570a007f64ec0,
+  startup200webDB/ready503existingpausedpaperbacktest;all otherdata checks true.
+  Four preservedservices, no tradingreactivation/volume deletion. RAMobserved
+  app156MiB/backup40.39/marketdata267.1/personaldata240.4, notwholeVM/Chrome RAM.
+- Native Chrome user's shippingresearch8766 tab active,8080existingtab retained;
+  extension getTabtimeoutreset. Do not overwrite usertab or countUI verification.
+  Actual graphchecked; UI followup stillrequired afterremainingdossiers.
+- Direct scoped source/security review: no new deps/auth/schema/order/networkpaths;
+  AIcalls0, CodeRabbit/newagents/paiddata/publicscan/OCI-KMSclaims0.
+- Prior nuclear52eaf317282b97fd73b9c97812311c9af705c2c1 pushed CI37093535121SUCCESS.
+  Current producer commit/push pending at contextappend. Continue immediately.
+- NEXT INR GFR EGY GPRK GTE KOS TALO WTI DEC REPX HPK SD PED EPSN TXO WBI.
+  Actualreadercompleted next-producer-read.json, next-producer-business.json and
+  originals at /tmp/milkyway-energy-research. GFRactual40FAIF/FS/MDA newlyreceived
+  observedparentlinks /next-producer-attachment-manifest.json (actual8financials,
+  financialsourceCAD584395000revenue). /tmp/milkyway-energy-equipment-review/
+  next-producer-read.py. No modelcalls needed. ActualMURex21cached/51parsedtoo.
+  GFR TrafiguraCanada buysallblends;Enbridgepipeline,NGTLgas,Polariscondensate,
+  CNOOCExpansion25%;McKay suspendedMar2023. GPRKVitol2026offtakeextended2028,
+  HocolcurrentLlanosJV;ManatiBrazilsoldDecember2025notcurrent. INR table
+  customer namesMarathonOil/BPAmerica/BlueRacer butannualparagraphslose tablecells,
+  inspectactualHTMLrowfor2025%. Receivable24/53/18notrevenue. EGYsignificant
+  customer namesnotyetparsed; needsactualtable, suppliedparagraphsexclude names.
+  All107remaining list /tmp/milkyway-energy-remaining-producers-20261003.json.

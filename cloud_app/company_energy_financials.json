@@ -2365,7 +2365,18 @@
       }
     ],
     "cik": "1658566",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 고객 계약 매출5,065,211,000 USD는 자체 원유·가스·NGL과 매입 재판매입니다. 고객별 비율과 WaterBridge 물 서비스 약정은 서로 다른 거래입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1658566/000165856626000035/pr-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "DINO": {
     "annual": {
@@ -2613,7 +2624,18 @@
       }
     ],
     "cik": "1792580",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 연결 수입8,908,000,000 USD는 계약 매출8,663,000,000과 파생상품 손익245,000,000을 포함합니다. 2026년 NuVista 취득·Anadarko 매각 후 사업과 다릅니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1792580/000119312526064309/ovv-20251231.htm",
+          "as_of": "2026-02-23",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "APA": {
     "annual": {
@@ -2627,6 +2649,18 @@
       "collected_at": "2026-10-02T12:11:48.301388+00:00"
     },
     "financials": [
+      {
+        "label": "원유·가스 생산·매입 판매 매출",
+        "value": 8920000000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Revenues",
+          "url": "https://www.sec.gov/Archives/edgar/data/1841666/000184166626000015/apa-20251231.htm#f-65",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
       {
         "label": "영업이익",
         "value": 3087000000.0,
@@ -2701,7 +2735,18 @@
       }
     ],
     "cik": "1841666",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 자체 원유·가스 생산과 매입 판매 매출8,920,000,000 USD입니다. 전체 수입9,220,000,000의 파생상품·기타 소득과 다르며 이집트 연결 사업은1/3 비지배지분을 포함합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1841666/000184166626000015/apa-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "DTM": {
     "annual": {
@@ -3125,7 +3170,18 @@
       }
     ],
     "cik": "893538",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 매출3,154,000,000 USD는 상품 계약 매출3,138,000,000과 기타16,000,000을 포함합니다. 2026-01-30 Civitas 통합·2026-04-30 일부 South Texas 매각 전 범위입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/893538/000089353826000032/sm-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "VNOM": {
     "annual": {
@@ -3473,7 +3529,18 @@
       }
     ],
     "cik": "1486159",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 자체 생산·매입 판매 계약 매출4,877,126,000 USD입니다. 자체 생산과 매입 원유·가스 소계를 중복 합산하지 않으며 Enerplus 취득 후 범위입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1486159/000148615926000005/chrd-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "AM": {
     "annual": {
@@ -3933,7 +4000,18 @@
       }
     ],
     "cik": "1520006",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 수입3,696,277,000 USD는 고객 계약 매출3,656,514,000과 파생상품 손익을 포함합니다. San Mateo 내부 거래 제거 전 매출을 외부 중류 매출에 추가하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1520006/000152000626000002/mtdr-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "WFRD": {
     "annual": {
@@ -4157,7 +4235,18 @@
       }
     ],
     "cik": "1698990",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 원유·콘덴세이트·천연가스·NGL 판매 매출1,311,845,000 USD입니다. 지역·제품 매출 비율을 제품 시장점유율로 사용하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1698990/000169899026000005/mgy-20251231.htm",
+          "as_of": "2026-02-12",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "RIG": {
     "annual": {
@@ -4656,6 +4745,18 @@
         }
       },
       {
+        "label": "총자산",
+        "value": 9832626000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/717423/000162828026011709/mur-20251231.htm#f-77",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        }
+      },
+      {
         "label": "총부채",
         "value": 4595929000.0,
         "unit": "USD",
@@ -4690,10 +4791,33 @@
           "as_of": "2026-02-25",
           "level": "primary"
         }
+      },
+      {
+        "label": "계속사업 영업활동 현금흐름",
+        "value": 1247808000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+          "url": "https://www.sec.gov/Archives/edgar/data/717423/000162828026011709/mur-20251231.htm#f-314",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        }
       }
     ],
     "cik": "717423",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 연결 수입2,718,823,000 USD와 상품 계약 매출2,689,845,000이 다릅니다. 반올림 부문 합계와의 차액을 임의 배분하지 않으며 미국 해상 비지배지분을 포함합니다. 영업 현금흐름은 계속사업입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/717423/000162828026011709/mur-20251231.htm",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "VAL": {
     "annual": {
@@ -5476,7 +5600,18 @@
       }
     ],
     "cik": "1070412",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 전체 수입2,239,134,000 USD와 자체 상품 판매1,913,728,000·매입 가스 재판매45,349,000은 범위가 다릅니다. 고객 이름은 원문 표 기준이며 옛 XBRL 고객 태그로 바꾸지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1070412/000107041226000038/cnx-20251231.htm",
+          "as_of": "2026-02-10",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "CNR": {
     "annual": {
@@ -5824,7 +5959,18 @@
       }
     ],
     "cik": "1609253",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 연결 수입3,669,000,000 USD는 상품 계약 매출2,910,000,000과 다른 수입을 포함합니다. Berry는12월18일 이후만 포함되며 Carbon TerraVault 공동 지배 JV 수입은 재합산하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1609253/000160925326000051/crc-20251231.htm",
+          "as_of": "2026-03-02",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "PARR": {
     "annual": {
@@ -6184,7 +6330,18 @@
       }
     ],
     "cik": "1866175",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 계약 매출3,579,782,000 USD입니다. Ridgemar는1월31일·Vital은12월15일 이후만 포함되며 Springfield 지분법 사업 전체 매출을 추가하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1866175/000186617526000026/crgy-20251231.htm",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "HP": {
     "annual": {
@@ -7080,7 +7237,18 @@
       }
     ],
     "cik": "1104485",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 전체 수입2,475,723,000 USD와 생산 상품 판매2,081,288,000·기타 계약 수입13,771,000은 다릅니다. 2026년 Ohio·Duvernay 취득 후 물량을 소급 합산하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1104485/000110448526000008/nog-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "LEU": {
     "cik": "1065059",
@@ -7451,7 +7619,18 @@
       }
     ],
     "cik": "874499",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 연결 수입1,422,583,000 USD와 원유·가스·NGL 계약 매출1,323,527,000의 범위가 다릅니다. 제품 구성에 전체 수입을 분모로 적용하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/874499/000162828026011487/gpor-20251231.htm",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "TALO": {
     "annual": {
@@ -8909,7 +9088,7 @@
     },
     "financials": [
       {
-        "label": "고객 계약 매출 · 부과세 제외",
+        "label": "영업수입 · 자산 처분이익 포함",
         "value": 2220289000.0,
         "unit": "USD",
         "period": "2025-01-01 ~ 2025-12-31",
@@ -9018,7 +9197,18 @@
       }
     ],
     "cik": "23194",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "원문의 계약 매출 태그2,220,289,000 USD에는 자산 처분이익291,938,000이 포함돼 상품·서비스 수입1,928,351,000과 구분합니다. 원문 태그는 보존하고 표시는 영업수입으로 바꿉니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/23194/000119312526059001/crk-20251231.htm",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "GPRE": {
     "annual": {
@@ -9341,6 +9531,30 @@
         }
       },
       {
+        "label": "현금·현금성 자산",
+        "value": 199412000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1838406/000162828026015661/bkv-20251231.htm#f-56",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업활동 현금흐름",
+        "value": 242707000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:NetCashProvidedByUsedInOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1838406/000162828026015661/bkv-20251231.htm#f-313",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      },
+      {
         "label": "유형자산 취득 현금",
         "value": 300165000.0,
         "unit": "USD",
@@ -9354,7 +9568,18 @@
       }
     ],
     "cik": "1838406",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 계약 매출893,781,000 USD와45Q 수입11,752,000을 분리합니다. 발전 JV 매출523,540,000은 당시50% 지분법 범위로 연결 매출에 더하지 않습니다. 발전 지배 취득은2026-01-30입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1838406/000162828026015661/bkv-20251231.htm",
+          "as_of": "2026-03-06",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "DEC": {
     "annual": {
@@ -10114,7 +10339,18 @@
       }
     ],
     "cik": "1944558",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 실적 · 사업·수입 범위",
+        "detail": "2025년 계약 매출273,989,000 USD입니다. Lucero는3월7일 이후만 포함되며 비운영·직접 운영 자산과 실제 상품 판매·헤지 손익은 서로 다른 범위입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1944558/000194455826000009/vitesse-20251231.htm",
+          "as_of": "2026-03-02",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "SD": {
     "annual": {

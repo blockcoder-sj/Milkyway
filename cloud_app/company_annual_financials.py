@@ -32,6 +32,7 @@ METRICS = (
     ('현금·현금성 자산', ('us-gaap:CashAndCashEquivalentsAtCarryingValue',
                          'ifrs-full:CashAndCashEquivalents'), True),
     ('영업활동 현금흐름', ('us-gaap:NetCashProvidedByUsedInOperatingActivities',
+                          'us-gaap:NetCashProvidedByUsedInOperatingActivitiesContinuingOperations',
                           'ifrs-full:CashFlowsFromUsedInOperatingActivities',
                           'ifrs-full:CashFlowsFromUsedInOperations'), False),
     ('유형자산 취득 현금', ('us-gaap:PaymentsToAcquirePropertyPlantAndEquipment',
@@ -39,6 +40,7 @@ METRICS = (
                            'su:CashFlowsUsedForCapitalExpenditures'), False),
 )
 LABELS = {
+    'us-gaap:NetCashProvidedByUsedInOperatingActivitiesContinuingOperations': '계속사업 영업활동 현금흐름',
     'su:CashFlowsUsedForCapitalExpenditures': '자본지출 현금 · 공시 기준',
     'ifrs-full:RevenueFromContractsWithCustomers': '고객 계약 매출 · IFRS',
     'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': '고객 계약 매출 · 부과세 제외',

@@ -112,6 +112,60 @@ class FilingExtractionTests(unittest.TestCase):
             f'<tr><td>Child {i} LLC</td><td>Delaware</td></tr>' for i in range(2500))+'</table>'
         self.assertEqual(len(parse_subsidiaries(raw,SOURCE)),80)
 
+    def test_numbered_exhibit_cells_are_formatting_not_companies(self):
+        raw='''<h1>Subsidiaries</h1><table>
+        <tr><td>viii.</td><td>Murphy Production LLC</td><td>Delaware</td></tr>
+        <tr><td>xiv.</td><td>Murphy Gas Limited</td><td>United Kingdom</td></tr>
+        <tr><td>23.</td><td>Murphy Services LLC</td><td>Texas</td></tr></table>'''
+        rows=parse_subsidiaries(raw,SOURCE)
+        self.assertEqual([r['name'] for r in rows],
+                         ['Murphy Production LLC','Murphy Gas Limited','Murphy Services LLC'])
+        self.assertIn('관할: Delaware',rows[0]['detail'])
+        self.assertIn('관할: United Kingdom',rows[1]['detail'])
+
+    def test_inline_item_prefix_and_cross_reference_do_not_change_legal_suffixes(self):
+        raw='''<h1>Subsidiaries</h1><table>
+        <tr><td>a. Murphy Netherlands Holdings B.V.</td><td>Netherlands</td></tr>
+        <tr><td>i. Murphy Sur, S. de R. L. de C.V. (see company F.b.i.4.a.ii.1. below)</td><td>Mexico</td></tr>
+        <tr><td>1. Murphy Sur, S. de R. L. de C.V.</td><td>Mexico</td></tr>
+        <tr><td>E. ON Services Limited</td><td>England</td></tr></table>'''
+        rows=parse_subsidiaries(raw,SOURCE)
+        self.assertEqual([r['name'] for r in rows],
+                         ['Murphy Netherlands Holdings B.V.','Murphy Sur, S. de R. L. de C.V.',
+                          'E. ON Services Limited'])
+
+    def test_generated_legacy_item_names_are_repaired_without_touching_reviewed_rows(self):
+        from copy import deepcopy
+        from cloud_app.company_subsidiaries import repair_legacy
+        origin={**SOURCE,'label':'SEC · Exhibit 21 자회사 명세서'}
+        rows=[dict(name=name,kind='subsidiary',source=origin,
+            detail='공시 자회사 명세서에 기재된 기업명 · 기존 수집에서 관할을 확인하지 못했습니다.')
+            for name in ('viii.','xiv.','a. Murphy Netherlands Holdings B.V.')]
+        manual=dict(name='i. Reviewed Ventures LLC',kind='subsidiary',source=origin,detail='직접 검토된 별도 사업 관계')
+        customer=dict(rows[0],kind='customer')
+        before=deepcopy(rows+[manual,customer]); result=repair_legacy(before)
+        self.assertEqual(before,rows+[manual,customer])
+        self.assertEqual([r['name'] for r in result],
+                         ['Murphy Netherlands Holdings B.V.','i. Reviewed Ventures LLC','viii.'])
+        self.assertEqual(repair_legacy(result),result)
+
+    def test_indented_exhibit_colspans_use_physical_columns_and_exclude_registrant(self):
+        raw='''<h1>Subsidiaries as of December 31, 2025</h1><table>
+        <tr><td colspan="18">Name of Company</td><td colspan="3"></td>
+        <td colspan="3">State or Other Jurisdiction of Incorporation</td><td colspan="3"></td>
+        <td colspan="3">Percentage of Voting Securities Owned by Immediate Parent</td></tr>
+        <tr><td colspan="18">Murphy Oil Corporation (REGISTRANT)</td></tr>
+        <tr><td colspan="3"></td><td colspan="3">A.</td><td colspan="12">Arkansas Oil Company</td>
+        <td colspan="3"></td><td colspan="3">Delaware</td><td colspan="3"></td><td colspan="3">100.00</td></tr>
+        <tr><td colspan="3"></td><td colspan="3"></td><td colspan="3"></td><td colspan="3">viii.</td>
+        <td colspan="6">Murphy Australia Oil Pty Ltd.</td><td colspan="3"></td>
+        <td colspan="3">Western Australia</td><td colspan="3"></td><td colspan="3">40.00</td></tr></table>'''
+        rows=parse_subsidiaries(raw,SOURCE)
+        self.assertEqual([r['name'] for r in rows],['Arkansas Oil Company','Murphy Australia Oil Pty Ltd.'])
+        self.assertIn('관할: Delaware',rows[0]['detail'])
+        self.assertIn('관할: Western Australia',rows[1]['detail'])
+        self.assertFalse(any(value in str(rows) for value in ('REGISTRANT','100.00','40.00','viii.')))
+
     def test_subsidiary_link_cannot_leave_sec_or_switch_issuer(self):
         for href in ("https://evil.test/report.htm", "https://www.sec.gov/Archives/edgar/data/2/000000000126000001/ex21.htm", "https://www.sec.gov/private.htm"):
             raw = f'<a href="{href}">Subsidiaries of Registrant</a>'.encode()

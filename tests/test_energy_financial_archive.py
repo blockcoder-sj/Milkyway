@@ -13,7 +13,7 @@ class EnergyFinancialArchiveTests(unittest.TestCase):
         records = archive()
         self.assertEqual(len(records), 205)
         self.assertEqual(sum(bool(r['financials']) for r in records.values()), 199)
-        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1545)
+        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1550)
         self.assertEqual(records['STNG']['financials'][0]['value'], 938222000)
         self.assertEqual(records['PBA']['financials'][0]['value'], 7778000000)
 

@@ -20,15 +20,25 @@ PLACES = frozenset(value.lower() for value in (
     'Peru|Ecuador|Venezuela|Guyana|Suriname|Uruguay|Bolivia|Panama|Costa Rica|'
     'Trinidad and Tobago|China|Hong Kong|Taiwan|Japan|Korea|South Korea|Republic of Korea|'
     'Singapore|Malaysia|Indonesia|Thailand|Philippines|Vietnam|Viet Nam|India|Pakistan|'
-    'Australia|New Zealand|Saudi Arabia|United Arab Emirates|UAE|Abu Dhabi|Dubai|'
+    'Australia|Western Australia|New Zealand|Saudi Arabia|United Arab Emirates|UAE|Abu Dhabi|Dubai|'
     'Qatar|Oman|Bahrain|Kuwait|Iraq|Egypt|Nigeria|Angola|South Africa|Mozambique|'
     'Gabon|Ghana|Kenya|Senegal|Algeria|Libya|Tunisia|Equatorial Guinea|Kazakhstan|Azerbaijan'
 ).split('|'))
 LEGAL_FORM = re.compile(r'(.+?)\s+(?:limited liability company|corporation|limited partnership|'
                         r'limited liability partnership|company limited by shares)', re.I)
 NAME_HEADER = re.compile(r'(?:name(?: of (?:subsidiary|company|entity))?|subsidiar(?:y|ies))', re.I)
-PLACE_HEADER = re.compile(r'(?:jurisdiction(?: of (?:incorporation|organization|formation))?|'
-                         r'(?:state|country)(?: of (?:incorporation|organization|formation))?)', re.I)
+PLACE_HEADER = re.compile(r'(?:jurisdiction|(?:state|country)(?: or (?:other )?jurisdiction)?)'
+                         r'(?: of (?:incorporation|organization|formation))?', re.I)
+ITEM_NUMBER = re.compile(r'(?:[ivxlcdm]+|[a-z]|\d{1,4})[.)]', re.I)
+LEADING_ITEM = re.compile(r'^(?:(?:[ivxlcdm]+|[a-z]|\d{1,4})[.)]\s+)+')
+CROSS_REFERENCE = re.compile(r'\s*\(see company\b[^)]*\)\s*$', re.I)
+
+
+def normalized_name(value):
+    """Remove exhibit list formatting, never a company's legal suffix."""
+    value = value.strip()
+    value = LEADING_ITEM.sub('', value, count=1)
+    return CROSS_REFERENCE.sub('', value).strip()
 
 
 def jurisdiction(value):
@@ -40,8 +50,11 @@ def jurisdiction(value):
 
 
 def company_name(value):
+    value = normalized_name(value)
     return (3 <= len(value) <= 160 and re.search(r'[A-Za-z]', value)
+        and not ITEM_NUMBER.fullmatch(value)
         and not jurisdiction(value)
+        and not re.search(r'\(REGISTRANT\)', value, re.I)
         and not re.search(r'(?:subsidiar|jurisdiction|\bname\b|exhibit|^state$|^December \d)', value, re.I))
 
 
@@ -51,6 +64,7 @@ def parse(soup, origin):
     result, seen = [], set()
 
     def add(name, place=None):
+        name = normalized_name(name)
         if not company_name(name) or name in seen or len(result) >= 80:
             return None
         seen.add(name)
@@ -67,18 +81,33 @@ def parse(soup, origin):
                 return result
             cells = tr.find_all(['td', 'th'], recursive=False)
             values = [re.sub(r'\s+', ' ', c.get_text(' ', strip=True)).strip() for c in cells]
-            names = [i for i,v in enumerate(values) if NAME_HEADER.fullmatch(v)]
+            # SEC's indented lists use different numbers of td cells per row.
+            # Match physical column ranges, rather than a td's ordinal index.
+            positions, offset = [], 0
+            for cell,value in zip(cells,values):
+                span = cell.get('colspan', '1')
+                width = min(int(span), 256) if re.fullmatch(r'[0-9]{1,3}', str(span)) else 1
+                width = max(width, 1)
+                positions.append((value, offset, offset + width))
+                offset += width
+            names = [i for i,(v,_,_) in enumerate(positions) if NAME_HEADER.fullmatch(v)]
             if names:
-                columns = [(i, next((j for j in range(i+1, len(values))
+                columns = [(positions[i][1:], next((positions[j][1:] for j in range(i+1, len(values))
                                      if PLACE_HEADER.fullmatch(values[j])), None)) for i in names]
                 pending = []
                 continue
             if columns:
-                for i,j in columns:
-                    if i < len(values):
-                        add(values[i], jurisdiction(values[j]) if j is not None and j < len(values) else None)
+                for name_range,place_range in columns:
+                    def within(bounds):
+                        return [v for v,start,end in positions
+                                if bounds and start < bounds[1] and end > bounds[0]
+                                and v and not ITEM_NUMBER.fullmatch(v)]
+                    name = ' '.join(within(name_range))
+                    place = next((p for v in within(place_range) if (p := jurisdiction(v))), None)
+                    add(name, place)
                 continue
-            values = [v for v in values if v and v not in {'*', '—', '-', '•'}]
+            values = [v for v in values if v and v not in {'*', '—', '-', '•'}
+                      and not ITEM_NUMBER.fullmatch(v)]
             places = [jurisdiction(v) for v in values]
             # Flotek's two parallel name columns have legal-form/state rows below.
             if values and all(places):
@@ -100,7 +129,7 @@ def parse(soup, origin):
 
 
 def repair_legacy(rows):
-    """Discard old geographic phantoms and remove unsupported jurisdiction claims."""
+    """Repair only generated exhibit rows; keep independently reviewed claims."""
     result = []
     prefix = '공시 자회사 명세서 · 설립·등록 관할: '
     for row in rows:
@@ -108,11 +137,15 @@ def repair_legacy(rows):
             result.append(row)
             continue
         origin = row.get('source', {})
-        legacy = (row.get('kind') == 'subsidiary' and origin.get('label', '').startswith('SEC · Exhibit 21')
-                  and row.get('detail', '').startswith(prefix))
-        if legacy and jurisdiction(row.get('name', '')):
-            continue
-        if legacy:
+        generated = (row.get('kind') == 'subsidiary' and origin.get('label', '').startswith('SEC · Exhibit 21')
+                     and row.get('detail', '').startswith('공시 자회사 명세서'))
+        if generated:
+            name = normalized_name(row.get('name', ''))
+            if not name or ITEM_NUMBER.fullmatch(name) or jurisdiction(name) or re.search(r'\(REGISTRANT\)', name, re.I):
+                continue
+            if name != row['name']:
+                row = {**row, 'name': name}
+        if generated and row.get('detail', '').startswith(prefix):
             place = row['detail'].removeprefix(prefix).split(' · ',1)[0]
             if not jurisdiction(place):
                 row = {**row, 'detail': '공시 자회사 명세서에 기재된 기업명 · 기존 수집에서 관할을 확인하지 못했습니다. '
