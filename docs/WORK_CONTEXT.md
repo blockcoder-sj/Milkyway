@@ -1877,3 +1877,17 @@ Flatrock취득,FGPR7월결산/GP,NFG유틸리티us55/계약매출범위,SMC비�
 실제auth12기업/8역할200/logout,Chrome6곳/SEI표·비중제외·제품페이지·Omega이동.
 자세한근거/실패/한계 ENERGY_GAS_SERVICE_REVIEW_20261004.md. 개인/시장/backup/
 볼륨보존,AI/CodeRabbit/DeepScan0. 검토푸시후나머지15개를계속한다.
+
+## 2026-10-04 신규 법인·복합 사업·생산 전환
+
+APC/BDCO/IEP/INVX/NUAI/RSRV/SUNC/TBN 8개, 매출56행·실명역할21·편집관계31.
+주본문206/213, 남은7개와 전체 품질 검수 계속.16연차/분기 원본 SHA·추가공식6원본.
+APC상장전combined/shell,BDCO외부/내부제거,IEP투자순손익·PepBoys실제매각,
+INVX제품/시장/지리·TCO실제취득,NUAIgas순매출·PPA미래공급·임차인협상/허가중지,
+RSRV상품/lease혼합지표,SUNC전체SUN연결/NCI,TBN6월무매출·9월첫gas를구별.
+최종747/21.808s OK(skip18),host21/.634sOK,관련28/.302sOK,289포장SHA일치.
+1149entities seed.986s/SQLiteok/213목록p95.155ms/상세24회p956.932ms/RSS72308KiB.
+앱bf1993add5ae702e500aad0efa65ee54032baaceb7fd9e70549ad8c757ed06ef healthy.
+실제auth14기업/8역할200/logout,Chrome8곳/NUAI-Luminant이동·역방향/지표한국어/스크린샷.
+개인·시장·backup·runtime·볼륨보존,AI/CodeRabbit/DeepScan0. 상세 ENERGY_TRANSITION_REVIEW_20261004.md.
+검토·커밋·푸시후 신규상장·OTC7개와 최종전수검수를 계속한다.

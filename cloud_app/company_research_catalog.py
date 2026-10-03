@@ -228,6 +228,9 @@ PRIVATE_COMPANIES.update(COAL_PRIVATE)
 from .company_energy_gas_service import PUBLIC as GAS_SERVICE_PUBLIC, PRIVATE as GAS_SERVICE_PRIVATE, EDGES as GAS_SERVICE_EDGES, COMMON_CONTEXT as GAS_SERVICE_COMMON_CONTEXT
 PUBLIC_COMPANIES.update(GAS_SERVICE_PUBLIC)
 PRIVATE_COMPANIES.update(GAS_SERVICE_PRIVATE)
+from .company_energy_transition import PUBLIC as TRANSITION_PUBLIC, PRIVATE as TRANSITION_PRIVATE, EDGES as TRANSITION_EDGES
+PUBLIC_COMPANIES.update(TRANSITION_PUBLIC)
+PRIVATE_COMPANIES.update(TRANSITION_PRIVATE)
 # Apply every group's dated context; shared IDs can have several business roles.
 for _registry, _notes in [(key, notes) for context in (MATERIAL_COMMON_CONTEXT, NUCLEAR_COMMON_CONTEXT,
         PRODUCER_COMMON_CONTEXT, EXTENDED_COMMON_CONTEXT, DOWNSTREAM_COMMON_CONTEXT,
@@ -352,6 +355,8 @@ for _symbol, _edges in COAL_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 
+for _symbol, _edges in TRANSITION_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in GAS_SERVICE_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 

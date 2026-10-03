@@ -99,7 +99,7 @@
       "name": "ARKO Petroleum Corp.",
       "cik": "2080921",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -159,7 +159,7 @@
       "name": "BLUE DOLPHIN ENERGY CO",
       "cik": "793306",
       "exchange": "OTC",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1416,7 +1416,7 @@
       "name": "Innovex International, Inc.",
       "cik": "1042893",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "equipment",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2466,7 +2466,7 @@
       "name": "RESERVE PETROLEUM CO",
       "cik": "83350",
       "exchange": "OTC",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2754,7 +2754,7 @@
       "name": "SunocoCorp LLC",
       "cik": "2089661",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2784,7 +2784,7 @@
       "name": "Tamboran Resources Corp",
       "cik": "1997652",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

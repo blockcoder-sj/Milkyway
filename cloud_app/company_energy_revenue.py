@@ -20,14 +20,15 @@ from . import company_energy_marine_revenue as marine
 from . import company_energy_lng_revenue as lng
 from . import company_energy_coal_revenue as coal
 from . import company_energy_gas_service_revenue as gas_service
+from . import company_energy_transition_revenue as transition
 
 COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES,
                **canada.COORDINATES, **infrastructure.COORDINATES, **nuclear.COORDINATES,
                **producers.COORDINATES, **extended.COORDINATES, **downstream.COORDINATES,
-               **shipping.COORDINATES, **land.COORDINATES, **specialists.COORDINATES, **marine.COORDINATES, **lng.COORDINATES, **coal.COORDINATES, **gas_service.COORDINATES}
+               **shipping.COORDINATES, **land.COORDINATES, **specialists.COORDINATES, **marine.COORDINATES, **lng.COORDINATES, **coal.COORDINATES, **gas_service.COORDINATES, **transition.COORDINATES}
 LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS,
           **canada.LABELS, **infrastructure.LABELS, **nuclear.LABELS, **producers.LABELS,
-          **extended.LABELS, **downstream.LABELS, **shipping.LABELS, **land.LABELS, **specialists.LABELS, **marine.LABELS, **lng.LABELS, **coal.LABELS, **gas_service.LABELS}
+          **extended.LABELS, **downstream.LABELS, **shipping.LABELS, **land.LABELS, **specialists.LABELS, **marine.LABELS, **lng.LABELS, **coal.LABELS, **gas_service.LABELS, **transition.LABELS}
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -414,7 +415,7 @@ def annotate(rows, symbol, cik):
                     row['share_exclusion'] = explanation
                     if row['group'] == 'segment':
                         row['includes_intersegment'], row['total'] = True, None
-    for adapter in (providers, majors, canada, infrastructure, nuclear, producers, extended, downstream, shipping, land, specialists, marine, lng, coal, gas_service):
+    for adapter in (providers, majors, canada, infrastructure, nuclear, producers, extended, downstream, shipping, land, specialists, marine, lng, coal, gas_service, transition):
         rows = adapter.annotate(rows, symbol, cik)
     return rows
 
@@ -446,6 +447,7 @@ def canonical_revenue(rows, symbol):
         rows = lng.canonical(rows, symbol, cik)
         rows = coal.canonical(rows, symbol, cik)
         rows = gas_service.canonical(rows, symbol, cik)
+        rows = transition.canonical(rows, symbol, cik)
     if symbol != 'EQT':
         return rows
     kept = []
@@ -462,6 +464,8 @@ def canonical_revenue(rows, symbol):
 
 
 def metric_allowed(tag, group, start, end, origin, symbol, cik):
+    if not transition.metric_allowed(tag, group, start, end, origin, symbol, cik):
+        return False
     if not gas_service.metric_allowed(tag, group, start, end, origin, symbol, cik):
         return False
     if not coal.metric_allowed(tag, group, start, end, origin, symbol, cik):
@@ -528,6 +532,9 @@ def dimensions(pairs, symbol, cik):
     reviewed = shipping.dimensions(pairs, symbol, cik)
     if reviewed:
         return reviewed
+    reviewed = transition.dimensions(pairs, symbol, cik)
+    if reviewed is not None:
+        return reviewed
     reviewed = gas_service.dimensions(pairs, symbol, cik)
     if reviewed is not None:
         return reviewed
@@ -573,19 +580,22 @@ def presentation_group(row, symbol, cik):
     row['group'] = marine.presentation_group(row, symbol, cik)
     row['group'] = lng.presentation_group(row, symbol, cik)
     row['group'] = coal.presentation_group(row, symbol, cik)
-    return gas_service.presentation_group(row, symbol, cik)
+    row['group'] = gas_service.presentation_group(row, symbol, cik)
+    return transition.presentation_group(row, symbol, cik)
 
 
 def extra_metrics(origin, symbol, cik, period_end):
     return (shipping.extra_metrics(origin, symbol, cik, period_end)
             + land.extra_metrics(origin, symbol, cik, period_end)
-            + gas_service.extra_metrics(origin, symbol, cik, period_end))
+            + gas_service.extra_metrics(origin, symbol, cik, period_end)
+            + transition.extra_metrics(origin, symbol, cik, period_end))
 
 
 def statement_rows(rows, clean, anchors, origin, symbol, cik, period_end):
     rows = shipping.statement_rows(rows, clean, anchors, origin, symbol, cik, period_end)
     rows = land.statement_rows(rows, clean, anchors, origin, symbol, cik, period_end)
-    return gas_service.statement_rows(rows, clean, anchors, origin, symbol, cik, period_end)
+    rows = gas_service.statement_rows(rows, clean, anchors, origin, symbol, cik, period_end)
+    return transition.statement_rows(rows, clean, anchors, origin, symbol, cik, period_end)
 
 
 def signed_value(tag, context, origin, symbol, cik):
