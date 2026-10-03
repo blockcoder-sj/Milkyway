@@ -783,7 +783,7 @@
       "name": "Excelerate Energy, Inc.",
       "cik": "1888447",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "lng",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1827,7 +1827,7 @@
       "name": "NextDecade Corp",
       "cik": "1612720",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "lng",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1842,7 +1842,7 @@
       "name": "New Fortress Energy Inc.",
       "cik": "1749723",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "lng",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3114,7 +3114,7 @@
       "name": "Venture Global, Inc.",
       "cik": "2007855",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "lng",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

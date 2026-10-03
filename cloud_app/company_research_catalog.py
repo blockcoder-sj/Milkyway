@@ -219,7 +219,14 @@ PRIVATE_COMPANIES.update(SPECIALIST_PRIVATE)
 from .company_energy_marine import PUBLIC as MARINE_PUBLIC, PRIVATE as MARINE_PRIVATE, EDGES as MARINE_EDGES, COMMON_CONTEXT as MARINE_COMMON_CONTEXT
 PUBLIC_COMPANIES.update(MARINE_PUBLIC)
 PRIVATE_COMPANIES.update(MARINE_PRIVATE)
-for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT, **EXTENDED_COMMON_CONTEXT, **DOWNSTREAM_COMMON_CONTEXT, **SHIPPING_COMMON_CONTEXT, **LAND_COMMON_CONTEXT, **MARINE_COMMON_CONTEXT}.items():
+from .company_energy_lng import PUBLIC as LNG_PUBLIC, PRIVATE as LNG_PRIVATE, EDGES as LNG_EDGES, COMMON_CONTEXT as LNG_COMMON_CONTEXT
+PUBLIC_COMPANIES.update(LNG_PUBLIC)
+PRIVATE_COMPANIES.update(LNG_PRIVATE)
+# Apply every group's dated context; shared IDs can have several business roles.
+for _registry, _notes in [(key, notes) for context in (MATERIAL_COMMON_CONTEXT, NUCLEAR_COMMON_CONTEXT,
+        PRODUCER_COMMON_CONTEXT, EXTENDED_COMMON_CONTEXT, DOWNSTREAM_COMMON_CONTEXT,
+        SHIPPING_COMMON_CONTEXT, LAND_COMMON_CONTEXT, MARINE_COMMON_CONTEXT, LNG_COMMON_CONTEXT)
+        for key, notes in context.items()]:
     _existing = PRIVATE_COMPANIES[_registry]
     for _field, _value in _notes.items():
         if isinstance(_value, list):
@@ -330,6 +337,8 @@ for _symbol, _edges in LAND_EDGES.items():
 for _symbol, _edges in SPECIALIST_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in MARINE_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in LNG_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

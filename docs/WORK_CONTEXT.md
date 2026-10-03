@@ -1835,3 +1835,20 @@ healthy/startup200. 실제auth15개API200,9개82행,상대상세/역방향확인
 자세한 증거/한계: docs/ENERGY_MARINE_REVIEW_20261004.md.
 CodeRabbit/실제AI호출0,DeepScan실행안함,개인/시장/backup서비스와볼륨보존.
 검토·커밋·푸시 후 나머지29기업 및 전체 품질 검수를 계속한다.
+
+
+## 2026-10-04 LNG 수입·액화·수출
+
+EE/NEXT/NFE/VG4곳,매출26행·역할프로필11개·편집관계24개. 주본문188/213,
+남은25및전체품질검수.8원본SHA/크기확인. NFE9월11일실제구조조정/Brazil분리,
+EEJordan가동/Iraq2027일정갱신,NEXT현재건설/VG시운전/COD/2030장기SPA구별.
+VG -2050000000 USD원문부문제거보존,NFE과거범위비중제외,NEXT대시임의0안채움.
+공통비중제외문구바로잡고Chrome캐시때문에JSURL버전갱신,실제신규로드확인.
+공유상대문맥을그룹별모두보존. 최종732/21.141s OK(skip18Node),host21/.620sOK,
+관련25/3.025sOK,280파일SHA일치.1096entities seed.929s/SQLiteok,
+directory213p95.146ms/detail12p956.330ms/RSS71492KiB.
+앱만821d9d0d152e43958205458d1a2acc3b2ca12a5e38b3b4aa55ecab8210295a5c,
+healthy/startup200. 실제auth10기업/7상대API200/26행/역방향/logout.
+기존Chrome1탭4곳/음수/비중제외/ChinaGas실제이동검증.
+자세한근거와한계 docs/ENERGY_LNG_REVIEW_20261004.md. 실제AI/CodeRabbit0,
+DeepScan안함,개인/시장/backup및볼륨보존. 검토커밋푸시후석탄/광물과나머지25계속.

@@ -17,14 +17,15 @@ from . import company_energy_shipping_revenue as shipping
 from . import company_energy_land_revenue as land
 from . import company_energy_specialist_revenue as specialists
 from . import company_energy_marine_revenue as marine
+from . import company_energy_lng_revenue as lng
 
 COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES,
                **canada.COORDINATES, **infrastructure.COORDINATES, **nuclear.COORDINATES,
                **producers.COORDINATES, **extended.COORDINATES, **downstream.COORDINATES,
-               **shipping.COORDINATES, **land.COORDINATES, **specialists.COORDINATES, **marine.COORDINATES}
+               **shipping.COORDINATES, **land.COORDINATES, **specialists.COORDINATES, **marine.COORDINATES, **lng.COORDINATES}
 LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS,
           **canada.LABELS, **infrastructure.LABELS, **nuclear.LABELS, **producers.LABELS,
-          **extended.LABELS, **downstream.LABELS, **shipping.LABELS, **land.LABELS, **specialists.LABELS, **marine.LABELS}
+          **extended.LABELS, **downstream.LABELS, **shipping.LABELS, **land.LABELS, **specialists.LABELS, **marine.LABELS, **lng.LABELS}
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -411,7 +412,7 @@ def annotate(rows, symbol, cik):
                     row['share_exclusion'] = explanation
                     if row['group'] == 'segment':
                         row['includes_intersegment'], row['total'] = True, None
-    for adapter in (providers, majors, canada, infrastructure, nuclear, producers, extended, downstream, shipping, land, specialists, marine):
+    for adapter in (providers, majors, canada, infrastructure, nuclear, producers, extended, downstream, shipping, land, specialists, marine, lng):
         rows = adapter.annotate(rows, symbol, cik)
     return rows
 
@@ -440,6 +441,7 @@ def canonical_revenue(rows, symbol):
         rows = land.canonical(rows, symbol, cik)
         rows = specialists.canonical(rows, symbol, cik)
         rows = marine.canonical(rows, symbol, cik)
+        rows = lng.canonical(rows, symbol, cik)
     if symbol != 'EQT':
         return rows
     kept = []
@@ -456,6 +458,8 @@ def canonical_revenue(rows, symbol):
 
 
 def metric_allowed(tag, group, start, end, origin, symbol, cik):
+    if not lng.metric_allowed(tag, group, start, end, origin, symbol, cik):
+        return False
     if not marine.metric_allowed(tag, group, start, end, origin, symbol, cik):
         return False
     if not specialists.metric_allowed(tag, group, start, end, origin, symbol, cik):
@@ -516,6 +520,9 @@ def dimensions(pairs, symbol, cik):
     reviewed = shipping.dimensions(pairs, symbol, cik)
     if reviewed:
         return reviewed
+    reviewed = lng.dimensions(pairs, symbol, cik)
+    if reviewed is not None:
+        return reviewed
     reviewed = marine.dimensions(pairs, symbol, cik)
     if reviewed is not None:
         return reviewed
@@ -549,7 +556,8 @@ def presentation_group(row, symbol, cik):
     row['group'] = shipping.presentation_group(row, symbol, cik)
     row['group'] = land.presentation_group(row, symbol, cik)
     row['group'] = specialists.presentation_group(row, symbol, cik)
-    return marine.presentation_group(row, symbol, cik)
+    row['group'] = marine.presentation_group(row, symbol, cik)
+    return lng.presentation_group(row, symbol, cik)
 
 
 def extra_metrics(origin, symbol, cik, period_end):
@@ -566,7 +574,8 @@ def signed_value(tag, context, origin, symbol, cik):
     return (extended.signed_value(tag, context, origin, symbol, cik)
             or downstream.signed_value(tag, context, origin, symbol, cik)
             or land.signed_value(tag, context, origin, symbol, cik)
-            or specialists.signed_value(tag, context, origin, symbol, cik))
+            or specialists.signed_value(tag, context, origin, symbol, cik)
+            or lng.signed_value(tag, context, origin, symbol, cik))
 
 
 def compound_member(member, symbol, cik):
