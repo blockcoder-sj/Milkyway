@@ -129,7 +129,7 @@
       "name": "ALLIANCE RESOURCE PARTNERS LP",
       "cik": "1086600",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "coal-minerals",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -261,7 +261,7 @@
       "name": "PEABODY ENERGY CORP",
       "cik": "1064728",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "coal-minerals",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -372,7 +372,7 @@
       "name": "Clean Energy Fuels Corp.",
       "cik": "1368265",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -408,7 +408,7 @@
       "name": "Core Natural Resources, Inc.",
       "cik": "1710366",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "coal-minerals",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1005,7 +1005,7 @@
       "name": "FERRELLGAS PARTNERS L P",
       "cik": "922358",
       "exchange": "OTC",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1887,7 +1887,7 @@
       "name": "NATURAL GAS SERVICES GROUP INC",
       "cik": "1084991",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "compression",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2526,7 +2526,7 @@
       "name": "Solaris Energy Infrastructure, Inc.",
       "cik": "1697500",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "compression",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2607,7 +2607,7 @@
       "name": "Summit Midstream Corp",
       "cik": "2024218",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

@@ -30022,5 +30022,1025 @@
         "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
       }
     ]
+  },
+  "CLNE": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm",
+      "as_of": "2026-02-24",
+      "level": "primary",
+      "sha256": "67ed2007e1f88f43d8789026c06c0644676614e93708a35a1caed8cb2f5ce85b",
+      "bytes": 4379001,
+      "blocks": 10172,
+      "collected_at": "2026-10-02T15:31:14.117336+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926092061/clne-20260630x10q.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "8c0b5142f5c5347e46b53f53202de7215d38f9864046f8f282b503142f4743d4",
+      "bytes": 3048433,
+      "blocks": 7135,
+      "collected_at": "2026-10-02T15:31:18.362647+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "clne:OtherServiceRevenueSourceMember",
+        "label": "기타 서비스",
+        "value": 2634000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_HxwDujZS80SGBLoswNfCpA_15_11",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "clne:StationConstructionSalesMember",
+        "label": "충전소 건설",
+        "value": 33984000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_TXq2qeaY6Eq-xPQywb4aDQ_11_11",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "clne:VolumeRelatedOperationsAndMaintenanceServiceRevenueMember",
+        "label": "운영·정비 서비스",
+        "value": 56732000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_y0ZgZQLKtEuIMmElS4VUmg_14_11",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "clne:VolumeRelatedProductRevenueMember",
+        "label": "연료·환경 크레딧 · 평가 조정 후 순매출",
+        "value": 331483000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_DgUa3k1rpEuNHq4QipEeHw_10_11",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "clne:SingleReportableSegmentMember",
+        "label": "연료·충전·서비스 단일 보고 부문",
+        "value": 424833000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_H_xCz6MEv0KA28rL7YcjUQ_3_10",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CA",
+        "label": "캐나다",
+        "value": 7008000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_L7Gxer0B_0K-o7iWISjqjQ_4_9",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 417825000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_VcsBG9vTeUCg1eJGvVtzYw_3_9",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "us-gaap:ProductMember",
+        "label": "제품 순매출",
+        "value": 365467000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_onIPKbIGSUqkbpBmZsK_kA_5_10",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "us-gaap:ServiceMember",
+        "label": "서비스",
+        "value": 59366000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 424833000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1368265/000110465926019215/clne-20251231x10k.htm#Tc_eVwptbXeIk6QpzY7dLneZQ_6_10",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "FGPR": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/922358/000110465926110592/fgp-20260731x10k.htm",
+      "as_of": "2026-09-25",
+      "level": "primary",
+      "sha256": "d8716e75b3ce833030d9ad812397da725f8dd1dfcf1c17879b356c3183415529",
+      "bytes": 5178187,
+      "blocks": 13384,
+      "collected_at": "2026-10-02T15:40:16.069628+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/922358/000110465926070715/fgp-20260430x10q.htm",
+      "as_of": "2026-06-05",
+      "level": "primary",
+      "sha256": "b338067e391354bd93ce757a7dac10b011070076dccd2dcc712d40aa0bc56f94",
+      "bytes": 3668420,
+      "blocks": 9426,
+      "collected_at": "2026-10-02T15:40:19.727855+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "fgp:OtherGasSalesMember",
+        "label": "기타 가스 판매",
+        "value": 15327000.0,
+        "unit": "USD",
+        "start": "2025-08-01",
+        "end": "2026-07-31",
+        "total": 1864014000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/922358/000110465926110592/fgp-20260731x10k.htm#Tc_VIokg9cUKU28hmlWBtHJZA_5_4",
+          "as_of": "2026-09-25",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "fgp:WholesaleSalesToResellersMember",
+        "label": "재판매상 도매",
+        "value": 536395000.0,
+        "unit": "USD",
+        "start": "2025-08-01",
+        "end": "2026-07-31",
+        "total": 1864014000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/922358/000110465926110592/fgp-20260731x10k.htm#Tc_iPNflwqfokGXJKqyOheQZA_4_4",
+          "as_of": "2026-09-25",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ProductAndServiceOtherMember",
+        "label": "기타 제품·서비스",
+        "value": 107412000.0,
+        "unit": "USD",
+        "start": "2025-08-01",
+        "end": "2026-07-31",
+        "total": 1864014000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/922358/000110465926110592/fgp-20260731x10k.htm#Tc_v8bvw0-l70K3T4nwmZe_OA_5_4",
+          "as_of": "2026-09-25",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:RetailMember",
+        "label": "소매 프로판",
+        "value": 1204880000.0,
+        "unit": "USD",
+        "start": "2025-08-01",
+        "end": "2026-07-31",
+        "total": 1864014000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/922358/000110465926110592/fgp-20260731x10k.htm#Tc_0hJaXum9UkaH_7P533X8_A_3_4",
+          "as_of": "2026-09-25",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "fgp:PropaneOperationAndRelatedEquipmentSalesSegmentMember",
+        "label": "프로판·관련 장비 단일 부문",
+        "value": 1864014000.0,
+        "unit": "USD",
+        "start": "2025-08-01",
+        "end": "2026-07-31",
+        "total": 1864014000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/922358/000110465926110592/fgp-20260731x10k.htm#Tc_b9Pm3SJ0TE6EIr4yOuzdew_3_4",
+          "as_of": "2026-09-25",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "NFG": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm",
+      "as_of": "2025-11-21",
+      "level": "primary",
+      "sha256": "cd8bdd809f1188b9c34ad623a467de6038297f859c6f2d935d644482c13bc13c",
+      "bytes": 3613042,
+      "blocks": 1752,
+      "collected_at": "2026-10-02T15:41:48.328675+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014526000033/nfg-20260630.htm",
+      "as_of": "2026-07-30",
+      "level": "primary",
+      "sha256": "e0fc41162b5e5ac8a7bd15ab97ce935a1e3ae37d08a5b5945c94b81f8fd2bbe0",
+      "bytes": 2396804,
+      "blocks": 753,
+      "collected_at": "2026-10-02T15:41:50.153601+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "nfg:NaturalGasCommercialSalesMember",
+        "label": "상업용 가스 공급",
+        "value": 84515000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-657",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "nfg:NaturalGasIndustrialSalesMember",
+        "label": "산업용 가스 공급",
+        "value": 4399000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-664",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "nfg:NaturalGasProcessingMember",
+        "label": "가스 처리",
+        "value": 1196000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-622",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "nfg:NaturalGasResidentialSalesMember",
+        "label": "가정용 가스 공급",
+        "value": 596988000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-650",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "nfg:ProductionofCrudeOilMember",
+        "label": "원유 생산",
+        "value": 1837000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-615",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:NaturalGasMidstreamMember",
+        "label": "가스 집하",
+        "value": 11813000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-629",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:NaturalGasProductionMember",
+        "label": "가스 생산",
+        "value": 1104283000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-608",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:NaturalGasStorageMember",
+        "label": "가스 저장",
+        "value": 57807000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-643",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:OilAndGasServiceMember",
+        "label": "가스 운송 서비스",
+        "value": 325271000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-636",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ProductAndServiceOtherMember",
+        "label": "기타 계약 매출",
+        "value": 31008000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-671",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 매출 2,219,117,000 USD의 구분입니다. 파생상품·대체 요금 수익 등이 포함된 연결 매출2,277,541,000 전체의 비중과 다릅니다."
+      },
+      {
+        "group": "segment",
+        "member": "nfg:IntegratedUpstreamAndGatheringAndOtherMember",
+        "label": "통합 생산·집하·기타 · 외부",
+        "value": 1184136000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": 2277541000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-58",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "nfg:PipelineAndStorageMember",
+        "label": "파이프라인·저장 · 외부",
+        "value": 276131000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": 2277541000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-61",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "nfg:TotalUtilityMember",
+        "label": "규제 가스 공급 · 외부",
+        "value": 817274000.0,
+        "unit": "USD",
+        "start": "2024-10-01",
+        "end": "2025-09-30",
+        "total": 2277541000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/70145/000007014525000039/nfg-20250930.htm#f-55",
+          "as_of": "2025-11-21",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "NGS": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000015/ngs-20251231.htm",
+      "as_of": "2026-03-16",
+      "level": "primary",
+      "sha256": "abafbfb98601e079b450230301816e7a0589d236af236326d879f8e5322e7a1f",
+      "bytes": 1718512,
+      "blocks": 1060,
+      "collected_at": "2026-10-02T15:41:52.261532+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000079/ngs-20260630.htm",
+      "as_of": "2026-08-10",
+      "level": "primary",
+      "sha256": "b86516d5f4c28184799ac18cfb1c8398559bf32e80354fe7ce411182ed1cafa7",
+      "bytes": 1419420,
+      "blocks": 582,
+      "collected_at": "2026-10-02T15:41:53.883170+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "ngs:AftermarketServicesMember",
+        "label": "고객 장비 사후 서비스",
+        "value": 3997000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000015/ngs-20251231.htm#f-143",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        },
+        "share_exclusion": "임대 수입과 고객 계약 매출을 합친 원문 표입니다. 2025 합계172,315,000 USD이며 서로 다른 회계 지표에 동일 분모 비중을 붙이지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "ngs:CompressorRelatedMember",
+        "label": "압축기·재제작 판매",
+        "value": 1872000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000015/ngs-20251231.htm#f-823",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        },
+        "share_exclusion": "임대 수입과 고객 계약 매출을 합친 원문 표입니다. 2025 합계172,315,000 USD이며 서로 다른 회계 지표에 동일 분모 비중을 붙이지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "ngs:OtherPartsRebuildsMember",
+        "label": "부품 판매",
+        "value": 2120000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000015/ngs-20251231.htm#f-820",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        },
+        "share_exclusion": "임대 수입과 고객 계약 매출을 합친 원문 표입니다. 2025 합계172,315,000 USD이며 서로 다른 회계 지표에 동일 분모 비중을 붙이지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:RentalIncomeNonoperating",
+        "label": "압축기 임대",
+        "value": 164326000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RentalIncomeNonoperating",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000015/ngs-20251231.htm#f-137",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        },
+        "share_exclusion": "임대 수입과 고객 계약 매출을 합친 원문 표입니다. 2025 합계172,315,000 USD이며 서로 다른 회계 지표에 동일 분모 비중을 붙이지 않습니다."
+      }
+    ]
+  },
+  "SEI": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026012501/sei-20251231.htm",
+      "as_of": "2026-02-27",
+      "level": "primary",
+      "sha256": "2f0fbc6aecc51ac8f943208266411e25e5b712c23f9e7b6f7c0dc9a9ccaa2818",
+      "bytes": 2244221,
+      "blocks": 1606,
+      "collected_at": "2026-10-02T15:25:44.544381+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026054349/sei-20260630.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "42931da4c1b0d80f7452b8d8659b02296998ed84466b890a43487d37b99ffe0b",
+      "bytes": 1533023,
+      "blocks": 763,
+      "collected_at": "2026-10-02T15:25:46.188935+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "sei:SolarisLogisticsSolutionsMember/us-gaap:ServiceMember",
+        "label": "유전 물류 서비스 · 반올림",
+        "value": 288700000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026012501/sei-20251231.htm#f-717",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 주석은 백만 USD 반올림 표이며 손익계산서 서비스/임대 분류와도 차이가 있습니다. 정확한 전체매출 622,205,000의 비중으로 계산하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "sei:SolarisPowerSolutionsMember/sei:LeasingRevenueMember",
+        "label": "발전 장비 임대 · 반올림",
+        "value": 267900000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026012501/sei-20251231.htm#f-711",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 주석은 백만 USD 반올림 표이며 손익계산서 서비스/임대 분류와도 차이가 있습니다. 정확한 전체매출 622,205,000의 비중으로 계산하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "sei:SolarisPowerSolutionsMember/us-gaap:ServiceMember",
+        "label": "발전 서비스 · 반올림",
+        "value": 65600000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026012501/sei-20251231.htm#f-714",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 주석은 백만 USD 반올림 표이며 손익계산서 서비스/임대 분류와도 차이가 있습니다. 정확한 전체매출 622,205,000의 비중으로 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "sei:SolarisLogisticsSolutionsMember",
+        "label": "Logistics Solutions · 반올림",
+        "value": 288700000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026012501/sei-20251231.htm#f-839",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 주석은 백만 USD 반올림 표이며 손익계산서 서비스/임대 분류와도 차이가 있습니다. 정확한 전체매출 622,205,000의 비중으로 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "sei:SolarisPowerSolutionsMember",
+        "label": "Power Solutions · 반올림",
+        "value": 333500000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026012501/sei-20251231.htm#f-836",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 주석은 백만 USD 반올림 표이며 손익계산서 서비스/임대 분류와도 차이가 있습니다. 정확한 전체매출 622,205,000의 비중으로 계산하지 않습니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "us-gaap:NonrelatedPartyMember",
+        "label": "서비스 · 손익계산서 정확값",
+        "value": 349848000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026012501/sei-20251231.htm#f-173",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "서로 다른 계약 서비스/임대 회계 지표의 정확값입니다. 두 항목 합계는 622,205,000 USD이며 단일 지표 구성비로 계산하지 않습니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "us-gaap:OperatingLeaseLeaseIncome",
+        "label": "임대 · 손익계산서 정확값",
+        "value": 272357000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:OperatingLeaseLeaseIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1697500/000162828026012501/sei-20251231.htm#f-179",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "서로 다른 계약 서비스/임대 회계 지표의 정확값입니다. 두 항목 합계는 622,205,000 USD이며 단일 지표 구성비로 계산하지 않습니다."
+      }
+    ]
+  },
+  "SMC": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000017/smlp-20251231.htm",
+      "as_of": "2026-03-16",
+      "level": "primary",
+      "sha256": "8ef2fc0591471b930047cb6d89cc1fece80242131e012f869da8d4c7fc21b010",
+      "bytes": 2910027,
+      "blocks": 2010,
+      "collected_at": "2026-10-02T15:34:15.955201+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000087/smc-20260630.htm",
+      "as_of": "2026-08-10",
+      "level": "primary",
+      "sha256": "14b9ac576b9ba6fdef3f91354c785be6845041cef5039ca9451c7f0e6ec11d13",
+      "bytes": 1946018,
+      "blocks": 841,
+      "collected_at": "2026-10-02T15:34:17.525729+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "us-gaap:NaturalGasGatheringTransportationMarketingAndProcessingMember",
+        "label": "집하·처리 수수료",
+        "value": 255677000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 562091000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000017/smlp-20251231.htm#f-162",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:OilAndCondensateMember",
+        "label": "천연가스·NGL·콘덴세이트 판매",
+        "value": 265059000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 562091000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000017/smlp-20251231.htm#f-165",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ProductAndServiceOtherMember",
+        "label": "기타 제품·서비스",
+        "value": 41355000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 562091000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000017/smlp-20251231.htm#f-168",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "smlp:MidConBarnettShaleSegmentMember",
+        "label": "Mid-Con·Barnett",
+        "value": 159232000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 562091000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000017/smlp-20251231.htm#f-633",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "smlp:PermianBasinSegmentMember",
+        "label": "Permian · 연결 매출",
+        "value": 3641000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 562091000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000017/smlp-20251231.htm#f-629",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "smlp:PiceanceBasinSegmentMember",
+        "label": "Piceance",
+        "value": 69867000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 562091000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000017/smlp-20251231.htm#f-637",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "smlp:RockiesSegmentMember",
+        "label": "Rockies",
+        "value": 329351000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 562091000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2024218/000202421826000017/smlp-20251231.htm#f-625",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      }
+    ]
   }
 }

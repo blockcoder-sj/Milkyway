@@ -1863,3 +1863,17 @@ CNR 외부매출/인수기간·BTU 비연결JV/종료인수·NC 비연결VIE/미
 NC 음수·미확인종결/SWEPCO 실제 역방향, auth10기업32행검증·logout.
 개인/시장/backup·볼륨보존,AI/CodeRabbit/DeepScan0. 상세 ENERGY_COAL_REVIEW_20261004.md.
 검토·커밋·푸시 후 가스 연료·압축·집하 등 남은21개를 계속한다.
+
+## 2026-10-04 가스 연료·압축·전력·집하
+
+CLNE/FGPR/NFG/NGS/SEI/SMC 6개, 매출45행·실명 역할18·편집관계28.
+주본문198/213, 남은15+전체품질검수.12원본 SHA+추가공식6원본 확인.
+SEI 손익계산서 정확값/주석반올림분류·실제GESA/Omega취득,NGS임대태그/
+Flatrock취득,FGPR7월결산/GP,NFG유틸리티us55/계약매출범위,SMC비연결JV구별.
+6곳과석탄4곳의사업분류갱신. 전체742/21.213s OK(skip18),host21/.613sOK,
+관련28/.279sOK,286포장SHA일치.1126entities seed.918s/SQLiteok,
+213목록p95.150ms/상세18회p955.931ms/RSS70172KiB.
+앱e8f7dcbef4e197f8804aa9ae67f230f4bb538f40ed742ad1d188310e7f41765d healthy,
+실제auth12기업/8역할200/logout,Chrome6곳/SEI표·비중제외·제품페이지·Omega이동.
+자세한근거/실패/한계 ENERGY_GAS_SERVICE_REVIEW_20261004.md. 개인/시장/backup/
+볼륨보존,AI/CodeRabbit/DeepScan0. 검토푸시후나머지15개를계속한다.
