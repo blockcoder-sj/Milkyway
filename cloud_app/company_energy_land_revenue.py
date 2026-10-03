@@ -143,6 +143,16 @@ def metric_allowed(tag,group,start,end,origin,symbol,cik):
     return tag in ((CONTRACT,LEASE) if symbol=='CKX' and group=='product' else (expected,))
 
 
+def signed_value(tag,context,origin,symbol,cik):
+    start,end,group,member=context
+    if not reviewed(dict(start=start,end=end,source=origin),symbol,cik):
+        return False
+    if group is None and not member:
+        return tag in EXTRA_METRICS.get(symbol,()) and symbol in STATEMENT_LINES
+    return (symbol=='MNR' and cik==1980088 and tag=='us-gaap:Revenues'
+            and (group,member)==('product','mnr:OilAndNaturalGasDerivativesGainLossMember'))
+
+
 def canonical(rows,symbol,cik):
     allowed = {(group,member) for (issuer,identity,_),(group,member) in COORDINATES.items()
                if (issuer,identity)==(symbol,cik)}

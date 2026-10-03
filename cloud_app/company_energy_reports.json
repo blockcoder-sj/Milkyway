@@ -24144,7 +24144,89 @@
       "bytes": 1107068,
       "blocks": 487,
       "collected_at": "2026-10-02T15:39:44.681189+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "srt:NaturalGasReservesMember",
+        "label": "천연가스·NGL",
+        "value": 191616000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1621434/000162143426000018/bsm-20251231.htm#f-136",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 422,328,000 USD 구성입니다. 연결 수입 469,919,000에는 파생상품 순이익 47,591,000이 포함되므로 전체 수입 구성비가 아닙니다."
+      },
+      {
+        "group": "product",
+        "member": "srt:OilReservesMember",
+        "label": "원유·콘덴세이트",
+        "value": 209361000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1621434/000162143426000018/bsm-20251231.htm#f-133",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 422,328,000 USD 구성입니다. 연결 수입 469,919,000에는 파생상품 순이익 47,591,000이 포함되므로 전체 수입 구성비가 아닙니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:RealEstateMember",
+        "label": "임대 보너스·기타",
+        "value": 21351000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1621434/000162143426000018/bsm-20251231.htm#f-139",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 422,328,000 USD 구성입니다. 연결 수입 469,919,000에는 파생상품 순이익 47,591,000이 포함되므로 전체 수입 구성비가 아닙니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "us-gaap:GainLossOnDerivativeInstrumentsNetPretax",
+        "label": "파생상품 순손익",
+        "value": 47591000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:GainLossOnDerivativeInstrumentsNetPretax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1621434/000162143426000018/bsm-20251231.htm#f-145",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 422,328,000 USD 구성입니다. 연결 수입 469,919,000에는 파생상품 순이익 47,591,000이 포함되므로 전체 수입 구성비가 아닙니다."
+      }
+    ]
   },
   "CRT": {
     "annual": {
@@ -24166,7 +24248,29 @@
       "bytes": 732450,
       "blocks": 665,
       "collected_at": "2026-10-02T15:39:51.919833+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "table:net_profit_income",
+        "label": "순이익 권리 수입 · NPI",
+        "value": 5738240,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "table:net_profit_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "원문 비인라인 표에서 대조한 신탁 수입입니다. 기초 유정의 총판매 14,589,185 USD나 배분 전 생산량과 같지 않습니다. 이자 49,682·관리비·준비금은 따로 확인합니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/881787/000119312526128448/crt_2025_10-k.htm#statements_of_distributable_income",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "DMLP": {
     "annual": {
@@ -24188,7 +24292,89 @@
       "bytes": 603187,
       "blocks": 546,
       "collected_at": "2026-10-02T15:39:58.346880+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "dmlp:LeaseBonusMember",
+        "label": "임대 보너스",
+        "value": 9400000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 152832000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1172358/000143774926005376/dmlp20251231_10k.htm#c140194556",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 상위 항목 127,823,000 USD와 그 안의 원유 114,116,000·가스 13,707,000을 중복 합산하지 않습니다. NPI·임대 보너스·기타 포함 합계는 152,832,000입니다."
+      },
+      {
+        "group": "product",
+        "member": "dmlp:NetProfitInterestsMember",
+        "label": "순이익 권리 NPI",
+        "value": 13928000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 152832000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1172358/000143774926005376/dmlp20251231_10k.htm#c140194553",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 상위 항목 127,823,000 USD와 그 안의 원유 114,116,000·가스 13,707,000을 중복 합산하지 않습니다. NPI·임대 보너스·기타 포함 합계는 152,832,000입니다."
+      },
+      {
+        "group": "product",
+        "member": "dmlp:OtherRevenueMember",
+        "label": "기타",
+        "value": 1681000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 152832000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1172358/000143774926005376/dmlp20251231_10k.htm#c140194559",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 상위 항목 127,823,000 USD와 그 안의 원유 114,116,000·가스 13,707,000을 중복 합산하지 않습니다. NPI·임대 보너스·기타 포함 합계는 152,832,000입니다."
+      },
+      {
+        "group": "product",
+        "member": "dmlp:RoyaltiesMember",
+        "label": "광물·로열티 권리 수입",
+        "value": 127823000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 152832000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1172358/000143774926005376/dmlp20251231_10k.htm#c140194550",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 상위 항목 127,823,000 USD와 그 안의 원유 114,116,000·가스 13,707,000을 중복 합산하지 않습니다. NPI·임대 보너스·기타 포함 합계는 152,832,000입니다."
+      }
+    ]
   },
   "KRP": {
     "annual": {
@@ -24210,7 +24396,109 @@
       "bytes": 1910024,
       "blocks": 5330,
       "collected_at": "2026-10-02T15:41:19.897749+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "krp:LeaseBonusAndOtherIncomeMember",
+        "label": "임대 보너스·기타",
+        "value": 4266000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657788/000110465926020477/krp-20251231x10k.htm#Tc_acIQa569z0qMA32RhYfy9g_6_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "상품·임대/기타 합계 321,739,000 USD입니다. 연결 333,830,000에 포함된 파생상품 순이익 12,091,000은 원유·가스 판매가 아닙니다."
+      },
+      {
+        "group": "product",
+        "member": "krp:NGLRevenueMember",
+        "label": "NGL",
+        "value": 43638000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657788/000110465926020477/krp-20251231x10k.htm#Tc_L3e5fkXVlkSWSyr6DfUxeg_6_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "상품·임대/기타 합계 321,739,000 USD입니다. 연결 333,830,000에 포함된 파생상품 순이익 12,091,000은 원유·가스 판매가 아닙니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:NaturalGasMidstreamMember",
+        "label": "천연가스 · 원문 제품 표",
+        "value": 78364000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657788/000110465926020477/krp-20251231x10k.htm#Tc_hFMwzIWqoEqmfHZfRQViTg_5_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "상품·임대/기타 합계 321,739,000 USD입니다. 연결 333,830,000에 포함된 파생상품 순이익 12,091,000은 원유·가스 판매가 아닙니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:OilAndCondensateMember",
+        "label": "원유·콘덴세이트",
+        "value": 195471000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657788/000110465926020477/krp-20251231x10k.htm#Tc_MXccRN-OR0eSJAh6yfWOkg_4_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "상품·임대/기타 합계 321,739,000 USD입니다. 연결 333,830,000에 포함된 파생상품 순이익 12,091,000은 원유·가스 판매가 아닙니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "us-gaap:UnrealizedGainLossOnCommodityContracts",
+        "label": "파생상품 순손익 · 원문 손익표",
+        "value": 12091000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:UnrealizedGainLossOnCommodityContracts",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657788/000110465926020477/krp-20251231x10k.htm#Tc_wGEyLUDAekOxW2DPQjElxw_7_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "상품·임대/기타 합계 321,739,000 USD입니다. 연결 333,830,000에 포함된 파생상품 순이익 12,091,000은 원유·가스 판매가 아닙니다."
+      }
+    ]
   },
   "NRP": {
     "annual": {
@@ -24232,7 +24520,69 @@
       "bytes": 1845857,
       "blocks": 1195,
       "collected_at": "2026-10-02T15:33:50.800707+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "nrp:RoyaltyAndOtherMineralRightsMember",
+        "label": "로열티·기타 광물권",
+        "value": 191045000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1171486/000143774926006147/nrp20251231_10k.htm#c140875464",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "광물권·물류 매출 202,340,000 USD입니다. 운송·처리 11,295,000에는 리스 수입이 포함됩니다. 순수입 207,282,000의 자산 처분·지분법 수익이나 Sisecam Wyoming 자체 판매 529,382,000을 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "nrp:TransportationAndProcessingServicesMember",
+        "label": "운송·처리 · 리스 포함",
+        "value": 11295000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1171486/000143774926006147/nrp20251231_10k.htm#c140875467",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "광물권·물류 매출 202,340,000 USD입니다. 운송·처리 11,295,000에는 리스 수입이 포함됩니다. 순수입 207,282,000의 자산 처분·지분법 수익이나 Sisecam Wyoming 자체 판매 529,382,000을 더하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "nrp:MineralRightsSegmentMember",
+        "label": "광물권 · 처분손익 제외",
+        "value": 202340000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "nrp:RevenuesExcludingGainOnSaleOfAsset",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1171486/000143774926006147/nrp20251231_10k.htm#c140876126",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "광물권·물류 매출 202,340,000 USD입니다. 운송·처리 11,295,000에는 리스 수입이 포함됩니다. 순수입 207,282,000의 자산 처분·지분법 수익이나 Sisecam Wyoming 자체 판매 529,382,000을 더하지 않습니다."
+      }
+    ]
   },
   "NRT": {
     "annual": {
@@ -24254,7 +24604,169 @@
       "bytes": 208140,
       "blocks": 264,
       "collected_at": "2026-10-02T15:41:59.327283+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "table:gas",
+        "label": "가스",
+        "value": 8146320,
+        "unit": "USD",
+        "start": "2024-11-01",
+        "end": "2025-10-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "FY2025는 2024-11-01~2025-10-31입니다. 사업 표의 제품·지역·운영사별 합계는 각각 8,649,904 USD로 수입 표 수취액 8,650,094보다 190 작습니다. 공시 표의 차이를 임의 조정하거나 100% 구성비로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm#z72410ae4bcc047fba4fc2616e2724258",
+          "as_of": "2025-12-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "table:sulfur",
+        "label": "황",
+        "value": 428513,
+        "unit": "USD",
+        "start": "2024-11-01",
+        "end": "2025-10-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "FY2025는 2024-11-01~2025-10-31입니다. 사업 표의 제품·지역·운영사별 합계는 각각 8,649,904 USD로 수입 표 수취액 8,650,094보다 190 작습니다. 공시 표의 차이를 임의 조정하거나 100% 구성비로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm#z72410ae4bcc047fba4fc2616e2724258",
+          "as_of": "2025-12-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "table:oil",
+        "label": "원유",
+        "value": 75071,
+        "unit": "USD",
+        "start": "2024-11-01",
+        "end": "2025-10-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "FY2025는 2024-11-01~2025-10-31입니다. 사업 표의 제품·지역·운영사별 합계는 각각 8,649,904 USD로 수입 표 수취액 8,650,094보다 190 작습니다. 공시 표의 차이를 임의 조정하거나 100% 구성비로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm#z72410ae4bcc047fba4fc2616e2724258",
+          "as_of": "2025-12-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "table:western_oldenburg",
+        "label": "Western Oldenburg",
+        "value": 6686731,
+        "unit": "USD",
+        "start": "2024-11-01",
+        "end": "2025-10-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "FY2025는 2024-11-01~2025-10-31입니다. 사업 표의 제품·지역·운영사별 합계는 각각 8,649,904 USD로 수입 표 수취액 8,650,094보다 190 작습니다. 공시 표의 차이를 임의 조정하거나 100% 구성비로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm#z72410ae4bcc047fba4fc2616e2724258",
+          "as_of": "2025-12-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "table:eastern_oldenburg",
+        "label": "Eastern Oldenburg",
+        "value": 1963173,
+        "unit": "USD",
+        "start": "2024-11-01",
+        "end": "2025-10-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "FY2025는 2024-11-01~2025-10-31입니다. 사업 표의 제품·지역·운영사별 합계는 각각 8,649,904 USD로 수입 표 수취액 8,650,094보다 190 작습니다. 공시 표의 차이를 임의 조정하거나 100% 구성비로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm#z72410ae4bcc047fba4fc2616e2724258",
+          "as_of": "2025-12-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "table:non_oldenburg",
+        "label": "Oldenburg 외",
+        "value": 0,
+        "unit": "USD",
+        "start": "2024-11-01",
+        "end": "2025-10-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "FY2025는 2024-11-01~2025-10-31입니다. 사업 표의 제품·지역·운영사별 합계는 각각 8,649,904 USD로 수입 표 수취액 8,650,094보다 190 작습니다. 공시 표의 차이를 임의 조정하거나 100% 구성비로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm#z72410ae4bcc047fba4fc2616e2724258",
+          "as_of": "2025-12-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "table:mobil_erdgas",
+        "label": "Mobil Erdgas 약정",
+        "value": 5836999,
+        "unit": "USD",
+        "start": "2024-11-01",
+        "end": "2025-10-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "FY2025는 2024-11-01~2025-10-31입니다. 사업 표의 제품·지역·운영사별 합계는 각각 8,649,904 USD로 수입 표 수취액 8,650,094보다 190 작습니다. 공시 표의 차이를 임의 조정하거나 100% 구성비로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm#z72410ae4bcc047fba4fc2616e2724258",
+          "as_of": "2025-12-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "table:beb",
+        "label": "BEB · OEG 약정",
+        "value": 2812905,
+        "unit": "USD",
+        "start": "2024-11-01",
+        "end": "2025-10-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "FY2025는 2024-11-01~2025-10-31입니다. 사업 표의 제품·지역·운영사별 합계는 각각 8,649,904 USD로 수입 표 수취액 8,650,094보다 190 작습니다. 공시 표의 차이를 임의 조정하거나 100% 구성비로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm#z72410ae4bcc047fba4fc2616e2724258",
+          "as_of": "2025-12-31",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "PBT": {
     "annual": {
@@ -24276,7 +24788,29 @@
       "bytes": 800728,
       "blocks": 831,
       "collected_at": "2026-10-02T15:42:08.397286+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "table:royalty_income",
+        "label": "로열티 수입 · 합의금 포함",
+        "value": 16055300,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "원문 비인라인 표를 대조했습니다. Texas Royalties 11,555,301 USD·합의금 수령 4,500,000의 합계는 손익 표 로열티 16,055,300과 1 USD 차이가 있습니다. 차이를 보정하지 않으며 Waddell 운영 수입 0과 합의금은 다릅니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/319654/000119312526128561/pbt_10-k_2025-12-31.htm#statements_of_distributable_income",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "SBR": {
     "annual": {
@@ -24298,7 +24832,29 @@
       "bytes": 494349,
       "blocks": 565,
       "collected_at": "2026-10-02T15:42:29.792085+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "table:royalty_income",
+        "label": "로열티 수입",
+        "value": 77061857,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "table:royalty_income",
+        "parent": null,
+        "includes_intersegment": false,
+        "share_exclusion": "원문 비인라인 표를 대조한 로열티 수입입니다. 이자 471,835 USD·관리비 4,090,067·분배 가능 수입 73,443,625와 실제 지급액 75,291,967은 다른 항목입니다.",
+        "source": {
+          "label": "SEC 연차 원문 표 · 로열티·권리 수입 · 수동 대조",
+          "url": "https://www.sec.gov/Archives/edgar/data/710752/000119312526081251/sbr_10-k_2025-12-31.htm#statements_of_distributable_income",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "TPL": {
     "annual": {
@@ -24320,7 +24876,142 @@
       "bytes": 1403751,
       "blocks": 495,
       "collected_at": "2026-10-02T12:11:27.182895+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "tpl:EasementandSundryMember",
+        "label": "통행·사용권·기타 토지 수입",
+        "value": 91775000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 798190000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000018/tpl-20251231.htm#f-161",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tpl:LandSalesMember",
+        "label": "토지 매각",
+        "value": 819000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 798190000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000018/tpl-20251231.htm#f-164",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tpl:OilAndGasRoyaltiesMember",
+        "label": "석유·가스 로열티",
+        "value": 411677000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 798190000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000018/tpl-20251231.htm#f-152",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tpl:ProducedWaterRoyaltiesMember",
+        "label": "생산수 로열티",
+        "value": 124218000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 798190000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000018/tpl-20251231.htm#f-158",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tpl:WaterSalesAndRoyaltiesMember",
+        "label": "용수 판매·로열티",
+        "value": 169701000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 798190000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000018/tpl-20251231.htm#f-155",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tpl:LandAndResourceManagementSegmentMember",
+        "label": "토지·자원 관리",
+        "value": 490726000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 798190000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000018/tpl-20251231.htm#f-1160",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tpl:WaterServiceandOperationsSegmentMember",
+        "label": "용수 서비스·운영",
+        "value": 307464000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 798190000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000018/tpl-20251231.htm#f-1161",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "VNOM": {
     "annual": {
@@ -24342,7 +25033,109 @@
       "bytes": 1515702,
       "blocks": 752,
       "collected_at": "2026-10-02T15:24:28.816615+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "vnom:NaturalGasIncomeMember",
+        "label": "천연가스 로열티",
+        "value": 56000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2074176/000207417626000010/vnom-20251231.htm#f-59",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        },
+        "share_exclusion": "제품별·운영사별 표는 같은 로열티 1,346,000,000 USD를 각각 나눈 것입니다. 연결 수입 1,395,000,000에는 임대 보너스 48,000,000·기타 1,000,000도 포함됩니다."
+      },
+      {
+        "group": "product",
+        "member": "vnom:NaturalGasLiquidsIncomeMember",
+        "label": "NGL 로열티",
+        "value": 159000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2074176/000207417626000010/vnom-20251231.htm#f-62",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        },
+        "share_exclusion": "제품별·운영사별 표는 같은 로열티 1,346,000,000 USD를 각각 나눈 것입니다. 연결 수입 1,395,000,000에는 임대 보너스 48,000,000·기타 1,000,000도 포함됩니다."
+      },
+      {
+        "group": "product",
+        "member": "vnom:OilIncomeMember",
+        "label": "원유 로열티",
+        "value": 1131000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2074176/000207417626000010/vnom-20251231.htm#f-56",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        },
+        "share_exclusion": "제품별·운영사별 표는 같은 로열티 1,346,000,000 USD를 각각 나눈 것입니다. 연결 수입 1,395,000,000에는 임대 보너스 48,000,000·기타 1,000,000도 포함됩니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "vnom:DiamondbackOperatedPropertiesMember",
+        "label": "Diamondback 운영 자산 · 로열티만",
+        "value": 741000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2074176/000207417626000010/vnom-20251231.htm#f-581",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        },
+        "share_exclusion": "제품별·운영사별 표는 같은 로열티 1,346,000,000 USD를 각각 나눈 것입니다. 연결 수입 1,395,000,000에는 임대 보너스 48,000,000·기타 1,000,000도 포함됩니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "vnom:ThirdPartyOperatedPropertiesMember",
+        "label": "제3자 운영 자산 · 로열티만",
+        "value": 605000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2074176/000207417626000010/vnom-20251231.htm#f-582",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        },
+        "share_exclusion": "제품별·운영사별 표는 같은 로열티 1,346,000,000 USD를 각각 나눈 것입니다. 연결 수입 1,395,000,000에는 임대 보너스 48,000,000·기타 1,000,000도 포함됩니다."
+      }
+    ]
   },
   "CKX": {
     "annual": {
@@ -24364,7 +25157,129 @@
       "bytes": 742882,
       "blocks": 568,
       "collected_at": "2026-10-02T15:39:47.544659+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "us-gaap:OilAndGasMember",
+        "label": "석유·가스 로열티",
+        "value": 415469.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/352955/000143774926010434/ckx20251231_10k.htm#c133",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 415,469 USD·목재 94,825·임대 328,249 합계는 838,543입니다. 제품 표의 고객 계약/리스 태그를 보존합니다. 토지 처분 이익은 이 매출 구성과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:TimberMember",
+        "label": "목재",
+        "value": 94825.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/352955/000143774926010434/ckx20251231_10k.htm#c135",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 415,469 USD·목재 94,825·임대 328,249 합계는 838,543입니다. 제품 표의 고객 계약/리스 태그를 보존합니다. 토지 처분 이익은 이 매출 구성과 다릅니다."
+      },
+      {
+        "group": "segment",
+        "member": "ckx:OilAndGasSegmentMember",
+        "label": "석유·가스",
+        "value": 415469.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/352955/000143774926010434/ckx20251231_10k.htm#c623",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 415,469 USD·목재 94,825·임대 328,249 합계는 838,543입니다. 제품 표의 고객 계약/리스 태그를 보존합니다. 토지 처분 이익은 이 매출 구성과 다릅니다."
+      },
+      {
+        "group": "segment",
+        "member": "ckx:SurfaceSegmentMember",
+        "label": "지표 토지 임대",
+        "value": 328249.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/352955/000143774926010434/ckx20251231_10k.htm#c625",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 415,469 USD·목재 94,825·임대 328,249 합계는 838,543입니다. 제품 표의 고객 계약/리스 태그를 보존합니다. 토지 처분 이익은 이 매출 구성과 다릅니다."
+      },
+      {
+        "group": "segment",
+        "member": "ckx:TimberSegmentMember",
+        "label": "목재",
+        "value": 94825.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/352955/000143774926010434/ckx20251231_10k.htm#c624",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 415,469 USD·목재 94,825·임대 328,249 합계는 838,543입니다. 제품 표의 고객 계약/리스 태그를 보존합니다. 토지 처분 이익은 이 매출 구성과 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "ckx:SurfaceLeasesUnrelatedPartiesMember",
+        "label": "제3자 토지 임대",
+        "value": 328249.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:OperatingLeaseLeaseIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/352955/000143774926010434/ckx20251231_10k.htm#c137",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        },
+        "share_exclusion": "로열티 415,469 USD·목재 94,825·임대 328,249 합계는 838,543입니다. 제품 표의 고객 계약/리스 태그를 보존합니다. 토지 처분 이익은 이 매출 구성과 다릅니다."
+      }
+    ]
   },
   "MNR": {
     "annual": {
@@ -24386,7 +25301,109 @@
       "bytes": 1517441,
       "blocks": 853,
       "collected_at": "2026-10-02T15:41:29.989053+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "mnr:OilAndNaturalGasDerivativesGainLossMember",
+        "label": "파생상품 손익",
+        "value": 81289000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1175390000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1980088/000162828026017249/mnr-20251231.htm#f-126",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        },
+        "share_exclusion": "순상품 판매 1,037,650,000 USD·파생상품 81,289,000·중류 27,561,000·외부 상품 28,890,000의 합계입니다. 총상품 판매 1,040,852,000과 그 제품별 내역을 다시 더하지 않습니다. 차액 3,202,000은 공시된 생산 후 비용입니다."
+      },
+      {
+        "group": "product",
+        "member": "mnr:OilGasAndNaturalGasLiquidsNetMember",
+        "label": "석유·가스·NGL · 생산 후 비용 차감",
+        "value": 1037650000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1175390000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1980088/000162828026017249/mnr-20251231.htm#f-123",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        },
+        "share_exclusion": "순상품 판매 1,037,650,000 USD·파생상품 81,289,000·중류 27,561,000·외부 상품 28,890,000의 합계입니다. 총상품 판매 1,040,852,000과 그 제품별 내역을 다시 더하지 않습니다. 차액 3,202,000은 공시된 생산 후 비용입니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:NaturalGasMidstreamMember",
+        "label": "가스 집하·처리",
+        "value": 27561000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1175390000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1980088/000162828026017249/mnr-20251231.htm#f-129",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        },
+        "share_exclusion": "순상품 판매 1,037,650,000 USD·파생상품 81,289,000·중류 27,561,000·외부 상품 28,890,000의 합계입니다. 총상품 판매 1,040,852,000과 그 제품별 내역을 다시 더하지 않습니다. 차액 3,202,000은 공시된 생산 후 비용입니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ProductMember",
+        "label": "외부 조달 상품 판매",
+        "value": 28890000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1175390000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1980088/000162828026017249/mnr-20251231.htm#f-132",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        },
+        "share_exclusion": "순상품 판매 1,037,650,000 USD·파생상품 81,289,000·중류 27,561,000·외부 상품 28,890,000의 합계입니다. 총상품 판매 1,040,852,000과 그 제품별 내역을 다시 더하지 않습니다. 차액 3,202,000은 공시된 생산 후 비용입니다."
+      },
+      {
+        "group": "segment",
+        "member": "mnr:ReportableSegmentMember",
+        "label": "단일 보고 사업",
+        "value": 1175390000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1175390000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1980088/000162828026017249/mnr-20251231.htm#f-1274",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        },
+        "share_exclusion": "순상품 판매 1,037,650,000 USD·파생상품 81,289,000·중류 27,561,000·외부 상품 28,890,000의 합계입니다. 총상품 판매 1,040,852,000과 그 제품별 내역을 다시 더하지 않습니다. 차액 3,202,000은 공시된 생산 후 비용입니다."
+      }
+    ]
   },
   "MXC": {
     "annual": {
@@ -24408,7 +25425,69 @@
       "bytes": 493140,
       "blocks": 205,
       "collected_at": "2026-10-02T15:41:33.153449+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "MXC:NaturalGasSalesMember",
+        "label": "천연가스",
+        "value": 1271067.0,
+        "unit": "USD",
+        "start": "2025-04-01",
+        "end": "2026-03-31",
+        "total": 6561324.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/66418/000149315226030386/form10-k.htm#Fact000233",
+          "as_of": "2026-06-29",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2026는 2025-04-01~2026-03-31입니다. 제품 3개 합계 6,561,324 USD와 사무실 전대 수입을 구분합니다."
+      },
+      {
+        "group": "product",
+        "member": "MXC:OilSalesMember",
+        "label": "원유",
+        "value": 5276981.0,
+        "unit": "USD",
+        "start": "2025-04-01",
+        "end": "2026-03-31",
+        "total": 6561324.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/66418/000149315226030386/form10-k.htm#Fact000230",
+          "as_of": "2026-06-29",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2026는 2025-04-01~2026-03-31입니다. 제품 3개 합계 6,561,324 USD와 사무실 전대 수입을 구분합니다."
+      },
+      {
+        "group": "product",
+        "member": "MXC:OtherMember",
+        "label": "기타",
+        "value": 13276.0,
+        "unit": "USD",
+        "start": "2025-04-01",
+        "end": "2026-03-31",
+        "total": 6561324.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/66418/000149315226030386/form10-k.htm#Fact000236",
+          "as_of": "2026-06-29",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2026는 2025-04-01~2026-03-31입니다. 제품 3개 합계 6,561,324 USD와 사무실 전대 수입을 구분합니다."
+      }
+    ]
   },
   "LB": {
     "annual": {
@@ -24430,7 +25509,209 @@
       "bytes": 2690505,
       "blocks": 2451,
       "collected_at": "2026-10-02T15:41:26.114106+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "lb:EasementsAndOtherSurfaceRelatedRevenuesMember/us-gaap:NonrelatedPartyMember",
+        "label": "통행·사용권·기타 토지 수입 · 제3자",
+        "value": 51286000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_54389967-501c-4c7e-b49a-935078da6781",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "lb:EasementsAndOtherSurfaceRelatedRevenuesMember/us-gaap:RelatedPartyMember",
+        "label": "통행·사용권·기타 토지 수입 · 특수관계자",
+        "value": 10716000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_d357147d-eccb-428e-a895-7942c9c16b4d",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "lb:OilAndGasRoyaltiesMember",
+        "label": "석유·가스 로열티",
+        "value": 12589000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_a60016fa-9de8-4476-b896-3dfc6773aebd",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "lb:ResourceRoyaltiesMember/us-gaap:NonrelatedPartyMember",
+        "label": "용수·모래 등 자원 로열티 · 제3자",
+        "value": 15730000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_4b8acadc-59f8-4a8b-971e-07e04c474438",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "lb:ResourceRoyaltiesMember/us-gaap:RelatedPartyMember",
+        "label": "용수·모래 등 자원 로열티 · 특수관계자",
+        "value": 7297000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_45d2c119-bad8-4a4e-be8a-1b3c5a4eb5df",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "lb:ResourceSalesMember/us-gaap:NonrelatedPartyMember",
+        "label": "용수 등 자원 판매 · 제3자",
+        "value": 23005000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_2b429c19-9cc4-43d6-9139-9acd2aa70f16",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "lb:ResourceSalesMember/us-gaap:RelatedPartyMember",
+        "label": "용수 등 자원 판매 · 특수관계자",
+        "value": 1718000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_61ee0e37-5bf1-41e4-9c42-99867070416a",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "lb:SurfaceUseRoyaltiesMember/us-gaap:NonrelatedPartyMember",
+        "label": "지표 사용 로열티 · 제3자",
+        "value": 36604000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_24a9e156-445b-4a16-8f1e-f3ccbbdb7311",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "lb:SurfaceUseRoyaltiesMember/us-gaap:RelatedPartyMember",
+        "label": "지표 사용 로열티 · 특수관계자",
+        "value": 36168000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_d698fe57-6afe-4579-8acf-0919666d8205",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ProductAndServiceOtherMember",
+        "label": "기타",
+        "value": 3980000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 199093000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm#F_47ae1ee8-7018-4be0-8413-49d29f35c40e",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "제품×특수관계자 여부의 두 축을 모두 보존합니다. 10개 실제 항목의 합계는 199,093,000 USD입니다. 별도 관련자 약정 표 소계 55,899,000을 다시 더하지 않습니다."
+      }
+    ]
   },
   "PNRG": {
     "annual": {
@@ -24452,6 +25733,128 @@
       "bytes": 952446,
       "blocks": 814,
       "collected_at": "2026-10-02T15:42:18.203801+00:00"
-    }
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "pnrg:NaturalGasLiquidMember",
+        "label": "NGL",
+        "value": 25274000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/56868/000143774926012531/pnrg20251231_10k.htm#c165",
+          "as_of": "2026-04-16",
+          "level": "primary"
+        },
+        "share_exclusion": "제품·서비스 185,909,000 USD와 실제 별도 태그의 기타 수입 1,536,000·자산 처분 순이익 1,607,000이 연결 수입 189,052,000을 구성합니다. 처분이익을 원유·가스 판매에 합치지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "pnrg:OilSalesMember",
+        "label": "원유",
+        "value": 144749000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/56868/000143774926012531/pnrg20251231_10k.htm#c161",
+          "as_of": "2026-04-16",
+          "level": "primary"
+        },
+        "share_exclusion": "제품·서비스 185,909,000 USD와 실제 별도 태그의 기타 수입 1,536,000·자산 처분 순이익 1,607,000이 연결 수입 189,052,000을 구성합니다. 처분이익을 원유·가스 판매에 합치지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:NaturalGasProductionMember",
+        "label": "천연가스",
+        "value": 7490000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/56868/000143774926012531/pnrg20251231_10k.htm#c163",
+          "as_of": "2026-04-16",
+          "level": "primary"
+        },
+        "share_exclusion": "제품·서비스 185,909,000 USD와 실제 별도 태그의 기타 수입 1,536,000·자산 처분 순이익 1,607,000이 연결 수입 189,052,000을 구성합니다. 처분이익을 원유·가스 판매에 합치지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:OilAndGasServiceMember",
+        "label": "유전 서비스",
+        "value": 8396000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/56868/000143774926012531/pnrg20251231_10k.htm#c167",
+          "as_of": "2026-04-16",
+          "level": "primary"
+        },
+        "share_exclusion": "제품·서비스 185,909,000 USD와 실제 별도 태그의 기타 수입 1,536,000·자산 처분 순이익 1,607,000이 연결 수입 189,052,000을 구성합니다. 처분이익을 원유·가스 판매에 합치지 않습니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "us-gaap:OtherIncome",
+        "label": "기타 수입",
+        "value": 1536000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:OtherIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/56868/000143774926012531/pnrg20251231_10k.htm#c169",
+          "as_of": "2026-04-16",
+          "level": "primary"
+        },
+        "share_exclusion": "제품·서비스 185,909,000 USD와 실제 별도 태그의 기타 수입 1,536,000·자산 처분 순이익 1,607,000이 연결 수입 189,052,000을 구성합니다. 처분이익을 원유·가스 판매에 합치지 않습니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "us-gaap:GainLossOnSaleOfPropertyPlantEquipment",
+        "label": "자산 처분 순이익",
+        "value": 1607000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:GainLossOnSaleOfPropertyPlantEquipment",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/56868/000143774926012531/pnrg20251231_10k.htm#c171",
+          "as_of": "2026-04-16",
+          "level": "primary"
+        },
+        "share_exclusion": "제품·서비스 185,909,000 USD와 실제 별도 태그의 기타 수입 1,536,000·자산 처분 순이익 1,607,000이 연결 수입 189,052,000을 구성합니다. 처분이익을 원유·가스 판매에 합치지 않습니다."
+      }
+    ]
   }
 }

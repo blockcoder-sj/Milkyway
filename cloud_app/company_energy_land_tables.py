@@ -30,15 +30,15 @@ FINANCIALS = {
   ('관리비',847078,False,'Administration expense'),
   ('분배 가능 수입',4490844,False,'Distributable income'),
   ('현금·단기 투자',2133676,True,'Cash and short-term investments'),
-  ('자산 총계 · 신탁 장부',4296650,True,'Total assets'),
+  ('자산 총계 · 신탁 장부',4296650,True,'Assets · 원문 무표제 합계행'),
   ('신탁 원본 · 장부금액',2158420,True,'Trust corpus')]),
  'NRT':_financials('NRT','za5f095eaf64240c3aba6560641c403db','zb51f4ce6a8874cecb4b66a599292fae3',[
   ('로열티 수취액',8650094,False,'Royalties received'),
-  ('수입 합계 · 이자 포함',8734568,False,'Total income'),
+  ('수입 합계 · 이자 포함',8734568,False,'Trust Income'),
   ('순이익 · 신탁 기준',7938920,False,'Net income'),
   ('현금·현금성 자산',4785156,True,'Cash and cash equivalents'),
   ('자산 총계 · 신탁 장부',4785157,True,'Total assets'),
-  ('미지급 분배금',2849083,True,'Distributions payable'),
+  ('미지급 분배금',2849083,True,'Distributions to be paid to unit owners'),
   ('미분배 수익 잔액',1936073,True,'Undistributed earnings')]),
  'PBT':_financials('PBT','statements_of_assets_liabilities_and','statements_of_distributable_income',[
   ('로열티 수입 · 합의금 포함',16055300,False,'Royalty income'),
@@ -46,15 +46,15 @@ FINANCIALS = {
   ('관리비',1827899,False,'General and administrative'),
   ('분배 가능 수입',14300162,False,'Distributable income'),
   ('현금·단기 투자',1715167,True,'Cash and short-term investments'),
-  ('자산 총계 · 신탁 장부',1877733,True,'Total assets'),
+  ('자산 총계 · 신탁 장부',1877733,True,'Total · 자산 합계'),
   ('부채 총계 · 준비금 포함',1715167,True,'Total liabilities')]),
  'SBR':_financials('SBR','statements_of_assets_liabilities_and_tru','statements_of_distributable_income',[
   ('로열티 수입',77061857,False,'Royalty income'),
-  ('수입 합계 · 이자 포함',77533692,False,'Total income'),
+  ('수입 합계 · 이자 포함',77533692,False,'Total · 수입 합계'),
   ('관리비',4090067,False,'General and administrative expenses'),
   ('분배 가능 수입',73443625,False,'Distributable income'),
   ('현금·단기 투자',7574257,True,'Cash and short-term investments'),
-  ('자산 총계 · 신탁 장부',7643865,True,'Total assets'),
+  ('자산 총계 · 신탁 장부',7643865,True,'Total · 자산 합계'),
   ('부채 총계',796286,True,'Total liabilities')]),
 }
 

@@ -26,6 +26,8 @@ GROUPS = {
     'proppant-logistics': '파쇄 모래·현장 물류',
     'drilling': '계약 시추·리그',
     'shipping': '원유·제품·가스 해상 운송 · 산업 연결',
+    'mineral-royalty': '광물권·로열티·순이익 권리',
+    'surface-land': '토지·용수·생산수 사용권',
 }
 
 
@@ -42,7 +44,8 @@ class Issuer(BaseModel):
     group: Literal['pending', 'integrated', 'upstream', 'refining',
                    'gas-infrastructure', 'lng', 'fuel-distribution', 'compression',
                    'nuclear-fuel', 'coal-minerals', 'digital-power', 'diversified', 'utility',
-                   'oilfield-services', 'equipment', 'proppant-logistics', 'drilling', 'shipping']
+                   'oilfield-services', 'equipment', 'proppant-logistics', 'drilling', 'shipping',
+                   'mineral-royalty', 'surface-land']
     scope: Literal['research', 'context']
     sector_hint: Literal['us_10', 'us_55'] = 'us_10'
     report_source: ImmutableSource

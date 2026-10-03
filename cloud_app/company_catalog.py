@@ -626,6 +626,10 @@ def enrich(value):
     if canonical_registry in REGISTERED_TICKERS and REGISTERED_TICKERS[canonical_registry] == data['symbol']:
         data['registry_id'] = canonical_registry
         data['name'] = PUBLIC_COMPANIES[data['symbol']]['name']
+    elif data['symbol'] in PUBLIC_COMPANIES and not data.get('registry_id'):
+        # Provider quote names may be truncated. Use the name attached to the
+        # reviewed issuer profile without changing its ticker or legal identity.
+        data['name'] = PUBLIC_COMPANIES[data['symbol']]['name']
     normalized = CompanyKnowledge.model_validate({
         'name': data['name'], **{key: rows for key, rows in curated.items()
                                if key in CompanyKnowledge.model_fields and key not in {'name', 'entity_id'}}

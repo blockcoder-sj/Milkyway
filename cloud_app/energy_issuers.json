@@ -225,7 +225,7 @@
       "name": "Black Stone Minerals, L.P.",
       "cik": "1621434",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -327,7 +327,7 @@
       "name": "CKX LANDS, INC.",
       "cik": "352955",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "surface-land",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -513,7 +513,7 @@
       "name": "CROSS TIMBERS ROYALTY TRUST",
       "cik": "881787",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -654,7 +654,7 @@
       "name": "DORCHESTER MINERALS, L.P.",
       "cik": "1172358",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1527,7 +1527,7 @@
       "name": "Kimbell Royalty Partners, LP",
       "cik": "1657788",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1542,7 +1542,7 @@
       "name": "LandBridge Co LLC",
       "cik": "1995807",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "surface-land",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1662,7 +1662,7 @@
       "name": "MACH NATURAL RESOURCES LP",
       "cik": "1980088",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1737,7 +1737,7 @@
       "name": "MEXCO ENERGY CORP",
       "cik": "66418",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1947,7 +1947,7 @@
       "name": "NATURAL RESOURCE PARTNERS LP",
       "cik": "1171486",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "coal-minerals",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1962,7 +1962,7 @@
       "name": "NORTH EUROPEAN OIL ROYALTY TRUST",
       "cik": "72633",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2235,7 +2235,7 @@
       "name": "PERMIAN BASIN ROYALTY TRUST",
       "cik": "319654",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2286,7 +2286,7 @@
       "name": "PRIMEENERGY RESOURCES CORP",
       "cik": "56868",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2481,7 +2481,7 @@
       "name": "SABINE ROYALTY TRUST",
       "cik": "710752",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2874,7 +2874,7 @@
       "name": "Texas Pacific Land Corp",
       "cik": "1811074",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "surface-land",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3144,7 +3144,7 @@
       "name": "Viper Energy, Inc.",
       "cik": "2074176",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

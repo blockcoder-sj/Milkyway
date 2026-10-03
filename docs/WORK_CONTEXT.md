@@ -1768,3 +1768,39 @@ resuming; no paid AI regression approval has arrived.
 - Detailed record docs/NEW_PC_RESUME_REVIEW_20261004.md. NEXT land15 actualsources/
   revenue/catalog/groups integration and validation, then remaining43+ALLdepthaudit.
   Progress still155editedmain/213, not completedcompanies. Never stop at thispush.
+
+## 2026-10-04 land/royalty integration, reviewed and continuing
+
+- BSM CRT DMLP KRP NRP NRT PBT SBR TPL VNOM CKX MNR MXC LB PNRG: 15 reviewed
+  drafts integrated into catalog/relations/navigation; 58 counterpart roles/115
+  source-backed edges. Main-body count170 of213, remaining43; not completion count.
+- 30annual/quarteroriginals SHA/size matched. 11inlineannuals reparsed58rows;
+  trust4tables28financials/11revenue verified; total69revenue. Preserve NRT190/PBT1
+  USD original table differences; fiscalMXCFY2026/NRTNov-Oct; JV/derivatives/leases.
+- PBTSept18actualmonthlyPDF/LBSept23DEF14C/MNRacquisition8K received+SHA.
+  PBTcombination stillconditional; LBconversionexpectedOct13, pendingOct4.
+  NSAI reusedexistingID; WBI/cawleyandoldnotes retained. No guessed anonymousbuyers.
+- Chrome revealed provider-truncated names. Reviewed public profile name nowleads
+  without identitychange; regression/idempotence pass. Exact reviewednegative
+  parserguard onlyURL/CIK/issuer/FY/tag, no generalnegativeallowance.
+- Finalimage82e07a5a6ef28496d36e1e63ffbc0202953b97ba440c04641034c1dd19a1e8ad:
+  716tests20.631sOK18Node skip; host9modules21/.622sOK; 271publicfilesSHA match.
+  Initial3fullattempts failed temporaryDB/keymountpermissions; logsretained; tests
+  passed after fixing disposabletmpfsownership, without personalvolumemount.
+- Finaloffline512MiB/1CPU: seed1060/.849s, SQLitequickcheckOK; directory213x50
+  p95.135ms, landdetail45x p955.566ms, RSS67.1MiB. Not browser/feedperformance.
+- App-onlyrecreated; HTTP15+6existing200/69rows/reverserelations. Firstanonymous
+  HTTP401 asrequired; normal localauthAPI+memorycookie used, temporarysessionlogout.
+- User'soneChrome tab: all15title/revenue/relations actualrender; royalty8filter;
+  PBTmanualdifference+Septnote/Argentnavigation+reverse; LB10rows/pendingconversion.
+  CachedPBTSEC404warningkept, manualreviewedfinancialsshown. Nofreshfeedclaim.
+- startup200/apphealthy, ready503onlystoppedpaper/backtest. Fourservices/userdata/
+  volumes/oldshippingimage+originalbackups preserved. Logs in runtime/verification-
+  20261004; publicevidence in runtime/handoff/evidence-20261004. Reviewrecord:
+  docs/ENERGY_LAND_REVIEW_20261004.md. NoAPIkeys/paidAI/newagents/CodeRabbit/DeepScan.
+- NewhostXcode license shim blocks /usr/bin/git/python3. CLT git and Python3.9.6
+  work at /Library/Developer/CommandLineTools/usr/bin/. License not accepted
+  byagent; use CLT PATH forGit/gh. DockerPython3.11 used forappchecks.
+- NEXT afterreview/commit/push: remaining43service/drilling/marine/coal/LNG/small
+  issuer originals+editednotes; missing8annuals stillneedrealprimaryretrieval.
+  Continue entire depth/currentness/identity/classification/KoreanUIaudit.

@@ -548,7 +548,8 @@ def statement_rows(rows, clean, anchors, origin, symbol, cik, period_end):
 
 def signed_value(tag, context, origin, symbol, cik):
     return (extended.signed_value(tag, context, origin, symbol, cik)
-            or downstream.signed_value(tag, context, origin, symbol, cik))
+            or downstream.signed_value(tag, context, origin, symbol, cik)
+            or land.signed_value(tag, context, origin, symbol, cik))
 
 
 def compound_member(member, symbol, cik):

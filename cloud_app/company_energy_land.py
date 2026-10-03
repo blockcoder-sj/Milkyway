@@ -33,6 +33,10 @@ MNR_Q2=source('Mach · 2026 Q2·생산·투입 비용',
  'https://www.sec.gov/Archives/edgar/data/1980088/000121390026086148/ea030081701ex99-1.htm','2026-08-06')
 MNR_ACQUIRE=source('Mach · SIMCOE·Simlog 실제 취득·법인 동일성',
  'https://www.sec.gov/Archives/edgar/data/1980088/000121390026040477/ea0285164-8k_mach.htm','2026-04-06')
+PBT_SEPTEMBER=source('PBT · 9월 수입·비용 초과·결합 진행 상태',
+ 'https://pbt-permian.com/wp-content/uploads/2026/09/September-2026-PR-PBT.pdf','2026-09-18')
+LB_CONVERSION=source('LandBridge · 승인된 법인 전환·발효 예정일',
+ 'https://www.sec.gov/Archives/edgar/data/1995807/000119312526398459/d158565ddef14c.htm','2026-09-23')
 
 PUBLIC={
  'BSM':profile('Black Stone Minerals',ANNUAL['BSM'],
@@ -256,7 +260,9 @@ LATEST={
  'NRT':[(QUARTER['NRT'],'최근 공시 · FY2026 3분기',
   '2026-07-31 분기·9개월 자료는 10월 결산연도입니다. EUR 정산·USD 환전 시점과 과거 가격 조정금이 수취액에 반영되므로 달력연도 3분기로 표시하지 않습니다.')],
  'PBT':[(QUARTER['PBT'],'합의금·제안된 결합 · 2026 Q2 공시',
-  'Blackbeard 합의금 1,125,000 USD씩 2026-01·04·07에 수령했습니다. 7월28일 SoftVest/Blackbeard의 New PBT 결합은 유닛 보유자 표결·종결 조건이 있으며 신탁·수탁사는 결합계약 당사자가 아닙니다.')],
+  'Blackbeard 합의금 1,125,000 USD씩 2026-01·04·07에 수령했습니다. 7월28일 SoftVest/Blackbeard의 New PBT 결합은 유닛 보유자 표결·종결 조건이 있으며 신탁·수탁사는 결합계약 당사자가 아닙니다.'),
+  (PBT_SEPTEMBER,'9월 수입·결합 진행 · 2026-09-18',
+  '8월 Waddell 비용 초과가 이어져 9월 분배에는 해당 권리 수입이 없습니다. Texas Royalties의 신탁 귀속 기여금은 1,130,007 USD입니다. New PBT는 S-4·S-1을 제출했지만 표결 조건이 남고 회의일은 추후 공지입니다. 이를 결합 완료로 표시하지 않습니다.')],
  'SBR':[(QUARTER['SBR'],'최근 권리·관리 범위 · 2026 Q2',
   'RJ Holdings의 원래 Sabine 의무 승계와 PEC의 임대 체결 권리를 현재 공시에서도 구분합니다. 과거 Sempra·Hunt 거래를 현재 신탁 공급·소유 관계로 유지하지 않습니다.')],
  'TPL':[(TPL_Q2,'개발 약정·시험 설비 · 2026 Q2',
@@ -270,7 +276,9 @@ LATEST={
  'MXC':[(QUARTER['MXC'],'최근 사업 · FY2027 Q1',
   '2026-06-30 분기는 FY2027 Q1입니다. 7월 Bone Spring 유정 3개 참여 약 70,000 USD는 분기말 이후 거래로 분리합니다.')],
  'LB':[(QUARTER['LB'],'신규 약정·법인 전환 · 2026 Q2',
-  '8월4일 NDB Landfill 기초 토지 약 560 acres·20,000,000 USD 취득에 합의했습니다. 당시에 WaterBridge 거래와 함께 Q3 종결 예정이며 전력/디지털 7개 상대는 LOI·선택권·협상 단계입니다.')],
+  '8월4일 NDB Landfill 기초 토지 약 560 acres·20,000,000 USD 취득에 합의했습니다. 당시 공시는 WaterBridge 거래와 함께 Q3 종결 예정을 설명합니다. 시설 운영 취득과 토지 매매는 다른 거래이며 전력/디지털 7개 상대는 LOI·선택권·협상 단계입니다.'),
+  (LB_CONVERSION,'법인 전환 승인·발효 예정 · 2026-09-23',
+  '8월14일 대주주 서면 동의로 Delaware LLC에서 Texas Corporation으로의 전환을 승인했고 9월23일 확정 정보서를 발송합니다. 예정 발효일은 10월13일경입니다. 10월4일 기준 예정 상태이며 이미 전환한 회사의 이름·법인 형태로 과거 공시를 바꾸지 않습니다.')],
  'PNRG':[(QUARTER['PNRG'],'개발 일정 · 2026 Q2',
   '프로그램별 운영사·작업 지분·개발 지출을 2025 완료 유정과 2026년 계획/실제 완료로 나누어 확인합니다. 이전 APA/COP/OVV의 2023 시추를 현재 신규 주문으로 표시하지 않습니다.')],
 }
@@ -649,3 +657,11 @@ for _symbol,_peers,_scope in [
         EDGES[_symbol].append(relation(PUBLIC[_peer]['name'],_peer,'competitor',
             _scope+' 사업 범위 비교 · 각사 공시를 대조한 비교이며 상대를 공시 실명 경쟁사로 명시한 것은 아님',ANNUAL[_symbol]))
         PUBLIC[_symbol]['sources'].append(ANNUAL[_peer])
+
+# Reuse the already reviewed legal entity rather than creating a second NSAI.
+_nsai=PRIVATE.pop('netherland-sewell-land')
+COMMON_CONTEXT['nsai-reserve-engineering']={
+    field:_nsai[field] for field in ('brief','products','sources')}
+for _edge in EDGES['MNR']:
+    if _edge['registry_id']=='netherland-sewell-land':
+        _edge['registry_id']='nsai-reserve-engineering'
