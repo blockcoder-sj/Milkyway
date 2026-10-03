@@ -188,14 +188,14 @@ const result={symbol:'AAPL',name:'<script>Apple</script>',description:'descripti
  related_directory:{MSFT:{sector:'us_45',name:'Microsoft'}},peers:[{symbol:'MSFT',name:'Microsoft',currency:'USD',market_cap:12,source:'Yahoo',url:'https://finance.yahoo.com/quote/MSFT/'}],financials:[],filings:[],facts:[],segments:[],drivers:[],market_shares:[],
  products:Array.from({length:12},(_,i)=>({title:`<img Product ${i}>`,detail:'safe',source:src})),
  relations:Array.from({length:12},(_,i)=>({name:`Company <${i}>`,target_id:'c_'+String(i+1).padStart(32,'0'),kind:i===0?'supplier':'subsidiary',symbol:i===0?'MSFT':null,detail:'Source-backed relation',source:src}))};
-let delayed=false,response=result;
+let delayed=false,response=result,rejectCollection=false;
 result.relations[0].business={title:'기업 사업',detail:'<script>검사 장비</script>',source:src};
 const ctx=vm.createContext({window:{MilkywayResearchView:{escape},MilkywayCompanyPrice:{create:()=>({setContext(){},clear(){}})},getSelection:()=>null},
  document:{querySelector:el,createElement:()=>panel,addEventListener(kind,fn){documentHandlers[kind]=fn;}},
  history:{state:null,pushState(value){this.state=value;},back(){}},setInterval(fn){poll=fn;},Intl,Date,Number,Math,Map,Set,URL,encodeURIComponent});
 for(const name of ['format.js','list-paging.js','market-directory.js','company-research-view.js','company-relations.js','company-network.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
 ctx.window.MilkywayCompany.initialize({getState:()=>state,openWorkspace:workspace=>{state.workspace=workspace;},
- api:async(path,options)=>{calls.push({path,options});if(delayed)return await new Promise(resolve=>{resolveDelayed=resolve});return response;}});
+ api:async(path,options)=>{calls.push({path,options});if(rejectCollection&&options?.method==='POST')throw new Error('Collection queue full');if(delayed)return await new Promise(resolve=>{resolveDelayed=resolve});return response;}});
 function click(attribute,value){panelHandlers.click({target:{closest(selector){return selector==='['+attribute+']'?{dataset:{[attribute.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:String(value)}}:null;}}});}
 (async()=>{
  await ctx.window.MilkywayCompany.open('us_45','AAPL');
@@ -245,6 +245,16 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
  ctx.window.MilkywayCompany.leave();state.workspace='market';resolveDelayed({...result,stale:true});await opening;
  assert.equal(calls.length,1);assert(!calls.some(row=>row.options?.method==='POST'));
  calls=[];await ctx.window.MilkywayCompany.open('../env','AAPL');assert.equal(calls.length,0);
+ delayed=false;rejectCollection=true;
+ response={...result,stale:true,errors:['Earlier collection warning'],
+   financials:[{label:'Reviewed revenue',value:123,unit:'USD',period:'2025',source:src}]};
+ calls=[];await ctx.window.MilkywayCompany.open('us_45','AAPL');
+ assert.equal(calls.length,2);assert(el('#companyFinancials').innerHTML.includes('Reviewed revenue'));
+ assert(el('#companyError').textContent.includes('Earlier collection warning'));
+ assert(!el('#companyError').textContent.includes('Collection queue full'));
+ assert(el('#companyStatus').textContent.includes('Collection queue full'));
+ await el('#companyCollect').click({});
+ assert.equal(el('#companyError').textContent,'Collection queue full');
 })().catch(error=>{console.error(error);process.exitCode=1;});
 """
         root = Path(__file__).resolve().parents[1] / "cloud_app/static"

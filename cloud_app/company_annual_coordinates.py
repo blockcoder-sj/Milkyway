@@ -10,6 +10,8 @@ VET = 'https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20
 IMO = 'https://www.sec.gov/Archives/edgar/data/49938/000004993826000009/imo-20251231.htm'
 APA = 'https://www.sec.gov/Archives/edgar/data/1841666/000184166626000015/apa-20251231.htm'
 CRK = 'https://www.sec.gov/Archives/edgar/data/23194/000119312526059001/crk-20251231.htm'
+NXE = 'https://www.sec.gov/Archives/edgar/data/1698535/000119312526089376/d84755dex993.htm'
+NEXT = 'https://www.sec.gov/Archives/edgar/data/1612720/000161272026000009/next-20251231.htm'
 SU_TAGS = frozenset({'ifrs-full:CashFlowsFromUsedInOperations',
                      'su:CashFlowsUsedForCapitalExpenditures'})
 VET_AGGREGATE = ('ifrs-full:ContinuingAndDiscontinuedOperationsAxis',
@@ -48,6 +50,13 @@ def context_tags(ctx, origin, cik, end, wanted):
 
 def financial_label(metric, fallback, origin, period):
     document = origin.get('url', '').split('#')[0] if origin else ''
+    # The visible audited statements use these tags for different subtotals.
+    # Retain the reported figure while displaying its actual table label.
+    if period == '2025-01-01 ~ 2025-12-31':
+        if document == NXE and metric == 'ifrs-full:ProfitLossFromOperatingActivities':
+            return '세전 손익 · 원문 표시'
+        if document == NEXT and metric == 'us-gaap:NetIncomeLoss':
+            return '순이익 · 비지배지분 포함 · 원문 표시'
     if (metric == 'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax'
             and document == CRK and period == '2025-01-01 ~ 2025-12-31'):
         return '영업수입 · 자산 처분이익 포함'

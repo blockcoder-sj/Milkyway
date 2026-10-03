@@ -99,7 +99,7 @@ PUBLIC['NFE']['segments'] = [fact(r['title'], r['detail'], r['source']) for r in
 PUBLIC['NFE']['financial_context'].append(fact('구조조정 전 실적',
     '2025 연차는2026년 9월 11일 Brazil 분리 전 그룹입니다. 현재 New NFE 자체 연차 수치·구성비로 표시하지 않습니다.', NFE_CLOSE))
 PUBLIC['NEXT']['financial_context'].append(fact('건설 단계·매출 표',
-    '2025 매출 표의 대시를 임의 숫자로 채우지 않습니다. 세부 매출 구성이 미확보인 상태이며 미래 SPA·예상 수수료를 현재 매출로 표시하지 않습니다.', ANNUAL['NEXT']))
+    '2025년 연결 손익계산서 41쪽은 매출을 대시로 표시합니다. 개발·건설 중에는 매출을 발생시키지 못한다는 위험 설명도 함께 확인했습니다. 판매 전 단계이므로 제품별 구성비를 만들지 않습니다. 전체 순손실 429,637,000 USD에는 비지배지분 손실 123,203,000 USD가 포함되며 보통주 귀속 손실은 306,434,000 USD입니다.', ANNUAL['NEXT']))
 PUBLIC['VG']['brief'].append(fact('최근 프로젝트 단계',
     '8월 11일 기준 Plaquemines Phase 1 COD는 2026 Q4, Phase 2는 2027 중반 목표이며 CP2 첫 LNG는 2027 H2 목표입니다. 현재 시운전 LNG 판매와 최종 COD·예정 확장 FID를 구별합니다.', VG_UPDATE))
 PUBLIC['VG']['products'][-1]['source'] = QUARTER['VG']

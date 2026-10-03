@@ -3,7 +3,7 @@ import datetime as dt
 from decimal import Decimal
 import unittest
 
-from cloud_app.company_annual_coordinates import SU, VET, IMO, VET_AGGREGATE
+from cloud_app.company_annual_coordinates import SU, VET, IMO, NXE, NEXT, VET_AGGREGATE
 from cloud_app.company_annual_financials import parse_annual_financials
 from cloud_app.company_financial_labels import presented
 from cloud_app.company_xbrl_precision import reported_value
@@ -80,6 +80,19 @@ class AnnualCoordinateTests(unittest.TestCase):
         self.assertIsNone(reported_value({(d('10'),0),(d('10.49'),1)}))
         self.assertEqual(reported_value({(d('10'),0),(d('10.4'),1)}),d('10.4'))
         self.assertEqual(reported_value({(d('10'),0),(d('10.5'),17)}),d('10.5'))
+
+    def test_visible_statement_labels_override_tags_only_for_exact_reviewed_year_and_document(self):
+        cases = [(NXE, 1698535, 'ifrs-full:ProfitLossFromOperatingActivities', '세전 손익 · 원문 표시'),
+                 (NEXT, 1612720, 'us-gaap:NetIncomeLoss', '순이익 · 비지배지분 포함 · 원문 표시')]
+        for url, cik, metric, expected in cases:
+            dates = dict(start='2025-01-01', end='2025-12-31', cik=str(cik))
+            raw = annual(context('year', **dates), fact('year', '295', metric=metric, attrs='sign="-"'), period='2025-12-31')
+            row, = self.parse(raw, url, cik)
+            self.assertEqual((row['label'], row['value']), (expected, -295000000))
+            legacy = {**row, 'label': '영업이익' if cik == 1698535 else '지배기업 귀속 순이익'}
+            self.assertEqual(presented([legacy])[0]['label'], expected)
+            self.assertNotEqual(self.parse(raw.replace('2025', '2024'), url, cik)[0]['label'], expected)
+            self.assertNotEqual(self.parse(raw, url.replace('.htm', '-other.htm'), cik)[0]['label'], expected)
 
 
 if __name__ == '__main__':

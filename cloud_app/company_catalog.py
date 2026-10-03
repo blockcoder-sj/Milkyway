@@ -620,8 +620,14 @@ def enrich(value):
         if data['symbol'] and data['symbol'] != registered_symbol:
             raise ValueError('Conflicting registered company symbol')
         data['symbol'] = registered_symbol
-    curated = (private_profile(data['registry_id']) if data.get('registry_id')
-               else editorial_for(data['symbol']))
+    if registered_symbol:
+        # A private-role bookmark can become an exact public issuer alias.
+        # It must receive the same annual archive as a ticker-only profile.
+        curated = editorial_for(registered_symbol)
+        curated['registry_id'] = data['registry_id']
+    else:
+        curated = (private_profile(data['registry_id']) if data.get('registry_id')
+                   else editorial_for(data['symbol']))
     canonical_registry = curated.get('registry_id')
     if canonical_registry in REGISTERED_TICKERS and REGISTERED_TICKERS[canonical_registry] == data['symbol']:
         data['registry_id'] = canonical_registry
@@ -652,9 +658,9 @@ def enrich(value):
                 continue
             seen, merged = set(), []
             preferred = {(row.get('title'), row.get('source', {}).get('url'), row.get('source', {}).get('as_of'))
-                         for row in normalized[key]} if key in {'products', 'segments', 'drivers', 'market_shares'} else set()
+                         for row in normalized[key]} if key in {'products', 'segments', 'drivers', 'market_shares', 'financial_context'} else set()
             reviewed_text = {(row.get('title'), row.get('detail')) for row in normalized[key]} \
-                if key in {'products', 'segments', 'drivers', 'market_shares'} else set()
+                if key in {'products', 'segments', 'drivers', 'market_shares', 'financial_context'} else set()
             # A reviewed figure replaces the same filing coordinate, including
             # old English labels/anchors. Other periods and sources are retained.
             previous_rows = data.get(key, [])
@@ -685,6 +691,12 @@ def enrich(value):
                     continue
                 if key == 'segments':
                     row = {**row, 'title': SEGMENT_KO.get(row['title'], row['title'])}
+                if key == 'financial_context' and any(
+                        row.get('detail') == item.get('detail') and
+                        row.get('source') == item.get('source') for item in normalized[key]):
+                    # Earlier presentation titles can change while the exact
+                    # accounting statement and its dated citation stay the same.
+                    continue
                 if reviewed_text and (row.get('title'), row.get('detail')) in reviewed_text:
                     # Keep the cached citation while displaying identical text
                     # once after an editorial source correction.

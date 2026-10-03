@@ -1,6 +1,31 @@
 # 재시작 후 붙여 넣을 프롬프트
 
-아래 문구를 현재 Milkyway 프로젝트의 새 대화에 붙여 넣으세요.
+**2026-10-04 갱신:** 아래는 재시작 당시의 복원 프롬프트다. 이후 사용자가 재개했고
+복원·개발 환경·개인 앱 실행과 213개 Energy 조사·탐색 검수를 완료했다.
+현재는 HANDOFF.md와 [최종 검토](ENERGY_FINAL_REVIEW_20261004.md), WORK_CONTEXT의
+마지막 기록을 먼저 읽는다. 이 과거 프롬프트로 복원된 볼륨을 다시 덮어쓰지 않는다.
+
+현재 상태에서 새 대화에 붙여 넣을 문구:
+
+```text
+Milkyway 작업 맥락을 확인해.
+폴더는 /Users/kimseungzoo/Developer/4.Milkyway,
+GitHub 브랜치는 codex/ai-research-workflow야.
+AGENTS.md, HANDOFF.md, docs/HANDOFF_OTHER_COMPUTER.md,
+docs/ENERGY_FINAL_REVIEW_20261004.md, docs/WORK_CONTEXT.md 마지막 항목을 읽어.
+10월 4일 새 PC 복원·개발 환경·앱 실행과 확정한 Energy 기업213개 조사를 완료했어.
+현재 Git/앱/볼륨 상태를 확인하고 기존 개인 데이터·백업·runtime을 보존해.
+과거 재시작 프롬프트의 복원 명령을 이미 복원된 볼륨에 다시 실행하지 마.
+새 작업은 내가 요청한 범위로 진행하고, 기존 Chrome 탭 하나를 재사용해.
+마일스톤마다 직접 검토·검증·커밋·푸시 후 범위 내 다음 작업을 계속해.
+CodeRabbit과 새 agent는 사용하지 말고 실제 AI provider 호출은 승인받아.
+브로커 피드 실패·중단 worker의 readiness503과 공개 OCI/KMS NO-GO는
+정적 연구의 완료와 구분해. 실제 성공 증거 없이 실운용 성공을 주장하지 마.
+```
+
+## 보존한 10월 3일 재시작 프롬프트
+
+아래 문구는 당시 기록이며 현재 복원 지시로 사용하지 않는다.
 
 ```text
 컴퓨터 재시작을 마쳤으니 Milkyway 작업을 이어서 진행해.

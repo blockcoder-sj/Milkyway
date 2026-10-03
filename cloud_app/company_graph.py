@@ -17,6 +17,7 @@ import uuid
 from .company_schemas import CompanyKnowledge, Source
 from .company_provenance import forbidden
 from .company_context import business_context
+from .company_relation_presentation import evidence_order
 
 ENTITY_KEY = re.compile(r"c_[a-f0-9]{32}")
 QID = re.compile(r"Q\d{1,12}")
@@ -510,7 +511,7 @@ class CompanyGraph:
                           r.observed_at DESC,r.id LIMIT 400""",
                 (key, key, key),
             ).fetchall()
-            ids = list({row['target_id'] for row in rows})
+            ids = list({row[field] for row in rows for field in ('target_id', 'owner_id', 'object_id')})
             aliases_by_id = {target:[] for target in ids}
             if ids:
                 for alias in db.execute('SELECT entity_id,namespace,value FROM company_aliases WHERE entity_id IN (' + ','.join('?' for _ in ids) + ') ORDER BY namespace,value', ids):
@@ -518,7 +519,7 @@ class CompanyGraph:
             result = []
             groups = {}
             seen = set()
-            for row in rows:
+            for row in sorted(rows, key=lambda row: evidence_order(row, aliases_by_id)):
                 reverse = row["object_id"] == key
                 kind = INVERSE[row["kind"]] if reverse else row["kind"]
                 identity = (

@@ -84,7 +84,10 @@
     $('#companyQuote').innerHTML=`<strong>${esc(data.symbol||'종목 미등록')}</strong><span>${esc(data.sector_label)}</span>${data.quote.market_cap!=null?`<small>시가총액 ${fmt(data.quote.market_cap,0)} ${esc(data.quote.currency)} ${source(reading.quoteSource(data.quote,basis.fetched_at))}</small>${Number.isFinite(data.quote.displayed_share_pct)?`<small>수집 기업 내 비중 ${fmt(data.quote.displayed_share_pct)}%</small>`:''}`:'<small>등록된 시가총액·지수 비중 자료 없음</small>'}${basis.count?`<details class="company-quote-method"><summary>시총·비중 산출</summary><p>시총은 제공사 보고값입니다. 비중 = 기업 시총 ÷ 수신한 동일 통화 ${fmt(basis.count,0)}개 기업의 시총 합계(${fmt(basis.market_cap_sum,0)} ${esc(data.quote.currency)}) × 100. 페이지를 바꿔도 분모는 같습니다. 시총 미수신 기업이 있으면 비중을 계산하지 않습니다.</p><p>수집 ${esc(date)} · 제품 시장점유율·공식 지수 비중과 다릅니다.</p></details>`:''}`;
     $('#companyStatus').textContent=`${data.pending?'기업 자료 수집 요청 접수 · 수집기 실행 후 결과가 갱신됩니다':data.fetched_at?'자료 수집 '+new Date(data.fetched_at).toLocaleString('ko-KR'):'공식 관계 자료로 등록된 항목'}${data.collectable===false?' · 등록된 공식 자료 범위 제공':data.stale?' · 일부 자료 확인 필요':''}`;
     $('#companyCollect').disabled=Boolean(data.pending)||data.collectable===false;
-    $('#companyError').textContent=(data.errors||[]).join(' / ');
+    $('#companyError').textContent=(data.errors||[]).length
+      ? '자동 수집 확인 사항: '+data.errors.join(' / ')
+        +((data.financials||[]).length?' · 별도로 확보된 재무 수치는 아래에 출처와 함께 표시합니다.':'')
+      : '';
     $('#companyReportAnalysis').innerHTML=data.report_analysis?fact(data.report_analysis):'<p class="fineprint">공시 본문 분석 자료 수신 전입니다. 기업 자료를 수집하면 공시에서 확인한 사업 관계와 원문을 추가합니다. 빈 관계 분류는 해당 관계가 없다는 뜻이 아닙니다.</p>';
     products();relations();peers();
     $('#companyBrief').innerHTML=reading.essentials();
@@ -113,11 +116,14 @@
     }catch(e){if(token===epoch)$('#companyError').textContent=e.message;}
     finally{if(loading===token)loading=null;}
   }
-  async function collect(){
+  async function collect({automatic=false}={}){
     if(!loadPath||data?.pending||data?.collectable===false)return;
     const token=epoch;$('#companyCollect').disabled=true;
     try{await hooks.api(loadPath+'/refresh',{method:'POST'});if(token===epoch){signature='';await refresh();}}
-    catch(e){if(token===epoch)$('#companyError').textContent=e.message;}
+    catch(e){if(token===epoch){
+      if(automatic)$('#companyStatus').textContent='자동 자료 갱신 대기 · '+e.message+' · 현재 확보된 자료는 아래에 표시합니다.';
+      else $('#companyError').textContent=e.message;
+    }}
     finally{if(token===epoch)$('#companyCollect').disabled=Boolean(data?.pending)||data?.collectable===false;}
   }
   async function present(path,hash,nextSector,nextSymbol,key,push){
@@ -130,7 +136,7 @@
     $('#companyStatus').textContent='';$('#companyCollect').disabled=true;
     for(const id of ['companyIntro','companyIntroSource','companyQuote','companyBrief','companyRevenue','companyGraph','companyRelationFocus','companyRelationList','companyRelationPages','companyRelationSummary','companyReportAnalysis','companyProducts','companyProductPages','companyProductOriginals','companySegments','companySegmentOriginals','companyDriverOriginals','companyFacts','companyMarketShares','companyDrivers','companyPeers','companyPeerPages','companyFinancials','companyFilings','companySources'])$('#'+id).innerHTML='';
     const token=epoch;await refresh();
-    if(token===epoch&&hooks.getState().workspace==='company'&&data?.stale&&!data.pending&&data.collectable!==false)await collect();
+    if(token===epoch&&hooks.getState().workspace==='company'&&data?.stale&&!data.pending&&data.collectable!==false)await collect({automatic:true});
   }
   async function open(nextSector,nextSymbol,push=true){
     if(!/^[a-z0-9_]{1,30}$/.test(nextSector)||!/^[A-Z0-9][A-Z0-9.-]{0,19}$/.test(nextSymbol)||!hooks.getState().config.personal_local_mode)return;

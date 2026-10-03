@@ -164,6 +164,55 @@ sys.exit(9)
         )
         self.assertEqual(len({r["target_id"] for r in self.graph.relations(key)}), 2)
 
+    def test_current_reviewed_wording_wins_same_document_and_keeps_old_evidence(self):
+        from copy import deepcopy
+        from cloud_app.company_research_catalog import RELATIONS
+        reviewed = deepcopy(next(e for e in RELATIONS['NUAI'] if e.get('registry_id') == 'luminant-et'))
+        old = deepcopy(reviewed)
+        old['detail'] = 'Earlier cached wording'
+        owner = self.graph.ingest(company('NUAI', None, 'New Era', relations=[old, reviewed]))
+        with self.graph.connection() as db:
+            db.execute("UPDATE company_relations SET observed_at='2099-01-01' WHERE detail=?", (old['detail'],))
+        relation, = self.graph.relations(owner)
+        self.assertEqual(relation['detail'], reviewed['detail'])
+        reverse, = self.graph.relations(relation['target_id'])
+        self.assertEqual(reverse['detail'], reviewed['detail'])
+        self.assertEqual({e['detail'] for e in reverse['evidence']}, {old['detail'], reviewed['detail']})
+
+    def test_newer_dated_document_wins_over_older_reviewed_or_recently_fetched_claim(self):
+        from copy import deepcopy
+        from cloud_app.company_research_catalog import RELATIONS
+        old = deepcopy(next(e for e in RELATIONS['NUAI'] if e.get('registry_id') == 'luminant-et'))
+        newer = deepcopy(old)
+        newer['detail'] = 'Newer document statement'
+        newer['source'] = dict(label='Later primary statement', url='https://www.sec.gov/later',
+                               as_of='2026-10-03', level='primary')
+        collected = deepcopy(old)
+        collected['detail'] = 'Collection date is not the document date'
+        collected['source'] = dict(label='Undated page', url='https://www.sec.gov/undated',
+                                   as_of='열람 2026-10-04', level='primary')
+        owner = self.graph.ingest(company('NUAI', None, 'New Era', relations=[old, newer, collected]))
+        with self.graph.connection() as db:
+            db.execute("UPDATE company_relations SET observed_at='2099-01-01' WHERE detail!=?", (newer['detail'],))
+        relation, = self.graph.relations(owner)
+        self.assertEqual(relation['detail'], newer['detail'])
+        self.assertEqual(len(relation['evidence']), 3)
+        self.assertEqual(self.graph.relations(relation['target_id'])[0]['detail'], newer['detail'])
+
+    def test_newer_provider_claim_does_not_displace_primary_evidence(self):
+        from copy import deepcopy
+        from cloud_app.company_research_catalog import RELATIONS
+        primary = deepcopy(next(e for e in RELATIONS['NUAI'] if e.get('registry_id') == 'luminant-et'))
+        secondary = deepcopy(primary)
+        secondary['detail'] = 'Later secondary claim'
+        secondary['source'] = dict(label='Provider account', url='https://example.org/later',
+                                   as_of='2026-10-04', level='provider')
+        owner = self.graph.ingest(company('NUAI', None, 'New Era', relations=[primary, secondary]))
+        relation, = self.graph.relations(owner)
+        self.assertEqual(relation['detail'], primary['detail'])
+        self.assertEqual(len(relation['evidence']), 2)
+        self.assertEqual(self.graph.relations(relation['target_id'])[0]['detail'], primary['detail'])
+
     def test_name_only_reference_is_navigable_but_not_collected_by_guessing(self):
         key = self.graph.ingest(company(relations=[edge(qid=None)]))
         target = self.graph.relations(key)[0]["target_id"]

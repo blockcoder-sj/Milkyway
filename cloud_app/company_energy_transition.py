@@ -104,7 +104,7 @@ PUBLIC={
    ('연료 유통','dealer·distributor·commercial·retail fuel 공급입니다. 연료 가격·판매 gallon·마진과 관련 소매 매출을 구별합니다.'),
    ('파이프라인','원유·정유제품 수송 수수료와 예약 용량입니다. ET 계열 연결·JV 운영과 단순 100% 자회사 관계를 구별합니다.'),
    ('터미널','저장·throughput·독일/Poland TanQuid 사업입니다. 2026년 1월 16일 취득 완료와 2025 비교 범위를 구별합니다.'),
-   ('Parkland 정유·유통','2025년 11월 Parkland 취득 후 Canada·국제 유통·Burnaby 정유 등이 편입됩니다. 2025 는 취득 이후 부분 실적이며 전체 2026 연간 실적을 소급 넣지 않습니다.'),
+   ('Parkland 정유·유통','2025년 10월 31일 Parkland 취득 후 Canada·국제 유통·Burnaby 정유 등이 편입됩니다. SunocoCorp의 NYSE 거래 개시는 11월 6일로 인수 완료일과 다릅니다. 2025년은 취득 이후 부분 실적이며 2026년 전체 연간 실적을 소급 넣지 않습니다.'),
    ('지배·법인','Energy Transfer 가 SunocoCorp Manager·SUN GP 를 소유하는 관리/control 관계입니다. SUNC 상장 unit 의 100% 경제 소유와는 다릅니다.'),
    ('NCI·배당','SUN 전체의 연결 EBITDA/DCF 와 SUNC common unitholder 에게 전달되는 SUN 분배금을 구별합니다. 연결 현금을 모두 SUNC 배당 가능액으로 표시하지 않습니다.')],
   customers='SUN 의 연료 dealer·retailer·산업·pipeline/terminal shipper 입니다. SUNC 자체 보유 unit·투자자와 운영 고객은 다릅니다.',
