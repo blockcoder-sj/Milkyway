@@ -1571,3 +1571,31 @@ resuming; no paid AI regression approval has arrived.
   operating/producerSUAs;TPLimagecustomerpie needs actualsource notdirector links.
   Then remaining43 and entiredepthaudit.8missingannual AMEN EROK FTW HMH NUCL
   UNTC WHK XPRO require actualIR/newlistinghistory. No final at intermediate batch.
+
+### Explicit pause and cross-computer handoff · 2026-10-03
+
+- USER explicitly paused feature development and requested a portable handoff.
+  This overrides older ACTIVE/no-intermediate-stop notes. Do not continue feature
+  work or invoke providers until the user resumes. Only handoff preservation is
+  authorized in this final part of the session.
+- Read HANDOFF.md and docs/HANDOFF_OTHER_COMPUTER.md first on the next computer.
+  Latest validated/pushed/deployed shipping SHA is
+  dd0b8eae3a06bd5d5b183a1d18f376724bb6a18a; actual CI37117351110 completed SUCCESS.
+  Image27a0a9157119af9237985426c480c31ae1b6afb12b0ab09cff874314465b0cd3 unchanged.
+- Current WIP: new company_energy_land.py, _land_revenue.py, _land_tables.py;
+  modified company_energy_revenue.py and company_energy_reports.json.
+  30 actual annual/quarter receipts for15 added. Profiles/roles/manual tables are
+  DRAFT, not catalog/group connected, no current land tests or deployment.
+  Initial actual parse11 produced54 rows before the last added BSM/KRP derivative
+  and PNRG other/disposal statement projections. Reparse before archiving results.
+- Current progress remains155 edited main /213;58 plus whole-depth review left.
+  Current15 must NOT be reported completed170. Other43/missing8 and exact pending
+  integration/verification/source points are listed in the new handoff.
+- Original58-company evidence, land intermediate readings/helpers and selected
+  logs are preserved in a separate public-source ZIP at
+  runtime/handoff/milkyway-energy-handoff-20261003.zip (not Git tracked).
+  No .env/keys/cookies/privateDB/runtimevolumes in it. Clone supplies code/docs;
+  ZIP supplies /tmp originals. User personal DB/backups need separate migration.
+- User memory constraint preserved: no Chrome or Docker mutation, no paidAI,
+  no CodeRabbit, no new agents, no feature tests/deployment resumed for handoff.
+  This checkpoint is a saved unfinished state, not a completed milestone.

@@ -2,6 +2,9 @@
 
 ## Resume context
 
+- For cross-computer continuation, read `HANDOFF.md` and
+  `docs/HANDOFF_OTHER_COMPUTER.md` first. The latest explicit user pause overrides
+  older instructions to continue without stopping; resume on the user's request.
 - Read `docs/WORK_CONTEXT.md` when resuming this project. It records the latest
   completed work, verification evidence, user preferences, and remaining limits.
 - Treat runtime observations as dated evidence; confirm current Git/runtime state

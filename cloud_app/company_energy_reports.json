@@ -24123,5 +24123,335 @@
         "share_exclusion": "기간 용선 359,094,000 USD·나용선 2,091,000·기타 3,258,000의 합계는 364,443,000입니다. 기타에 포함된 항해 466,000과 기간·나용선 상위 소계를 다시 더하지 않습니다. 서로 다른 태그를 보존합니다."
       }
     ]
+  },
+  "BSM": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1621434/000162143426000018/bsm-20251231.htm",
+      "as_of": "2026-02-24",
+      "level": "primary",
+      "sha256": "506779831fbc72465c3469e00f9bd642c731673219c3bccde8355d43fc336ae7",
+      "bytes": 2096198,
+      "blocks": 1454,
+      "collected_at": "2026-10-02T15:39:43.223857+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1621434/000162828026052686/bsm-20260630.htm",
+      "as_of": "2026-08-04",
+      "level": "primary",
+      "sha256": "df962d49bf79b29cf734f5194b926d18dc7bc510675c90ca112688fa77dec16e",
+      "bytes": 1107068,
+      "blocks": 487,
+      "collected_at": "2026-10-02T15:39:44.681189+00:00"
+    }
+  },
+  "CRT": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/881787/000119312526128448/crt_2025_10-k.htm",
+      "as_of": "2026-03-27",
+      "level": "primary",
+      "sha256": "603e1c8fd3c79fc7d7fed3b74909597ae74f255f93cc70681c3f947985835e93",
+      "bytes": 1993049,
+      "blocks": 1940,
+      "collected_at": "2026-10-02T15:39:50.145483+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/881787/000119312526348628/crt_10-q_2606.htm",
+      "as_of": "2026-08-13",
+      "level": "primary",
+      "sha256": "ad4024353f6df1c0c09fa93126bbdc6118853309ccbb86d909889987011ebdd1",
+      "bytes": 732450,
+      "blocks": 665,
+      "collected_at": "2026-10-02T15:39:51.919833+00:00"
+    }
+  },
+  "DMLP": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1172358/000143774926005376/dmlp20251231_10k.htm",
+      "as_of": "2026-02-24",
+      "level": "primary",
+      "sha256": "07cb16c484089a671f1b4bb0da40e1d1bd5474d9757a97730f4d491da9527f8d",
+      "bytes": 1146599,
+      "blocks": 1489,
+      "collected_at": "2026-10-02T15:39:57.033249+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1172358/000143774926026367/dmlp20260630_10q.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "10e953813be98fd41396ebeabf8e83cb7cda7e0d76a55f87d5c8a5bc23f13534",
+      "bytes": 603187,
+      "blocks": 546,
+      "collected_at": "2026-10-02T15:39:58.346880+00:00"
+    }
+  },
+  "KRP": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1657788/000110465926020477/krp-20251231x10k.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "sha256": "6bca0ba2f8b73334eea362278ea58b39b00f7e15e44d515a72632df84e614371",
+      "bytes": 4006620,
+      "blocks": 10371,
+      "collected_at": "2026-10-02T15:41:17.871663+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1657788/000110465926092712/krp-20260630x10q.htm",
+      "as_of": "2026-08-07",
+      "level": "primary",
+      "sha256": "c7f6f76d64441ba4e9847ee2f7be20080812cb82fc67ca0d433b7e19869f7a9a",
+      "bytes": 1910024,
+      "blocks": 5330,
+      "collected_at": "2026-10-02T15:41:19.897749+00:00"
+    }
+  },
+  "NRP": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1171486/000143774926006147/nrp20251231_10k.htm",
+      "as_of": "2026-02-27",
+      "level": "primary",
+      "sha256": "cf2ed03215f38b351817dec62fc30e94975269d1b5317f59f139eb84ab7119b4",
+      "bytes": 3151060,
+      "blocks": 3182,
+      "collected_at": "2026-10-02T15:33:48.810330+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1171486/000143774926025856/nrp20260630_10q.htm",
+      "as_of": "2026-08-05",
+      "level": "primary",
+      "sha256": "31fd46e04c754352964e18e5e2124d4deed234581d8944a3e18a460be0b5e406",
+      "bytes": 1845857,
+      "blocks": 1195,
+      "collected_at": "2026-10-02T15:33:50.800707+00:00"
+    }
+  },
+  "NRT": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036125047052/ef20061997_10k.htm",
+      "as_of": "2025-12-31",
+      "level": "primary",
+      "sha256": "75e1ece13aea564a246336fbe50cc0c411fce1efc535e2ae1cad745c072000ff",
+      "bytes": 424751,
+      "blocks": 920,
+      "collected_at": "2026-10-02T15:41:58.283844+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/72633/000114036126035923/ef20076348_10q.htm",
+      "as_of": "2026-09-08",
+      "level": "primary",
+      "sha256": "effea717d8b9b2707474073973f847d0d325cdc02eab876d0e7f596507b5759a",
+      "bytes": 208140,
+      "blocks": 264,
+      "collected_at": "2026-10-02T15:41:59.327283+00:00"
+    }
+  },
+  "PBT": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/319654/000119312526128561/pbt_10-k_2025-12-31.htm",
+      "as_of": "2026-03-27",
+      "level": "primary",
+      "sha256": "5b5ebbd8ca16c8611271d6efb6870dac6b07ca60216be9b2ff4255ac8980873e",
+      "bytes": 2224956,
+      "blocks": 2269,
+      "collected_at": "2026-10-02T15:42:07.055297+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/319654/000119312526348826/pbt_10q_6-30-2026.htm",
+      "as_of": "2026-08-13",
+      "level": "primary",
+      "sha256": "83c1f64d6dd300493c2e462a68eecdbcf84d83a9029190c230c13867bd83cd43",
+      "bytes": 800728,
+      "blocks": 831,
+      "collected_at": "2026-10-02T15:42:08.397286+00:00"
+    }
+  },
+  "SBR": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/710752/000119312526081251/sbr_10-k_2025-12-31.htm",
+      "as_of": "2026-02-27",
+      "level": "primary",
+      "sha256": "63ad9fa700f2b3dfc8ca4b897455d9406c1d351516246354aab3a91a9a99cece",
+      "bytes": 1235395,
+      "blocks": 1369,
+      "collected_at": "2026-10-02T15:42:28.469316+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/710752/000119312526339823/sbr_10-q_2026-06-30.htm",
+      "as_of": "2026-08-07",
+      "level": "primary",
+      "sha256": "2cdd71e99c780af0df78fd8e7cde9470ac6df913d7ad70167e9640435e6bb6d6",
+      "bytes": 494349,
+      "blocks": 565,
+      "collected_at": "2026-10-02T15:42:29.792085+00:00"
+    }
+  },
+  "TPL": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000018/tpl-20251231.htm",
+      "as_of": "2026-02-18",
+      "level": "primary",
+      "sha256": "3c6429a8f379b088d4633f26f3c6fc085884e3d3955ab9a1cb1d8be1a89a2872",
+      "bytes": 2873214,
+      "blocks": 1841,
+      "collected_at": "2026-10-02T12:11:25.336376+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1811074/000181107426000058/tpl-20260630.htm",
+      "as_of": "2026-08-05",
+      "level": "primary",
+      "sha256": "fa93a2166d91b768b7a171c087f6cb47e1ae9f38cb0e5c0ceb5d7da79fe39a9b",
+      "bytes": 1403751,
+      "blocks": 495,
+      "collected_at": "2026-10-02T12:11:27.182895+00:00"
+    }
+  },
+  "VNOM": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/2074176/000207417626000010/vnom-20251231.htm",
+      "as_of": "2026-02-25",
+      "level": "primary",
+      "sha256": "82ad00576678b74ca74c23c173f071620e30d6853961237c33909c9ddd81de28",
+      "bytes": 2327500,
+      "blocks": 1425,
+      "collected_at": "2026-10-02T15:24:27.263550+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/2074176/000207417626000053/vnom-20260630.htm",
+      "as_of": "2026-08-05",
+      "level": "primary",
+      "sha256": "57de20ad4930db4e932e21990436e453e0f34cb64254eb894e594874776f5e98",
+      "bytes": 1515702,
+      "blocks": 752,
+      "collected_at": "2026-10-02T15:24:28.816615+00:00"
+    }
+  },
+  "CKX": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/352955/000143774926010434/ckx20251231_10k.htm",
+      "as_of": "2026-03-31",
+      "level": "primary",
+      "sha256": "1e96a36ce0725fc64ffb8a09b796e21d002a7e631b85b2fb66dc1d86b468f240",
+      "bytes": 1004417,
+      "blocks": 1136,
+      "collected_at": "2026-10-02T15:39:45.984205+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/352955/000143774926026519/ckx20260630_10q.htm",
+      "as_of": "2026-08-07",
+      "level": "primary",
+      "sha256": "5d56c3087eb2c26c74198d566ff77cd3009740e859f3c1c50bfa2d6648a25131",
+      "bytes": 742882,
+      "blocks": 568,
+      "collected_at": "2026-10-02T15:39:47.544659+00:00"
+    }
+  },
+  "MNR": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1980088/000162828026017249/mnr-20251231.htm",
+      "as_of": "2026-03-12",
+      "level": "primary",
+      "sha256": "b05c34fffbec5380eae1c0488502f38d372ce5f6e09c4541431a8c71729a8a3b",
+      "bytes": 2787112,
+      "blocks": 2257,
+      "collected_at": "2026-10-02T15:41:28.173321+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1980088/000162828026054263/mnr-20260630.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "26a8bd49c944169be81303872b14c635c32cdad7920ac3d6cc218af183e9588a",
+      "bytes": 1517441,
+      "blocks": 853,
+      "collected_at": "2026-10-02T15:41:29.989053+00:00"
+    }
+  },
+  "MXC": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/66418/000149315226030386/form10-k.htm",
+      "as_of": "2026-06-29",
+      "level": "primary",
+      "sha256": "af7654cfad93e6239609cc8970c688c59c56ecadb0641babe89198fb0bba66c5",
+      "bytes": 1208590,
+      "blocks": 642,
+      "collected_at": "2026-10-02T15:41:31.980557+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/66418/000149315226037396/form10-q.htm",
+      "as_of": "2026-08-12",
+      "level": "primary",
+      "sha256": "0da29cbf4cbaea1aea357e6a582bf7dd041a11a8ae0f43e85aa38c61b1516b00",
+      "bytes": 493140,
+      "blocks": 205,
+      "collected_at": "2026-10-02T15:41:33.153449+00:00"
+    }
+  },
+  "LB": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526072404/lb-20251231.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "sha256": "a65047211eca8dbfea9f6618f01a6d158cb9f4fc78226b3b79f777691efdadf3",
+      "bytes": 4322586,
+      "blocks": 4087,
+      "collected_at": "2026-10-02T15:41:23.710939+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1995807/000119312526335650/lb-20260630.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "0874b517365abca920392433bba984869d908df92eb9f0dcd034d8e9fa54663c",
+      "bytes": 2690505,
+      "blocks": 2451,
+      "collected_at": "2026-10-02T15:41:26.114106+00:00"
+    }
+  },
+  "PNRG": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/56868/000143774926012531/pnrg20251231_10k.htm",
+      "as_of": "2026-04-16",
+      "level": "primary",
+      "sha256": "272dc5f8f0d05069b0b860889f7c8f8ad789996bfdd3947c5986d606343821de",
+      "bytes": 1466577,
+      "blocks": 1627,
+      "collected_at": "2026-10-02T15:42:16.787345+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/56868/000143774926027969/pnrg20260630_10q.htm",
+      "as_of": "2026-08-14",
+      "level": "primary",
+      "sha256": "2c37104e4b793b9954f0621f440f04126a909b3ec975626bb2c949e58cfb39bb",
+      "bytes": 952446,
+      "blocks": 814,
+      "collected_at": "2026-10-02T15:42:18.203801+00:00"
+    }
   }
 }
