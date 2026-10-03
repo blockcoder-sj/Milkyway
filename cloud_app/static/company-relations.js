@@ -2,11 +2,11 @@
 (() => {
   const kinds = Object.freeze({
     supplier: '공급사', customer: '고객사', partner: '협력사', competitor: '경쟁사',
-    parent: '모회사', subsidiary: '자회사', owner: '소유·지분 관계', holding: '보유·지분 기업',
+    parent: '모회사', subsidiary: '자회사', owner: '소유·지분 관계', holding: '보유·지분 기업', transaction: '사업 거래',
   });
   const colors = Object.freeze({
     supplier: '#e9be77', customer: '#85b9ed', partner: '#7dcfb5', competitor: '#e99099',
-    parent: '#b69aef', subsidiary: '#b69aef', owner: '#9298a9', holding: '#9298a9',
+    parent: '#b69aef', subsidiary: '#b69aef', owner: '#9298a9', holding: '#9298a9', transaction: '#95a8c8',
   });
   const operating = new Set(['supplier', 'customer', 'partner', 'competitor']);
   const order = Object.keys(kinds);
@@ -23,7 +23,7 @@
     const score = edge => (operating.has(edge.kind) ? 0 : 100)
       + (sourceRank[lead(edge).source?.level] ?? 3) * 10 + order.indexOf(edge.kind);
     return rows.map((edge, index) => ({...edge, index})).filter(edge =>
-      filter === 'all' || (filter === 'business' ? !['owner', 'holding'].includes(edge.kind) : edge.kind === filter)
+      filter === 'all' || (filter === 'business' ? !['owner', 'holding', 'transaction'].includes(edge.kind) : edge.kind === filter)
     ).sort((a, b) => score(a) - score(b)
       || Number(Boolean(b.business?.detail)) - Number(Boolean(a.business?.detail))
       || a.name.localeCompare(b.name, 'ko') || a.index - b.index);

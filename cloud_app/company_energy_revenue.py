@@ -7,9 +7,10 @@ Valero's product facts are qualified by the associated reported segment.
 from . import company_energy_provider_revenue as providers
 from . import company_energy_equipment_revenue as equipment
 from . import company_energy_major_revenue as majors
+from . import company_energy_canada_revenue as canada
 
-COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES}
-LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS}
+COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES, **canada.COORDINATES}
+LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS, **canada.LABELS}
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -396,7 +397,7 @@ def annotate(rows, symbol, cik):
                     row['share_exclusion'] = explanation
                     if row['group'] == 'segment':
                         row['includes_intersegment'], row['total'] = True, None
-    return majors.annotate(providers.annotate(rows, symbol, cik), symbol, cik)
+    return canada.annotate(majors.annotate(providers.annotate(rows, symbol, cik), symbol, cik), symbol, cik)
 
 
 def _reviewed_year(row, document):
@@ -452,6 +453,9 @@ def dimensions(pairs, symbol, cik):
     reviewed = majors.dimensions(pairs, symbol, cik)
     if reviewed:
         return reviewed
+    reviewed = canada.dimensions(pairs, symbol, cik)
+    if reviewed:
+        return reviewed
     # These issuers put external corporate revenue on a consolidation axis.
     # Never accept the operating-segment totals or elimination coordinates here.
     if ((symbol, cik) in {('MPC', 1510295), ('PSX', 1534701)}
@@ -466,7 +470,8 @@ def presentation_group(row, symbol, cik):
     group = providers.presentation_group(row, symbol, cik)
     row['group'] = group
     row['group'] = equipment.presentation_group(row, symbol, cik)
-    return majors.presentation_group(row, symbol, cik)
+    row['group'] = majors.presentation_group(row, symbol, cik)
+    return canada.presentation_group(row, symbol, cik)
 
 
 def compound_member(member, symbol, cik):

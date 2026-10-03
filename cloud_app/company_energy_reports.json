@@ -12105,5 +12105,1387 @@
         }
       }
     ]
+  },
+  "SU": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231x40f.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "sha256": "4d2b82fd5fa44da62b4ac82e11240eb48025be71e1fdc0227bb26e1f245165dc",
+      "bytes": 392584,
+      "blocks": 232,
+      "collected_at": "2026-10-02T22:23:56.201028+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "su:ExplorationAndProductionSegmentMember/su:NaturalGasMember",
+        "label": "탐사·생산 · 원유·NGL",
+        "value": 2509000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_tPuFBBQaak6V8QOx7-RTnw_8_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "product",
+        "member": "su:OilSandsSegmentMember/su:BitumenMember",
+        "label": "오일샌드 · 비투멘",
+        "value": 9521000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_w3jJnZ8-g0-UN0S8mgvyyA_5_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "product",
+        "member": "su:OilSandsSegmentMember/su:ScoAndDieselMember",
+        "label": "오일샌드 · 합성원유·디젤",
+        "value": 17803000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_28BueUiOEE2H7cq2NPrLvA_4_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "product",
+        "member": "su:RefiningAndMarketingSegmentMember/su:DistillateMember",
+        "label": "정유·판매 · 중간유분",
+        "value": 14886000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_X0XWVMmk_kugFeLtT8Wt3A_12_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "product",
+        "member": "su:RefiningAndMarketingSegmentMember/su:GasolineMember",
+        "label": "정유·판매 · 휘발유",
+        "value": 13208000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_BltZW34s-Um69HrlZdaQuw_11_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "product",
+        "member": "su:RefiningAndMarketingSegmentMember/su:OtherProductAndServicesMember",
+        "label": "정유·판매 · 기타 제품·서비스",
+        "value": 2577000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_p9g0JIR4R0msVeoMN7cQFQ_13_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "segment",
+        "member": "su:ExplorationAndProductionSegmentMember",
+        "label": "탐사·생산 · 해상 등",
+        "value": 2509000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_KDOLw4DW-UOywV_-8NFi1A_9_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "segment",
+        "member": "su:OilSandsSegmentMember",
+        "label": "오일샌드 · 채굴·열회수·개질",
+        "value": 27324000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_oIYM6DwrNEKzGBDjCdHDDw_6_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "segment",
+        "member": "su:RefiningAndMarketingSegmentMember",
+        "label": "정유·판매",
+        "value": 30671000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_OeX_yZGWkESjTPMVVcoxyQ_14_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·제품 매출은 내부 거래를 포함합니다. 부문 합계 60,504,000,000 CAD에서 내부 거래 8,127,000,000 CAD를 제거한 고객 계약 총매출은 52,377,000,000 CAD입니다. 여기서 로열티 3,469,000,000 CAD를 차감하며 기타소득 402,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "geography",
+        "member": "srt:NorthAmericaMember",
+        "label": "북미",
+        "value": 51886000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 52377000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_IWb9MYDZ6keIxDcTciexhw_17_2",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "su:OtherForeignCountriesOtherThanThoseInNorthAmericaMember",
+        "label": "북미 외",
+        "value": 491000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 52377000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm#Tc_312mH7DI0k6N4_qG168rRw_17_4",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ],
+    "aif": {
+      "label": "SEC · 40-F 첨부 · Annual Information Form of Suncor Energy Inc. for the fiscal year ended December 31, 2025 dated February 25, 2026",
+      "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d1.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231x40f.htm",
+      "sha256": "709d9bfd84acd4de3f64de408da77da0eba051f253e14a5ef678f96ba71f8750",
+      "bytes": 2883598,
+      "blocks": 7298,
+      "collected_at": "2026-10-02T23:40:07.622418+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · Audited Consolidated Financial Statements of Suncor Energy Inc. for the fiscal year ended December 31, 2025",
+      "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d2.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231x40f.htm",
+      "sha256": "7347d0de0068d9ec3e973e7f85fcef2310f2425e28ee485bf758c51b67dc9184",
+      "bytes": 3060010,
+      "blocks": 5623,
+      "collected_at": "2026-10-02T23:40:09.751288+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · Management’s Discussion and Analysis for the fiscal year ended December 31, 2025, dated February 25, 2026",
+      "url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231xex99d3.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/311337/000110465926020411/su-20251231x40f.htm",
+      "sha256": "aa5c1c113ddb75e4a57d122c3c62720e65bc7c947512bf8323e4cb5470f170fa",
+      "bytes": 2675170,
+      "blocks": 5960,
+      "collected_at": "2026-10-02T23:40:11.973643+00:00"
+    }
+  },
+  "CNQ": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1017413/000101741326000018/cnq-20251231.htm",
+      "as_of": "2026-03-26",
+      "level": "primary",
+      "sha256": "a258adaac5b43f466535665063aa2fdbf6ee349dc0f0494e641d7ddade906278",
+      "bytes": 6572468,
+      "blocks": 3497,
+      "collected_at": "2026-10-02T22:24:01.648007+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "cnq:EliminationOfIntersegmentAmountsAndOtherMember",
+        "label": "내부 거래 제거·기타 영업 · 순액",
+        "value": 1076000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1017413/000101741326000018/cnq-20251231.htm#f-2091",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 거래를 포함한 다섯 영업 부문의 로열티 차감 후 매출 합계는 37,686,000,000 CAD입니다. 내부 거래 제거·기타 영업 순액 +1,076,000,000 CAD를 합쳐 연결 매출 38,762,000,000 CAD가 됩니다. 기타 영업을 전부 음수 내부 거래로 취급하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cnq:MidstreamAndRefiningSegmentMember",
+        "label": "중류·정유",
+        "value": 761000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1017413/000101741326000018/cnq-20251231.htm#f-2088",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 거래를 포함한 다섯 영업 부문의 로열티 차감 후 매출 합계는 37,686,000,000 CAD입니다. 내부 거래 제거·기타 영업 순액 +1,076,000,000 CAD를 합쳐 연결 매출 38,762,000,000 CAD가 됩니다. 기타 영업을 전부 음수 내부 거래로 취급하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cnq:NorthAmericaExplorationAndProductionSegmentMember",
+        "label": "북미 탐사·생산",
+        "value": 18952000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1017413/000101741326000018/cnq-20251231.htm#f-1930",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 거래를 포함한 다섯 영업 부문의 로열티 차감 후 매출 합계는 37,686,000,000 CAD입니다. 내부 거래 제거·기타 영업 순액 +1,076,000,000 CAD를 합쳐 연결 매출 38,762,000,000 CAD가 됩니다. 기타 영업을 전부 음수 내부 거래로 취급하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cnq:NorthSeaExplorationAndProductionSegmentMember",
+        "label": "북해 탐사·생산",
+        "value": 337000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1017413/000101741326000018/cnq-20251231.htm#f-1933",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 거래를 포함한 다섯 영업 부문의 로열티 차감 후 매출 합계는 37,686,000,000 CAD입니다. 내부 거래 제거·기타 영업 순액 +1,076,000,000 CAD를 합쳐 연결 매출 38,762,000,000 CAD가 됩니다. 기타 영업을 전부 음수 내부 거래로 취급하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cnq:OffshoreAfricaExplorationAndProductionSegmentMember",
+        "label": "아프리카 해상 탐사·생산",
+        "value": 187000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1017413/000101741326000018/cnq-20251231.htm#f-1936",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 거래를 포함한 다섯 영업 부문의 로열티 차감 후 매출 합계는 37,686,000,000 CAD입니다. 내부 거래 제거·기타 영업 순액 +1,076,000,000 CAD를 합쳐 연결 매출 38,762,000,000 CAD가 됩니다. 기타 영업을 전부 음수 내부 거래로 취급하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cnq:OilSandsMiningAndUpgradingSegmentMember",
+        "label": "오일샌드 채굴·개질",
+        "value": 17449000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1017413/000101741326000018/cnq-20251231.htm#f-2085",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 거래를 포함한 다섯 영업 부문의 로열티 차감 후 매출 합계는 37,686,000,000 CAD입니다. 내부 거래 제거·기타 영업 순액 +1,076,000,000 CAD를 합쳐 연결 매출 38,762,000,000 CAD가 됩니다. 기타 영업을 전부 음수 내부 거래로 취급하지 않습니다."
+      }
+    ]
+  },
+  "IMO": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/49938/000004993826000009/imo-20251231.htm",
+      "as_of": "2026-02-18",
+      "level": "primary",
+      "sha256": "910733f435daff6c8178a4e396496d532093b50d040544a53e54c1fe2f68ebe9",
+      "bytes": 3874186,
+      "blocks": 4045,
+      "collected_at": "2026-10-02T22:24:06.068338+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "imo:ChemicalMember",
+        "label": "화학",
+        "value": 1377000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/49938/000004993826000009/imo-20251231.htm#f-355",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·본사 수익 합계 69,482,000,000 CAD에서 내부 거래 22,404,000,000 CAD를 제거한 매출·기타소득 합계는 47,078,000,000 CAD입니다. 매출 46,918,000,000 CAD와 기타소득 160,000,000 CAD의 합계이며 부과세 포함 고객 계약 매출 38,678,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "segment",
+        "member": "imo:DownstreamMember",
+        "label": "하류 · 정유·판매",
+        "value": 52090000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/49938/000004993826000009/imo-20251231.htm#f-352",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·본사 수익 합계 69,482,000,000 CAD에서 내부 거래 22,404,000,000 CAD를 제거한 매출·기타소득 합계는 47,078,000,000 CAD입니다. 매출 46,918,000,000 CAD와 기타소득 160,000,000 CAD의 합계이며 부과세 포함 고객 계약 매출 38,678,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "segment",
+        "member": "imo:UpstreamMember",
+        "label": "상류 · 생산",
+        "value": 15950000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/49938/000004993826000009/imo-20251231.htm#f-349",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·본사 수익 합계 69,482,000,000 CAD에서 내부 거래 22,404,000,000 CAD를 제거한 매출·기타소득 합계는 47,078,000,000 CAD입니다. 매출 46,918,000,000 CAD와 기타소득 160,000,000 CAD의 합계이며 부과세 포함 고객 계약 매출 38,678,000,000 CAD는 별도입니다."
+      },
+      {
+        "group": "segment",
+        "member": "us-gaap:CorporateNonSegmentMember",
+        "label": "본사·기타",
+        "value": 65000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/49938/000004993826000009/imo-20251231.htm#f-535",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        },
+        "share_exclusion": "부문·본사 수익 합계 69,482,000,000 CAD에서 내부 거래 22,404,000,000 CAD를 제거한 매출·기타소득 합계는 47,078,000,000 CAD입니다. 매출 46,918,000,000 CAD와 기타소득 160,000,000 CAD의 합계이며 부과세 포함 고객 계약 매출 38,678,000,000 CAD는 별도입니다."
+      }
+    ]
+  },
+  "CVE": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231_d2.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "sha256": "4f812cf813a6a734f4f08edf8e8e1a68aa9d00e7b3105a992f1b5eea7df31ee4",
+      "bytes": 70548,
+      "blocks": 123,
+      "collected_at": "2026-10-02T22:24:08.196922+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "cve:DownstreamMember",
+        "label": "하류 사업 소계",
+        "value": 29197000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-429",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출 합계 58,637,000,000 CAD에서 본사·내부 거래 제거 8,941,000,000 CAD를 차감하면 연결 매출 49,696,000,000 CAD입니다. 상·하류 소계와 개별 부문을 합쳐 중복 계산하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "cve:UpstreamMember",
+        "label": "상류 사업 소계",
+        "value": 29440000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-319",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출 합계 58,637,000,000 CAD에서 본사·내부 거래 제거 8,941,000,000 CAD를 차감하면 연결 매출 49,696,000,000 CAD입니다. 상·하류 소계와 개별 부문을 합쳐 중복 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cve:CanadianRefiningMember",
+        "label": "캐나다 정유·개질",
+        "value": 5079000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-425",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출 합계 58,637,000,000 CAD에서 본사·내부 거래 제거 8,941,000,000 CAD를 차감하면 연결 매출 49,696,000,000 CAD입니다. 상·하류 소계와 개별 부문을 합쳐 중복 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cve:ConventionalSegmentMember",
+        "label": "일반 육상 원유·가스",
+        "value": 2605000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-315",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출 합계 58,637,000,000 CAD에서 본사·내부 거래 제거 8,941,000,000 CAD를 차감하면 연결 매출 49,696,000,000 CAD입니다. 상·하류 소계와 개별 부문을 합쳐 중복 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cve:OffshoreMember",
+        "label": "해상 생산",
+        "value": 1428000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-317",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출 합계 58,637,000,000 CAD에서 본사·내부 거래 제거 8,941,000,000 CAD를 차감하면 연결 매출 49,696,000,000 CAD입니다. 상·하류 소계와 개별 부문을 합쳐 중복 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cve:OilSandsSegmentMember",
+        "label": "오일샌드",
+        "value": 25407000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-313",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출 합계 58,637,000,000 CAD에서 본사·내부 거래 제거 8,941,000,000 CAD를 차감하면 연결 매출 49,696,000,000 CAD입니다. 상·하류 소계와 개별 부문을 합쳐 중복 계산하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "cve:USRefiningMember",
+        "label": "미국 정유",
+        "value": 24118000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-427",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출 합계 58,637,000,000 CAD에서 본사·내부 거래 제거 8,941,000,000 CAD를 차감하면 연결 매출 49,696,000,000 CAD입니다. 상·하류 소계와 개별 부문을 합쳐 중복 계산하지 않습니다."
+      },
+      {
+        "group": "geography",
+        "member": "country:CA",
+        "label": "캐나다",
+        "value": 23789000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 49696000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-659",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CN",
+        "label": "중국",
+        "value": 1012000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 49696000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-663",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 24895000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 49696000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm#f-661",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      }
+    ],
+    "aif": {
+      "label": "SEC · 40-F 첨부 · 99.1",
+      "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/a2025annualinformationform.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231_d2.htm",
+      "sha256": "8f3f7130fe69ce4eb9928230a61bac6000aaeb34681db71dd1a8dc7b8949e7b6",
+      "bytes": 2286554,
+      "blocks": 4764,
+      "collected_at": "2026-10-02T23:40:13.927677+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · 99.3",
+      "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231_d2.htm",
+      "sha256": "a864f3e1830d2a4c785c038a5095b7d80e7618893e9811e6cdacb1606293d41b",
+      "bytes": 2728818,
+      "blocks": 1359,
+      "collected_at": "2026-10-02T23:40:15.699035+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · 99.2",
+      "url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/a2025managementsdiscussion.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1475260/000147526026000008/cve-20251231_d2.htm",
+      "sha256": "4a456cded46f89670d2939c89c516775501c035c88f822ed021e9f572a02cf3c",
+      "bytes": 2420382,
+      "blocks": 1505,
+      "collected_at": "2026-10-02T23:40:18.027082+00:00"
+    }
+  },
+  "OBE": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-20251231.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "sha256": "fc419f9c21690628a034aa8622c8aeb0011498ceee91a6873f85a852eacf52b4",
+      "bytes": 348122,
+      "blocks": 137,
+      "collected_at": "2026-10-02T22:24:09.925044+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "obe:CrudeOilFuelMember",
+        "label": "원유",
+        "value": 527000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 599800000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-ex99_3.htm#F_05b248b0-11c4-405b-9a62-5808253ba44a",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "obe:NaturalGasLiquidMember",
+        "label": "NGL",
+        "value": 35800000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 599800000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-ex99_3.htm#F_a77cb950-4ef3-4c48-b6f1-06901b2dab87",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "srt:NaturalGasReservesMember",
+        "label": "천연가스",
+        "value": 37000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 599800000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-ex99_3.htm#F_2d71982d-4c1f-4e24-83ee-af4c2ac6208c",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      }
+    ],
+    "aif": {
+      "label": "SEC · 40-F 첨부 · Annual Information Form for the fiscal year ended December 31, 2025",
+      "url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-ex99_1.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-20251231.htm",
+      "sha256": "eca7542f45d54a59f33f52742ad9a8a5ed31816dde257c12ac813c77620ccbae",
+      "bytes": 1655728,
+      "blocks": 2658,
+      "collected_at": "2026-10-02T23:40:19.966329+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025",
+      "url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-ex99_3.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-20251231.htm",
+      "sha256": "2c8133fc7460003f168f5d9c90ef39ecbab864b76408f03ad1c1166d7e540c25",
+      "bytes": 2767192,
+      "blocks": 2487,
+      "collected_at": "2026-10-02T23:40:21.835162+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · Management’s Discussion and Analysis of Financial Condition and Results of Operations for the fiscal year ended December 31, 2025",
+      "url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-ex99_2.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1334388/000119312526058652/obe-20251231.htm",
+      "sha256": "f3fa3637220873d36b54d35fece27679811f483f1aa71a83691b72e0abd75559",
+      "bytes": 2498503,
+      "blocks": 2317,
+      "collected_at": "2026-10-02T23:40:24.024283+00:00"
+    }
+  },
+  "BTE": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231.htm",
+      "as_of": "2026-03-05",
+      "level": "primary",
+      "sha256": "d1a568e870a676a7fada8be833e42d5fb0ecb8d3178268620deaff4d594c8d5d",
+      "bytes": 254845,
+      "blocks": 116,
+      "collected_at": "2026-10-02T22:24:12.405141+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "bte:HeavyOilPropertiesMember",
+        "label": "중질유",
+        "value": 1261899000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1684648000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.2",
+          "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231_d2.htm#f-872",
+          "as_of": "2026-03-05",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "bte:LightOilandCondensateMember",
+        "label": "경질유·콘덴세이트",
+        "value": 366523000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1684648000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.2",
+          "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231_d2.htm#f-870",
+          "as_of": "2026-03-05",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "bte:NGLMember",
+        "label": "NGL",
+        "value": 29583000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1684648000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.2",
+          "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231_d2.htm#f-874",
+          "as_of": "2026-03-05",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "bte:NaturalGasMember",
+        "label": "천연가스",
+        "value": 26643000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1684648000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.2",
+          "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231_d2.htm#f-876",
+          "as_of": "2026-03-05",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CA",
+        "label": "캐나다 · 계속사업",
+        "value": 1684648000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1684648000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · 99.2",
+          "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231_d2.htm#f-878",
+          "as_of": "2026-03-05",
+          "level": "primary"
+        }
+      }
+    ],
+    "aif": {
+      "label": "SEC · 40-F 첨부 · 99.1",
+      "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/a991-2025aif.htm",
+      "as_of": "2026-03-05",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231.htm",
+      "sha256": "d918518524c4f8e20487eca303828c524d4f02775e287d4015e1fc5ce4404111",
+      "bytes": 1394350,
+      "blocks": 1018,
+      "collected_at": "2026-10-02T23:40:25.583523+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · 99.2",
+      "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231_d2.htm",
+      "as_of": "2026-03-05",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231.htm",
+      "sha256": "bcaaf20a5a572e301438dfc08dd16170cc8cd120a3e240923caf70983418c37e",
+      "bytes": 1068435,
+      "blocks": 462,
+      "collected_at": "2026-10-02T23:40:26.756278+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · 99.3",
+      "url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/a993-2025mda.htm",
+      "as_of": "2026-03-05",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1279495/000127949526000007/bte-20251231.htm",
+      "sha256": "cce0fdb9a2b68e9f3696cff35253f317a5c9972acb3061841c79dcba4fd69ae9",
+      "bytes": 1168212,
+      "blocks": 592,
+      "collected_at": "2026-10-02T23:40:27.957624+00:00"
+    }
+  },
+  "VET": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231x40f.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "sha256": "1f687240cb2f71b2acb3a1c3a7f1a6af01c325b1dd0e4283082fee778baeee14",
+      "bytes": 357615,
+      "blocks": 228,
+      "collected_at": "2026-10-02T22:24:14.995078+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "geography",
+        "member": "country:AU",
+        "label": "호주",
+        "value": 127278000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1765141000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm#Tc_EreVhMdJ_0ylFrv_Im0lOQ_13_12",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CA",
+        "label": "캐나다",
+        "value": 707968000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1765141000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm#Tc_DZs5WdUOD0miEYSamEeoRw_13_2",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:DE",
+        "label": "독일",
+        "value": 187541000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1765141000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm#Tc_HuNM3CK1PEOIUhkvAM-bYA_13_8",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:FR",
+        "label": "프랑스",
+        "value": 200266000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1765141000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm#Tc_XtJ3RdqoKkyfMHjaH45aig_13_4",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:IE",
+        "label": "아일랜드",
+        "value": 294109000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1765141000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm#Tc_fWryZGpg3kaLjsYPoLjxXA_13_10",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:NL",
+        "label": "네덜란드",
+        "value": 132494000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1765141000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm#Tc_h8vrTZhAi06To2l0e3liNw_13_6",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ifrs-full:UnallocatedAmountsMember",
+        "label": "기업 공통·지역 미배분 매출",
+        "value": 63514000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1765141000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm#Tc_Z6zv84aUnEKlPXJSpGB4sg_13_16",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "vet:CentralAndEasternEuropeMember",
+        "label": "중·동부 유럽",
+        "value": 51971000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1765141000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+          "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm#Tc_g-U6bXuUOke0ACBepRAsaQ_13_14",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      }
+    ],
+    "aif": {
+      "label": "SEC · 40-F 첨부 · Annual Information Form for the Year Ended December 31, 2025",
+      "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d1.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231x40f.htm",
+      "sha256": "e4e3eca22f56e38d44b993184e5f715d1a4291cfd5ac78e30fc4e38860fa15d1",
+      "bytes": 6737469,
+      "blocks": 15871,
+      "collected_at": "2026-10-02T23:40:32.566201+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · Audited Annual Financial Statements for the Year Ended December 31, 2025",
+      "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d3.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231x40f.htm",
+      "sha256": "224ef2695a050d8db46c4813ee49e9582d47bbedc1e84a8512f27f27304b6e91",
+      "bytes": 2471633,
+      "blocks": 5949,
+      "collected_at": "2026-10-02T23:40:34.910210+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · Management's Discussion and Analysis from the 2025 Annual Report to Shareholders",
+      "url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231xex99d2.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1293135/000110465926023553/vet-20251231x40f.htm",
+      "sha256": "f5185532e3fa09fe95c9c3b3d6467ec5c3ac504d86270d52b4d3be6f40b3eecd",
+      "bytes": 5402330,
+      "blocks": 14094,
+      "collected_at": "2026-10-02T23:40:39.607734+00:00"
+    }
+  },
+  "PDS": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-20251231.htm",
+      "as_of": "2026-03-09",
+      "level": "primary",
+      "sha256": "3eda99dc5f5f3611dd951d1c26c219358154df42e4843aaab1ba4f03268f2c65",
+      "bytes": 359481,
+      "blocks": 151,
+      "collected_at": "2026-10-02T22:24:26.116871+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "pds:DayRateOrHourlyServicesMember",
+        "label": "일당·시간당 서비스",
+        "value": 1836328000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1843704000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+          "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm#F_8e647c82-75fd-479e-a1b3-746f549ec562",
+          "as_of": "2026-03-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pds:OtherServicesMember",
+        "label": "기타 서비스",
+        "value": 2267000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1843704000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+          "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm#F_288f3bc8-0e87-4912-bf18-3b95a944bdb2",
+          "as_of": "2026-03-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pds:ShortfallPaymentsOrIdleButContractedMember",
+        "label": "계약 부족분·대기 보상",
+        "value": 5109000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1843704000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+          "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm#F_2d622e65-8803-4299-b6fd-8724f887445d",
+          "as_of": "2026-03-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "pds:CompletionAndProductionServicesSegmentMember",
+        "label": "완결·생산 서비스",
+        "value": 278818000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+          "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm#F_54c36e90-7f96-46ac-8d91-c3336a43ba56",
+          "as_of": "2026-03-09",
+          "level": "primary"
+        },
+        "share_exclusion": "두 부문 매출 합계 1,854,854,000 CAD에서 내부 거래 11,150,000 CAD를 차감하면 연결 매출 1,843,704,000 CAD입니다. 제품별 서비스·지역 표는 이 제거 후 연결 기준입니다."
+      },
+      {
+        "group": "segment",
+        "member": "pds:ContractDrillingServicesSegmentMember",
+        "label": "계약 시추",
+        "value": 1576036000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+          "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm#F_77fbd6c0-9f90-4682-9760-0bc8ff3cfd54",
+          "as_of": "2026-03-09",
+          "level": "primary"
+        },
+        "share_exclusion": "두 부문 매출 합계 1,854,854,000 CAD에서 내부 거래 11,150,000 CAD를 차감하면 연결 매출 1,843,704,000 CAD입니다. 제품별 서비스·지역 표는 이 제거 후 연결 기준입니다."
+      },
+      {
+        "group": "geography",
+        "member": "country:CA",
+        "label": "캐나다",
+        "value": 1099184000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1843704000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+          "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm#F_8ce9f27a-5296-42ed-a582-f77b296393bc",
+          "as_of": "2026-03-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 547728000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1843704000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+          "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm#F_ec2d839e-a706-4eac-81ed-5ce2fb23d26d",
+          "as_of": "2026-03-09",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "pds:InternationalSegmentMember",
+        "label": "미국·캐나다 외",
+        "value": 196792000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1843704000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+          "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm#F_a8bdd2fb-1a03-4803-9e97-38d85fa5e60a",
+          "as_of": "2026-03-09",
+          "level": "primary"
+        }
+      }
+    ],
+    "aif": {
+      "label": "SEC · Precision Drilling 2025 Annual Information Form",
+      "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_1.htm",
+      "as_of": "2026-03-09",
+      "level": "primary",
+      "sha256": "d0cc5029f0e2fab7be4bdab7ec808e52229389f66f441e6d9f23c4c4008db9c4",
+      "bytes": 1021713,
+      "blocks": 1336,
+      "collected_at": "2026-10-03T00:22:09.131308+00:00"
+    },
+    "financials": {
+      "label": "SEC · 40-F 첨부 · Consolidated Financial Statements for the fiscal year ended December 31, 2025.",
+      "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_3.htm",
+      "as_of": "2026-03-09",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-20251231.htm",
+      "sha256": "7749fb9230439b2262f40347413c60556e307b5b0c0e3d4d17a5c96121c125f0",
+      "bytes": 4020240,
+      "blocks": 3538,
+      "collected_at": "2026-10-02T23:40:41.916759+00:00"
+    },
+    "mda": {
+      "label": "SEC · 40-F 첨부 · Management’s Discussion and Analysis of Financial Condition and Results of Operations for the fiscal year ended December 31, 2025.",
+      "url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-ex99_2.htm",
+      "as_of": "2026-03-09",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1013605/000101360526000014/pds-20251231.htm",
+      "sha256": "2c5511e31fd5aec886426d8fa3024b95e8ab3eb927e2b1dd5aa54c22ae5ad60b",
+      "bytes": 2266459,
+      "blocks": 2022,
+      "collected_at": "2026-10-02T23:40:43.573663+00:00"
+    }
   }
 }

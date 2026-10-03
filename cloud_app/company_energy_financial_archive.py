@@ -13,6 +13,8 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 
 from .bounded_io import read_bounded_json
 from .company_annual_financials import METRICS
+from .company_annual_coordinates import metric_allowed
+from .company_annual_attachments import same_annual_accession
 from .company_financial_coordinates import coordinate
 from .company_revenue import source_cik
 from .company_schemas import Fact, Financial, Source
@@ -33,6 +35,8 @@ class Record(BaseModel):
     model_config = ConfigDict(extra='forbid')
     cik: str = Field(pattern=r'^[1-9][0-9]{0,9}$')
     annual: Receipt
+    parent_annual: Receipt | None = None
+    annual_period_end: str | None = Field(default=None, pattern=r'^\d{4}-\d{2}-\d{2}$')
     financials: list[Financial] = Field(max_length=9)
     financial_context: list[Fact] = Field(default_factory=list, max_length=8)
 
@@ -41,6 +45,14 @@ class Record(BaseModel):
         source = self.annual.model_dump()
         if source_cik(source) != int(self.cik) or self.annual.level != 'primary':
             raise ValueError('Financial receipt issuer mismatch')
+        if self.parent_annual is not None:
+            parent = self.parent_annual.model_dump()
+            if (not same_annual_accession(source, parent, self.cik)
+                    or self.annual_period_end is None
+                    or dt.date.fromisoformat(self.annual_period_end) > dt.date.fromisoformat(parent['as_of'])):
+                raise ValueError('Financial exhibit parent mismatch')
+        elif self.annual_period_end is not None:
+            raise ValueError('Exhibit period requires original parent evidence')
         allowed = {tag: instant for _, tags, instant in METRICS for tag in tags}
         seen = set()
         filed = dt.date.fromisoformat(self.annual.as_of)
@@ -55,6 +67,8 @@ class Record(BaseModel):
                 raise ValueError('Invalid original financial coordinate')
             dates = [dt.date.fromisoformat(value) for value in row.period.split(' ~ ')]
             if (len(dates) not in (1, 2) or dates[-1] > filed
+                    or not metric_allowed(metric, source, self.cik, dates[-1])
+                    or (self.parent_annual is not None and dates[-1].isoformat() != self.annual_period_end)
                     or (len(dates) == 1) != allowed[metric]
                     or (len(dates) == 2 and not 300 <= (dates[1] - dates[0]).days <= 400)):
                 raise ValueError('Invalid original financial period')
@@ -106,5 +120,8 @@ def editorial(symbol):
     if not value:
         return {}
     origin = {key: value['annual'][key] for key in ('label', 'url', 'as_of', 'level')}
+    origins = [origin]
+    if value.get('parent_annual'):
+        origins.append({key:value['parent_annual'][key] for key in ('label','url','as_of','level')})
     return deepcopy(dict(financials=value['financials'],
-        financial_context=value['financial_context'], filings=[origin], sources=[origin]))
+        financial_context=value['financial_context'], filings=origins, sources=origins))

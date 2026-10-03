@@ -1277,3 +1277,42 @@ resuming; no paid AI regression approval has arrived.
   PDS main annual contains AIF rather than guessed extra URL. Read actual source.
   Then named suppliers/customers/current JV, essential KO notes, all-field audit.
   This milestone still needs commit/push+new CI confirmation; continue after it.
+
+### Canadian original-source continuation · 2026-10-03
+
+- Whole Energy remains unfinished and active: 213 research entries, 75 edited
+  main companies, 138 unedited. Counts are not all-field completion. Continue
+  immediately after Canadian commit/push; never final at a partial milestone.
+- Added SU/CNQ/IMO/CVE/OBE/BTE/VET/PDS edited Korean dossiers, 25 role-specific
+  context pages, 56 annual financial values and 55 revenue rows. Actual AIF, MD&A
+  and audited attachment receipts; current assets vs annual/discontinued scope
+  kept separate. docs/ENERGY_CANADA_REVIEW_20261003.md holds detailed evidence.
+- Correct previous PDS note: main 40-F is cover, actual SEC ex99_1 AIF separately
+  collected SHA d0cc5029f0e2fab7be4bdab7ec808e52229389f66f441e6d9f23c4c4008db9c4.
+  Verified same CIK/accession/date/observed cover link before sharing XBRL resources.
+  No invented DEI. Duplicate resource conflicts rejected. Precision-bound CVE
+  2740m cash vs rounded2700m; VET limited continue/discontinue balance totals.
+- OBE PCU11 Whitecap operator verified government unit65643 on actual PDF p33,
+  asofSep17,2026; OBE45% from AIF, other ownership unknown. Named GLJ/ISN service
+  and Sept14 compressor/guidance update. SU Komatsu secondPC9000 actualAug2025
+  delivery distinguished from initial plan. CVE WRB soldSep30,2025; new transaction
+  kind separate from current business/JV and shown in dedicated graph filter.
+- Final source638tests32.554s, actual packaged638tests33.517s OK(skipped18Node);
+  realhost10frontend modules26tests1.166s; focus83tests0.530s. Direct bounded
+  source/security review, no dependencies/auth/schema/order changes; noCodeRabbit.
+- Offline512MiB/1CPU cold622entities1.224s/RSS62.4MiB/quick_checkOK; directory
+  p95.746ms, CVEmerge1.791ms, graph11.506ms/RSS63.0MiB. Not network/UI RAM claim.
+- App-only image0ff07807fb49d76f8490bd69c6b942be318fda40c56388ae573f858421c923f7;
+  18appSHA match; healthy/readiness200. ExistingChrome1tab verified CVE notes,
+  financials, transactionfilter, graph→HMLP and reverse CVE link. Observed expired
+  local12h session401 recovered after refresh(localauth200, detail/price200).
+  CVE32.40USD actualYahoo closed quoteOct2 20:00:02UTC, not live-new-transaction.
+- Prior major commit0ccca69905bba4551d414a25cf5aac4e67de83e3 pushed; CI37079074349
+  SUCCESS. Canadian commit pending at this context append. Four needed services,
+  paper worker paused/stopped; runtime/backup volumes preserved. 0 actual AI calls.
+- NEXT: ENB/PBA/TRP/SOBO Canadian oil/gas transport actual attachments/contracts;
+  TS/SSL, then whole remaining producers/refiners/marine/fuels/nuclear/trusts.
+  /tmp/milkyway-energy-remaining-20261003.json lists actual remaining138.
+  Original annuals already local in /tmp/milkyway-energy-research; reuse receipts.
+  FTK actual four subsidiaries source verified earlier; no global public scan
+  unless managedworkspace; no paid data, new agents, OCI/KMS claims.

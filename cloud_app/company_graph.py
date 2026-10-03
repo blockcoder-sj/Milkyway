@@ -31,6 +31,7 @@ INVERSE = {
     "customer": "supplier",
     "partner": "partner",
     "competitor": "competitor",
+    "transaction": "transaction",
 }
 SCHEMA = """
 CREATE TABLE company_entities (

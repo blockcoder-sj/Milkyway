@@ -46,6 +46,7 @@ class Relation(BaseModel):
         "supplier",
         "customer",
         "competitor",
+        "transaction",
     ]
     detail: str = Field(default="", max_length=700)
     original: str = Field(default="", max_length=1500)

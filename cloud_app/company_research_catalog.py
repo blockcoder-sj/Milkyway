@@ -182,6 +182,9 @@ PRIVATE_COMPANIES.update(EQUIPMENT_PRIVATE)
 from .company_energy_majors import PUBLIC as MAJOR_PUBLIC, PRIVATE as MAJOR_PRIVATE, EDGES as MAJOR_EDGES
 PUBLIC_COMPANIES.update(MAJOR_PUBLIC)
 PRIVATE_COMPANIES.update(MAJOR_PRIVATE)
+from .company_energy_canada import PUBLIC as CANADA_PUBLIC, PRIVATE as CANADA_PRIVATE, EDGES as CANADA_EDGES
+PUBLIC_COMPANIES.update(CANADA_PUBLIC)
+PRIVATE_COMPANIES.update(CANADA_PRIVATE)
 
 # Explicitly reviewed brand/issuer mapping. Similar names never create aliases.
 # Range names the ProFrac service group; its listed parent is ACDC, not FLOC.
@@ -259,6 +262,8 @@ for _symbol, _edges in PROVIDER_EDGES.items():
 for _symbol, _edges in EQUIPMENT_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in MAJOR_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in CANADA_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

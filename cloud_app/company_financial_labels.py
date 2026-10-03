@@ -1,4 +1,5 @@
 """Display the reported metric, without changing a value or its accounting scope."""
+from .company_annual_coordinates import financial_label
 
 CONTRACT_REVENUE = 'RevenueFromContractWithCustomerExcludingAssessedTax'
 
@@ -14,6 +15,8 @@ def presented(rows):
     result = []
     for row in rows:
         metric = row.get('source', {}).get('label', '').removeprefix('SEC XBRL · ')
-        result.append({**row, 'label': label(metric, row['label'])}
-                      if row['label'] == '매출' else dict(row))
+        metric = metric.removeprefix('SEC 연차 원문 XBRL · ')
+        name = label(metric, row['label']) if row['label'] == '매출' else row['label']
+        name = financial_label(metric, name, row.get('source'), row.get('period'))
+        result.append({**row, 'label': name})
     return result

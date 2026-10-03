@@ -11,9 +11,9 @@ from cloud_app.company_schemas import CompanyKnowledge
 class EnergyFinancialArchiveTests(unittest.TestCase):
     def test_all_original_coordinates_and_issuer_identities_validate(self):
         records = archive()
-        self.assertEqual(len(records), 190)
-        self.assertEqual(sum(bool(r['financials']) for r in records.values()), 181)
-        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1408)
+        self.assertEqual(len(records), 198)
+        self.assertEqual(sum(bool(r['financials']) for r in records.values()), 189)
+        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1464)
         self.assertEqual(records['STNG']['financials'][0]['value'], 938222000)
         self.assertFalse(records['PBA']['financials'])
 
@@ -38,6 +38,28 @@ class EnergyFinancialArchiveTests(unittest.TestCase):
             validate_archive(bad)
         with self.assertRaises(ValueError):
             validate_archive({'UNKNOWN': raw['ACDC']})
+
+    def test_annual_exhibit_receipt_preserves_exact_parent_and_declared_period(self):
+        raw={'ACDC':deepcopy(archive()['ACDC'])}
+        record=raw['ACDC']
+        record['parent_annual']=deepcopy(record['annual'])
+        record['parent_annual']['url']=record['annual']['url'].rsplit('/',1)[0]+'/cover.htm'
+        record['annual_period_end']='2025-12-31'
+        result=validate_archive(raw)['ACDC']
+        self.assertEqual(result['parent_annual']['sha256'],record['parent_annual']['sha256'])
+        self.assertTrue(result['financials'][0]['source']['url'].startswith(record['annual']['url']))
+        for change in ('period','date','issuer','accession','authority','level','missing_parent','missing_period'):
+            bad=deepcopy(raw);entry=bad['ACDC'];parent=entry['parent_annual']
+            if change=='period':entry['annual_period_end']='2024-12-31'
+            if change=='date':parent['as_of']='2026-03-01'
+            if change=='issuer':parent['url']=archive()['FTK']['annual']['url']
+            if change=='accession':parent['url']=parent['url'].rsplit('/',2)[0]+'/000000000000000001/cover.htm'
+            if change=='authority':parent['url']=parent['url'].replace('www.sec.gov','evil.test')
+            if change=='level':parent['level']='provider'
+            if change=='missing_parent':entry['parent_annual']=None
+            if change=='missing_period':entry['annual_period_end']=None
+            with self.subTest(change=change),self.assertRaises(ValueError):
+                validate_archive(bad)
 
     def test_historical_scopes_stay_visible_and_cannot_be_silently_dropped(self):
         for symbol in ('XOM', 'HOS', 'NINE', 'ACDC'):

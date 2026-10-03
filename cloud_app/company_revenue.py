@@ -243,13 +243,15 @@ def number(fact, *, signed=False):
     if transform in {'ixt:zerodash', 'ixt:zero-dash'} and raw in {'-', '—', '–'}:
         raw = '0'
     elif transform in {'ixt:num-dot-decimal', 'ixt:numdotdecimal'}:
-        if not re.fullmatch(r'(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?', raw):
+        # The official transform permits spaces as digit separators (for example
+        # Suncor's "52 377"). Keep conservative, consistent three-digit grouping.
+        if not re.fullmatch(r'(?:\d{1,3}(?:,\d{3})+|\d{1,3}(?: \d{3})+|\d+)(?:\.\d+)?', raw):
             return None
-        raw = raw.replace(',', '')
+        raw = raw.replace(',', '').replace(' ', '')
     elif transform in {'ixt:num-comma-decimal', 'ixt:numcommadecimal'}:
-        if not re.fullmatch(r'(?:\d{1,3}(?:\.\d{3})+|\d+)(?:,\d+)?', raw):
+        if not re.fullmatch(r'(?:\d{1,3}(?:\.\d{3})+|\d{1,3}(?: \d{3})+|\d+)(?:,\d+)?', raw):
             return None
-        raw = raw.replace('.', '').replace(',', '.')
+        raw = raw.replace('.', '').replace(' ', '').replace(',', '.')
     elif transform or not re.fullmatch(r'\d+(?:\.\d+)?', raw):
         return None
     try:
@@ -269,20 +271,22 @@ def number(fact, *, signed=False):
         return None
 
 
-def parse_revenue(raw, origin, symbol, today=None):
-    soup = document(raw)
+def parse_revenue(raw, origin, symbol, today=None, *, shared=None, period_end=None, parsed=None):
+    # Shared resources are supplied by the exact linked annual-exhibit resolver.
+    from .company_xbrl_resources import resource_nodes
+    soup = parsed if parsed is not None else document(raw)
     today = today or dt.datetime.now(dt.timezone.utc).date()
     expected_cik = source_cik(origin)
     if expected_cik is None:
         return []
     contexts, units = {}, {}
-    for unit in soup.find_all('xbrli:unit', limit=200):
+    for unit in resource_nodes(soup, shared, 'xbrli:unit', 200):
         measures = unit.find_all('xbrli:measure')
         if len(measures) == 1 and not unit.find('xbrli:divide'):
             currency = measures[0].get_text(strip=True)
             if re.fullmatch(r'iso4217:[A-Z]{3}', currency):
                 units[unit.get('id')] = currency.split(':')[1]
-    for ctx in soup.find_all('xbrli:context', limit=10000):
+    for ctx in resource_nodes(soup, shared, 'xbrli:context', 10000):
         identifier = ctx.find('xbrli:identifier')
         if (not identifier or identifier.get('scheme') != 'http://www.sec.gov/CIK'
                 or not re.fullmatch(r'\d{1,10}', identifier.get_text(strip=True))
@@ -296,7 +300,8 @@ def parse_revenue(raw, origin, symbol, today=None):
             first, last = dt.date.fromisoformat(start.text), dt.date.fromisoformat(end.text)
         except ValueError:
             continue
-        if not 300 <= (last - first).days <= 400 or last > today:
+        if (not 300 <= (last - first).days <= 400 or last > today
+                or (period_end is not None and last != period_end)):
             continue
         members = ctx.find_all('xbrldi:explicitmember')
         classified = dimensions(members, symbol, expected_cik)
