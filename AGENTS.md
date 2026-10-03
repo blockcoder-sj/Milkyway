@@ -2,10 +2,11 @@
 
 ## Resume context
 
-- Latest instruction on 2026-10-03: pause for a computer restart and save handoff.
-  Do not resume implementation, restoration or app startup until the user resumes.
-  Read `docs/RESTART_HANDOFF_20261003.md` for the new-PC state and
-  `docs/RESUME_PROMPT.md` for the requested continuation scope.
+- Latest instruction on 2026-10-04: the user resumed continuous Energy work and
+  requested testing in the already open Chrome. The restart pause is lifted.
+  Read `docs/NEW_PC_RESUME_REVIEW_20261004.md` for actual restoration evidence,
+  `docs/WORK_CONTEXT.md` for the latest progress, and `docs/RESUME_PROMPT.md`
+  for the continuation scope. Earlier restart observations are historical.
 - For cross-computer continuation, read `HANDOFF.md` and
   `docs/HANDOFF_OTHER_COMPUTER.md` first. The latest explicit user pause overrides
   older instructions to continue without stopping; resume on the user's request.

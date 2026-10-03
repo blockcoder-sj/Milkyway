@@ -1743,3 +1743,28 @@ resuming; no paid AI regression approval has arrived.
   milestone. Save/push public instructions and the tested host recovery change;
   private files remain local. Verify actual remote HEAD after push; CI may still
   be pending when the computer is shut down.
+
+### New PC resumed and actual private restore verified · 2026-10-04
+
+- USER resumed continuous Energy work and requested testing in the already open
+  Chrome. The October3 restart pause is lifted. Continue after milestone pushes;
+  do not ask to resume at an intermediate checkpoint.
+- Starting Git tree clean; live local/remote SHA8f10c830107ffadf7cf8a56c637c0955748dd584
+  matched. Downloads complete. Docker29.7.2 and the previously validated shipping
+  imagefd9bdb59eeada9f5297ea72086a848b3e8a5b67d06bddd7c273100fdb49d889f confirmed.
+- Rechecked both archiveSHA. Actual restore3972files to NEW personal volumes
+  succeeded; previous other-project volumes/containers preserved. Both DBs passed
+  integrity/foreign-key checks. All13stable research/strategy/paper tables exactly
+  matched original rows by private digest; allgraph tablecounts matched too.
+- ONLY app/personal-data/market-data/backup up; apphealthy/startup200. Ready503
+  retains pausedpaper/backtest; allotherdata gates true. No AI calls, reactivation,
+  credential-input/publicdeploy/whole-security-scan claims. Environment is disabled
+  permission profile; managed DeepScan remediation remains outside this scope.
+- Public bundleCRC/248payloadSHA verified/extracted under gitignored runtime/handoff/
+  evidence-20261004. Recovery13tests/.126sOK in sequential offline512MiB/1CPU
+  disposablecontainer. Scoped recovery source/path/permissions review performed.
+- Actual existingChrome tab1903321937 navigated app→market→Energy;213issuer
+  directory/industryguide render visible. WholeEnergy visualaudit remains pending.
+- Detailed record docs/NEW_PC_RESUME_REVIEW_20261004.md. NEXT land15 actualsources/
+  revenue/catalog/groups integration and validation, then remaining43+ALLdepthaudit.
+  Progress still155editedmain/213, not completedcompanies. Never stop at thispush.
