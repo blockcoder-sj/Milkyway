@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-03",
+  "checked_at": "2026-10-04",
   "identity_source": {
     "label": "SEC · 현재 발행기업·거래소 목록",
     "url": "https://www.sec.gov/files/company_tickers_exchange.json",
@@ -63,13 +63,13 @@
       "name": "Amen Properties",
       "cik": null,
       "exchange": "OTC",
-      "group": "diversified",
-      "scope": "context",
+      "group": "mineral-royalty",
+      "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "Amen Properties · 공식 기업·IR",
-        "url": "https://amenproperties.com/",
-        "as_of": "열람 2026-10-03",
+        "label": "Amen · FY2025 미감사 연차 원문",
+        "url": "https://www.otcmarkets.com/file/company/financial-report/533270/content",
+        "as_of": "2026-03-16",
         "level": "primary"
       },
       "identity_source": {
@@ -909,13 +909,13 @@
       "name": "EagleRock Land, LLC",
       "cik": "2104882",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "surface-land",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 10-Q",
-        "url": "https://www.sec.gov/Archives/edgar/data/2104882/000119312526349110/ck0002104882-20260630.htm",
-        "as_of": "2026-08-13",
+        "label": "EagleRock · 상장·L&E FY2025 감사 원문",
+        "url": "https://www.sec.gov/Archives/edgar/data/2104882/000119312526224302/d37594d424b4.htm",
+        "as_of": "2026-05-14",
         "level": "primary"
       }
     },
@@ -1092,16 +1092,16 @@
     },
     {
       "symbol": "FTW",
-      "name": "PRESIDIO PRODUCTION Co",
+      "name": "Presidio Production Company",
       "cik": "2083125",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 10-Q",
-        "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
-        "as_of": "2026-08-13",
+        "label": "Presidio · PIH FY2025 감사·합병 원문",
+        "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026033155/ea0283047-424b3_presidio.htm",
+        "as_of": "2026-03-24",
         "level": "primary"
       }
     },
@@ -1275,13 +1275,13 @@
       "name": "HMH Holding Inc",
       "cik": "2021880",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "equipment",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 10-Q",
-        "url": "https://www.sec.gov/Archives/edgar/data/2021880/000162828026053385/hmh-20260630.htm",
-        "as_of": "2026-08-05",
+        "label": "HMH · B.V. FY2025 감사·현재 구조 원문",
+        "url": "https://www.sec.gov/Archives/edgar/data/2021880/000119312526405527/d32439ds1.htm",
+        "as_of": "2026-09-28",
         "level": "primary"
       }
     },
@@ -1996,9 +1996,9 @@
       "scope": "context",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 10-Q",
-        "url": "https://www.sec.gov/Archives/edgar/data/2089283/000110465926085069/tmb-20260531x10q.htm",
-        "as_of": "2026-07-20",
+        "label": "Eagle Nuclear · FY2025 전신 감사 원문",
+        "url": "https://www.sec.gov/Archives/edgar/data/2089283/000110465926085241/tm2620834d1_ars.pdf",
+        "as_of": "2026-07-21",
         "level": "primary"
       }
     },
@@ -3010,9 +3010,9 @@
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "Unit Corporation · 공식 기업·IR",
-        "url": "https://unitcorp.com/investor-relations/",
-        "as_of": "열람 2026-10-03",
+        "label": "Unit · FY2025 지속·중단 사업 공식 실적",
+        "url": "https://unitcorp.com/unit-corporation-reports-fourth-quarter-and-year-end-results/",
+        "as_of": "2026-03-12",
         "level": "primary"
       },
       "identity_source": {
@@ -3249,13 +3249,13 @@
       "name": "WhiteHawk Minerals Corp.",
       "cik": "1921603",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "mineral-royalty",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 10-Q",
-        "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526349344/whk-20260630.htm",
-        "as_of": "2026-08-13",
+        "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+        "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+        "as_of": "2026-10-01",
         "level": "primary"
       }
     },

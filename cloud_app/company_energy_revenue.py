@@ -21,6 +21,7 @@ from . import company_energy_lng_revenue as lng
 from . import company_energy_coal_revenue as coal
 from . import company_energy_gas_service_revenue as gas_service
 from . import company_energy_transition_revenue as transition
+from . import company_energy_emerging_revenue as emerging
 
 COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES,
                **canada.COORDINATES, **infrastructure.COORDINATES, **nuclear.COORDINATES,
@@ -448,6 +449,7 @@ def canonical_revenue(rows, symbol):
         rows = coal.canonical(rows, symbol, cik)
         rows = gas_service.canonical(rows, symbol, cik)
         rows = transition.canonical(rows, symbol, cik)
+        rows = emerging.canonical(rows, symbol, cik)
     if symbol != 'EQT':
         return rows
     kept = []

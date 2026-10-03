@@ -32309,5 +32309,539 @@
       "collected_at": "2026-10-02T15:42:46.956847+00:00"
     },
     "revenue_mix": []
+  },
+  "AMEN": {
+    "annual": {
+      "label": "Amen · FY2025 미감사 연차 원문",
+      "url": "https://www.otcmarkets.com/file/company/financial-report/533270/content",
+      "as_of": "2026-03-16",
+      "level": "primary",
+      "bytes": 791079,
+      "sha256": "53564b2936b2dac5430ed405a152d005f0f7ebddec60993103628b18f9aa17d1"
+    },
+    "revenue_mix": [],
+    "quarter": {
+      "label": "Amen · Q2 2026 미감사 원문",
+      "url": "https://www.otcmarkets.com/file/company/financial-report/596445/content",
+      "as_of": "2026-09-28",
+      "level": "primary",
+      "bytes": 813116,
+      "sha256": "7f9c293e1127194110a3a0fbe24cd5b5fdec624e7f961ee1dd394d25693ae843"
+    }
+  },
+  "EROK": {
+    "annual": {
+      "label": "EagleRock · 상장·L&E FY2025 감사 원문",
+      "url": "https://www.sec.gov/Archives/edgar/data/2104882/000119312526224302/d37594d424b4.htm",
+      "as_of": "2026-05-14",
+      "level": "primary",
+      "bytes": 3262880,
+      "sha256": "99ab5699d2492031f6f6c9fed92455f41ea700faba35e3498b6b7433bc3647b6"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "reported:Water",
+        "label": "용수 판매 · 외부",
+        "value": 55199000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 72173000,
+        "metric": "reported:LeaEddyRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "EagleRock · 상장·L&E FY2025 감사 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2104882/000119312526224302/d37594d424b4.htm",
+          "as_of": "2026-05-14",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "reported:RelatedWater",
+        "label": "용수 판매 · 관계사",
+        "value": 509000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 72173000,
+        "metric": "reported:LeaEddyRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "EagleRock · 상장·L&E FY2025 감사 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2104882/000119312526224302/d37594d424b4.htm",
+          "as_of": "2026-05-14",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "reported:SurfaceOther",
+        "label": "토지 사용·기타",
+        "value": 16465000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 72173000,
+        "metric": "reported:LeaEddyRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "EagleRock · 상장·L&E FY2025 감사 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2104882/000119312526224302/d37594d424b4.htm",
+          "as_of": "2026-05-14",
+          "level": "primary"
+        }
+      }
+    ],
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/2104882/000119312526349110/ck0002104882-20260630.htm",
+      "as_of": "2026-08-13",
+      "level": "primary",
+      "sha256": "5a30b3bed8304aada0dd90317e92e7e4bb0e5e973f4f34ff43edfab6746bac4a",
+      "bytes": 3045742,
+      "blocks": 2912,
+      "collected_at": "2026-10-02T15:40:10.460688+00:00"
+    }
+  },
+  "FTW": {
+    "annual": {
+      "label": "Presidio · PIH FY2025 감사·합병 원문",
+      "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026033155/ea0283047-424b3_presidio.htm",
+      "as_of": "2026-03-24",
+      "level": "primary",
+      "bytes": 3265525,
+      "sha256": "e38e8caee0053f7259df8c01d5736e1ce7a10e12f74721cdb24ab22c7e3cc8d2"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "reported:Oil",
+        "label": "원유",
+        "value": 81640000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 179056000,
+        "metric": "reported:PresidioPredecessorRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Presidio · PIH FY2025 감사·합병 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026033155/ea0283047-424b3_presidio.htm",
+          "as_of": "2026-03-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "reported:Gas",
+        "label": "천연가스",
+        "value": 50309000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 179056000,
+        "metric": "reported:PresidioPredecessorRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Presidio · PIH FY2025 감사·합병 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026033155/ea0283047-424b3_presidio.htm",
+          "as_of": "2026-03-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "reported:NGL",
+        "label": "NGL",
+        "value": 45864000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 179056000,
+        "metric": "reported:PresidioPredecessorRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Presidio · PIH FY2025 감사·합병 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026033155/ea0283047-424b3_presidio.htm",
+          "as_of": "2026-03-24",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "reported:FieldServices",
+        "label": "현장 서비스",
+        "value": 1243000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 179056000,
+        "metric": "reported:PresidioPredecessorRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Presidio · PIH FY2025 감사·합병 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026033155/ea0283047-424b3_presidio.htm",
+          "as_of": "2026-03-24",
+          "level": "primary"
+        }
+      }
+    ],
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/2083125/000121390026088500/ea0300174-10q_presidio.htm",
+      "as_of": "2026-08-13",
+      "level": "primary",
+      "sha256": "3acdf645b97a37d114429f4d44f735e88e1bd82f02c9c16755d4742efaa109e0",
+      "bytes": 1740941,
+      "blocks": 592,
+      "collected_at": "2026-10-02T15:40:30.009383+00:00"
+    }
+  },
+  "HMH": {
+    "annual": {
+      "label": "HMH · B.V. FY2025 감사·현재 구조 원문",
+      "url": "https://www.sec.gov/Archives/edgar/data/2021880/000119312526405527/d32439ds1.htm",
+      "as_of": "2026-09-28",
+      "level": "primary",
+      "bytes": 5151127,
+      "sha256": "a8909ce115120aa4759ef41af85b6df1ba833156e3925388ee9f2e5df0ca8828"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "reported:Service",
+        "label": "서비스",
+        "value": 383385000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 821754000,
+        "metric": "reported:HMHBVRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "HMH · B.V. FY2025 감사·현재 구조 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2021880/000119312526405527/d32439ds1.htm",
+          "as_of": "2026-09-28",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "reported:Product",
+        "label": "제품 · 외부",
+        "value": 213544000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 821754000,
+        "metric": "reported:HMHBVRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "HMH · B.V. FY2025 감사·현재 구조 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2021880/000119312526405527/d32439ds1.htm",
+          "as_of": "2026-09-28",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "reported:Spare",
+        "label": "교체 부품",
+        "value": 224380000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 821754000,
+        "metric": "reported:HMHBVRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "HMH · B.V. FY2025 감사·현재 구조 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2021880/000119312526405527/d32439ds1.htm",
+          "as_of": "2026-09-28",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "reported:Related",
+        "label": "관계사 제품",
+        "value": 445000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 821754000,
+        "metric": "reported:HMHBVRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "HMH · B.V. FY2025 감사·현재 구조 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2021880/000119312526405527/d32439ds1.htm",
+          "as_of": "2026-09-28",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "reported:ESS",
+        "label": "시추 장비·서비스 ESS",
+        "value": 438553000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 821754000,
+        "metric": "reported:HMHBVRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "HMH · B.V. FY2025 감사·현재 구조 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2021880/000119312526405527/d32439ds1.htm",
+          "as_of": "2026-09-28",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "reported:PCS",
+        "label": "압력 제어 PCS",
+        "value": 383201000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 821754000,
+        "metric": "reported:HMHBVRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "HMH · B.V. FY2025 감사·현재 구조 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/2021880/000119312526405527/d32439ds1.htm",
+          "as_of": "2026-09-28",
+          "level": "primary"
+        }
+      }
+    ],
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/2021880/000162828026053385/hmh-20260630.htm",
+      "as_of": "2026-08-05",
+      "level": "primary",
+      "sha256": "5189fabe63f215d0d8fbad7bdddba92ee883bbaebc97d73b7284d3746df6244e",
+      "bytes": 1700895,
+      "blocks": 668,
+      "collected_at": "2026-10-02T15:40:48.990309+00:00"
+    }
+  },
+  "NUCL": {
+    "annual": {
+      "label": "Eagle Nuclear · FY2025 전신 감사 원문",
+      "url": "https://www.sec.gov/Archives/edgar/data/2089283/000110465926085241/tm2620834d1_ars.pdf",
+      "as_of": "2026-07-21",
+      "level": "primary",
+      "bytes": 1034461,
+      "sha256": "96b7a2f11609ea93e6de52ff35a16613d3dabeef80a20dd4d8b449ce4dae6234"
+    },
+    "revenue_mix": [],
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/2089283/000110465926085069/tmb-20260531x10q.htm",
+      "as_of": "2026-07-20",
+      "level": "primary",
+      "sha256": "298075a27449c2a2be7f4c00e93af387b2c3f13784fe601f07cc22172cc43502",
+      "bytes": 2019041,
+      "blocks": 4387,
+      "collected_at": "2026-10-02T15:42:01.673313+00:00"
+    }
+  },
+  "UNTC": {
+    "annual": {
+      "label": "Unit · FY2025 지속·중단 사업 공식 실적",
+      "url": "https://unitcorp.com/unit-corporation-reports-fourth-quarter-and-year-end-results/",
+      "as_of": "2026-03-12",
+      "level": "primary",
+      "bytes": 327445,
+      "sha256": "83e718f01faf0201dcaaff70afd40ac7bd16cc23992c1173b777c4e741f0ea3b"
+    },
+    "revenue_mix": [],
+    "quarter": {
+      "label": "Unit · Q2 2026 지속 사업 공식 실적",
+      "url": "https://unitcorp.com/unit-corporation-reports-second-quarter-results-4/",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "bytes": 324890,
+      "sha256": "4c526969567b4f4696071296ef513d94abd440104f19664dc2531d146799932f"
+    }
+  },
+  "WHK": {
+    "annual": {
+      "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+      "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+      "as_of": "2026-10-01",
+      "level": "primary",
+      "bytes": 19923298,
+      "sha256": "7bafa5b832c425f457b1c27f73410b264821def6050777ee238b73e333895e80"
+    },
+    "revenue_mix": [
+      {
+        "group": "revenue_type",
+        "member": "reported:Royalty",
+        "label": "로열티 · 비용 차감 후",
+        "value": 50075000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "reported:WhiteHawkRestatedRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+          "as_of": "2026-10-01",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2025 재작성 수치입니다. 제품 표는 로열티 매출 50,075,000 USD의 비용 차감 연결표이고, 전체 67,595,000 USD에는 파생상품 순손익과 lease bonus가 포함되어 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "reported:Derivative",
+        "label": "상품 파생상품 순손익",
+        "value": 16648000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "reported:WhiteHawkRestatedRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+          "as_of": "2026-10-01",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2025 재작성 수치입니다. 제품 표는 로열티 매출 50,075,000 USD의 비용 차감 연결표이고, 전체 67,595,000 USD에는 파생상품 순손익과 lease bonus가 포함되어 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "reported:Bonus",
+        "label": "광물권 계약 보너스",
+        "value": 872000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "reported:WhiteHawkRestatedRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+          "as_of": "2026-10-01",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2025 재작성 수치입니다. 제품 표는 로열티 매출 50,075,000 USD의 비용 차감 연결표이고, 전체 67,595,000 USD에는 파생상품 순손익과 lease bonus가 포함되어 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "reported:Gas",
+        "label": "천연가스 · 차감 전",
+        "value": 48720000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "reported:WhiteHawkRestatedRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+          "as_of": "2026-10-01",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2025 재작성 수치입니다. 제품 표는 로열티 매출 50,075,000 USD의 비용 차감 연결표이고, 전체 67,595,000 USD에는 파생상품 순손익과 lease bonus가 포함되어 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "reported:Oil",
+        "label": "원유 · 차감 전",
+        "value": 5359000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "reported:WhiteHawkRestatedRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+          "as_of": "2026-10-01",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2025 재작성 수치입니다. 제품 표는 로열티 매출 50,075,000 USD의 비용 차감 연결표이고, 전체 67,595,000 USD에는 파생상품 순손익과 lease bonus가 포함되어 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "reported:NGL",
+        "label": "NGL · 차감 전",
+        "value": 4622000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "reported:WhiteHawkRestatedRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+          "as_of": "2026-10-01",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2025 재작성 수치입니다. 제품 표는 로열티 매출 50,075,000 USD의 비용 차감 연결표이고, 전체 67,595,000 USD에는 파생상품 순손익과 lease bonus가 포함되어 구성비를 계산하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "reported:Deduction",
+        "label": "집하·수송·기타 차감",
+        "value": -8626000,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "reported:WhiteHawkRestatedRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "WhiteHawk · FY2025 재작성 감사·현재 거래 원문",
+          "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526410790/whk-20261001.htm",
+          "as_of": "2026-10-01",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2025 재작성 수치입니다. 제품 표는 로열티 매출 50,075,000 USD의 비용 차감 연결표이고, 전체 67,595,000 USD에는 파생상품 순손익과 lease bonus가 포함되어 구성비를 계산하지 않습니다."
+      }
+    ],
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1921603/000119312526349344/whk-20260630.htm",
+      "as_of": "2026-08-13",
+      "level": "primary",
+      "sha256": "0e9abfd45eab7c85de2c83d460ed810bc29cdd12268af8dd6b63325a86ea420b",
+      "bytes": 3548139,
+      "blocks": 3256,
+      "collected_at": "2026-10-02T15:43:08.819070+00:00"
+    }
   }
 }

@@ -1891,3 +1891,16 @@ RSRV상품/lease혼합지표,SUNC전체SUN연결/NCI,TBN6월무매출·9월첫ga
 실제auth14기업/8역할200/logout,Chrome8곳/NUAI-Luminant이동·역방향/지표한국어/스크린샷.
 개인·시장·backup·runtime·볼륨보존,AI/CodeRabbit/DeepScan0. 상세 ENERGY_TRANSITION_REVIEW_20261004.md.
 검토·커밋·푸시후 신규상장·OTC7개와 최종전수검수를 계속한다.
+
+## 2026-10-04 신규 상장·OTC 7개
+
+AMEN/EROK/FTW/HMH/NUCL/UNTC/WHK 본문·실제 관계·재무를 추가했다.
+주 본문 213개 모두 갖췄으며 최종 전수 검수는 계속한다. 전신 S-1 재무,
+WHK 재작성·음수 집하/수송 차감과 mezzanine, AMEN 미감사·지분법/처분,
+NUCL 무매출 개발·NSR/license, UNTC 시추 처분, 실제 후속 취득을 구별했다.
+최종 전체752개/22.001s OK(skip18), host21/.585s OK, 관련11/.175s OK(skip1),
+포장 코드/공개 데이터292 SHA 일치. 신규7+기존6 실제API200, 상대7 역방향200,
+기존Chrome7곳·WHK표 전환/음수/산출제외·NUCL→UNM 이동/스크린샷 확인.
+app651cb44908943eb79cb3ac1e6af2bd1c25d996d2ee5a414ef0ce0b478000423e healthy.
+개인/시장/backup/runtime/볼륨 보존, AI/CodeRabbit/DeepScan0.
+상세 ENERGY_EMERGING_REVIEW_20261004.md. 검토·푸시 후 섹터 최종 검수를 계속한다.

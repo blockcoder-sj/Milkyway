@@ -231,10 +231,13 @@ PRIVATE_COMPANIES.update(GAS_SERVICE_PRIVATE)
 from .company_energy_transition import PUBLIC as TRANSITION_PUBLIC, PRIVATE as TRANSITION_PRIVATE, EDGES as TRANSITION_EDGES
 PUBLIC_COMPANIES.update(TRANSITION_PUBLIC)
 PRIVATE_COMPANIES.update(TRANSITION_PRIVATE)
+from .company_energy_emerging import PUBLIC as EMERGING_PUBLIC, PRIVATE as EMERGING_PRIVATE, EDGES as EMERGING_EDGES, COMMON_CONTEXT as EMERGING_COMMON_CONTEXT
+PUBLIC_COMPANIES.update(EMERGING_PUBLIC)
+PRIVATE_COMPANIES.update(EMERGING_PRIVATE)
 # Apply every group's dated context; shared IDs can have several business roles.
 for _registry, _notes in [(key, notes) for context in (MATERIAL_COMMON_CONTEXT, NUCLEAR_COMMON_CONTEXT,
         PRODUCER_COMMON_CONTEXT, EXTENDED_COMMON_CONTEXT, DOWNSTREAM_COMMON_CONTEXT,
-        SHIPPING_COMMON_CONTEXT, LAND_COMMON_CONTEXT, MARINE_COMMON_CONTEXT, LNG_COMMON_CONTEXT, GAS_SERVICE_COMMON_CONTEXT)
+        SHIPPING_COMMON_CONTEXT, LAND_COMMON_CONTEXT, MARINE_COMMON_CONTEXT, LNG_COMMON_CONTEXT, GAS_SERVICE_COMMON_CONTEXT, EMERGING_COMMON_CONTEXT)
         for key, notes in context.items()]:
     _existing = PRIVATE_COMPANIES[_registry]
     for _field, _value in _notes.items():
@@ -356,6 +359,8 @@ for _symbol, _edges in COAL_EDGES.items():
 
 
 for _symbol, _edges in TRANSITION_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in EMERGING_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in GAS_SERVICE_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)

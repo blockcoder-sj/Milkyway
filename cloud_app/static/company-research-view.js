@@ -4,7 +4,7 @@
   const fmt = (value, digits = 0) => window.MilkywayFormat.number(value, digits);
   const groups = Object.freeze({product: '제품·서비스', segment: '보고 사업 부문', end_market: '최종 사용 시장', geography: '지역', revenue_type: '매출 유형·포함 항목'});
   const levels = {primary: '공시·기업 원문', provider: '정보 제공사·공개 조사'};
-  const metrics = Object.freeze({'reported:CombinedRevenue': '이전 대상 결합 사업 매출', 'us-gaap:RegulatedOperatingRevenueGas': '광물권 임대·상품 매출 · 공시 지표', 'us-gaap:Revenues': '매출', 'us-gaap:SalesRevenueNet': '순매출',
+  const metrics = Object.freeze({'reported:LeaEddyRevenue': 'L&E 전신 매출', 'reported:PresidioPredecessorRevenue': 'PIH 전신 매출', 'reported:HMHBVRevenue': 'HMH B.V. 전신 매출', 'reported:WhiteHawkRestatedRevenue': 'WhiteHawk 재작성 수입', 'reported:CombinedRevenue': '이전 대상 결합 사업 매출', 'us-gaap:RegulatedOperatingRevenueGas': '광물권 임대·상품 매출 · 공시 지표', 'us-gaap:Revenues': '매출', 'us-gaap:SalesRevenueNet': '순매출',
     'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': '계약 고객 매출(부과세 제외)',
     'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax': '계약 고객 매출(부과세 포함)', 'ifrs-full:Revenue': 'IFRS 매출',
     'ifrs-full:RevenueFromContractsWithCustomers': 'IFRS 고객 계약 매출',
