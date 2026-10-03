@@ -205,7 +205,12 @@ PUBLIC_COMPANIES.update(DOWNSTREAM_PUBLIC)
 PRIVATE_COMPANIES.update(DOWNSTREAM_PRIVATE)
 for _symbol, _profile in DOWNSTREAM_COUNTERPART_PUBLIC.items():
     PUBLIC_COMPANIES.setdefault(_symbol, _profile)
-for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT, **EXTENDED_COMMON_CONTEXT, **DOWNSTREAM_COMMON_CONTEXT}.items():
+from .company_energy_shipping import PUBLIC as SHIPPING_PUBLIC, PRIVATE as SHIPPING_PRIVATE, EDGES as SHIPPING_EDGES, COMMON_CONTEXT as SHIPPING_COMMON_CONTEXT, COUNTERPART_PUBLIC as SHIPPING_COUNTERPART_PUBLIC
+PUBLIC_COMPANIES.update(SHIPPING_PUBLIC)
+PRIVATE_COMPANIES.update(SHIPPING_PRIVATE)
+for _symbol, _profile in SHIPPING_COUNTERPART_PUBLIC.items():
+    PUBLIC_COMPANIES.setdefault(_symbol, _profile)
+for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT, **EXTENDED_COMMON_CONTEXT, **DOWNSTREAM_COMMON_CONTEXT, **SHIPPING_COMMON_CONTEXT}.items():
     _existing = PRIVATE_COMPANIES[_registry]
     for _field, _value in _notes.items():
         if isinstance(_value, list):
@@ -215,7 +220,8 @@ for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, *
 
 # Explicitly reviewed brand/issuer mapping. Similar names never create aliases.
 # Range names the ProFrac service group; its listed parent is ACDC, not FLOC.
-REGISTERED_TICKERS = {'range-profrac': 'ACDC', 'jetblue-world-fuel': 'JBLU'}
+REGISTERED_TICKERS = {'range-profrac': 'ACDC', 'jetblue-world-fuel': 'JBLU',
+                      'bw-lpg-shipping': 'BWLP', 'robin-energy-toro': 'RBNE'}
 
 
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
@@ -307,6 +313,8 @@ for _symbol, _edges in PRODUCER_EDGES.items():
 for _symbol, _edges in EXTENDED_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in DOWNSTREAM_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in SHIPPING_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

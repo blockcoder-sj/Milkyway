@@ -1,6 +1,6 @@
 """Bounded annual revenue slices from the issuer's inline XBRL, without AI.
 
-Only standard revenue metrics and checked dimension combinations are supported. A
+Standard revenue metrics and exact reviewed issuer metrics are supported. A
 denominator must be the same document/metric/currency/period, with no dimensions.
 Displayed slices are not summed: products, segments and regions can overlap.
 """
@@ -288,6 +288,7 @@ def parse_revenue(raw, origin, symbol, today=None, *, shared=None, period_end=No
     expected_cik = source_cik(origin)
     if expected_cik is None:
         return []
+    metrics = METRICS + energy.extra_metrics(origin, symbol, expected_cik, period_end)
     contexts, units = {}, {}
     for unit in resource_nodes(soup, shared, 'xbrli:unit', 200):
         measures = unit.find_all('xbrli:measure')
@@ -325,7 +326,7 @@ def parse_revenue(raw, origin, symbol, today=None, *, shared=None, period_end=No
     values, anchors = {}, {}
     for fact in soup.find_all('ix:nonfraction', limit=100000):
         tag, ctx, currency = fact.get('name'), contexts.get(fact.get('contextref')), units.get(fact.get('unitref'))
-        if tag not in METRICS or not ctx or not currency:
+        if tag not in metrics or not ctx or not currency:
             continue
         value = number(fact, signed=energy.signed_value(tag, ctx, origin, symbol, expected_cik))
         if value is None:
@@ -343,7 +344,7 @@ def parse_revenue(raw, origin, symbol, today=None, *, shared=None, period_end=No
         if not candidates:
             continue
         # One matching metric/currency/period per view. No mixing current and prior years.
-        chosen = max(candidates, key=lambda key: (key[3], -METRICS.index(key[0]), key[2], key[1]))
+        chosen = max(candidates, key=lambda key: (key[3], -metrics.index(key[0]), key[2], key[1]))
         prefix = chosen[:4]
         total = clean.get((*prefix, None, ''))
         for key in sorted(candidates):
@@ -357,4 +358,5 @@ def parse_revenue(raw, origin, symbol, today=None, *, shared=None, period_end=No
                 total=float(denominator) if denominator else None, metric=key[0], parent=None,
                 includes_intersegment=internal,
                 source={**origin, 'url': origin['url'] + ('#' + anchors[key] if key in anchors else '')}))
+    result = energy.statement_rows(result, clean, anchors, origin, symbol, expected_cik, period_end)
     return present_revenue(result, symbol)[:80]

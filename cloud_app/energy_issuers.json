@@ -594,7 +594,7 @@
       "name": "DHT Holdings, Inc.",
       "cik": "1331284",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1020,7 +1020,7 @@
       "name": "Flex LNG Ltd.",
       "cik": "1772253",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1050,7 +1050,7 @@
       "name": "Frontline plc",
       "cik": "913290",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1155,7 +1155,7 @@
       "name": "GOLAR LNG LTD",
       "cik": "1207179",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1371,7 +1371,7 @@
       "name": "Imperial Petroleum Inc./Marshall Islands",
       "cik": "1876581",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1401,7 +1401,7 @@
       "name": "International Seaways, Inc.",
       "cik": "1679049",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1482,7 +1482,7 @@
       "name": "KNOT Offshore Partners LP",
       "cik": "1564180",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1602,7 +1602,7 @@
       "name": "DORIAN LPG LTD.",
       "cik": "1596993",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1752,7 +1752,7 @@
       "name": "NORDIC AMERICAN TANKERS Ltd",
       "cik": "1000177",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2007,7 +2007,7 @@
       "name": "Navigator Holdings Ltd.",
       "cik": "1581804",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2361,7 +2361,7 @@
       "name": "Pyxis Tankers Inc.",
       "cik": "1640043",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2703,7 +2703,7 @@
       "name": "Scorpio Tankers Inc.",
       "cik": "1483934",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2814,7 +2814,7 @@
       "name": "TSAKOS ENERGY NAVIGATION LTD",
       "cik": "1166663",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2829,7 +2829,7 @@
       "name": "TEEKAY CORP LTD",
       "cik": "911971",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2844,7 +2844,7 @@
       "name": "TEEKAY TANKERS LTD.",
       "cik": "1419945",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2859,7 +2859,7 @@
       "name": "TORO CORP.",
       "cik": "1941131",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "shipping",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

@@ -22541,5 +22541,1587 @@
         }
       }
     ]
+  },
+  "DHT": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1331284/000114036126010407/ef20059925_20f.htm",
+      "as_of": "2026-03-19",
+      "level": "primary",
+      "sha256": "612857bfa907cb558ea4eac3f4a09e3a12915707ff8eaceb50ea47c86b0f3db5",
+      "bytes": 3836032,
+      "blocks": 4869,
+      "collected_at": "2026-10-02T15:39:55.317719+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "dht:TimeCharterRevenuesMember",
+        "label": "기간 용선 · 운송 수입",
+        "value": 145800000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 497197000.0,
+        "metric": "dht:ShippingRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1331284/000114036126010407/ef20059925_20f.htm#Fact_df889d702c314c07b2eed0045e77659d",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "기간·항해 용선 합계는 운송 수입 497,197,000 USD입니다. 기타 수입 1,203,000을 포함한 연결 498,400,000과 다른 분모입니다."
+      },
+      {
+        "group": "product",
+        "member": "dht:VoyageCharterRevenuesMember",
+        "label": "항해 용선 · 운송 수입",
+        "value": 351397000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 497197000.0,
+        "metric": "dht:ShippingRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1331284/000114036126010407/ef20059925_20f.htm#Fact_6eb54ff3fa0a475caa3453b1c14759ec",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "기간·항해 용선 합계는 운송 수입 497,197,000 USD입니다. 기타 수입 1,203,000을 포함한 연결 498,400,000과 다른 분모입니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "ifrs-full:OtherRevenue",
+        "label": "기타 수입 · 운송 외",
+        "value": 1203000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:OtherRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1331284/000114036126010407/ef20059925_20f.htm#Fact_6276ab52563247da8aa0f3389c73bca7",
+          "as_of": "2026-03-19",
+          "level": "primary"
+        },
+        "share_exclusion": "기간·항해 용선 합계는 운송 수입 497,197,000 USD입니다. 기타 수입 1,203,000을 포함한 연결 498,400,000과 다른 분모입니다."
+      }
+    ]
+  },
+  "FRO": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/913290/000162828026021774/fro-20251231.htm",
+      "as_of": "2026-03-27",
+      "level": "primary",
+      "sha256": "d26c1a5cb526340f28e49d74ad283f81a7cdb043755b0839d3f057a39eddd210",
+      "bytes": 3096974,
+      "blocks": 2087,
+      "collected_at": "2026-10-02T15:40:24.689885+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "fro:AdministrativeIncomeMember",
+        "label": "관리 서비스 수입",
+        "value": 10156000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1965104000.0,
+        "metric": "ifrs-full:RevenueFromRenderingOfServices",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/913290/000162828026021774/fro-20251231.htm#f-407",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        },
+        "share_exclusion": "용선·관리 서비스 1,965,104,000 USD와 기타 수입 6,069,000을 구분합니다. 연결 수입은 1,971,173,000이며 같은 서비스에 포함된 리스·비리스 부분을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "fro:TimeCharterMember",
+        "label": "기간 용선 · 서비스 수입",
+        "value": 72166000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1965104000.0,
+        "metric": "ifrs-full:RevenueFromRenderingOfServices",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/913290/000162828026021774/fro-20251231.htm#f-404",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        },
+        "share_exclusion": "용선·관리 서비스 1,965,104,000 USD와 기타 수입 6,069,000을 구분합니다. 연결 수입은 1,971,173,000이며 같은 서비스에 포함된 리스·비리스 부분을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "fro:VoyageCharterMember",
+        "label": "항해 용선 · 서비스 수입",
+        "value": 1882782000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1965104000.0,
+        "metric": "ifrs-full:RevenueFromRenderingOfServices",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/913290/000162828026021774/fro-20251231.htm#f-401",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        },
+        "share_exclusion": "용선·관리 서비스 1,965,104,000 USD와 기타 수입 6,069,000을 구분합니다. 연결 수입은 1,971,173,000이며 같은 서비스에 포함된 리스·비리스 부분을 다시 더하지 않습니다."
+      },
+      {
+        "group": "revenue_type",
+        "member": "ifrs-full:OtherRevenue",
+        "label": "기타 수입 · 서비스 외",
+        "value": 6069000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:OtherRevenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/913290/000162828026021774/fro-20251231.htm#f-469",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        },
+        "share_exclusion": "용선·관리 서비스 1,965,104,000 USD와 기타 수입 6,069,000을 구분합니다. 연결 수입은 1,971,173,000이며 같은 서비스에 포함된 리스·비리스 부분을 다시 더하지 않습니다."
+      }
+    ]
+  },
+  "GLNG": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm",
+      "as_of": "2026-03-26",
+      "level": "primary",
+      "sha256": "cf174ba7d67d7b4b4c72fdd0dd4aa127204f36e5d809df82993b37259610fd56",
+      "bytes": 3464408,
+      "blocks": 2231,
+      "collected_at": "2026-10-02T15:40:34.129104+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "glng:LiquefactionServicesRevenueMember",
+        "label": "액화 서비스",
+        "value": 226794000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 393522000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm#f-62",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "glng:SalesTypeLeaseRevenueMember",
+        "label": "판매형 리스",
+        "value": 91461000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 393522000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm#f-65",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "glng:TimeAndVoyageCharterRevenueMember",
+        "label": "기간·항해 용선",
+        "value": 876000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 393522000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm#f-71",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "glng:VesselManagementFeesAndOtherRevenuesMember",
+        "label": "선박 관리·기타",
+        "value": 74391000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 393522000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm#f-68",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "glng:FLNGMember",
+        "label": "FLNG",
+        "value": 366724000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 393522000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm#f-848",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "us-gaap:CorporateAndOtherMember",
+        "label": "본사·기타",
+        "value": 26798000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 393522000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm#f-849",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CM",
+        "label": "Cameroon · FLNG만",
+        "value": 226794000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm#f-1051",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "FLNG 지역 표 366,724,000 USD는 Hilli·Gimi만 포함합니다. 연결 393,522,000의 지역별 구성비나 생산 LNG의 판매액이 아닙니다."
+      },
+      {
+        "group": "geography",
+        "member": "glng:MauritaniaAndSenegalMember",
+        "label": "Mauritania·Senegal · FLNG만",
+        "value": 139930000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1207179/000162828026021198/glng-20251231.htm#f-1054",
+          "as_of": "2026-03-26",
+          "level": "primary"
+        },
+        "share_exclusion": "FLNG 지역 표 366,724,000 USD는 Hilli·Gimi만 포함합니다. 연결 393,522,000의 지역별 구성비나 생산 LNG의 판매액이 아닙니다."
+      }
+    ]
+  },
+  "FLNG": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1772253/000162828026012574/flng-20251231.htm",
+      "as_of": "2026-02-27",
+      "level": "primary",
+      "sha256": "67642170163c20fc9c9ea919c26cffd473da289994f2a374ef192496379af457",
+      "bytes": 1896759,
+      "blocks": 1682,
+      "collected_at": "2026-10-02T15:40:21.921170+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "label": "LNG 선박 용선 · 단일 보고 사업",
+        "value": 347637000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1772253/000162828026012574/flng-20251231.htm#f-62",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        },
+        "share_exclusion": "원문 단일 LNG 용선 사업의 실제 수입입니다. 표시 키는 원래 매출 태그이며 공시에 없는 사업 부문 식별자를 만든 값이 아닙니다. EUA 거래 수입은 이미 포함됩니다."
+      }
+    ]
+  },
+  "LPG": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1596993/000159699326000025/lpg-20260331x10k.htm",
+      "as_of": "2026-05-27",
+      "level": "primary",
+      "sha256": "fe90a4acf1f12a46445ad475126ee8064e3e8528c10ddd427c103b2fec92e7dc",
+      "bytes": 3527186,
+      "blocks": 8287,
+      "collected_at": "2026-10-02T15:27:57.501562+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "lpg:NetPoolRevenuesRelatedPartyIncome",
+        "label": "Helios 운항 풀 · 순수입",
+        "value": 474888842.0,
+        "unit": "USD",
+        "start": "2025-04-01",
+        "end": "2026-03-31",
+        "total": null,
+        "metric": "lpg:NetPoolRevenuesRelatedPartyIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1596993/000159699326000025/lpg-20260331x10k.htm#Tc_H-Jov8SF2EGFahbE0C-Yhg_4_4",
+          "as_of": "2026-05-27",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2026는 2025-04-01~2026-03-31입니다. Helios 풀 순수입 474,888,842 USD와 기타 6,622,400의 합계는 481,511,242입니다. 서로 다른 실제 태그를 보존하며 풀의 최종 고객 총운임과는 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:RevenueNotFromContractWithCustomerOther",
+        "label": "기타 수입",
+        "value": 6622400.0,
+        "unit": "USD",
+        "start": "2025-04-01",
+        "end": "2026-03-31",
+        "total": null,
+        "metric": "us-gaap:RevenueNotFromContractWithCustomerOther",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1596993/000159699326000025/lpg-20260331x10k.htm#Tc_q9LFsO3_m0-hTCWX6xZkzg_6_4",
+          "as_of": "2026-05-27",
+          "level": "primary"
+        },
+        "share_exclusion": "FY2026는 2025-04-01~2026-03-31입니다. Helios 풀 순수입 474,888,842 USD와 기타 6,622,400의 합계는 481,511,242입니다. 서로 다른 실제 태그를 보존하며 풀의 최종 고객 총운임과는 다릅니다."
+      }
+    ],
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1596993/000159699326000035/lpg-20260630x10q.htm",
+      "as_of": "2026-08-05",
+      "level": "primary",
+      "sha256": "112a6ef61a52b76fabf27ee72a7dd5e4e755291c15f749f794ae5a6aa383a574",
+      "bytes": 1792100,
+      "blocks": 4621,
+      "collected_at": "2026-10-02T15:27:59.720547+00:00"
+    }
+  },
+  "INSW": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1679049/000110465926020113/insw-20251231x10k.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "sha256": "a0990376b4188299eeafb72d91bb3fd10a876f8ce2d7a33db3c22827ebad60b9",
+      "bytes": 4831744,
+      "blocks": 12298,
+      "collected_at": "2026-10-02T15:26:02.642155+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "insw:PoolRevenueLeasesMember",
+        "label": "상업 운항 풀 · 리스 포함",
+        "value": 641785000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 843302000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1679049/000110465926020113/insw-20251231x10k.htm#Tc_qYaMIQ6I4kmpYedSMivAfA_4_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "insw:TimeAndBareboatCharterLeasesMember",
+        "label": "기간·나용선 · 리스 포함",
+        "value": 157580000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 843302000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1679049/000110465926020113/insw-20251231x10k.htm#Tc_dWSA9Qddj0COXpFmldNgmQ_5_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "insw:VoyageCharterLeasesMember",
+        "label": "항해 용선 · 리스 포함",
+        "value": 43937000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 843302000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1679049/000110465926020113/insw-20251231x10k.htm#Tc_eB51jhRZo0WehosOPIb4Qw_6_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "insw:InternationalCrudeTankersSegmentMember",
+        "label": "원유 운송",
+        "value": 439611000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 843302000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1679049/000110465926020113/insw-20251231x10k.htm#Tc_HDMKa9C760msgGlvzqij4A_4_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "insw:InternationalProductCarriersSegmentMember",
+        "label": "석유 제품 운송",
+        "value": 403691000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 843302000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1679049/000110465926020113/insw-20251231x10k.htm#Tc_AmARJcBCBUKbdvoxS7XkJA_4_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ],
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1679049/000110465926093061/insw-20260630x10q.htm",
+      "as_of": "2026-08-10",
+      "level": "primary",
+      "sha256": "e617dda4b1b6ae1c7b30d3ce8410c782668fa170b166cad7268d812b1faf9580",
+      "bytes": 2657697,
+      "blocks": 7377,
+      "collected_at": "2026-10-02T15:26:05.657546+00:00"
+    }
+  },
+  "NAT": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1000177/000114036126017809/ef20071320_20f.htm",
+      "as_of": "2026-04-29",
+      "level": "primary",
+      "sha256": "37415ff03cb67254b5aedaa979a3bfb12ddb33ceaea9a3cbdc91286872e94ebf",
+      "bytes": 2135110,
+      "blocks": 3057,
+      "collected_at": "2026-10-02T15:41:35.474055+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "nat:SpotCharterMember",
+        "label": "현물 항해 용선",
+        "value": 211952000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 291690000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1000177/000114036126017809/ef20071320_20f.htm#Fact_8e312d6f50994ee6ad10ca2472614da4",
+          "as_of": "2026-04-29",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "nat:TimeCharterMember",
+        "label": "기간 용선",
+        "value": 79738000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 291690000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1000177/000114036126017809/ef20071320_20f.htm#Fact_300608e776c44f6da880a1d4ec9f7c5a",
+          "as_of": "2026-04-29",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "NVGS": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1581804/000162828026017320/nvgs-20251231.htm",
+      "as_of": "2026-03-12",
+      "level": "primary",
+      "sha256": "459ebe12de8d0da76a6fdc5ffa671ab93982e4023fa6c21f132d8eb224e4e835",
+      "bytes": 2659301,
+      "blocks": 2185,
+      "collected_at": "2026-10-02T15:42:04.640407+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "nvgs:TimeChartersMember",
+        "label": "기간 용선 · 고객 계약",
+        "value": 360316000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1581804/000162828026017320/nvgs-20251231.htm#f-643",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 538,457,000 USD와 운영 리스 48,504,000의 합계는 586,961,000입니다. 서로 다른 태그를 그대로 보존하며 지분법 수출 터미널 전체 수입 97,859,000은 연결에 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "nvgs:VoyageChartersMember",
+        "label": "항해 용선 · 고객 계약",
+        "value": 178141000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1581804/000162828026017320/nvgs-20251231.htm#f-646",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 538,457,000 USD와 운영 리스 48,504,000의 합계는 586,961,000입니다. 서로 다른 태그를 그대로 보존하며 지분법 수출 터미널 전체 수입 97,859,000은 연결에 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:OperatingLeaseLeaseIncome",
+        "label": "운영 리스 · 운항 풀",
+        "value": 48504000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:OperatingLeaseLeaseIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1581804/000162828026017320/nvgs-20251231.htm#f-160",
+          "as_of": "2026-03-12",
+          "level": "primary"
+        },
+        "share_exclusion": "고객 계약 538,457,000 USD와 운영 리스 48,504,000의 합계는 586,961,000입니다. 서로 다른 태그를 그대로 보존하며 지분법 수출 터미널 전체 수입 97,859,000은 연결에 더하지 않습니다."
+      }
+    ]
+  },
+  "STNG": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1483934/000148393426000021/stng-20251231.htm",
+      "as_of": "2026-03-20",
+      "level": "primary",
+      "sha256": "bc1bdc1954903b090d23b3c27bb0a015853b5c2daadd897b29af43419bf7eea8",
+      "bytes": 4275292,
+      "blocks": 2600,
+      "collected_at": "2026-10-02T15:42:36.494413+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "stng:HandymaxMember",
+        "label": "Handymax",
+        "value": 115632000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 938222000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1483934/000148393426000021/stng-20251231.htm#f-1044",
+          "as_of": "2026-03-20",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "stng:LR2Member",
+        "label": "LR2",
+        "value": 444313000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 938222000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1483934/000148393426000021/stng-20251231.htm#f-1045",
+          "as_of": "2026-03-20",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "stng:MRMember",
+        "label": "MR",
+        "value": 378277000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 938222000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1483934/000148393426000021/stng-20251231.htm#f-1046",
+          "as_of": "2026-03-20",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "TEN": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1166663/000119312526144027/d49235d20f.htm",
+      "as_of": "2026-04-06",
+      "level": "primary",
+      "sha256": "6669e4d87fac24d6a04dbbcbdd40a0aac9cfe188b05d7fc1bfa114408ede4e89",
+      "bytes": 3090728,
+      "blocks": 1619,
+      "collected_at": "2026-10-02T15:42:49.423410+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "tnp:VoyageChartersAndContractsMember",
+        "label": "항해 용선·운송 계약",
+        "value": 136701000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueNotFromContractWithCustomer",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1166663/000119312526144027/d49235d20f.htm#Fact000833",
+          "as_of": "2026-04-06",
+          "level": "primary"
+        },
+        "share_exclusion": "항해·운송 계약 136,701,000 USD와 기간·나용선·풀 661,988,000의 합계는 798,689,000입니다. 원문의 서로 다른 태그를 보존하며 전대 리스 소계 29,273,000을 다시 더하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "tnp:TimeBareboatAndPoolingCharterArrangementsMember",
+        "label": "기간·나용선·운항 풀",
+        "value": 661988000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "tnp:OperatingLeaseLeaseIncome1",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1166663/000119312526144027/d49235d20f.htm#Fact000845",
+          "as_of": "2026-04-06",
+          "level": "primary"
+        },
+        "share_exclusion": "항해·운송 계약 136,701,000 USD와 기간·나용선·풀 661,988,000의 합계는 798,689,000입니다. 원문의 서로 다른 태그를 보존하며 전대 리스 소계 29,273,000을 다시 더하지 않습니다."
+      }
+    ]
+  },
+  "TK": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm",
+      "as_of": "2026-03-13",
+      "level": "primary",
+      "sha256": "ea4e72eb3e7c7d5f9422a9fc4a881273cbf87d9d28e7019c0bc274147b77a891",
+      "bytes": 2428126,
+      "blocks": 2168,
+      "collected_at": "2026-10-02T15:42:53.687849+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "tk:ManagementFeesAndOtherOtherRevenueMember",
+        "label": "관리·기타",
+        "value": 8047000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-523",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tk:ShiptoshipsupportservicesOtherrevenueMember",
+        "label": "선박 간 화물 이송 지원",
+        "value": 14670000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-520",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tk:TimeCharterBunkerTankerMember",
+        "label": "연료 공급선 · 기간 용선",
+        "value": 8327000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-511",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tk:TimeChartersAframaxLR2Member",
+        "label": "Aframax·LR2 · 기간 용선",
+        "value": 11196000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-508",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tk:TimeChartersSuezmaxMember",
+        "label": "Suezmax · 기간 용선",
+        "value": 3892000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-505",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tk:VesselOperationalAndMaintenanceServicesOtherRevenueMember",
+        "label": "선박 운항·정비",
+        "value": 118149000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-517",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tk:VoyageChartersAframaxAndLR2Member",
+        "label": "Aframax·LR2 · 항해 용선",
+        "value": 349312000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-496",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tk:VoyageChartersSuezmaxMember",
+        "label": "Suezmax · 항해 용선",
+        "value": 424952000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-493",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tk:VoyageChartersVLCCMember",
+        "label": "VLCC · 항해 용선",
+        "value": 10975000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-499",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tk:MarineServicesAndOtherMember",
+        "label": "해상 서비스·기타",
+        "value": 125506000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-528",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tk:TankersMember",
+        "label": "유조선",
+        "value": 824014000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 949520000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/911971/000091197126000015/tk-20251231.htm#f-527",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "TNK": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm",
+      "as_of": "2026-03-13",
+      "level": "primary",
+      "sha256": "b2a4fa36ce36fa00e7b5f98e5adb88c779705a35c36e9dff3357a90f91255165",
+      "bytes": 2483057,
+      "blocks": 2227,
+      "collected_at": "2026-10-02T15:42:56.112844+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "tnk:ManagementFeesAndOtherOtherRevenueMember",
+        "label": "관리·기타",
+        "value": 10324000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-513",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tnk:ShiptoshipsupportservicesOtherrevenueMember",
+        "label": "선박 간 화물 이송 지원",
+        "value": 14670000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-510",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tnk:TimeCharterBunkerTankerMember",
+        "label": "연료 공급선 · 기간 용선",
+        "value": 8327000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-501",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tnk:TimeChartersAframaxLR2Member",
+        "label": "Aframax·LR2 · 기간 용선",
+        "value": 11196000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-498",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tnk:TimeChartersSuezmaxMember",
+        "label": "Suezmax · 기간 용선",
+        "value": 3892000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-495",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tnk:VesselOperationalAndMaintenanceServicesOtherRevenueMember",
+        "label": "선박 운항·정비",
+        "value": 118149000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-507",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tnk:VoyageChartersAframaxAndLR2Member",
+        "label": "Aframax·LR2 · 항해 용선",
+        "value": 349312000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-486",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tnk:VoyageChartersSuezmaxMember",
+        "label": "Suezmax · 항해 용선",
+        "value": 424952000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-483",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "tnk:VoyageChartersVLCCMember",
+        "label": "VLCC · 항해 용선",
+        "value": 10975000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-489",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tnk:MarineServicesAndOtherMember",
+        "label": "해상 서비스·기타",
+        "value": 127783000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-518",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "tnk:TankersMember",
+        "label": "유조선",
+        "value": 824014000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 951797000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1419945/000141994526000007/tnk-20251231.htm#f-517",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "TORO": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1941131/000114036126014706/ef20060830_20f.htm",
+      "as_of": "2026-04-15",
+      "level": "primary",
+      "sha256": "772d25d27a2665c7fd3c5cc34f74004a03678d0e0eeba53a7e1de37f37d70517",
+      "bytes": 3960456,
+      "blocks": 4173,
+      "collected_at": "2026-10-02T15:42:58.495399+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "toro:PoolAgreementsMember",
+        "label": "운항 풀 · 리스",
+        "value": 2068779.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:OperatingLeaseLeaseIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1941131/000114036126014706/ef20060830_20f.htm#Fact_de44592565114dfdb090dcd5a46fe65c",
+          "as_of": "2026-04-15",
+          "level": "primary"
+        },
+        "share_exclusion": "연결 수입 21,081,840 USD는 리스 수입으로 구성됩니다. 고객 계약 태그의 0은 전체 수입 0이 아닙니다. 처분·분할한 선박의 중단 사업은 제외합니다."
+      },
+      {
+        "group": "product",
+        "member": "toro:TimeCharterMember",
+        "label": "기간 용선 · 리스",
+        "value": 19013061.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:OperatingLeaseLeaseIncome",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1941131/000114036126014706/ef20060830_20f.htm#Fact_a1e92b4bdde54f8390ab59f9c4715785",
+          "as_of": "2026-04-15",
+          "level": "primary"
+        },
+        "share_exclusion": "연결 수입 21,081,840 USD는 리스 수입으로 구성됩니다. 고객 계약 태그의 0은 전체 수입 0이 아닙니다. 처분·분할한 선박의 중단 사업은 제외합니다."
+      },
+      {
+        "group": "segment",
+        "member": "toro:EcoTankerSegmentMember",
+        "label": "Eco 탱커",
+        "value": 6231397.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 21081840.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1941131/000114036126014706/ef20060830_20f.htm#Fact_3d0b591006be4f75becc61e43cec0f3e",
+          "as_of": "2026-04-15",
+          "level": "primary"
+        },
+        "share_exclusion": "연결 수입 21,081,840 USD는 리스 수입으로 구성됩니다. 고객 계약 태그의 0은 전체 수입 0이 아닙니다. 처분·분할한 선박의 중단 사업은 제외합니다."
+      },
+      {
+        "group": "segment",
+        "member": "toro:LPGCarrierSegmentMember",
+        "label": "LPG 운송",
+        "value": 12803193.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 21081840.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1941131/000114036126014706/ef20060830_20f.htm#Fact_ddb4ba1e7f0745ad8060fed459b11ef9",
+          "as_of": "2026-04-15",
+          "level": "primary"
+        },
+        "share_exclusion": "연결 수입 21,081,840 USD는 리스 수입으로 구성됩니다. 고객 계약 태그의 0은 전체 수입 0이 아닙니다. 처분·분할한 선박의 중단 사업은 제외합니다."
+      },
+      {
+        "group": "segment",
+        "member": "toro:NonEcoTankerSegmentMember",
+        "label": "일반 탱커",
+        "value": 2047250.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 21081840.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1941131/000114036126014706/ef20060830_20f.htm#Fact_3113c36a85ee4b268e29a9a41b7c25ad",
+          "as_of": "2026-04-15",
+          "level": "primary"
+        },
+        "share_exclusion": "연결 수입 21,081,840 USD는 리스 수입으로 구성됩니다. 고객 계약 태그의 0은 전체 수입 0이 아닙니다. 처분·분할한 선박의 중단 사업은 제외합니다."
+      }
+    ]
+  },
+  "IMPP": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1876581/000119312526192203/d60380d20f.htm",
+      "as_of": "2026-04-29",
+      "level": "primary",
+      "sha256": "e506a4b57fdb4511a8ee66afc8b8e1000a9241bfd87c7a02383d91932a4cbd97",
+      "bytes": 2365866,
+      "blocks": 2510,
+      "collected_at": "2026-10-02T15:41:06.382755+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "impp:TimeCharterRevenuesMember",
+        "label": "기간 용선 · 부분 구성",
+        "value": 67952884.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1876581/000119312526192203/d60380d20f.htm#ixv-21343",
+          "as_of": "2026-04-29",
+          "level": "primary"
+        },
+        "share_exclusion": "기간·항해 두 계약 항목의 합계 154,775,747 USD는 전체 161,004,306보다 6,228,559 작습니다. 미태그 부분을 차액으로 만들어 넣거나 100% 구성비로 표시하지 않습니다."
+      },
+      {
+        "group": "product",
+        "member": "impp:VoyageCharterRevenuesMember",
+        "label": "항해 용선 · 부분 구성",
+        "value": 86822863.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1876581/000119312526192203/d60380d20f.htm#ixv-21346",
+          "as_of": "2026-04-29",
+          "level": "primary"
+        },
+        "share_exclusion": "기간·항해 두 계약 항목의 합계 154,775,747 USD는 전체 161,004,306보다 6,228,559 작습니다. 미태그 부분을 차액으로 만들어 넣거나 100% 구성비로 표시하지 않습니다."
+      }
+    ]
+  },
+  "PXS": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1640043/000149315226014641/form20-f.htm",
+      "as_of": "2026-04-01",
+      "level": "primary",
+      "sha256": "fd15b07274b51a7c046ed2b7e8f488e91e5e66dec086b406bca11a42c818acb5",
+      "bytes": 3041249,
+      "blocks": 1632,
+      "collected_at": "2026-10-02T15:42:20.961971+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "PXS:SpotVoyageChartersMember",
+        "label": "현물 항해 용선",
+        "value": 2041000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 38994000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1640043/000149315226014641/form20-f.htm#Fact001071",
+          "as_of": "2026-04-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "PXS:TimeChartersMember",
+        "label": "기간 용선",
+        "value": 36953000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 38994000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1640043/000149315226014641/form20-f.htm#Fact001075",
+          "as_of": "2026-04-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "PXS:DryBulkVesselsMember",
+        "label": "건화물 운송",
+        "value": 14871000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 38994000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1640043/000149315226014641/form20-f.htm#Fact002045",
+          "as_of": "2026-04-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "PXS:TankerVesselsMember",
+        "label": "석유 제품 탱커",
+        "value": 24123000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 38994000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1640043/000149315226014641/form20-f.htm#Fact002044",
+          "as_of": "2026-04-01",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "KNOP": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1564180/000110465926044664/knop-20251231x20f.htm",
+      "as_of": "2026-04-17",
+      "level": "primary",
+      "sha256": "a233a4be8e32549af675b5875b70232b6082108c1647a1ae5b235a987cecc4fa",
+      "bytes": 4351131,
+      "blocks": 9173,
+      "collected_at": "2026-10-02T15:41:14.378965+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "knop:BareboatRevenuesMember",
+        "label": "나용선",
+        "value": 2091000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1564180/000110465926044664/knop-20251231x20f.htm#Tc_ZGnQDFaxskWVoA5WL_Warw_4_3",
+          "as_of": "2026-04-17",
+          "level": "primary"
+        },
+        "share_exclusion": "기간 용선 359,094,000 USD·나용선 2,091,000·기타 3,258,000의 합계는 364,443,000입니다. 기타에 포함된 항해 466,000과 기간·나용선 상위 소계를 다시 더하지 않습니다. 서로 다른 태그를 보존합니다."
+      },
+      {
+        "group": "product",
+        "member": "knop:TimeCharterRevenuesMember",
+        "label": "기간 용선",
+        "value": 359094000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1564180/000110465926044664/knop-20251231x20f.htm#Tc_S0wd7lIZdEm205YERrYxWA_3_3",
+          "as_of": "2026-04-17",
+          "level": "primary"
+        },
+        "share_exclusion": "기간 용선 359,094,000 USD·나용선 2,091,000·기타 3,258,000의 합계는 364,443,000입니다. 기타에 포함된 항해 466,000과 기간·나용선 상위 소계를 다시 더하지 않습니다. 서로 다른 태그를 보존합니다."
+      },
+      {
+        "group": "product",
+        "member": "knop:OtherRevenues",
+        "label": "기타 · 항해 수입 포함",
+        "value": 3258000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "knop:OtherRevenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1564180/000110465926044664/knop-20251231x20f.htm#Tc_NvDX50StckOE3qtsHwAlDg_6_3",
+          "as_of": "2026-04-17",
+          "level": "primary"
+        },
+        "share_exclusion": "기간 용선 359,094,000 USD·나용선 2,091,000·기타 3,258,000의 합계는 364,443,000입니다. 기타에 포함된 항해 466,000과 기간·나용선 상위 소계를 다시 더하지 않습니다. 서로 다른 태그를 보존합니다."
+      }
+    ]
   }
 }

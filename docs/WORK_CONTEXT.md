@@ -1529,3 +1529,45 @@ resuming; no paid AI regression approval has arrived.
   March18extensions/March25Aurora. Need receive/read full primary sources and
   exact annual facts/contract dates before editing. Preserve non-Energy official
   classification, business exploration groups are not GICS certification.
+
+### Shipping continuation · 2026-10-03
+
+- WHOLE US Energy ACTIVE, unfinished: 213 roster /155 edited main /58 left plus
+  ALL-field depth/readability/actual relationship/source/current/classification/UI
+  audit. NEVER final/stop at commit/test/deploy/CI milestone. Latest time question
+  answered with uncertain 1–3 more workdays; no cancellation or reason to stop.
+- DHT FRO GLNG FLNG LPG INSW NAT NVGS STNG TEN TK TNK TORO IMPP PXS KNOP:
+  18 annual/availablequarter receipts matched;69 reviewed revenue rows;95 scoped
+  counterpart profiles.5 additional issuerPDForiginals downloaded/SHA recorded.
+  Financial205 records/200 populated/1567 values. See ENERGY_SHIPPING_REVIEW_20261003.
+- Reviewed issuer/document/FY/USD guards, actual undimensioned metric keys, lease/
+  pool/TCE/equitymethod distinctions, nestedsubtotal exclusion, TENbothmetrics+total
+  reconciliation. IMPPpartial154775747 vs161004306 no fabricated6228559component.
+  BWLP/RBNE officialtickers map to one relationship ID, not new213roster entries.
+- Actual ToroSep17/18MRdeliveries reflected:4MR+2LPG; AI OKTO Oct8 distribution
+  conditional/future Oct3. Updated Sept21record and Sept9proposal originals. Dorian
+  Aug5actual25fleet. HilliCameroonended/Gimiactual/Argentinafuture separated.
+- Final image27a0a9157119af9237985426c480c31ae1b6afb12b0ab09cff874314465b0cd3:
+  actual703tests79.358sOK18skip;host9modules21tests1.416sOK covers all18Node skips;
+  236 packagedsourceSHA match;40focus1.844s/82focus2.278sOK;69rowsactualparsematch.
+  Offline512MiB/1CPU seed1001/4.816s/RSS67.0MiB/quick_checkOK; directoryp95.745ms,
+  KNOPmerge1.445ms/details10.582ms/maxRSS67.7MiB. Existingdependencyimage reused;
+  offlineaptbuild/discoveryoption/PYTHONPATH/testassumption failures preserved.
+- App-only recreatehealthy,16+4counterpart+6priorcompanyactualHTTP200;periods/sums/
+  reverse relations verified. BWLP/RBNE sectorrosterURL404 is expected; actual
+  entityID URL200. HTTPhelper statusvar corrected, not appauth/API boundary change.
+  startup200/ready503existingpausedpaperbacktest; otherdata checks true.
+  Fourservices/data preserved, app151.1MiB/backup44.3/market268.3/personal240.6.
+- Existing Chrome energy810509711 debuggerunattached; actualvisualaudit pending.
+  No extra tabs/userunrelatedwindowchanges/paidAI/CodeRabbit/newagents/paiddata.
+  Scoped directcode/securityreview only; no publicscan/OCI-KMS/dependencyreaudit claims.
+- Downstream87a350c7bc1ba4f63366f0ae08c55495d91cbf9a pushed;CI37110770464SUCCESS.
+  Current shippingcommit/push pending at append. CONTINUE remaining58 immediately.
+- NEXT land/royalty15 BSM CRT DMLP KRP NRP NRT PBT SBR TPL VNOM CKX MNR MXC LB PNRG.
+  Actualoriginals at /tmp/milkyway-energy-research; land-royalty-business.json ready.
+  AMEN noannual yet, do not fabricate. BSMcurrent2025Aethon14% vsXOM13%2024;KRP
+  top10operatornamed47.1%;CRTXTOoperator/royaltynotphysicalsales;NRTFYOct31/EUR-USD;
+  PBTBlackbearddeficitWaddellnotalltrust0;NRPSisecam49%equitymethod;LBWaterBridge
+  operating/producerSUAs;TPLimagecustomerpie needs actualsource notdirector links.
+  Then remaining43 and entiredepthaudit.8missingannual AMEN EROK FTW HMH NUCL
+  UNTC WHK XPRO require actualIR/newlistinghistory. No final at intermediate batch.
