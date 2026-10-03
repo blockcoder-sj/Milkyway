@@ -3417,7 +3417,18 @@
       }
     ],
     "cik": "1534504",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 연결 수입 29,332,300,000 USD는 정유·물류 합계에서 내부 거래 348,900,000을 제거합니다. 정유 제품 표와 St. Bernard 지분법 공동사업은 다른 연결 범위입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1534504/000153450426000010/pbf-20251231.htm",
+          "as_of": "2026-02-12",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "CHRD": {
     "annual": {
@@ -5847,7 +5858,18 @@
       }
     ],
     "cik": "1694426",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 연결 외부 수입은 정유·물류입니다. 내부 거래 841,700,000 USD를 제거한 10,722,900,000이며 DKL의 외부 수입을 다시 더하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1694426/000162828026012664/dk-20251231.htm",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "CRC": {
     "annual": {
@@ -6094,7 +6116,18 @@
       }
     ],
     "cik": "821483",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 정유·물류·소매 내부 거래 전 합계 8,081,316,000 USD에서 616,666,000을 제거합니다. 비지배 Laramie 손익과 Hawaii 공동사업의 연결·비지배 지분을 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/821483/000082148326000005/parr-20251231.htm",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "PTEN": {
     "annual": {
@@ -6689,7 +6722,18 @@
       }
     ],
     "cik": "2013745",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 외부 수입 4,137,100,000 USD는 특수제품·브랜드·Montana입니다. 내부 거래 19,900,000을 제거하고 Royal Purple 산업용 자산의 2025년3월 처분 전 실적과 잔존 소비자 브랜드를 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2013745/000201374526000007/clmt-20251231x10k.htm",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "KNTK": {
     "annual": {
@@ -8101,7 +8145,18 @@
       }
     ],
     "cik": "789460",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 연결 수입 36,916,600,000 USD는 연료 판매 총액이며 마진·수수료가 아닙니다. 반올림된 부문 합계와 연결 총액의 100,000 차이는 임의로 수정하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/789460/000078946026000015/wkc-20251231.htm",
+          "as_of": "2026-02-24",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "CVI": {
     "annual": {
@@ -8201,7 +8256,18 @@
       }
     ],
     "cik": "1376139",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 외부 수입 7,162,000,000 USD는 석유·재생연료·연결 비료를 포함합니다. 내부 거래 전 합계 7,344,000,000과 다르며 RDU의 2025년12월 공정 전환 후 제품 상태를 따로 봅니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1376139/000137613926000014/cvi-20251231.htm",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "KOS": {
     "cik": "1509991",
@@ -8500,7 +8566,18 @@
       }
     ],
     "cik": "744187",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "FY2025는 2025-02-01~2026-01-31입니다. 제품 650,741,000 USD에서 파생상품 조정 -254,000을 반영해 650,487,000입니다. Big River 지분법 투자 전체 수입을 연결에 더하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/744187/000093041326000937/c115944_10k-ixbrl.htm",
+          "as_of": "2026-03-30",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "NBR": {
     "annual": {
@@ -9354,7 +9431,28 @@
       }
     ],
     "cik": "1309402",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 파생상품 회계를 포함한 연결 수입은 2,091,680,000 USD입니다. 계약 태그의 에탄올 0은 전체 에탄올 판매 0이 아닙니다. 계약 수입과 상품 거래를 포함한 연결 수입은 다른 범위입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1309402/000130940226000019/gpre-20251231.htm",
+          "as_of": "2026-02-10",
+          "level": "primary"
+        }
+      },
+      {
+        "title": "2026 Q2 · 비교 표시",
+        "detail": "ASU 2025-10 조기 적용으로 45Z를 소득세 이익 대신 매출원가 차감으로 표시하고 비교 기간을 소급 조정했습니다. 2025 연차 원문의 숫자를 새 분기 표시로 덮어쓰지 않습니다.",
+        "source": {
+          "label": "SEC · 10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/1309402/000162828026054377/gpre-20260630.htm",
+          "as_of": "2026-08-06",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "NEXT": {
     "annual": {
@@ -11395,7 +11493,18 @@
       }
     ],
     "cik": "1392380",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 North Dakota 취득 후 연결 수입 160,580,000 USD에는 에탄올·부산물·환경 속성·RNG·특수 연료 등이 있습니다. 미래 SAF 약정과 탄소 제거·생산 세액공제 양도는 서로 다른 범위입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1392380/000139238026000006/gevo-20251231x10k.htm",
+          "as_of": "2026-03-05",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "SMHI": {
     "annual": {
@@ -12077,7 +12186,18 @@
       }
     ],
     "cik": "1538849",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 전체 수입 3,662,534,000 USD는 상품·서비스 3,599,988,000과 리스 62,546,000입니다. 리스 제외 제품 표를 전체 매출의 100% 구성으로 표시하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1538849/000119312526071870/capl-20251231.htm",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "CQP": {
     "annual": {
@@ -12289,7 +12409,18 @@
       }
     ],
     "cik": "1552797",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 연결 수입 1,013,323,000 USD에는 리스 215,888,000이 포함됩니다. 리스 제외 상품·서비스 797,435,000과 지분법 W2W 전체 수입은 같은 매출 기준이 아닙니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1552797/000162828026012666/dkl-20251231.htm",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "EPD": {
     "annual": {
@@ -12577,7 +12708,18 @@
       }
     ],
     "cik": "1022321",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 외부 수입 1,630,415,000 USD는 해상 배관·해상 운송·육상/서비스입니다. 처분한 소다회 사업·중단 사업과 잔존 부문을 나누며 내부 귀속이 다른 부문 표를 혼합하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1022321/000102232126000008/gel-20251231.htm",
+          "as_of": "2026-02-18",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "GLP": {
     "annual": {
@@ -12665,7 +12807,18 @@
       }
     ],
     "cik": "1323468",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 연결 수입 18,561,421,000 USD는 상품 거래·리스 등을 포함합니다. 고객 계약 제품 8,713,114,000만을 전체 수입으로 취급하지 않으며 SPR 공동사업과 본체를 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1323468/000110465926021381/glp-20251231x10k.htm",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "HESM": {
     "annual": {
@@ -12877,7 +13030,18 @@
       }
     ],
     "cik": "1176334",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "2025 부문 외부 수입 716,113,000 USD는 내부 거래 24,065,000 제거 후입니다. Smackover의 위탁 원료·상품 소유권, 자체 상품 판매와 MRC 관련 고객 수입을 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1176334/000117633426000012/mmlp-20251231.htm",
+          "as_of": "2026-02-23",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "MPLX": {
     "annual": {
@@ -13077,7 +13241,18 @@
       }
     ],
     "cik": "1504461",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "FY2026는 2025-04-01~2026-03-31입니다. 연결 수입 3,156,159,000 USD의 부문 구성과 상품/서비스 구성은 별도 표입니다. 액체 부문의 해외 판매를 전사 지역 구성으로 확대하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1504461/000150446126000012/ngl-20260331.htm",
+          "as_of": "2026-05-28",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "NRP": {
     "annual": {
@@ -13428,6 +13603,18 @@
         }
       },
       {
+        "label": "현금·현금성 자산",
+        "value": 24683000.0,
+        "unit": "USD",
+        "period": "2025-09-30",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002590/000119312525311490/sgu-20250930.htm#F_7d0ac904-ede7-4db7-be39-5cc3be3f3850",
+          "as_of": "2025-12-09",
+          "level": "primary"
+        }
+      },
+      {
         "label": "영업활동 현금흐름",
         "value": 70950000.0,
         "unit": "USD",
@@ -13453,7 +13640,18 @@
       }
     ],
     "cik": "1002590",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "FY2025는 2024-10-01~2025-09-30입니다. 제품·설치·정비·유상 방문 1,784,418,000 USD의 세부 수입과 제품/서비스 상위 소계를 중복 합산하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1002590/000119312525311490/sgu-20250930.htm",
+          "as_of": "2025-12-09",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "SMC": {
     "annual": {
@@ -13677,7 +13875,18 @@
       }
     ],
     "cik": "1005210",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "회계 기간·연결 범위",
+        "detail": "FY2025는 2024-09-29~2025-09-27의 52주입니다. 제품별 수입과 고객 용도별 수입은 각각 같은 연결 1,432,518,000 USD를 나눈 별도 표이며 함께 더하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1005210/000119312525298630/sph-20250927.htm",
+          "as_of": "2025-11-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "SUN": {
     "annual": {

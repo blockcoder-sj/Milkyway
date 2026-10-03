@@ -1488,3 +1488,44 @@ resuming; no paid AI regression approval has arrived.
   All91remaining list in prior remaining-producer-sources-20261003.json;8annual
   missing AMEN EROK FTW HMH NUCL UNTC WHK XPRO require actual official originals.
   Immediately continue next17 then whole remainder+depthaudit;no final at commit.
+
+### Downstream continuation · 2026-10-03
+
+- WHOLE US Energy ACTIVE, unfinished: 213 roster /139 edited main /74 left plus
+  ALL-field depth/readability/actual relationship/source/current/classification/UI
+  audit. NEVER final/stop at commit/test/deploy/CI milestone. Latest user asked
+  remaining time; commentary estimated 1–3 more workdays with uncertainty, not a
+  cancellation or authorization to stop. Counts are not full-completion counts.
+- DK DKL PBF PARR CVI CLMT GLP CAPL SGU SPH MMLP NGL GEL WKC GPRE REX GEVO:
+  34 original annual/quarter receipts matched;104 reviewed revenue rows;
+  financial205 records/200 populated/1562 values. Exact scopes and failed runs in
+  docs/ENERGY_DOWNSTREAM_REVIEW_20261003.md. Preserve old MPC/PSX/DINO refining.
+- Fixed noncalendar fiscal dates;GPRE current annual cannot fall back to prior
+  partial product;SPH end_market parse;SGU cash24683000;REX derivative -254000;
+  DKL/GLP/CAPL partial lease/derivative bases;WKC rounding100000 has no share.
+  Named NGL→Hydrosource, GEL→BOE/LLOG, WKC→JetBlue/DHL with actual source dates.
+  JetBlue registry maps JBLU/single graph ID;preserve existing public profiles.
+- Actual HTTP found revenue data missing from module enrichment. Connected
+  PUBLIC notes to REPORTS rows and added empty-cache response regression test.
+  Final actual image8412753ceb92a5c6b3a71cf685f6a01d88063e2e5d8f62522d486074c90f3c84:
+  691tests125.251sOK18skip;host24/1.312sOK;236 packaged app/test SHA match;
+  70focus/.911sOK. Offline512MiB/1CPU seed905/4.864s/RSS67.8MiB/quick_checkOK;
+  directoryp95 .997ms/WKCmerge1.832ms/details10.886ms/RSS68.6MiB.
+- App-only recreate healthy, actual17+3counterpart+3priorrefiner HTTP200 sums/
+  reverse roles/cash/signed/rounded/period basis verified. startup200/ready503
+  pausedpaperbacktest, otherdatachecks true. Fourservices/data preserved, noAIcall.
+- Current Chrome extension energy tab810509711 remains debugger unattached.
+  Native Chrome now shows unrelated university window, do not alter it or claim
+  visual verification. No extra tabs/newagents/CodeRabbit/paiddata/publicscan claims.
+- Extended commit f2a1fdf029ebe1a1e6e63b8dc54e243ecf67cb52 pushed CI37105317411SUCCESS.
+  Downstream current commit/push pending at append. Continue remaining74 immediately.
+- NEXT shipping16 DHT FRO GLNG FLNG LPG INSW NAT NVGS STNG TEN TK TNK TORO IMPP
+  PXS KNOP. /tmp/milkyway-energy-equipment-review/shipping-read.py offline read
+  running; /tmp/milkyway-energy-research/shipping-business.json actual annual/quarter
+  blocks available. Only LPG/INSW local10Q, other foreign issuers use actual6K/
+  official interim release (not fabricated10Q). Official primary latest web found
+  DHT Sep14 Panther3yr/Jun3Hanwha2028newbuild/Aug5Q2;FROAug28Q2/Sep11sale2VLCC;
+  GolarAug13Q2new4thFLNGCIMCRaffles2029/SeatriumLOI;FlexAug19Q2actual106.8m and
+  March18extensions/March25Aurora. Need receive/read full primary sources and
+  exact annual facts/contract dates before editing. Preserve non-Energy official
+  classification, business exploration groups are not GICS certification.

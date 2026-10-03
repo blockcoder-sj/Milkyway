@@ -276,6 +276,15 @@ def parse_revenue(raw, origin, symbol, today=None, *, shared=None, period_end=No
     from .company_xbrl_resources import resource_nodes
     soup = parsed if parsed is not None else document(raw)
     today = today or dt.datetime.now(dt.timezone.utc).date()
+    if period_end is None:
+        # An annual filing can contain a prior-year breakdown when the current
+        # accounting basis changed. Its declared annual header binds all views.
+        from .company_annual_financials import ANNUAL_FORMS, _annual_period
+        period_end = _annual_period(soup, origin, today)
+        declared_forms = {f.get_text(strip=True) for f in soup.find_all('ix:nonnumeric', limit=10000)
+                          if f.get('name') == 'dei:DocumentType'}
+        if declared_forms & ANNUAL_FORMS and period_end is None:
+            return []
     expected_cik = source_cik(origin)
     if expected_cik is None:
         return []
@@ -328,7 +337,7 @@ def parse_revenue(raw, origin, symbol, today=None, *, shared=None, period_end=No
             anchors.setdefault(key, anchor)
     clean = {key: next(iter(rows)) for key, rows in values.items() if len(rows) == 1}
     result = []
-    for group in ('product', 'segment', 'geography', 'revenue_type'):
+    for group in ('product', 'segment', 'geography', 'revenue_type', 'end_market'):
         candidates = [key for key in clean if key[4] == group and
                       energy.metric_allowed(key[0], group, key[2], key[3], origin, symbol, expected_cik)]
         if not candidates:

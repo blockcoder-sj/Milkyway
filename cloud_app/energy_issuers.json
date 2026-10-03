@@ -276,7 +276,7 @@
       "name": "CrossAmerica Partners LP",
       "cik": "1538849",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -357,7 +357,7 @@
       "name": "Calumet, Inc. /DE",
       "cik": "2013745",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -549,7 +549,7 @@
       "name": "CVR ENERGY INC",
       "cik": "1376139",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -624,7 +624,7 @@
       "name": "Delek US Holdings, Inc.",
       "cik": "1694426",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -639,7 +639,7 @@
       "name": "Delek Logistics Partners, LP",
       "cik": "1552797",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1110,7 +1110,7 @@
       "name": "GENESIS ENERGY LP",
       "cik": "1022321",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1125,7 +1125,7 @@
       "name": "Gevo, Inc.",
       "cik": "1392380",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1170,7 +1170,7 @@
       "name": "GLOBAL PARTNERS LP",
       "cik": "1323468",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1200,7 +1200,7 @@
       "name": "Green Plains Inc.",
       "cik": "1309402",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1647,7 +1647,7 @@
       "name": "MARTIN MIDSTREAM PARTNERS L.P.",
       "cik": "1176334",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1872,7 +1872,7 @@
       "name": "NGL Energy Partners LP",
       "cik": "1504461",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2169,7 +2169,7 @@
       "name": "PAR PACIFIC HOLDINGS, INC.",
       "cik": "821483",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2199,7 +2199,7 @@
       "name": "PBF Energy Inc.",
       "cik": "1534504",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2406,7 +2406,7 @@
       "name": "REX AMERICAN RESOURCES Corp",
       "cik": "744187",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "refining",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2541,7 +2541,7 @@
       "name": "STAR GROUP, L.P.",
       "cik": "1002590",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2667,7 +2667,7 @@
       "name": "SUBURBAN PROPANE PARTNERS LP",
       "cik": "1005210",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3264,7 +3264,7 @@
       "name": "WORLD KINECT CORP",
       "cik": "789460",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "fuel-distribution",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

@@ -12,12 +12,14 @@ from . import company_energy_infrastructure_revenue as infrastructure
 from . import company_energy_nuclear_revenue as nuclear
 from . import company_energy_producer_revenue as producers
 from . import company_energy_extended_revenue as extended
+from . import company_energy_downstream_revenue as downstream
 
 COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES,
                **canada.COORDINATES, **infrastructure.COORDINATES, **nuclear.COORDINATES,
-               **producers.COORDINATES, **extended.COORDINATES}
+               **producers.COORDINATES, **extended.COORDINATES, **downstream.COORDINATES}
 LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS,
-          **canada.LABELS, **infrastructure.LABELS, **nuclear.LABELS, **producers.LABELS, **extended.LABELS}
+          **canada.LABELS, **infrastructure.LABELS, **nuclear.LABELS, **producers.LABELS,
+          **extended.LABELS, **downstream.LABELS}
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -404,7 +406,7 @@ def annotate(rows, symbol, cik):
                     row['share_exclusion'] = explanation
                     if row['group'] == 'segment':
                         row['includes_intersegment'], row['total'] = True, None
-    for adapter in (providers, majors, canada, infrastructure, nuclear, producers, extended):
+    for adapter in (providers, majors, canada, infrastructure, nuclear, producers, extended, downstream):
         rows = adapter.annotate(rows, symbol, cik)
     return rows
 
@@ -428,6 +430,7 @@ def canonical_revenue(rows, symbol):
         rows = nuclear.canonical(rows, symbol, cik)
         rows = producers.canonical(rows, symbol, cik)
         rows = extended.canonical(rows, symbol, cik)
+        rows = downstream.canonical(rows, symbol, cik)
     if symbol != 'EQT':
         return rows
     kept = []
@@ -444,6 +447,8 @@ def canonical_revenue(rows, symbol):
 
 
 def metric_allowed(tag, group, start, end, origin, symbol, cik):
+    if not downstream.metric_allowed(tag, group, start, end, origin, symbol, cik):
+        return False
     if not extended.metric_allowed(tag, group, start, end, origin, symbol, cik):
         return False
     if not producers.metric_allowed(tag, group, start, end, origin, symbol, cik):
@@ -488,6 +493,9 @@ def dimensions(pairs, symbol, cik):
     reviewed = extended.dimensions(pairs, symbol, cik)
     if reviewed:
         return reviewed
+    reviewed = downstream.dimensions(pairs, symbol, cik)
+    if reviewed:
+        return reviewed
     # These issuers put external corporate revenue on a consolidation axis.
     # Never accept the operating-segment totals or elimination coordinates here.
     if ((symbol, cik) in {('MPC', 1510295), ('PSX', 1534701)}
@@ -507,11 +515,13 @@ def presentation_group(row, symbol, cik):
     row['group'] = infrastructure.presentation_group(row, symbol, cik)
     row['group'] = nuclear.presentation_group(row, symbol, cik)
     row['group'] = producers.presentation_group(row, symbol, cik)
-    return extended.presentation_group(row, symbol, cik)
+    row['group'] = extended.presentation_group(row, symbol, cik)
+    return downstream.presentation_group(row, symbol, cik)
 
 
 def signed_value(tag, context, origin, symbol, cik):
-    return extended.signed_value(tag, context, origin, symbol, cik)
+    return (extended.signed_value(tag, context, origin, symbol, cik)
+            or downstream.signed_value(tag, context, origin, symbol, cik))
 
 
 def compound_member(member, symbol, cik):

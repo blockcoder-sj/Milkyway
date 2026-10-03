@@ -139,3 +139,14 @@ SLB/BKR/HAL/PTEN/PUMP/LBRT/SND/AESI/FLOC/ACDC/DTI/KLXE를 추가했다.
 [공급사 검토](ENERGY_PROVIDER_REVIEW_20261003.md)에 수치·검증·남은 범위를 기록한다.
 이어서 FTI/NOV/WHD/WTTR/FTK/NINE/TTI/NBR/HP/WFRD/RES/RNGR와 전 업종을
 계속 대조하며 커밋·푸시 시점에 전체 작업을 종료하지 않는다.
+
+## 2026-10-03 정유·연료 유통·바이오 연료 후속
+
+DK/DKL/PBF/PARR/CVI/CLMT/GLP/CAPL/SGU/SPH/MMLP/NGL/GEL/WKC/GPRE/REX/GEVO
+17곳의 실제 연간 기간·104행 수입·설비·명시된 구매/판매/물류/기술 계약을
+추가했다. 현재 조사 원장 213곳 중 한국어 주 본문은 139곳, 미편집 주 대상은
+74곳이다. 본문 수는 기업의 전 항목 완료 수가 아니다. 기존 자료의 관계 깊이,
+한글 정리·수치·최신성·전체 분류·실제 화면 전수 확인도 남아 있다.
+[정유·유통 후속 검토](ENERGY_DOWNSTREAM_REVIEW_20261003.md)에 원문·수치·
+실패 후 수정·전체 691개 검사·실제 HTTP·성능·보안 검토를 기록했다.
+이어서 해상 운송과 나머지 전 업종을 조사하며 커밋 뒤에도 작업을 계속한다.

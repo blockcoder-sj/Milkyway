@@ -200,7 +200,12 @@ PRIVATE_COMPANIES.update(PRODUCER_PRIVATE)
 from .company_energy_extended import PUBLIC as EXTENDED_PUBLIC, PRIVATE as EXTENDED_PRIVATE, EDGES as EXTENDED_EDGES, COMMON_CONTEXT as EXTENDED_COMMON_CONTEXT
 PUBLIC_COMPANIES.update(EXTENDED_PUBLIC)
 PRIVATE_COMPANIES.update(EXTENDED_PRIVATE)
-for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT, **EXTENDED_COMMON_CONTEXT}.items():
+from .company_energy_downstream import PUBLIC as DOWNSTREAM_PUBLIC, PRIVATE as DOWNSTREAM_PRIVATE, EDGES as DOWNSTREAM_EDGES, COMMON_CONTEXT as DOWNSTREAM_COMMON_CONTEXT, COUNTERPART_PUBLIC as DOWNSTREAM_COUNTERPART_PUBLIC
+PUBLIC_COMPANIES.update(DOWNSTREAM_PUBLIC)
+PRIVATE_COMPANIES.update(DOWNSTREAM_PRIVATE)
+for _symbol, _profile in DOWNSTREAM_COUNTERPART_PUBLIC.items():
+    PUBLIC_COMPANIES.setdefault(_symbol, _profile)
+for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT, **EXTENDED_COMMON_CONTEXT, **DOWNSTREAM_COMMON_CONTEXT}.items():
     _existing = PRIVATE_COMPANIES[_registry]
     for _field, _value in _notes.items():
         if isinstance(_value, list):
@@ -210,7 +215,7 @@ for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, *
 
 # Explicitly reviewed brand/issuer mapping. Similar names never create aliases.
 # Range names the ProFrac service group; its listed parent is ACDC, not FLOC.
-REGISTERED_TICKERS = {'range-profrac': 'ACDC'}
+REGISTERED_TICKERS = {'range-profrac': 'ACDC', 'jetblue-world-fuel': 'JBLU'}
 
 
 PRIVATE_NAMES = {value['name']: key for key, value in PRIVATE_COMPANIES.items()}
@@ -300,6 +305,8 @@ for _symbol, _edges in NUCLEAR_EDGES.items():
 for _symbol, _edges in PRODUCER_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in EXTENDED_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in DOWNSTREAM_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 
