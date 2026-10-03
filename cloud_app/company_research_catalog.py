@@ -222,6 +222,9 @@ PRIVATE_COMPANIES.update(MARINE_PRIVATE)
 from .company_energy_lng import PUBLIC as LNG_PUBLIC, PRIVATE as LNG_PRIVATE, EDGES as LNG_EDGES, COMMON_CONTEXT as LNG_COMMON_CONTEXT
 PUBLIC_COMPANIES.update(LNG_PUBLIC)
 PRIVATE_COMPANIES.update(LNG_PRIVATE)
+from .company_energy_coal import PUBLIC as COAL_PUBLIC, PRIVATE as COAL_PRIVATE, EDGES as COAL_EDGES
+PUBLIC_COMPANIES.update(COAL_PUBLIC)
+PRIVATE_COMPANIES.update(COAL_PRIVATE)
 # Apply every group's dated context; shared IDs can have several business roles.
 for _registry, _notes in [(key, notes) for context in (MATERIAL_COMMON_CONTEXT, NUCLEAR_COMMON_CONTEXT,
         PRODUCER_COMMON_CONTEXT, EXTENDED_COMMON_CONTEXT, DOWNSTREAM_COMMON_CONTEXT,
@@ -339,6 +342,10 @@ for _symbol, _edges in SPECIALIST_EDGES.items():
 for _symbol, _edges in MARINE_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in LNG_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+
+
+for _symbol, _edges in COAL_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

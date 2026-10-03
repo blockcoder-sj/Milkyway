@@ -14,11 +14,11 @@ Energy 개발을 계속합니다.**
 [다른 컴퓨터용 인계파일](docs/HANDOFF_OTHER_COMPUTER.md)에 정리했습니다.
 그 파일을 먼저 읽고, `docs/WORK_CONTEXT.md`의 마지막 기록과 `AGENTS.md`를 확인하세요.
 
-- 마지막 검증·실행 범위: [2026-10-04 LNG 검토](docs/ENERGY_LNG_REVIEW_20261004.md)
+- 마지막 검증·실행 범위: [2026-10-04 석탄·광물 검토](docs/ENERGY_COAL_REVIEW_20261004.md)
 - 작업 브랜치: `codex/ai-research-workflow`
 - 광물권·토지 15개, 전문 서비스 5개, 해양 시추·서비스 9개를 원문 대조·
-  전체 검사·Chrome 확인 후 반영했습니다. LNG 4개도 검증했습니다.
-  주 본문 편집 188개·남은 25개이며
+  전체 검사·Chrome 확인 후 반영했습니다. LNG 4개와 석탄·광물 4개도 검증했습니다.
+  주 본문 편집 192개·남은 21개이며
   전체 섹터 완료는 아닙니다.
 - 조사 원문·중간 결과 묶음: `runtime/handoff/milkyway-energy-handoff-20261003.zip`
   — Git에 포함하지 않은 별도 파일이므로 다른 컴퓨터로 함께 복사해야 합니다.

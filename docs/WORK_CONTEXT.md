@@ -1852,3 +1852,14 @@ healthy/startup200. 실제auth10기업/7상대API200/26행/역방향/logout.
 기존Chrome1탭4곳/음수/비중제외/ChinaGas실제이동검증.
 자세한근거와한계 docs/ENERGY_LNG_REVIEW_20261004.md. 실제AI/CodeRabbit0,
 DeepScan안함,개인/시장/backup및볼륨보존. 검토커밋푸시후석탄/광물과나머지25계속.
+
+## 2026-10-04 석탄·광물
+
+ARLP/BTU/CNR/NC 4개, 매출32행·실명 상대10개. 주본문192/213, 남은21개 및
+전체품질검수 계속. 8원본 SHA와4공식 Q2 갱신 검증. ARLP/NC 음수 제거·
+CNR 외부매출/인수기간·BTU 비연결JV/종료인수·NC 비연결VIE/미확인종결 구별.
+실제 API 발견 Middlemount 생성 자회사 오류를 정확한 Ex21·법인에 한정해 수정.
+전체737/21.359s OK(skip18),host21/.623sOK,포장283SHA일치. Chrome4개/
+NC 음수·미확인종결/SWEPCO 실제 역방향, auth10기업32행검증·logout.
+개인/시장/backup·볼륨보존,AI/CodeRabbit/DeepScan0. 상세 ENERGY_COAL_REVIEW_20261004.md.
+검토·커밋·푸시 후 가스 연료·압축·집하 등 남은21개를 계속한다.

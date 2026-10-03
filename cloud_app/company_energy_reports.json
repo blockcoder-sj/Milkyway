@@ -29308,5 +29308,719 @@
         }
       }
     ]
+  },
+  "ARLP": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm",
+      "as_of": "2026-02-26",
+      "level": "primary",
+      "sha256": "9449e90c31f814c30f8edd66601447146d125f46e594811e8087388b4ce309f8",
+      "bytes": 8502630,
+      "blocks": 24984,
+      "collected_at": "2026-10-02T15:32:24.108711+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926092001/arlp-20260630x10q.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "f994081f81f7d37eea3a2cb96e905bff5afd18cd04bcd27f9f9665a107f1b221",
+      "bytes": 3599598,
+      "blocks": 9636,
+      "collected_at": "2026-10-02T15:32:28.347017+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "arlp:CoalProductsAndServicesRevenueMember",
+        "label": "석탄 제품·서비스",
+        "value": 1932515000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 2194811000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_Pawig1Biwk2KBcn98t1_wA_4_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ProductAndServiceOtherMember",
+        "label": "기타 제품·서비스",
+        "value": 87835000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 2194811000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_RI6e8JaCA0Cv-neKgJ8uKQ_7_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:RoyaltyMember",
+        "label": "원유·가스 로열티",
+        "value": 137849000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 2194811000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_JvQg1t6LDUeiY-0VolcNHg_5_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ShippingAndHandlingMember",
+        "label": "운송·취급",
+        "value": 36612000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 2194811000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_wLtAD_lyHUCQPugzxcbOkw_6_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "arlp:AppalachiaSegmentMember",
+        "label": "Appalachia",
+        "value": 604703000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_1NXUhPrLTkqdWR79D4d8Ew_12_6",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "arlp:IllinoisBasinSegmentMember",
+        "label": "Illinois Basin",
+        "value": 1376162000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_ibzkuUG3JUCaOui8pI6HCA_12_3",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "arlp:RoyaltiesCoalSegmentMember",
+        "label": "석탄 로열티",
+        "value": 80471000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_-ldXFttJgUalMW7uyFCnCA_12_12",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "arlp:RoyaltiesOilAndGasSegmentMember",
+        "label": "원유·가스 로열티",
+        "value": 139556000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_jCmrrJ3dm0ygUNmh-emTIw_12_9",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "us-gaap:CorporateNonSegmentMember",
+        "label": "본사·기타 · 내부거래 제거 포함",
+        "value": -6081000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1086600/000110465926020468/arlp-20251231x10k.htm#Tc_ICYjZJBZqUS4Vdho-EGqKg_12_15",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      }
+    ]
+  },
+  "BTU": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "sha256": "2e88a364d51a49c190ec3b281ca0b1755fdff7a8bd6482720f4abb6d51c4b577",
+      "bytes": 4190601,
+      "blocks": 2235,
+      "collected_at": "2026-10-02T15:27:10.969916+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000050/btu-20260630.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "39363cb6e98d2e3aa24cb5f64804c6b37f8e2b0fc8b221c82196d910a803e5b1",
+      "bytes": 2178474,
+      "blocks": 759,
+      "collected_at": "2026-10-02T15:27:13.278966+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "btu:MetallurgicalCoalMember",
+        "label": "제철용 석탄",
+        "value": 1034800000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 3861500000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm#f-639",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "btu:ThermalCoalMember",
+        "label": "발전용 석탄",
+        "value": 2768300000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 3861500000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm#f-627",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ProductAndServiceOtherMember",
+        "label": "기타 제품·서비스",
+        "value": 58400000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 3861500000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm#f-645",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "btu:OtherUSThermalMiningMember",
+        "label": "기타 미국 발전용 석탄",
+        "value": 707300000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 3861500000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm#f-649",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "btu:PowderRiverBasinMiningMember",
+        "label": "Powder River Basin",
+        "value": 1153000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 3861500000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm#f-648",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "btu:SeaborneMetallurgicalMiningMember",
+        "label": "해상 제철용 석탄",
+        "value": 1036600000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 3861500000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm#f-647",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "btu:SeaborneThermalMiningMember",
+        "label": "해상 발전용 석탄",
+        "value": 908500000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 3861500000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm#f-646",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "us-gaap:CorporateAndOtherMember",
+        "label": "본사·기타",
+        "value": 56100000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 3861500000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1064728/000106472826000006/btu-20251231.htm#f-650",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "CNR": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm",
+      "as_of": "2026-02-17",
+      "level": "primary",
+      "sha256": "8f305c20e4e53aff7c287e382e49b05c3eca56e8609d0e187c1f9f92ae2388db",
+      "bytes": 3335966,
+      "blocks": 1922,
+      "collected_at": "2026-10-02T15:26:16.999201+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000054/cnr-20260630.htm",
+      "as_of": "2026-08-06",
+      "level": "primary",
+      "sha256": "9aa408ff6f4922961c0ff9c906ee2ef5e813b85c80d0c46106eb1ed304dd2cfa",
+      "bytes": 2156911,
+      "blocks": 823,
+      "collected_at": "2026-10-02T15:26:18.667714+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "cnr:IndustrialMember",
+        "label": "산업용 석탄",
+        "value": 940168000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-599",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "cnr:MetallurgicalMember",
+        "label": "제철용 석탄",
+        "value": 1328886000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-602",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "cnr:OtherRevenueMember",
+        "label": "기타 매출",
+        "value": 13817000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-607",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "cnr:PowerGenerationMember",
+        "label": "발전용 석탄",
+        "value": 1860427000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-596",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "cnr:TerminalRevenueMember",
+        "label": "제3자 터미널 서비스",
+        "value": 21477000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-606",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "cnr:CoreMarineTerminalMember",
+        "label": "Core Marine Terminal · 제3자",
+        "value": 21477000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-1617",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "cnr:CorporateAndReconcilingItemsMember",
+        "label": "휴지·기타 · 본사 조정",
+        "value": 13817000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-1627",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "cnr:HighCVThermalMember",
+        "label": "고열량 발전용 석탄 · 외부",
+        "value": 2208643000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-1614",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "cnr:MetallurgicalSegmentMember",
+        "label": "제철용 석탄 · 외부",
+        "value": 1202055000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-1615",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "cnr:PRBMember",
+        "label": "Powder River Basin · 외부",
+        "value": 718783000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 4164775000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1710366/000171036626000007/cnr-20251231.htm#f-1616",
+          "as_of": "2026-02-17",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "NC": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/789933/000078993326000070/nacco-20251231.htm",
+      "as_of": "2026-03-04",
+      "level": "primary",
+      "sha256": "a0ea1b8e3083d3dfa633343ed9b94dff770bd3407a39c2a03111a3a94ba0249b",
+      "bytes": 2388614,
+      "blocks": 1796,
+      "collected_at": "2026-10-02T15:41:37.526309+00:00"
+    },
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/789933/000078993326000144/nacco-20260630.htm",
+      "as_of": "2026-08-05",
+      "level": "primary",
+      "sha256": "25502cbb4eac870d4052b330a1e9817d83b052edbcb33399a6002ebc911c0ce0",
+      "bytes": 1151700,
+      "blocks": 455,
+      "collected_at": "2026-10-02T15:41:38.894955+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "nacco:ContractMiningMember",
+        "label": "Contract Mining",
+        "value": 140013000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/789933/000078993326000070/nacco-20251231.htm#f-451",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "nacco:MineralsAndRoyaltiesMember",
+        "label": "Minerals and Royalties",
+        "value": 37630000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/789933/000078993326000070/nacco-20251231.htm#f-453",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "nacco:UtilityCoalMiningMember",
+        "label": "Utility Coal Mining",
+        "value": 88188000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/789933/000078993326000070/nacco-20251231.htm#f-449",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "srt:ConsolidationEliminationsMember",
+        "label": "연결 내부거래 제거",
+        "value": -3713000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/789933/000078993326000070/nacco-20251231.htm#f-457",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "us-gaap:CorporateNonSegmentMember",
+        "label": "본사·기타",
+        "value": 15080000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": true,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/789933/000078993326000070/nacco-20251231.htm#f-455",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        },
+        "share_exclusion": "부문 매출과 음수 본사·내부거래 조정을 함께 보존한 표입니다. 조정 전 매출을 연결 구성비로 사용하지 않습니다."
+      }
+    ]
   }
 }

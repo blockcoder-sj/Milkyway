@@ -668,6 +668,10 @@ def enrich(value):
             previous = []
             for row in previous_rows:
                 if key == 'relations':
+                    from .company_energy_coal import replaced_generated_relation
+                    if replaced_generated_relation(row, data['symbol']):
+                        data['sources'].append(row['source'])
+                        continue
                     if not row.get('symbol') and not row.get('registry_id') and row['name'] in PRIVATE_NAMES:
                         row = {**row, 'registry_id': PRIVATE_NAMES[row['name']]}
                     if replaced_by_reviewed(row, normalized[key]):
