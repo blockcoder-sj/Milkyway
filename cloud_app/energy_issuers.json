@@ -342,7 +342,7 @@
       "name": "Core Laboratories Inc. /DE/",
       "cik": "1958086",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -990,7 +990,7 @@
       "name": "FORUM ENERGY TECHNOLOGIES, INC.",
       "cik": "1401257",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "equipment",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1812,7 +1812,7 @@
       "name": "National Energy Services Reunited Corp.",
       "cik": "1698514",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2064,7 +2064,7 @@
       "name": "OCEANEERING INTERNATIONAL INC",
       "cik": "73756",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2079,7 +2079,7 @@
       "name": "OIL STATES INTERNATIONAL, INC",
       "cik": "1121484",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "equipment",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

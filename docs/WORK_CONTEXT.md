@@ -1804,3 +1804,14 @@ resuming; no paid AI regression approval has arrived.
 - NEXT afterreview/commit/push: remaining43service/drilling/marine/coal/LNG/small
   issuer originals+editednotes; missing8annuals stillneedrealprimaryretrieval.
   Continue entire depth/currentness/identity/classification/KoreanUIaudit.
+
+## 2026-10-04 유전 분석·장비·해저 서비스 후속
+
+CLB·FET·NESR·OII·OIS 주 기업 5곳·매출 49행을 검토·연결했다. 원장 213개
+중 주 본문 편집 175개이며 38개와 전체 필수 항목 검수가 남았다.
+[검토 기록](ENERGY_SPECIALIST_REVIEW_20261004.md)에 실제 출처·성능·코드·
+보안·전체 721개 검사/호스트 21개 검사·기동/API·기존 Chrome 화면 증거와
+초기 연결 누락 수정, 한계를 기록했다. 앱만 교체, 개인 데이터/백업/볼륨 보존.
+마일스톤 푸시 후 NE·RIG·SDRL·VAL·TDW·SMHI·VTOL·HOS·XPRO와 나머지
+사업군을 계속한다. 사용자 일시정지나 구체적 외부 막힘 외에는 중간에 멈추지
+않는다. 실제 AI 공급자 호출과 CodeRabbit은 사용하지 않았다.

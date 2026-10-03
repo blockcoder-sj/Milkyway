@@ -213,6 +213,9 @@ for _symbol, _profile in SHIPPING_COUNTERPART_PUBLIC.items():
 from .company_energy_land import PUBLIC as LAND_PUBLIC, PRIVATE as LAND_PRIVATE, EDGES as LAND_EDGES, COMMON_CONTEXT as LAND_COMMON_CONTEXT
 PUBLIC_COMPANIES.update(LAND_PUBLIC)
 PRIVATE_COMPANIES.update(LAND_PRIVATE)
+from .company_energy_specialists import PUBLIC as SPECIALIST_PUBLIC, PRIVATE as SPECIALIST_PRIVATE, EDGES as SPECIALIST_EDGES
+PUBLIC_COMPANIES.update(SPECIALIST_PUBLIC)
+PRIVATE_COMPANIES.update(SPECIALIST_PRIVATE)
 for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT, **EXTENDED_COMMON_CONTEXT, **DOWNSTREAM_COMMON_CONTEXT, **SHIPPING_COMMON_CONTEXT, **LAND_COMMON_CONTEXT}.items():
     _existing = PRIVATE_COMPANIES[_registry]
     for _field, _value in _notes.items():
@@ -320,6 +323,8 @@ for _symbol, _edges in DOWNSTREAM_EDGES.items():
 for _symbol, _edges in SHIPPING_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in LAND_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in SPECIALIST_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 
