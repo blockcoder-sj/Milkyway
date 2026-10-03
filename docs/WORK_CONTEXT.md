@@ -1316,3 +1316,55 @@ resuming; no paid AI regression approval has arrived.
   Original annuals already local in /tmp/milkyway-energy-research; reuse receipts.
   FTK actual four subsidiaries source verified earlier; no global public scan
   unless managedworkspace; no paid data, new agents, OCI/KMS claims.
+
+### Infrastructure/materials continuation · 2026-10-03
+
+- Whole Energy remains unfinished and active. 213 entries, 81 edited main
+  companies, 132 remaining plus all-field deep audit. Continue after commit/push;
+  NEVER final/stop at a partial milestone. Literal all knowledge is not claimed.
+- Added ENB/PBA/TRP/SOBO/TS/SSL Korean dossiers and role-specific counterparts,
+  39 new financial figures, 64 revenue rows. 200 receipts/194 populated/1503
+  financial values are coverage, not completion. Actual observed same-accession
+  audited attachments PBA/TRP/SOBO/SSL; SSL FY2026 endsJun30/ZAR.
+- docs/ENERGY_INFRASTRUCTURE_REVIEW_20261003.md records exact coordinate/metric/
+  denominator checks, current named supplier/customer/EPC roles and project stages.
+  SOBO169m corrected to Keystone variable toll dispute revenue reduction, NOT
+  lease; gross1634m separate revenue_type, product1465m+403m+118m=1986m, no doubleadd.
+  TSrounded segment totals differ157k; no fabricated allocation. PGI/ORYX/investee
+  own revenue excluded. TransMountainCrown890kbpdcapacity preservesDINOcontext;
+  AirLiquide merged older XOMevidence with actual SSLoxygen/renewables.
+- Final source645/119.557s OK(skipped18Node), host9modules21/1.199s OK, focus51/
+  1.923s. Actual package645/146.540s OK18skip. Intermediate verifier runs failed
+  due PYTHONPATH/APP_ENV and tmpfs exec/runtime settings; corrected verifier only,
+  no app security change. Initial archive count expectation198 updated to200.
+- Offline512MiB/1CPU seed685entities4.186s/RSS63.0MiB/quick_checkOK; directoryp95
+  3.735ms, PBAmerge11.077ms, graph63.121ms/RSS63.5MiB;80focus1.604s OK. Measurements
+  not network/UI or total RAM; no causal comparison claim with earlier Canadian run.
+- App-only imagebac88e809780636f696e8b9424405cc84a7c1da650dad4aa01d7b2d4360ae953,
+  10editedsource SHA match;healthy/startup200webDB. /health/ready503 expected existing
+  paper/backtestworkerfalse, database/dataset/data_gate/personal_dataworkertrue.
+  Do NOT claim all trading workers active. Four existing services, volumes preserved.
+  Chromeoneexistingtab PBAbrief/products/financials25businessedges paged8; actual
+  graphclick→SiemensEnergy detail with reversePBA/Greenlight customers confirmed.
+  PBAactualYahoo45.89USD closedquoteOct2 20:00:02UTC, not freshlivefill.
+- Direct scoped code/security review; no deps/auth/schema/orders/permissions
+  changes, actualAIcalls0, noCodeRabbit/newagents/paiddata/publicscan/OCI-KMSclaims.
+  Prior Canadian d2f3e2331cfa65b66bf7584936572be2d9d6270c pushed;
+  CI37085463606SUCCESS. Current infrastructure commit pending at this append.
+- NEXT immediately continue nuclear CCJ/DNN/NXE/UEC/EU/URG/LEU/LTBR/UUUU, then
+  remainingwholeproducers/refiners/marine/trusts/fuels. Current parser reader
+  /tmp/milkyway-energy-equipment-review/nuclear-read.py running in isolated512MiB
+  singlecontainer, evidence /tmp/milkyway-energy-research/nuclear-read.json.
+  Actual annual originals alreadylocal. CCJ/DNN/NXE actualAIF/FS/MDA from existing
+  canada-attachment-manifest, UECFY2026Jul31. No fakeDEI/quarterfor6Kcovers.
+  CCJ CigarLake54.547%2025→57.418%actualJul2closed (Orano42.582%); Q2releaseJul31
+  +actualSECQ2FS subsequent note20 verified. DNN direct90%+JCUindirect5%=effective95%,
+  July28fullconstructionactual, mid2028productiontarget; WoodCM/SaskPoweractual,
+  UEXnonconsentinteresttransferNOTcomplete. NXE CNSCMar5constructionlicense NOT
+  operatinglicense, officialAug25page documentsAug13groundbreaking. Historic2021
+  Stantec/Wood/SLR feasibility roles NOT currentEPC. UEC actualFluorUR&Cdevelopment
+  and Cameco/ConverDyn storage from Sep29annual; convertfacilitynotoperating.
+  LTBR actualINL/Battelle irradiationNov2025 and RATENengineering; no commercial
+  fuelcustomer guessed. UUUU actualChemoursmonazite and POSCO1.7tonsample notlarge
+  commercialrecurringpurchase; Astron9.48%actual2025 vsfuture49%earn-in separate.
+  URG/enCore vendors still need freeprimary deeperresearch; no guesses to fill holes.

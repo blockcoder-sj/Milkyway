@@ -185,6 +185,19 @@ PRIVATE_COMPANIES.update(MAJOR_PRIVATE)
 from .company_energy_canada import PUBLIC as CANADA_PUBLIC, PRIVATE as CANADA_PRIVATE, EDGES as CANADA_EDGES
 PUBLIC_COMPANIES.update(CANADA_PUBLIC)
 PRIVATE_COMPANIES.update(CANADA_PRIVATE)
+from .company_energy_infrastructure import PUBLIC as INFRA_PUBLIC, PRIVATE as INFRA_PRIVATE, EDGES as INFRA_EDGES
+PUBLIC_COMPANIES.update(INFRA_PUBLIC)
+PRIVATE_COMPANIES.update(INFRA_PRIVATE)
+from .company_energy_materials import PUBLIC as MATERIAL_PUBLIC, PRIVATE as MATERIAL_PRIVATE, EDGES as MATERIAL_EDGES, COMMON_CONTEXT
+PUBLIC_COMPANIES.update(MATERIAL_PUBLIC)
+PRIVATE_COMPANIES.update(MATERIAL_PRIVATE)
+for _registry, _notes in COMMON_CONTEXT.items():
+    _existing = PRIVATE_COMPANIES[_registry]
+    for _field, _value in _notes.items():
+        if isinstance(_value, list):
+            _existing.setdefault(_field, []).extend(deepcopy(_value))
+        else:
+            _existing[_field] = deepcopy(_value)
 
 # Explicitly reviewed brand/issuer mapping. Similar names never create aliases.
 # Range names the ProFrac service group; its listed parent is ACDC, not FLOC.
@@ -264,6 +277,10 @@ for _symbol, _edges in EQUIPMENT_EDGES.items():
 for _symbol, _edges in MAJOR_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in CANADA_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in INFRA_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in MATERIAL_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

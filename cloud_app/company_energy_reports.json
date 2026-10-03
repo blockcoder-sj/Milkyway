@@ -13487,5 +13487,1442 @@
       "blocks": 2022,
       "collected_at": "2026-10-02T23:40:43.573663+00:00"
     }
+  },
+  "ENB": {
+    "annual": {
+      "label": "SEC · 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm",
+      "as_of": "2026-02-13",
+      "level": "primary",
+      "sha256": "06664700b316c678886ebda0f02481b219479b06406b408a1f1361f0de1237aa",
+      "bytes": 11891669,
+      "blocks": 10004,
+      "collected_at": "2026-10-02T15:39:20.992315+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "enb:CommoditySalesRevenueMember",
+        "label": "상품 판매 · 연결 총매출 기준",
+        "value": 35181000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65194000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_db6f1893-6d89-4b6b-89b4-6ffa1bca6e70",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "enb:GasDistributionRevenueMember",
+        "label": "가스 배급 · 연결 총매출 기준",
+        "value": 9769000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65194000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_148ac063-07db-4450-8651-84d8c7696bb0",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "enb:TransportationAndOtherServicesRevenuesMember",
+        "label": "운송·기타 서비스 · 연결 총매출 기준",
+        "value": 20244000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65194000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_4b93b2d5-4186-41dc-b0ae-5dde95f18e33",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "enb:GasDistributionandStorageSegmentMember",
+        "label": "가스 배급·저장 · 고객 계약만",
+        "value": 10476000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 29329000000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_3e563702-a73a-4552-aba2-a4bf6caaf9af",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "enb:GasTransmissionSegmentMember",
+        "label": "가스 운송 · 고객 계약만",
+        "value": 6408000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 29329000000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_9f0aed4c-730c-4c43-8aa6-64e1c414d4af",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "enb:LiquidsPipelinesSegmentMember",
+        "label": "원유·액체 운송 · 고객 계약만",
+        "value": 12213000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 29329000000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_46de99d2-c67c-4799-bbc5-e980940670d2",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "enb:RenewablePowerGenerationSegmentMember",
+        "label": "재생 전력 · 고객 계약만",
+        "value": 232000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 29329000000.0,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_c7327536-1089-4e06-ac16-815b4c84ee99",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:CA",
+        "label": "캐나다",
+        "value": 23077000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65194000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_aae58ece-1e3e-4f87-ab1f-cea0d7e72238",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 42117000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 65194000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526049810/enb-20251231.htm#F_9360b7f4-d85c-49cd-aaba-045a4a4d0931",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      }
+    ],
+    "quarter": {
+      "label": "SEC · 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/895728/000119312526326752/enb-20260630.htm",
+      "as_of": "2026-07-31",
+      "level": "primary",
+      "sha256": "f1ab831e02156df7c9efe04e32a724325f6fe07ba65a1d5c06d0f42cc374a7e0",
+      "bytes": 5223323,
+      "blocks": 4155,
+      "collected_at": "2026-10-02T15:39:24.816145+00:00"
+    }
+  },
+  "PBA": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231.htm",
+      "as_of": "2026-02-27",
+      "level": "primary",
+      "sha256": "b78f314b972659e7d7052c0349b144cc3564424b5309fc7080e35a556743bfe9",
+      "bytes": 480714,
+      "blocks": 102,
+      "collected_at": "2026-10-02T15:39:26.154237+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "pba:FeeForServiceMember",
+        "label": "이용량 기반 서비스 · 고객 계약만",
+        "value": 773000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 7335000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Pembina · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231_d2.htm#f-1681",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pba:ProductSalesMember",
+        "label": "상품 판매 · 고객 계약만",
+        "value": 3789000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 7335000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Pembina · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231_d2.htm#f-1691",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "pba:TakeOrPayContractMember",
+        "label": "최소 용량·물량 약정 · 고객 계약만",
+        "value": 2773000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 7335000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Pembina · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231_d2.htm#f-1671",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ifrs-full:UnallocatedAmountsMember",
+        "label": "기업 공통·미배분 · 외부 매출",
+        "value": 46000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 7778000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Pembina · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231_d2.htm#f-435",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "pba:FacilitiesSegmentMember",
+        "label": "처리·분별·저장 설비 · 외부 매출",
+        "value": 357000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 7778000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Pembina · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231_d2.htm#f-433",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "pba:MarketingNewVenturesSegmentMember",
+        "label": "상품 판매·신사업 · 외부 매출",
+        "value": 4059000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 7778000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Pembina · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231_d2.htm#f-434",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "pba:PipelinesSegmentMember",
+        "label": "파이프라인 · 외부 매출",
+        "value": 3316000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 7778000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Pembina · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231_d2.htm#f-432",
+          "as_of": "2026-02-27",
+          "level": "primary"
+        }
+      }
+    ],
+    "aif": {
+      "label": "Pembina · 2025 AIF · 사업·고객·프로젝트 원문 · SEC 40-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/aifppcq42025.htm",
+      "as_of": "2026-02-27",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231.htm",
+      "sha256": "c5a81f5e12bc105dc9b36548b0c349cef4c3cf3fc8668c6bf0ae623cbc9e7a32",
+      "bytes": 1474789,
+      "blocks": 1801,
+      "collected_at": "2026-10-03T01:17:41.137472+00:00"
+    },
+    "financials": {
+      "label": "Pembina · 2025 연결 재무제표 · SEC 40-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231_d2.htm",
+      "as_of": "2026-02-27",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231.htm",
+      "sha256": "b3d20e971787abc8e3f1556e2a747d05447ecba5922f166f8e7222bb045fe807",
+      "bytes": 3673232,
+      "blocks": 2157,
+      "collected_at": "2026-10-03T01:17:44.732910+00:00"
+    }
+  },
+  "TRP": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231.htm",
+      "as_of": "2026-02-13",
+      "level": "primary",
+      "sha256": "2a0adef99bda0bc00fcb0ff349c64f1aef5ce6df366b94b908c72866700c4dbf",
+      "bytes": 812956,
+      "blocks": 174,
+      "collected_at": "2026-10-02T15:39:28.565093+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "trp:CapacityArrangementsAndTransportationMember",
+        "label": "용량 예약·운송 · 고객 계약만",
+        "value": 11928000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-988",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문 고객 계약 매출 13,963,000,000 CAD만 포함합니다. 리스 등 1,262,000,000 CAD 및 본사 14,000,000 CAD를 포함한 연결 매출 15,239,000,000 CAD와 범위가 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "trp:NaturalGasStorageAndOtherMember",
+        "label": "가스 저장·기타 · 고객 계약만",
+        "value": 1799000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-998",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문 고객 계약 매출 13,963,000,000 CAD만 포함합니다. 리스 등 1,262,000,000 CAD 및 본사 14,000,000 CAD를 포함한 연결 매출 15,239,000,000 CAD와 범위가 다릅니다."
+      },
+      {
+        "group": "product",
+        "member": "trp:PowerGenerationMember",
+        "label": "발전 · 고객 계약만",
+        "value": 236000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-993",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        },
+        "share_exclusion": "영업 부문 고객 계약 매출 13,963,000,000 CAD만 포함합니다. 리스 등 1,262,000,000 CAD 및 본사 14,000,000 CAD를 포함한 연결 매출 15,239,000,000 CAD와 범위가 다릅니다."
+      },
+      {
+        "group": "segment",
+        "member": "trp:CanadianNaturalGasPipelinesMember",
+        "label": "캐나다 천연가스망",
+        "value": 5785000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-691",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "trp:MexicoNaturalGasPipelinesMember",
+        "label": "멕시코 천연가스망",
+        "value": 1450000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-693",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "trp:PowerAndEnergySolutionsMember",
+        "label": "전력·에너지 솔루션",
+        "value": 845000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-694",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "trp:U.S.NaturalGasPipelinesMember",
+        "label": "미국 천연가스망",
+        "value": 7145000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-692",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "us-gaap:CorporateMember",
+        "label": "본사·기타",
+        "value": 14000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-695",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 7204000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-964",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "trp:CanadaDomesticMember",
+        "label": "캐나다 내수",
+        "value": 5617000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-958",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "trp:CanadaExportMember",
+        "label": "캐나다 수출",
+        "value": 968000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-961",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "trp:MexicoandInternationalMember",
+        "label": "멕시코·기타 해외",
+        "value": 1450000000.0,
+        "unit": "CAD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 15239000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm#f-967",
+          "as_of": "2026-02-13",
+          "level": "primary"
+        }
+      }
+    ],
+    "aif": {
+      "label": "TC Energy · 2025 AIF · 사업·고객·프로젝트 원문 · SEC 40-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/a12312025tceaifenglish.htm",
+      "as_of": "2026-02-13",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231.htm",
+      "sha256": "f90a2504f58410c5d5e19ccda2752ffa0e7da27b59b3b11ae9cfdd1afbb7ecd8",
+      "bytes": 607251,
+      "blocks": 810,
+      "collected_at": "2026-10-03T01:17:45.984525+00:00"
+    },
+    "financials": {
+      "label": "TC Energy · 2025 연결 재무제표 · SEC 40-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231_d2.htm",
+      "as_of": "2026-02-13",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231.htm",
+      "sha256": "e57f5cc1e72dc3f2f95583ce1e8e815b7b11d7799f93a14ef602e78c5e5ae086",
+      "bytes": 3521512,
+      "blocks": 1443,
+      "collected_at": "2026-10-03T01:17:48.612968+00:00"
+    },
+    "mda": {
+      "label": "TC Energy · 2025 MD&A · 운영·계약 원문 · SEC 40-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-12312025xmda.htm",
+      "as_of": "2026-02-13",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231.htm",
+      "sha256": "22f9821262530c16aeef97e8328db0bf0b338a83d42f24b5fe2872ab1ba5004b",
+      "bytes": 2180788,
+      "blocks": 1896,
+      "collected_at": "2026-10-03T01:17:51.772834+00:00"
+    }
+  },
+  "SOBO": {
+    "annual": {
+      "label": "SEC · 40-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231_d2.htm",
+      "as_of": "2026-03-16",
+      "level": "primary",
+      "sha256": "518e528d6437a25042809bf9c0703766fc04d71268c6f32289be52aa95f6bb7d",
+      "bytes": 87472,
+      "blocks": 168,
+      "collected_at": "2026-10-02T15:39:27.119069+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "sobo:CapacityArrangementsAndTransportationAndOtherMember",
+        "label": "용량·운송 · 요금 분쟁 조정 후",
+        "value": 1465000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-469",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "sobo:MarketingActivitiesMember",
+        "label": "상품 판매",
+        "value": 403000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-471",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "us-gaap:ProductAndServiceOtherMember",
+        "label": "기타 수입",
+        "value": 118000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-473",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "sobo:IntraAlbertaAndOtherSegmentMember",
+        "label": "Alberta 운송망·기타",
+        "value": 18000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1986000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-304",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "sobo:KeystonePipelineSystemSegmentMember",
+        "label": "Keystone · 운송·기타",
+        "value": 1565000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1986000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-302",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "sobo:MarketingSegmentMember",
+        "label": "상품 판매",
+        "value": 403000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1986000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-303",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 1566000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1986000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-449",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "sobo:CanadaDomesticMember",
+        "label": "캐나다 내수",
+        "value": 19000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1986000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-453",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "sobo:CanadaExportMember",
+        "label": "캐나다 수출",
+        "value": 401000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 1986000000.0,
+        "metric": "us-gaap:Revenues",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-451",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "revenue_type",
+        "member": "sobo:CapacityArrangementsAndTransportationMember",
+        "label": "용량·운송 · 요금 조정 전 소계",
+        "value": 1634000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm#f-465",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        },
+        "share_exclusion": "용량·운송 1,634,000,000 USD에서 Keystone 변동 요금 분쟁 관련 169,000,000 USD를 차감한 1,465,000,000 USD가 제품 구성 표에 포함됩니다. 소계·차감 항목을 제품 매출에 다시 더하지 않습니다."
+      }
+    ],
+    "aif": {
+      "label": "South Bow · 2025 AIF · 사업·고객·프로젝트 원문 · SEC 40-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/soboaif-12312025.htm",
+      "as_of": "2026-03-16",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231_d2.htm",
+      "sha256": "84baff559c5763531ac919fd7d4df80d214878f3410cf73184530a4af0dcbfe8",
+      "bytes": 644485,
+      "blocks": 980,
+      "collected_at": "2026-10-03T01:17:53.110938+00:00"
+    },
+    "financials": {
+      "label": "South Bow · 2025 연결 재무제표 · SEC 40-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231.htm",
+      "as_of": "2026-03-16",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231_d2.htm",
+      "sha256": "d16c57c99d7c735438e345c22080bd76930a88072e75cd2463d202aa46324837",
+      "bytes": 1549855,
+      "blocks": 1390,
+      "collected_at": "2026-10-03T01:17:55.940332+00:00"
+    },
+    "mda": {
+      "label": "South Bow · 2025 MD&A · 운영·계약 원문 · SEC 40-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobomda-q42025.htm",
+      "as_of": "2026-03-16",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231_d2.htm",
+      "sha256": "3dc0af05d7715db433eecda07adec4645532966d40ec4be6a7feba16a9834b06",
+      "bytes": 933495,
+      "blocks": 1247,
+      "collected_at": "2026-10-03T01:17:57.489089+00:00"
+    }
+  },
+  "TS": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1190723/000155485526000490/ts-20251231.htm",
+      "as_of": "2026-03-31",
+      "level": "primary",
+      "sha256": "2ebe0b964f5f031addb7ed430ca5851ff7ce1fa8f5f812a8765854c55557e73a",
+      "bytes": 10217072,
+      "blocks": 10827,
+      "collected_at": "2026-10-02T22:24:23.634399+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "segment",
+        "member": "ifrs-full:AllOtherSegmentsMember",
+        "label": "기타 사업 · 백만 USD 반올림 표",
+        "value": 581000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1190723/000155485526000490/ts-20251231.htm#Tag456",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        },
+        "share_exclusion": "사업 부문은 백만 USD 반올림 표로 11,400,000,000 + 581,000,000입니다. 정밀 연결 매출 11,981,157,000 USD와 차이 157,000 USD를 임의로 부문에 배분하지 않습니다."
+      },
+      {
+        "group": "segment",
+        "member": "ts:TubesMember",
+        "label": "강관 · 백만 USD 반올림 표",
+        "value": 11400000000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": null,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1190723/000155485526000490/ts-20251231.htm#Tag455",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        },
+        "share_exclusion": "사업 부문은 백만 USD 반올림 표로 11,400,000,000 + 581,000,000입니다. 정밀 연결 매출 11,981,157,000 USD와 차이 157,000 USD를 임의로 부문에 배분하지 않습니다."
+      },
+      {
+        "group": "geography",
+        "member": "srt:EuropeMember",
+        "label": "유럽",
+        "value": 893540000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 11981157000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1190723/000155485526000490/ts-20251231.htm#Tag494",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:NorthAmericaMember",
+        "label": "북미",
+        "value": 5712368000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 11981157000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1190723/000155485526000490/ts-20251231.htm#Tag492",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:SouthAmericaMember",
+        "label": "남미",
+        "value": 2386881000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 11981157000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1190723/000155485526000490/ts-20251231.htm#Tag493",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ts:AsiaPacificMiddleEastAndAfricaMember",
+        "label": "아시아태평양·중동·아프리카",
+        "value": 2988368000.0,
+        "unit": "USD",
+        "start": "2025-01-01",
+        "end": "2025-12-31",
+        "total": 11981157000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1190723/000155485526000490/ts-20251231.htm#Tag495",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      }
+    ]
+  },
+  "SSL": {
+    "annual": {
+      "label": "SEC · 20-F",
+      "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630x20f.htm",
+      "as_of": "2026-09-01",
+      "level": "primary",
+      "sha256": "33d4f6fd305297638d09ccf0379d786ee86c6f90936ae738417ebe7af8c882b1",
+      "bytes": 3717589,
+      "blocks": 7524,
+      "collected_at": "2026-10-02T22:24:31.743825+00:00"
+    },
+    "revenue_mix": [
+      {
+        "group": "product",
+        "member": "ssl:ChemicalsAfricaMember/ssl:BaseChemicalsMember",
+        "label": "아프리카 · 기초 화학 · 고객 계약만",
+        "value": 43341000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_dHlm39Ir30WVv0DpdIA1uQ_10_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "ssl:ChemicalsAfricaMember/ssl:DifferentiatedChemicalsMember",
+        "label": "아프리카 · 특수 화학 · 고객 계약만",
+        "value": 16521000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_X8hO6FJcBk-EAYHr0W-w1A_11_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "ssl:ChemicalsAmericaMember/ssl:BaseChemicalsMember",
+        "label": "미주 · 기초 화학 · 고객 계약만",
+        "value": 16571000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_X0aNC8MsKkSpyzan1-EKcg_14_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "ssl:ChemicalsAmericaMember/ssl:DifferentiatedChemicalsMember",
+        "label": "미주 · 특수 화학 · 고객 계약만",
+        "value": 23583000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_V75_UN2MZUSMznL-GuWZ-w_15_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "ssl:ChemicalsEurasiaMember/ssl:DifferentiatedChemicalsMember",
+        "label": "유라시아 · 특수 화학 · 고객 계약만",
+        "value": 41865000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_IOgiNMlLEUCCrqv_UcfAPQ_17_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "ssl:EnergyBusinessSegmentMember/ssl:CoalMember",
+        "label": "에너지 · 석탄 · 고객 계약만",
+        "value": 210000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_5GvJQxn_ZEGA2oKI93_JxQ_6_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "ssl:EnergyBusinessSegmentMember/ssl:GasAndCondensateMember",
+        "label": "에너지 · 가스·콘덴세이트 · 고객 계약만",
+        "value": 7724000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_GS0HOTJTD0OKfuf3jYAMWA_8_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "ssl:EnergyBusinessSegmentMember/ssl:LiquidFuelsMember",
+        "label": "에너지 · 액체 연료 · 고객 계약만",
+        "value": 116299000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_SZsPj5pYSUC5AaftqxgQWg_7_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "product",
+        "member": "ssl:OtherIpRefineryServicesMember",
+        "label": "지식재산·정유 서비스 · 고객 계약만",
+        "value": 741000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 266855000000.0,
+        "metric": "ifrs-full:RevenueFromContractsWithCustomers",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_QYTomG5fDU6YqMMPe7HDQQ_18_3",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ssl:ChemicalsAfricaMember",
+        "label": "아프리카 화학 · 외부 매출",
+        "value": 59862000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_qAt3gii8MEGs2mLYsH3oKw_7_8",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ssl:ChemicalsAmericaMember",
+        "label": "미주 화학 · 외부 매출",
+        "value": 40290000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_FVTwFw99GECg6ZM2m8Kp-A_7_10",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ssl:ChemicalsEurasiaMember",
+        "label": "유라시아 화학 · 외부 매출",
+        "value": 41889000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc__u5KxIlew0-a1MMNLLQ8VA_7_12",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ssl:FuelsSegmentMember",
+        "label": "연료 · 외부 매출",
+        "value": 122075000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_vXdlkHdkP0mWUlNVY0rPYA_7_6",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ssl:GasSegmentMember",
+        "label": "가스 · 외부 매출",
+        "value": 7998000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_BNg1f8vt4EWiZxQgBUwhJg_7_4",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "segment",
+        "member": "ssl:MiningSegmentMember",
+        "label": "석탄 채굴 · 외부 매출",
+        "value": 4000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_Uzl9v1v2pU6OMA43gxkywQ_7_2",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:MZ",
+        "label": "모잠비크",
+        "value": 1205000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_gdf4PFp6YEi4waNkgorBLg_5_4",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "country:US",
+        "label": "미국",
+        "value": 41120000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_qUClPwG5qUSZsTJlY61q-w_5_6",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ifrs-full:CountryOfDomicileMember",
+        "label": "남아프리카공화국",
+        "value": 139061000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_m_FEiGUaw0-uBfofHSNeUg_5_2",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "srt:EuropeMember",
+        "label": "유럽",
+        "value": 45661000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_idSER4cCwkCQ9WA8IMhUBg_5_8",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      },
+      {
+        "group": "geography",
+        "member": "ssl:OtherCountryMember",
+        "label": "기타 국가",
+        "value": 45071000000.0,
+        "unit": "ZAR",
+        "start": "2025-07-01",
+        "end": "2026-06-30",
+        "total": 272118000000.0,
+        "metric": "ifrs-full:Revenue",
+        "parent": null,
+        "includes_intersegment": false,
+        "source": {
+          "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+          "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm#Tc_wsGhi0pUXkumjnGYpRKhYA_5_10",
+          "as_of": "2026-09-01",
+          "level": "primary"
+        }
+      }
+    ],
+    "financials": {
+      "label": "Sasol · FY2026 연결 재무제표 · SEC 20-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d1.htm",
+      "as_of": "2026-09-01",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630x20f.htm",
+      "sha256": "882b04c883a475d3d49505f960eb95ea1e65f993cf8b0151b85e58080c0bd8b5",
+      "bytes": 7439203,
+      "blocks": 16919,
+      "collected_at": "2026-10-03T01:32:00.721515+00:00"
+    },
+    "cfo": {
+      "label": "Sasol · FY2026 재무책임자 보고 · SEC 20-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d3.htm",
+      "as_of": "2026-09-01",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630x20f.htm",
+      "sha256": "80166d9e4c85804e97e27f2a4639e9c531d4634dd91ccb0380b3cd8bcecc0f75",
+      "bytes": 21652,
+      "blocks": 5,
+      "collected_at": "2026-10-03T01:32:01.712913+00:00"
+    },
+    "valuechain": {
+      "label": "Sasol · FY2026 통합 가치사슬 · SEC 20-F 첨부",
+      "url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630xex99d4.htm",
+      "as_of": "2026-09-01",
+      "level": "primary",
+      "parent_url": "https://www.sec.gov/Archives/edgar/data/314590/000110465926104048/ssl-20260630x20f.htm",
+      "sha256": "eaf6711b516c9a874f31ded0b8e77545f8d32dca5f7e9319090272b3aea12e78",
+      "bytes": 3902,
+      "blocks": 2,
+      "collected_at": "2026-10-03T01:32:02.703411+00:00"
+    }
   }
 }

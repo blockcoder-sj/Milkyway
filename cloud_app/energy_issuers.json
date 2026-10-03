@@ -813,7 +813,7 @@
       "name": "ENBRIDGE INC",
       "cik": "895728",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2184,12 +2184,12 @@
       "name": "PEMBINA PIPELINE CORP",
       "cik": "1546066",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 40-F",
-        "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/pba-20251231.htm",
+        "label": "Pembina · 2025 AIF · 사업·고객·프로젝트 원문 · SEC 40-F 첨부",
+        "url": "https://www.sec.gov/Archives/edgar/data/1546066/000154606626000014/aifppcq42025.htm",
         "as_of": "2026-02-27",
         "level": "primary"
       }
@@ -2652,12 +2652,12 @@
       "name": "South Bow Corp",
       "cik": "2019061",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 40-F",
-        "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/sobo-20251231_d2.htm",
+        "label": "South Bow · 2025 AIF · 사업·고객·프로젝트 원문 · SEC 40-F 첨부",
+        "url": "https://www.sec.gov/Archives/edgar/data/2019061/000201906126000006/soboaif-12312025.htm",
         "as_of": "2026-03-16",
         "level": "primary"
       }
@@ -2904,12 +2904,12 @@
       "name": "TC ENERGY CORP",
       "cik": "1232384",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 40-F",
-        "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/trp-20251231.htm",
+        "label": "TC Energy · 2025 AIF · 사업·고객·프로젝트 원문 · SEC 40-F 첨부",
+        "url": "https://www.sec.gov/Archives/edgar/data/1232384/000123238426000015/a12312025tceaifenglish.htm",
         "as_of": "2026-02-13",
         "level": "primary"
       }

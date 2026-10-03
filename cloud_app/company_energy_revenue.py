@@ -8,9 +8,12 @@ from . import company_energy_provider_revenue as providers
 from . import company_energy_equipment_revenue as equipment
 from . import company_energy_major_revenue as majors
 from . import company_energy_canada_revenue as canada
+from . import company_energy_infrastructure_revenue as infrastructure
 
-COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES, **canada.COORDINATES}
-LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS, **canada.LABELS}
+COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES,
+               **canada.COORDINATES, **infrastructure.COORDINATES}
+LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS,
+          **canada.LABELS, **infrastructure.LABELS}
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -397,7 +400,9 @@ def annotate(rows, symbol, cik):
                     row['share_exclusion'] = explanation
                     if row['group'] == 'segment':
                         row['includes_intersegment'], row['total'] = True, None
-    return canada.annotate(majors.annotate(providers.annotate(rows, symbol, cik), symbol, cik), symbol, cik)
+    return infrastructure.annotate(
+        canada.annotate(majors.annotate(providers.annotate(rows, symbol, cik), symbol, cik), symbol, cik),
+        symbol, cik)
 
 
 def _reviewed_year(row, document):
@@ -432,6 +437,8 @@ def canonical_revenue(rows, symbol):
 
 
 def metric_allowed(tag, group, start, end, origin, symbol, cik):
+    if not infrastructure.metric_allowed(tag, group, start, end, origin, symbol, cik):
+        return False
     # EQT's segment view has a Revenues-tag Upstream row but contract-revenue
     # rows only for Gathering/Transmission. Selecting the latter drops Upstream.
     if ((symbol, cik, group, start, end) == ('EQT', 33213, 'segment', '2025-01-01', '2025-12-31')
@@ -456,6 +463,9 @@ def dimensions(pairs, symbol, cik):
     reviewed = canada.dimensions(pairs, symbol, cik)
     if reviewed:
         return reviewed
+    reviewed = infrastructure.dimensions(pairs, symbol, cik)
+    if reviewed:
+        return reviewed
     # These issuers put external corporate revenue on a consolidation axis.
     # Never accept the operating-segment totals or elimination coordinates here.
     if ((symbol, cik) in {('MPC', 1510295), ('PSX', 1534701)}
@@ -471,7 +481,8 @@ def presentation_group(row, symbol, cik):
     row['group'] = group
     row['group'] = equipment.presentation_group(row, symbol, cik)
     row['group'] = majors.presentation_group(row, symbol, cik)
-    return canada.presentation_group(row, symbol, cik)
+    row['group'] = canada.presentation_group(row, symbol, cik)
+    return infrastructure.presentation_group(row, symbol, cik)
 
 
 def compound_member(member, symbol, cik):
