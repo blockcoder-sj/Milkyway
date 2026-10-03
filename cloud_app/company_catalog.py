@@ -630,6 +630,8 @@ def enrich(value):
         'name': data['name'], **{key: rows for key, rows in curated.items()
                                if key in CompanyKnowledge.model_fields and key not in {'name', 'entity_id'}}
     }).model_dump(mode='json')
+    from .company_reviewed_excerpts import replace_excerpts
+    replace_excerpts(data, curated, normalized)
     # A reviewed note moved into a visible section should not also remain in the
     # old raw-fact appendix. Match the entire validated fact, including evidence.
     promoted = {json.dumps(row, sort_keys=True, ensure_ascii=False)

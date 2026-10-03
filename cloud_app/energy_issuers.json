@@ -579,7 +579,7 @@
       "name": "Diversified Energy Co",
       "cik": "1922446",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -798,7 +798,7 @@
       "name": "VAALCO ENERGY INC /DE/",
       "cik": "894627",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -858,7 +858,7 @@
       "name": "Epsilon Energy Ltd.",
       "cik": "1726126",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1140,7 +1140,7 @@
       "name": "Greenfire Resources Ltd.",
       "cik": "1966287",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1215,7 +1215,7 @@
       "name": "GeoPark Ltd",
       "cik": "1464591",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1230,7 +1230,7 @@
       "name": "GRAN TIERRA ENERGY INC.",
       "cik": "1273441",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1320,7 +1320,7 @@
       "name": "HighPeak Energy, Inc.",
       "cik": "1792849",
       "exchange": "Nasdaq",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1386,7 +1386,7 @@
       "name": "INFINITY NATURAL RESOURCES, INC.",
       "cik": "2029118",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1512,7 +1512,7 @@
       "name": "Kosmos Energy Ltd.",
       "cik": "1509991",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2271,7 +2271,7 @@
       "name": "PEDEVCO CORP",
       "cik": "1141197",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2376,7 +2376,7 @@
       "name": "Riley Exploration Permian, Inc.",
       "cik": "1001614",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2496,7 +2496,7 @@
       "name": "SANDRIDGE ENERGY INC",
       "cik": "1349436",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2769,7 +2769,7 @@
       "name": "TALOS ENERGY INC.",
       "cik": "1724965",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2976,7 +2976,7 @@
       "name": "TXO Partners, L.P.",
       "cik": "1559432",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3189,7 +3189,7 @@
       "name": "WaterBridge Infrastructure LLC",
       "cik": "2064947",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "gas-infrastructure",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3294,7 +3294,7 @@
       "name": "W&T OFFSHORE INC",
       "cik": "1288403",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "upstream",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {

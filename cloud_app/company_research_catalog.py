@@ -197,7 +197,10 @@ PRIVATE_COMPANIES.update(NUCLEAR_PRIVATE)
 from .company_energy_producers import PUBLIC as PRODUCER_PUBLIC, PRIVATE as PRODUCER_PRIVATE, EDGES as PRODUCER_EDGES, COMMON_CONTEXT as PRODUCER_COMMON_CONTEXT
 PUBLIC_COMPANIES.update(PRODUCER_PUBLIC)
 PRIVATE_COMPANIES.update(PRODUCER_PRIVATE)
-for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT}.items():
+from .company_energy_extended import PUBLIC as EXTENDED_PUBLIC, PRIVATE as EXTENDED_PRIVATE, EDGES as EXTENDED_EDGES, COMMON_CONTEXT as EXTENDED_COMMON_CONTEXT
+PUBLIC_COMPANIES.update(EXTENDED_PUBLIC)
+PRIVATE_COMPANIES.update(EXTENDED_PRIVATE)
+for _registry, _notes in {**MATERIAL_COMMON_CONTEXT, **NUCLEAR_COMMON_CONTEXT, **PRODUCER_COMMON_CONTEXT, **EXTENDED_COMMON_CONTEXT}.items():
     _existing = PRIVATE_COMPANIES[_registry]
     for _field, _value in _notes.items():
         if isinstance(_value, list):
@@ -295,6 +298,8 @@ for _symbol, _edges in MATERIAL_EDGES.items():
 for _symbol, _edges in NUCLEAR_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 for _symbol, _edges in PRODUCER_EDGES.items():
+    RELATIONS.setdefault(_symbol, []).extend(_edges)
+for _symbol, _edges in EXTENDED_EDGES.items():
     RELATIONS.setdefault(_symbol, []).extend(_edges)
 
 

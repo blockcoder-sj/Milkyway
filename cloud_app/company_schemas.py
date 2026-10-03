@@ -70,7 +70,7 @@ class RevenueLine(BaseModel):
     group: Literal['product', 'segment', 'geography', 'revenue_type', 'end_market']
     member: str = Field(min_length=1, max_length=190)
     label: str = Field(min_length=1, max_length=160)
-    value: float = Field(ge=0, le=1e16)
+    value: float = Field(ge=-1e16, le=1e16)
     unit: str = Field(pattern=r'^[A-Z]{3}$')
     start: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
     end: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
@@ -85,7 +85,9 @@ class RevenueLine(BaseModel):
     def valid_period(self):
         import datetime as dt
         first, last = dt.date.fromisoformat(self.start), dt.date.fromisoformat(self.end)
-        if not 300 <= (last - first).days <= 400 or (self.total is not None and self.value > self.total):
+        if (not 300 <= (last - first).days <= 400
+                or (self.total is not None and self.value > self.total)
+                or (self.value < 0 and (self.total is not None or not self.share_exclusion))):
             raise ValueError('Invalid annual revenue slice')
         return self
 

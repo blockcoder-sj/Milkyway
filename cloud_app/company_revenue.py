@@ -318,7 +318,7 @@ def parse_revenue(raw, origin, symbol, today=None, *, shared=None, period_end=No
         tag, ctx, currency = fact.get('name'), contexts.get(fact.get('contextref')), units.get(fact.get('unitref'))
         if tag not in METRICS or not ctx or not currency:
             continue
-        value = number(fact)
+        value = number(fact, signed=energy.signed_value(tag, ctx, origin, symbol, expected_cik))
         if value is None:
             continue
         key = (tag, currency, *ctx)

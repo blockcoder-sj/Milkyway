@@ -50,6 +50,10 @@ const internal=view.create({revenue_mix:[{...base,group:'segment',includes_inter
 const adjusted=view.create({revenue_mix:[{...base,group:'segment',share_exclusion:'음수 조정 <script>excluded</script>'}]}).revenue('segment');
 assert(adjusted.includes('150,000,000 USD'));assert(adjusted.includes('조정 포함 · 산출 제외'));
 assert(adjusted.includes('&lt;script&gt;'));assert(!adjusted.includes('<script>'));assert(!adjusted.includes('75%'));
+const signed=view.create({revenue_mix:[{...base,value:-3322000,total:null,
+ share_exclusion:'가스 판매에서 집하·처리·운송비를 차감한 순판매'}]}).revenue('product');
+assert(signed.includes('-3,322,000 USD'));assert(signed.includes('집하·처리·운송비'));
+assert(signed.includes('조정 포함 · 산출 제외'));assert(!signed.includes('75%'));
 assert(internal.includes('내부 거래 포함'));assert(!internal.includes('75%'));assert(internal.includes('150,000,000 USD'));
 const periods=view.create({revenue_mix:[base,{...base,start:'2024-01-27',end:'2025-01-25'},
  {...base,unit:'KRW'},{...base,source:{...src,url:'https://www.sec.gov/another.htm'}},

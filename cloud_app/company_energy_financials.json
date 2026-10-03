@@ -7633,6 +7633,7 @@
     ]
   },
   "TALO": {
+    "cik": "1724965",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1724965/000119312526067807/talo-20251231.htm",
@@ -7741,8 +7742,18 @@
         }
       }
     ],
-    "cik": "1724965",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 기존 연결입니다. 2026년9월 Shell 자산 실제 취득과 향후 개발·시추 실적을 소급 추가하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1724965/000119312526067807/talo-20251231.htm",
+          "as_of": "2026-02-25",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "LPG": {
     "annual": {
@@ -8193,6 +8204,7 @@
     "financial_context": []
   },
   "KOS": {
+    "cik": "1509991",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1509991/000150999126000017/kos-20251231.htm",
@@ -8277,8 +8289,18 @@
         }
       }
     ],
-    "cik": "1509991",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 Equatorial Guinea 매각 전·GTA 초기 실적입니다. 2026년6월 매각·Tiberius farm-down 후 범위와 다릅니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1509991/000150999126000017/kos-20251231.htm",
+          "as_of": "2026-03-02",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "INVX": {
     "annual": {
@@ -9582,6 +9604,7 @@
     ]
   },
   "DEC": {
+    "cik": "1922446",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1922446/000192244626000020/dec-20251231.htm",
@@ -9625,6 +9648,18 @@
         "source": {
           "label": "SEC 연차 원문 XBRL · us-gaap:NetIncomeLoss",
           "url": "https://www.sec.gov/Archives/edgar/data/1922446/000192244626000020/dec-20251231.htm#f-215",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총자산",
+        "value": 6168959000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/1922446/000192244626000020/dec-20251231.htm#f-82",
           "as_of": "2026-02-26",
           "level": "primary"
         }
@@ -9676,10 +9711,32 @@
           "as_of": "2026-02-26",
           "level": "primary"
         }
+      },
+      {
+        "label": "유형자산 취득 현금",
+        "value": 184600000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "url": "https://www.sec.gov/Archives/edgar/data/1922446/000192244626000020/dec-20251231.htm#f-415",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
       }
     ],
-    "cik": "1922446",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 Maverick·Summit·Canvas 편입 후입니다. 2026년 Sheridan·Camino 취득 후 실적과 실물·파생 수입을 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1922446/000192244626000020/dec-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "FET": {
     "annual": {
@@ -9930,6 +9987,7 @@
     "financial_context": []
   },
   "REPX": {
+    "cik": "1001614",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1001614/000100161426000011/rep-20251231.htm",
@@ -10026,8 +10084,18 @@
         }
       }
     ],
-    "cik": "1001614",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 순판매입니다. 음수 가스·NGL GP&T와 중류 자산 처분이익·발전 JV를 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1001614/000100161426000011/rep-20251231.htm",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "EE": {
     "annual": {
@@ -10353,6 +10421,7 @@
     ]
   },
   "SD": {
+    "cik": "1349436",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1349436/000162828026015318/sd-20251231.htm",
@@ -10437,6 +10506,18 @@
         }
       },
       {
+        "label": "현금·현금성 자산",
+        "value": 110998000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1349436/000162828026015318/sd-20251231.htm#f-58",
+          "as_of": "2026-03-05",
+          "level": "primary"
+        }
+      },
+      {
         "label": "영업활동 현금흐름",
         "value": 100140000.0,
         "unit": "USD",
@@ -10461,10 +10542,21 @@
         }
       }
     ],
-    "cik": "1349436",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 연결입니다. 상품 판매·파생상품·제품 물량·고객 집중도를 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1349436/000162828026015318/sd-20251231.htm",
+          "as_of": "2026-03-05",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "EGY": {
+    "cik": "894627",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/894627/000089462726000013/egy-20251231.htm",
@@ -10573,8 +10665,18 @@
         }
       }
     ],
-    "cik": "894627",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 Canada 매각 전·Baobab 정비 중 실적입니다. PSC·WI·NRI와 연결 매출을 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/894627/000089462726000013/egy-20251231.htm",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "URG": {
     "cik": "1375205",
@@ -11643,6 +11745,7 @@
     ]
   },
   "WTI": {
+    "cik": "1288403",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1288403/000110465926028315/wti-20251231x10k.htm",
@@ -11739,8 +11842,18 @@
         }
       }
     ],
-    "cik": "1288403",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 회사·연결 자회사와 Monza 지분비례입니다. JV 전체 판매를 다시 더하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1288403/000110465926028315/wti-20251231x10k.htm",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "ARLP": {
     "annual": {
@@ -13779,6 +13892,7 @@
     "financial_context": []
   },
   "WBI": {
+    "cik": "2064947",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/2064947/000119312526106541/wbi-20251231.htm",
@@ -13887,8 +14001,18 @@
         }
       }
     ],
-    "cik": "2064947",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 사업 범위입니다. 제삼자·특수관계, 생산수 내skim oil과2026년 Ranger 취득 전 범위를 구분합니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2064947/000119312526106541/wbi-20251231.htm",
+          "as_of": "2026-03-16",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "WES": {
     "annual": {
@@ -15221,6 +15345,7 @@
     "financial_context": []
   },
   "EPSN": {
+    "cik": "1726126",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1726126/000110465926035794/epsn-20251231x10k.htm",
@@ -15329,8 +15454,18 @@
         }
       }
     ],
-    "cik": "1726126",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 상류·Auburn 지분 귀속입니다. 내부 집하1,864,769 USD 제거 후 연결51,587,556이며 원문은 달러 단위입니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1726126/000110465926035794/epsn-20251231x10k.htm",
+          "as_of": "2026-03-27",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "FGPR": {
     "annual": {
@@ -15745,7 +15880,128 @@
     "financial_context": []
   },
   "GFR": {
+    "cik": "1966287",
     "annual": {
+      "label": "SEC · 40-F 첨부 · 2025 감사 재무",
+      "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm",
+      "as_of": "2026-03-13",
+      "level": "primary",
+      "sha256": "10fee461aa1b6679443b48da345eb6deb460dfcc7137157c04e39fe253ca007c",
+      "bytes": 688369,
+      "blocks": 335,
+      "collected_at": "2026-10-03T04:49:37.197230+00:00"
+    },
+    "financials": [
+      {
+        "label": "매출",
+        "value": 584395000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Revenue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm#ixv-7345",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "순이익 · 비지배지분 포함",
+        "value": 47504000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:ProfitLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm#ixv-7379",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총자산",
+        "value": 1285444000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm#ixv-7310",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총부채",
+        "value": 118587000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Liabilities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm#ixv-7329",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "자본 합계 · 비지배지분 포함",
+        "value": 1166857000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:Equity",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm#ixv-7337",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "현금·현금성 자산",
+        "value": 41974000.0,
+        "unit": "CAD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:CashAndCashEquivalents",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm#ixv-7293",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업활동 현금흐름",
+        "value": 136461000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:CashFlowsFromUsedInOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm#ixv-7429",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "유형자산 취득 현금",
+        "value": 111766000.0,
+        "unit": "CAD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm#ixv-7441",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      }
+    ],
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 Hangingstone Expansion75%·Demo100% IFRS/CAD입니다. 2026년8월 취득 Connacher/Great Divide는 포함하지 않습니다.",
+        "source": {
+          "label": "SEC · 40-F 첨부 · 2025 감사 재무",
+          "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea028059001ex99-2.htm",
+          "as_of": "2026-03-13",
+          "level": "primary"
+        }
+      }
+    ],
+    "parent_annual": {
       "label": "SEC · 40-F",
       "url": "https://www.sec.gov/Archives/edgar/data/1966287/000121390026027268/ea0280590-40f_greenfire.htm",
       "as_of": "2026-03-13",
@@ -15755,9 +16011,7 @@
       "blocks": 107,
       "collected_at": "2026-10-02T15:40:31.087255+00:00"
     },
-    "financials": [],
-    "cik": "1966287",
-    "financial_context": []
+    "annual_period_end": "2025-12-31"
   },
   "GLNG": {
     "annual": {
@@ -15848,6 +16102,7 @@
     "financial_context": []
   },
   "GPRK": {
+    "cik": "1464591",
     "annual": {
       "label": "SEC · 20-F",
       "url": "https://www.sec.gov/Archives/edgar/data/1464591/000110465926037819/gprk-20251231x20f.htm",
@@ -15938,7 +16193,7 @@
         "period": "2025-12-31",
         "source": {
           "label": "SEC 연차 원문 XBRL · ifrs-full:CashAndCashEquivalents",
-          "url": "https://www.sec.gov/Archives/edgar/data/1464591/000110465926037819/gprk-20251231x20f.htm#Tc_m7XlrXiaOEqPwtlLqARdfg_16_4",
+          "url": "https://www.sec.gov/Archives/edgar/data/1464591/000110465926037819/gprk-20251231x20f.htm#Narr_EV-MsUjxzUq6HoQ_AuaSkg",
           "as_of": "2026-03-31",
           "level": "primary"
         }
@@ -15968,10 +16223,21 @@
         }
       }
     ],
-    "cik": "1464591",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 Colombia·Argentina와 연말 처분 Brazil/Ecuador를 포함합니다. 현재 자산 범위와 다릅니다.",
+        "source": {
+          "label": "SEC · 20-F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1464591/000110465926037819/gprk-20251231x20f.htm",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "GTE": {
+    "cik": "1273441",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1273441/000127344126000010/gte-20251231.htm",
@@ -16056,10 +16322,21 @@
         }
       }
     ],
-    "cik": "1273441",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 Colombia·Ecuador·Canada입니다. 남미 매각은2026-09-23 승인 대기이며 완료로 처리하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1273441/000127344126000010/gte-20251231.htm",
+          "as_of": "2026-03-04",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "HPK": {
+    "cik": "1792849",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1792849/000143774926007770/hpe20251231_10k.htm",
@@ -16156,8 +16433,18 @@
         }
       }
     ],
-    "cik": "1792849",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 Flat Top·Signal Peak입니다. 가스·NGL은 공시 합산 제품 금액이며 임의로 나누지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1792849/000143774926007770/hpe20251231_10k.htm",
+          "as_of": "2026-03-11",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "IEP": {
     "annual": {
@@ -16372,6 +16659,7 @@
     "financial_context": []
   },
   "INR": {
+    "cik": "2029118",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/2029118/000202911826000014/inr-20251231.htm",
@@ -16480,8 +16768,18 @@
         }
       }
     ],
-    "cik": "2029118",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 말 연결입니다. 2026년2월 Antero Ohio 취득·NOG 공동지분의 이후 실적은 포함하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/2029118/000202911826000014/inr-20251231.htm",
+          "as_of": "2026-03-10",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "KNOP": {
     "annual": {
@@ -17857,6 +18155,7 @@
     "financial_context": []
   },
   "PED": {
+    "cik": "1141197",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1141197/000165495426003098/ped_10k.htm",
@@ -17965,8 +18264,18 @@
         }
       }
     ],
-    "cik": "1141197",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "North Peak·Century는2025-10-31 취득 후 약2개월만 연결됩니다. 2026년 통합 규모와 같은 기준이 아닙니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1141197/000165495426003098/ped_10k.htm",
+          "as_of": "2026-03-31",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "PNRG": {
     "annual": {
@@ -19304,6 +19613,7 @@
     "financial_context": []
   },
   "TXO": {
+    "cik": "1559432",
     "annual": {
       "label": "SEC · 10-K",
       "url": "https://www.sec.gov/Archives/edgar/data/1559432/000119312526076813/txo-20251231.htm",
@@ -19388,8 +19698,18 @@
         }
       }
     ],
-    "cik": "1559432",
-    "financial_context": []
+    "financial_context": [
+      {
+        "title": "연간 재무·사업 범위",
+        "detail": "2025년 Cross Timbers50% 지분비례 연결입니다. 2026년4·5월 처분 후 현재 사업과 다릅니다.",
+        "source": {
+          "label": "SEC · 10-K",
+          "url": "https://www.sec.gov/Archives/edgar/data/1559432/000119312526076813/txo-20251231.htm",
+          "as_of": "2026-02-26",
+          "level": "primary"
+        }
+      }
+    ]
   },
   "ACDC": {
     "annual": {

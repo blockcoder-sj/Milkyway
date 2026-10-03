@@ -1444,3 +1444,47 @@ resuming; no paid AI regression approval has arrived.
   inspectactualHTMLrowfor2025%. Receivable24/53/18notrevenue. EGYsignificant
   customer namesnotyetparsed; needsactualtable, suppliedparagraphsexclude names.
   All107remaining list /tmp/milkyway-energy-remaining-producers-20261003.json.
+
+### Extended producer continuation · 2026-10-03
+
+- Whole US Energy is ACTIVE, unfinished: 213 entries /122 edited main /91 left
+  plus ALL-field depth/readability/relationship audit. NEVER final/stop at a batch,
+  commit, CI success or deployment. User explicitly requires continued completion.
+- INR GFR EGY GPRK GTE KOS TALO WTI DEC REPX HPK SD PED EPSN TXO WBI edited
+  Korean business/product/current notes;38 role counterparts,69 revenue rows.
+  39 original receipts bytes/SHA matched. Financial205/200 populated/1561 values.
+  Exact scopes and failed runs: docs/ENERGY_EXTENDED_REVIEW_20261003.md.
+- Fixed GFR extra parent_url schema error; preserved validated parent_annual.
+  Pure company_reviewed_excerpts replaces only matching parser excerpts when
+  edited products/drivers/revenue brief exist, keeps citations/manual translation,
+  other issuers and unreviewed originals. Old translated detail+original preserved.
+- Actual HTTP found EGY old contract-only income mixed with derivative-inclusive
+  geography; canonical stored rows now use same exact doc/year/issuer metric filter
+  as new parsing. Actual final EGY4geographies, REPXnegative -3322000/-3039000.
+- Final image1f1cd3858fcbe3b8381df7c0f7a0f64d2bd79be1be0f6883d5c3b3bd4294239e:
+  source16SHA match;678tests63.528sOK18Node skip;host9modules24tests1.289sOK;
+  focused23/.363sOK. Helper image678/145.810sOK; earlier failed runs preserved.
+- Offline512MiB/1CPU final helper benchmark seed849entities4.208s/RSS65.0MiB,
+  sqlite quick_checkOK;directoryp95 .750ms/WBImerge1.813ms/detail17.733ms/
+  RSS65.5MiB;84focus/.977sOK. First benchmark20.091s also preserved, no causal claim.
+- App-only recreate healthy;actual16company HTTP200+GFR→Trafigura reverse supplier
+  verified. startup200webDB/ready503existingpausedpaper/backtest, otherchecks true.
+  Four services/volumes preserved;no trading reactivation. ActualUI still pending:
+  two existing Chrome tabs, extension debugger unattached, native user's shipping
+  research active;do not alter/close their tab or claim visual verification.
+- Direct source/security review;no deps/auth/permissions/orders/network/schema
+  additions;actual paidAI calls0, no CodeRabbit/newagents/paiddata/publicscan claims.
+  Producer f2548231a9a4e32836ebebc710ab33795ff4dffd pushed;CI37098982483SUCCESS
+  on rerun, earlier SIGKILLrecovery/composewait failure retained. Currentpush pending.
+- NEXT DK DKL PBF PARR CVI CLMT GLP CAPL SGU SPH MMLP NGL GEL WKC GPRE REX GEVO.
+  Prepared17 actual annual+quarter sources and offline facts/business blocks under
+  /tmp/milkyway-energy-research/refining-distribution-read.json and -business.json.
+  Noncalendar FY SGU2025-09-30/SPH2025-09-27/NGL2026-03-31/REX2026-01-31.
+  Added extra current-year revenue/lease reading aid refining-extra-read.py and
+  refining-distribution-extra-facts.json; GPRESalesContract zero ethanol must NOT
+  override actual Revenues ethanol;REX -254000 derivative adjustment and BigRiver
+  unconsolidated1007906000;DKL lease215888000;GLP derivatives wholesale+lease;
+  CAPL rental62546000. Need human exact tag/table processing, no generic negative.
+  All91remaining list in prior remaining-producer-sources-20261003.json;8annual
+  missing AMEN EROK FTW HMH NUCL UNTC WHK XPRO require actual official originals.
+  Immediately continue next17 then whole remainder+depthaudit;no final at commit.

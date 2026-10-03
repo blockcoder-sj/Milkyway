@@ -47,7 +47,8 @@ def clean(value):
             if field == 'relations' and marker in row.get('detail', ''):
                 row['detail'], original = row['detail'].split(marker, 1)
                 row['original'] = row.get('original') or original[:1500]
-            elif '원문' in row.get('title', '') and row.get('detail'):
+            elif ('원문' in row.get('title', '') and row.get('detail')
+                    and not row.get('original')):
                 row['original'] = row.get('original') or row['detail'][:1500]
                 row['detail'] = ''
             rows.append(row)
