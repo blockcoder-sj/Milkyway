@@ -1815,3 +1815,23 @@ CLB·FET·NESR·OII·OIS 주 기업 5곳·매출 49행을 검토·연결했다. 
 마일스톤 푸시 후 NE·RIG·SDRL·VAL·TDW·SMHI·VTOL·HOS·XPRO와 나머지
 사업군을 계속한다. 사용자 일시정지나 구체적 외부 막힘 외에는 중간에 멈추지
 않는다. 실제 AI 공급자 호출과 CodeRabbit은 사용하지 않았다.
+
+
+## 2026-10-04 해양 시추·선박·항공·유정 서비스
+
+NE/RIG/SDRL/VAL/TDW/SMHI/VTOL/HOS/XPRO 9곳, 매출 82행·역할 프로필17개·
+편집 관계57개를 검토·통합했다. 주 본문184/213, 남은29와 전체 품질 검수.
+연차/분기18개 SHA·크기 재확인, Expro 이전N.V. 실제 연차 재무9개 추가.
+HOS 현재 결합/이전Helix와 Expro 현재Ltd/이전NV 범위, 조건부RIG/VAL,
+JV/용선/소유/신조예정과 익명 고객을 구별했다.
+
+Chrome에서 발견한 같은 본문의 중복 카드는 원문 근거를 남기고 한 번 표시.
+초기 검사에서 다른 기업 반복 enrichment의 출처 변경3건을 발견해 수정,
+관련29개·최종 전체728/21.017s OK(skip18Node), host21/.613s OK.
+최종277파일 SHA일치,1084entities seed.884s/SQLiteok, directory213 p95.238ms,
+detail27 p957.334ms/maxRSS69376KiB. 앱만a43de7198879ac0e5c01b6730ada0c667fc6fe9869d7b77025af5e63af49fe82,
+healthy/startup200. 실제auth15개API200,9개82행,상대상세/역방향확인/logout.
+기존Chrome1탭9개기업과HOS비중제외·중복제거,Enhanced/Sikorsky실제이동확인.
+자세한 증거/한계: docs/ENERGY_MARINE_REVIEW_20261004.md.
+CodeRabbit/실제AI호출0,DeepScan실행안함,개인/시장/backup서비스와볼륨보존.
+검토·커밋·푸시 후 나머지29기업 및 전체 품질 검수를 계속한다.

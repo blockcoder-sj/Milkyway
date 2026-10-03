@@ -1290,7 +1290,7 @@
       "name": "HORNBECK OFFSHORE SERVICES, INC.",
       "cik": "866829",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -1797,7 +1797,7 @@
       "name": "Noble Corp plc",
       "cik": "1895262",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "drilling",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2421,7 +2421,7 @@
       "name": "Transocean Ltd.",
       "cik": "1451505",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "drilling",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2511,7 +2511,7 @@
       "name": "SEADRILL Ltd",
       "cik": "1737706",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "drilling",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2622,7 +2622,7 @@
       "name": "SEACOR Marine Holdings Inc.",
       "cik": "1690334",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -2799,7 +2799,7 @@
       "name": "TIDEWATER INC",
       "cik": "98222",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3078,7 +3078,7 @@
       "name": "Valaris Ltd",
       "cik": "314808",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "drilling",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3159,7 +3159,7 @@
       "name": "Bristow Group Inc.",
       "cik": "1525221",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
@@ -3339,13 +3339,13 @@
       "name": "Expro Ltd",
       "cik": "2126198",
       "exchange": "NYSE",
-      "group": "pending",
+      "group": "oilfield-services",
       "scope": "research",
       "sector_hint": "us_10",
       "report_source": {
-        "label": "SEC · 10-Q",
-        "url": "https://www.sec.gov/Archives/edgar/data/2126198/000143774926024670/xprol20260630_10q.htm",
-        "as_of": "2026-07-28",
+        "label": "SEC · Expro Group Holdings N.V. 2025 10-K",
+        "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm",
+        "as_of": "2026-02-19",
         "level": "primary"
       }
     },

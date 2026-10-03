@@ -16,14 +16,15 @@ from . import company_energy_downstream_revenue as downstream
 from . import company_energy_shipping_revenue as shipping
 from . import company_energy_land_revenue as land
 from . import company_energy_specialist_revenue as specialists
+from . import company_energy_marine_revenue as marine
 
 COORDINATES = {**providers.COORDINATES, **equipment.COORDINATES, **majors.COORDINATES,
                **canada.COORDINATES, **infrastructure.COORDINATES, **nuclear.COORDINATES,
                **producers.COORDINATES, **extended.COORDINATES, **downstream.COORDINATES,
-               **shipping.COORDINATES, **land.COORDINATES, **specialists.COORDINATES}
+               **shipping.COORDINATES, **land.COORDINATES, **specialists.COORDINATES, **marine.COORDINATES}
 LABELS = {**providers.LABELS, **equipment.LABELS, **majors.LABELS,
           **canada.LABELS, **infrastructure.LABELS, **nuclear.LABELS, **producers.LABELS,
-          **extended.LABELS, **downstream.LABELS, **shipping.LABELS, **land.LABELS, **specialists.LABELS}
+          **extended.LABELS, **downstream.LABELS, **shipping.LABELS, **land.LABELS, **specialists.LABELS, **marine.LABELS}
 
 for _segment, _label in [('Upstream', '상류 · 탐사·생산'), ('Downstream', '하류 · 정제·판매')]:
     for _region, _region_label in [('country:US', '미국'), ('us-gaap:NonUsMember', '미국 외')]:
@@ -410,7 +411,7 @@ def annotate(rows, symbol, cik):
                     row['share_exclusion'] = explanation
                     if row['group'] == 'segment':
                         row['includes_intersegment'], row['total'] = True, None
-    for adapter in (providers, majors, canada, infrastructure, nuclear, producers, extended, downstream, shipping, land, specialists):
+    for adapter in (providers, majors, canada, infrastructure, nuclear, producers, extended, downstream, shipping, land, specialists, marine):
         rows = adapter.annotate(rows, symbol, cik)
     return rows
 
@@ -438,6 +439,7 @@ def canonical_revenue(rows, symbol):
         rows = shipping.canonical(rows, symbol, cik)
         rows = land.canonical(rows, symbol, cik)
         rows = specialists.canonical(rows, symbol, cik)
+        rows = marine.canonical(rows, symbol, cik)
     if symbol != 'EQT':
         return rows
     kept = []
@@ -454,6 +456,8 @@ def canonical_revenue(rows, symbol):
 
 
 def metric_allowed(tag, group, start, end, origin, symbol, cik):
+    if not marine.metric_allowed(tag, group, start, end, origin, symbol, cik):
+        return False
     if not specialists.metric_allowed(tag, group, start, end, origin, symbol, cik):
         return False
     if not land.metric_allowed(tag, group, start, end, origin, symbol, cik):
@@ -512,6 +516,9 @@ def dimensions(pairs, symbol, cik):
     reviewed = shipping.dimensions(pairs, symbol, cik)
     if reviewed:
         return reviewed
+    reviewed = marine.dimensions(pairs, symbol, cik)
+    if reviewed is not None:
+        return reviewed
     reviewed = specialists.dimensions(pairs, symbol, cik)
     if reviewed is not None:
         return reviewed
@@ -541,7 +548,8 @@ def presentation_group(row, symbol, cik):
     row['group'] = downstream.presentation_group(row, symbol, cik)
     row['group'] = shipping.presentation_group(row, symbol, cik)
     row['group'] = land.presentation_group(row, symbol, cik)
-    return specialists.presentation_group(row, symbol, cik)
+    row['group'] = specialists.presentation_group(row, symbol, cik)
+    return marine.presentation_group(row, symbol, cik)
 
 
 def extra_metrics(origin, symbol, cik, period_end):

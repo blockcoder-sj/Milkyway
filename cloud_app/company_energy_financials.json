@@ -23461,5 +23461,140 @@
         }
       }
     ]
+  },
+  "XPRO": {
+    "cik": "1575828",
+    "annual": {
+      "label": "SEC · Expro Group Holdings N.V. 2025 10-K",
+      "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm",
+      "as_of": "2026-02-19",
+      "level": "primary",
+      "sha256": "1587a8c769286f39915a5f80d0cc3bc4d46eac256141b5a7694b5ff691f64481",
+      "bytes": 2869151,
+      "collected_at": "2026-10-03T16:36:27.601372+00:00",
+      "blocks": 2402
+    },
+    "financials": [
+      {
+        "label": "고객 계약 매출 · 부과세 제외",
+        "value": 1607095000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016334",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업이익",
+        "value": 81138000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:OperatingIncomeLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016355",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "지배기업 귀속 순이익",
+        "value": 51686000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:NetIncomeLoss",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016376",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총자산",
+        "value": 2259435000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Assets",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016448",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "총부채",
+        "value": 725312000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:Liabilities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016476",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "주주자본 · 비지배지분 제외",
+        "value": 1534123000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:StockholdersEquity",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016488",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "현금·현금성 자산",
+        "value": 196093000.0,
+        "unit": "USD",
+        "period": "2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016420",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "영업활동 현금흐름",
+        "value": 210172000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:NetCashProvidedByUsedInOperatingActivities",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016552",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      },
+      {
+        "label": "유형자산 취득 현금",
+        "value": 112387000.0,
+        "unit": "USD",
+        "period": "2025-01-01 ~ 2025-12-31",
+        "source": {
+          "label": "SEC 연차 원문 XBRL · us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "url": "https://www.sec.gov/Archives/edgar/data/1575828/000143774926004727/xpro20251231_10k.htm#c140016555",
+          "as_of": "2026-02-19",
+          "level": "primary"
+        }
+      }
+    ],
+    "financial_context": [
+      {
+        "title": "이전 운영 법인 연차 · 현재 법인과 구별",
+        "detail": "2025 연차는 Expro Group Holdings N.V. CIK 1575828의 실적입니다. 2026-07-13 Luxembourg를 거쳐 Cayman Expro Ltd CIK 2126198로 법인 이전하고 기존 주식을 1:1 전환했습니다. 현재 Ltd가 2025년부터 존재했다는 뜻이 아닙니다. 7월23일 Enhanced Drilling 취득은 이 과거 연차 실적에 포함하지 않습니다.",
+        "source": {
+          "label": "SEC · 10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/2126198/000143774926024670/xprol20260630_10q.htm",
+          "as_of": "2026-07-28",
+          "level": "primary"
+        }
+      }
+    ]
   }
 }

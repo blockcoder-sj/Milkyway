@@ -653,6 +653,8 @@ def enrich(value):
             seen, merged = set(), []
             preferred = {(row.get('title'), row.get('source', {}).get('url'), row.get('source', {}).get('as_of'))
                          for row in normalized[key]} if key in {'products', 'segments', 'drivers', 'market_shares'} else set()
+            reviewed_text = {(row.get('title'), row.get('detail')) for row in normalized[key]} \
+                if key in {'products', 'segments', 'drivers', 'market_shares'} else set()
             # A reviewed figure replaces the same filing coordinate, including
             # old English labels/anchors. Other periods and sources are retained.
             previous_rows = data.get(key, [])
@@ -679,6 +681,14 @@ def enrich(value):
                     continue
                 if key == 'segments':
                     row = {**row, 'title': SEGMENT_KO.get(row['title'], row['title'])}
+                if reviewed_text and (row.get('title'), row.get('detail')) in reviewed_text:
+                    # Keep the cached citation while displaying identical text
+                    # once after an editorial source correction.
+                    if not any(item['source'] == row['source'] and
+                               (item.get('title'), item.get('detail')) ==
+                               (row.get('title'), row.get('detail')) for item in normalized[key]):
+                        data['sources'].append(row['source'])
+                    continue
                 identity = (row.get('title'), row.get('source', {}).get('url'), row.get('source', {}).get('as_of')) if isinstance(row, dict) else None
                 if identity not in preferred:
                     previous.append(row)

@@ -11,9 +11,9 @@ from cloud_app.company_schemas import CompanyKnowledge
 class EnergyFinancialArchiveTests(unittest.TestCase):
     def test_all_original_coordinates_and_issuer_identities_validate(self):
         records = archive()
-        self.assertEqual(len(records), 205)
-        self.assertEqual(sum(bool(r['financials']) for r in records.values()), 200)
-        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1567)
+        self.assertEqual(len(records), 206)
+        self.assertEqual(sum(bool(r['financials']) for r in records.values()), 201)
+        self.assertEqual(sum(len(r['financials']) for r in records.values()), 1576)
         self.assertEqual(records['STNG']['financials'][0]['value'], 938222000)
         self.assertEqual(records['PBA']['financials'][0]['value'], 7778000000)
 
@@ -62,7 +62,7 @@ class EnergyFinancialArchiveTests(unittest.TestCase):
                 validate_archive(bad)
 
     def test_historical_scopes_stay_visible_and_cannot_be_silently_dropped(self):
-        for symbol in ('XOM', 'HOS', 'NINE', 'ACDC'):
+        for symbol in ('XOM', 'HOS', 'NINE', 'ACDC', 'XPRO'):
             result = enrich(CompanyKnowledge(symbol=symbol, name=symbol))
             self.assertTrue(result.financial_context)
             self.assertTrue(result.financials)

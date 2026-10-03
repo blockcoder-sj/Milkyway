@@ -84,6 +84,8 @@ class Record(BaseModel):
 HISTORICAL = {
     'XOM': ('34088', 'https://www.sec.gov/Archives/edgar/data/34088/'
             '000003408826000045/xom-20251231.htm'),
+    'XPRO': ('1575828', 'https://www.sec.gov/Archives/edgar/data/1575828/'
+             '000143774926004727/xpro20251231_10k.htm'),
 }
 
 
