@@ -1599,3 +1599,20 @@ resuming; no paid AI regression approval has arrived.
 - User memory constraint preserved: no Chrome or Docker mutation, no paidAI,
   no CodeRabbit, no new agents, no feature tests/deployment resumed for handoff.
   This checkpoint is a saved unfinished state, not a completed milestone.
+
+### Cross-computer folder selection · 2026-10-03
+
+- User asked which workspace folders to transfer. Feature work remains paused.
+- Main handoff/code checkpoint19826f82b4ca13dd7bd7239dab9e15ab8ae9e3e1 is pushed;
+  actual GitHub ref matched. Working tree was clean after that checkpoint.
+- Added the actual folder map to docs/HANDOFF_OTHER_COMPUTER.md: Milkyway is the
+  current app; output and week10_Milkyway_검수 preserve previous artifacts; sibling
+  korea-shipping-research is a separate research project; report_builder.py makes
+  the separate PDF. Virtual environments/caches/previews can be recreated.
+- Whole-folder copies must retain .git/.env/runtime handoff evidence as needed;
+  Git clones omit private .env and the public-source ZIP. Docker named volume
+  personal-runtime holds current personal data and is not a host runtime folder.
+  Existing conversations/strategies/paper records need a separate app backup.
+- Guidance only: no new personal DB export/restore, no Docker/app mutation, no
+  provider calls, no feature tests or development resumed. The public evidence
+  ZIP remains the original verified archive; the latest handoff prose is in Git.
