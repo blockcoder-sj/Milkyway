@@ -14,6 +14,8 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPOSE = ["docker", "compose", "-f", str(ROOT / "compose.personal.yaml")]
+SERVICES = ("app", "paper-worker", "backtest-worker", "personal-data",
+            "market-data", "market-details", "company-data", "backup")
 
 
 def run(arguments, *, capture=False):
@@ -26,7 +28,11 @@ def main():
     parser.add_argument("command", choices=("doctor", "backup", "restore"))
     parser.add_argument("archive", nargs="?")
     parser.add_argument("--output", type=Path, default=ROOT / "backups")
+    parser.add_argument("--start-services", nargs="+", choices=SERVICES,
+                        help="After restore, start only these services (default: all).")
     args = parser.parse_args()
+    if args.start_services is not None and args.command != "restore":
+        parser.error("--start-services is only available for restore")
     if args.command == "doctor":
         run(COMPOSE + ["ps"])
         run(COMPOSE + ["exec", "-T", "app", "python", "-m", "cloud_app.local_ops", "doctor"])
@@ -36,7 +42,7 @@ def main():
         if archive is None or not archive.is_file():
             parser.error("restore requires an existing .zip backup file")
         print("Stopping local processes for a verified restore. A safety backup is created first.", flush=True)
-        run(COMPOSE + ["stop", "app", "paper-worker", "backtest-worker", "personal-data", "market-data", "backup"])
+        run(COMPOSE + ["stop", *SERVICES])
     helper = "milkyway-recovery-" + uuid.uuid4().hex[:12]
     run(COMPOSE + ["run", "--no-deps", "-d", "--name", helper, "backup", "sleep", "600"])
     successful = False
@@ -65,7 +71,7 @@ def main():
     finally:
         subprocess.run(["docker", "rm", "-f", helper], cwd=ROOT, check=False, stdout=subprocess.DEVNULL)
     if successful and args.command == "restore":
-        run(COMPOSE + ["up", "-d"])
+        run(COMPOSE + ["up", "-d", *(args.start_services or ())])
         print("Restore complete. Sign in again; holdings and history were restored.")
 
 

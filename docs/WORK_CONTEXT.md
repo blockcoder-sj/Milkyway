@@ -1616,3 +1616,130 @@ resuming; no paid AI regression approval has arrived.
 - Guidance only: no new personal DB export/restore, no Docker/app mutation, no
   provider calls, no feature tests or development resumed. The public evidence
   ZIP remains the original verified archive; the latest handoff prose is in Git.
+
+
+### Context saved · 2026-10-03 · personal backup complete, development paused
+
+- Latest user instruction is “맥락저장”. Feature development/research remains
+  explicitly paused. Continue only when the user resumes. This supersedes older
+  ACTIVE/no-intermediate-stop notes. No paid AI/provider call was made for handoff,
+  backup or context save. CodeRabbit remains globally forbidden; no new agents.
+- Last VERIFIED pushed branch head: codex/ai-research-workflow,
+  8b16fbd857dad15ca039312efb0092b161154f83 (folder transfer documentation).
+  Unfinished land checkpoint19826f82b4ca13dd7bd7239dab9e15ab8ae9e3e1 is also pushed.
+  Last validated/deployed shipping remains dd0b8eae3a06bd5d5b183a1d18f376724bb6a18a,
+  image27a0a9157119af9237985426c480c31ae1b6afb12b0ab09cff874314465b0cd3.
+  Do not deploy the unchecked land checkpoint or count it as completed.
+- US Energy remains155 edited main issuers /213, not155 fully completed companies.
+  Remaining58 and the entire depth/currentness/classification/UI audit are pending.
+  Land15 BSM CRT DMLP KRP NRP NRT PBT SBR TPL VNOM CKX MNR MXC LB PNRG have
+  unfinished profiles/revenue adapters/manual tables and30 original receipts.
+  Catalog/groups/latest revenue_mix integration and current land tests are pending.
+  The older11-issuer54-row parse is stale. Read HANDOFF_OTHER_COMPUTER.md for
+  the exact pending files, original-source cautions, remaining43 and missing8.
+- Public research bundle remains runtime/handoff/milkyway-energy-handoff-20261003.zip:
+  36,432,881 bytes,248 payload files; CRC/all memberSHA/path checks passed.
+  SHA256 c128c9da6d699a0ee18500cb9d25815cebafe23ac56603ca14d7aa3331d9d833.
+  This bundle contains no private DB/keys/.env and is not Git tracked.
+- USER subsequently authorized exporting the Docker personal DB into the project.
+  ACTUAL PRIVATE BACKUP is now backups/milkyway-20261003T121021Z-b65f42b0.zip,
+  created2026-10-03 21:10:30 KST;131,036,961 bytes;3,972 payload files;
+  uncompressed495,661,515 bytes. SHA256:
+  8a27d491bc4dfa6de8ca2634ba4d6e66e43f0b49be64eb4ff7c325c19d76d39c.
+  Docker source/host SHA matched; ALL archive CRC/memberSHA checks passed;
+  personal club.sqlite3 and company-details/graph.sqlite3 both passed SQLite
+  integrity and foreign_key checks. This is an actual snapshot/export, NOT a
+  performed live restore. No financial data/secret values were printed.
+- Private backup companion files: same-stem .zip.sha256 and .summary.json,
+  plus backups/READ_ME_FIRST.md. Directory0700/files0600. Backups are Git ignored
+  and MUST NOT be committed/pushed/shared. The ZIP itself is not encrypted and
+  contains encrypted credential rows plus LOCAL DECRYPTION ROOTS. Host .env is
+  separate: preserve/copy it privately. Do not put keys into any context document.
+- Latest actual Docker status at the end of backup: app healthy; app, personal-data,
+  market-data, backup running; paper-worker Exited143; backtest-worker/company-data/
+  market-details Created. Same containers/volumes preserved; no restart, removal,
+  live restore, new helper container, browser tab, feature test or deployment.
+  Existing backup source SHA matched app+host50f18ed867707dad820cea331ccff8667be931a02220c5aa882ed96f3f3e9b6c.
+- Default Docker socket /Users/kimseungjoo/.docker/run/docker.sock accepted connections
+  but _ping/API timed out. Desktop UI displayed Engine running. Working local
+  endpoint was unix:///Users/kimseungjoo/Library/Containers/com.docker.docker/Data/docker.raw.sock.
+  Used docker -H with that endpoint for read-only status, backup exec and archive
+  copy; no persistent Docker context/settings change. Do not infer Docker/Chrome
+  are generally uncontrollable. Probe the current PC before reusing a path.
+- macOS iCloud placeholders remain a real blocker for normal Git operations:
+  .git/HEAD, refs/heads/codex/ai-research-workflow and HANDOFF.md were
+  compressed,dataless. Finder showed roughly47,000 download requests queued.
+  Reads/Git check-ignore/public handoff edit hung. brctl download/Finder Download
+  Now did not clear these particular placeholders. The pending root-handfile edit
+  cell and our read-only/writer attempts were terminated; no Git metadata was
+  rewritten and no user/editor/Docker processes were killed. Root HANDOFF.md was
+  still899 bytes at the latest observation. Do not assume that private-backup
+  completion was already pushed to GitHub. Its previous authoritative completion
+  record is backups/READ_ME_FIRST.md; this new entry supersedes earlier “not exported”.
+- Transfer: current Milkyway folder is the app. Include .git/.env as appropriate,
+  runtime/handoff PUBLIC evidence and backups PRIVATE evidence. output and
+  week10_Milkyway_검수 preserve optional older artifacts; korea-shipping-research
+  is an independent8766 research app. Do not overwrite/use its repository or
+  user terminal/editor processes. Virtualenvs/caches can be recreated on the new PC.
+- NEXT on explicit resume: read this last entry, HANDOFF_OTHER_COMPUTER.md and the
+  private backup guide. Bring the latest LOCAL docs too if Git metadata is still
+  blocked; a clone alone omits both ignored bundles and possibly these new notes.
+  Validate the selected archive on the NEW PC and preserve existing data before
+  restoration. Stop all writers for restoration and afterwards start ONLY app,
+  personal-data, market-data, backup until the user resumes paper/backtest.
+  deploy/local_tools.py restore currently ends with unrestricted compose up -d;
+  do not silently enable all workers when maintaining the user's paused state.
+  Never restore this migration archive over the original PC merely to test it.
+  Resolve iCloud/Git availability and commit/push only public docs; private ZIPs
+  and .env stay excluded. Resume land15 integration/verification and remaining
+  Energy work only when requested. Read SECURITY_REMEDIATION_STATUS.md fully
+  before security/deployment/backup work; personal local authorization remains
+  distinct from the public deployment NO-GO and managed remediation gates.
+- Context-save verification: latest entry was written, fsynced and reread.
+  A bounded normal git status attempt then timed out after5seconds. This context
+  update is saved LOCALLY; its commit/push is still pending on iCloud Git metadata.
+  No Git metadata rewrite, force push, DB restoration or feature resume was done.
+
+### New PC preparation and explicit restart pause · 2026-10-03 23:26 KST
+
+- Current project is /Users/kimseungzoo/Developer/4.Milkyway. The user's latest
+  instruction explicitly pauses work to restart the computer and requests a
+  handoff and resume prompt. Do not resume restoration, app startup or feature
+  development until the user resumes. The continuous milestone preference applies
+  after resumption; this explicit pause takes precedence now.
+- Read docs/RESTART_HANDOFF_20261003.md and docs/RESUME_PROMPT.md first on restart,
+  then the original handoff/context and AGENTS. Those files list the exact state,
+  archive digests, commands, constraints and next development tasks.
+- Initial new-PC directory had .env/backups/docs/runtime but no app code or .git.
+  Cloned the actual branch codex/ai-research-workflow and merged missing files
+  without overwriting copied local files. Remote HEAD was verified as
+  8b16fbd857dad15ca039312efb0092b161154f83. Existing local backup/context entry
+  above was preserved. GitHub access works; old-PC iCloud problems do not apply
+  to this current checkout as an observed blocker.
+- BOTH private backup and public evidence ZIP passed current-PC whole-archive
+  SHA checks. .env/backups/runtime remain Git ignored and untracked.
+  No secret values or private DB contents were printed.
+- Docker Desktop was started and engine29.7.2 responded. Built ONLY validated
+  shipping source dd0b8eae3a06bd5d5b183a1d18f376724bb6a18a as
+  milkyway-personal:local, imageID
+  sha256:fd9bdb59eeada9f5297ea72086a848b3e8a5b67d06bddd7c273100fdb49d889f.
+  No app deployment or source completeness is implied by this successful build.
+- deploy/local_tools.py now supports --start-services after restore and stops
+  all8 Compose writers including company-data/market-details. Tests were run
+  BEFORE the pause: tests.test_local_tools + tests.test_local_ops,13 passed/.196s.
+  Scoped direct review and diff check passed. Compose config--quiet passed.
+  No whole test/security scan/performance run/current CI success is claimed.
+- Crucial pending state: NO live Docker archive restore, NO app/service startup,
+  NO personal Milkyway volume created. At23:26 there were no running
+  milkyway-personal containers or volumes of that prefix. Other Docker projects
+  and existing volumes were preserved. No paidAI, CodeRabbit or newagents used.
+- NEXT on explicit resume: recheck Git/Docker/image/archive/current volumes;
+  preserve any existing target data; restore the 21:10KST private snapshot with
+  --start-services app personal-data market-data backup; verify DBs and prior
+  records/local HTTP; leave paper/backtest stopped. Then resume land15 and
+  remaining Energy review from the detailed handoff. Do not deploy unchecked
+  land source or report the155 edited profiles/213 roster as fully completed.
+- This restart save is a preservation checkpoint, not a completed Energy
+  milestone. Save/push public instructions and the tested host recovery change;
+  private files remain local. Verify actual remote HEAD after push; CI may still
+  be pending when the computer is shut down.

@@ -2,6 +2,10 @@
 
 ## Resume context
 
+- Latest instruction on 2026-10-03: pause for a computer restart and save handoff.
+  Do not resume implementation, restoration or app startup until the user resumes.
+  Read `docs/RESTART_HANDOFF_20261003.md` for the new-PC state and
+  `docs/RESUME_PROMPT.md` for the requested continuation scope.
 - For cross-computer continuation, read `HANDOFF.md` and
   `docs/HANDOFF_OTHER_COMPUTER.md` first. The latest explicit user pause overrides
   older instructions to continue without stopping; resume on the user's request.
@@ -40,6 +44,11 @@
 
 ## Milestone completion checks
 
+- The user resumed on the new PC on 2026-10-03 and requested continuous work.
+  A milestone is a review, verification, commit and push checkpoint, not a reason
+  to stop or ask to continue. Continue the next in-scope task after each push.
+  Stop only when the requested work is complete, the user pauses it, or a concrete
+  blocker requires new information or authority. Report the blocker precisely.
 - For every completed milestone, check functionality, performance, code quality,
   and security before committing and pushing to GitHub. Record actual evidence
   and remaining limitations; do not claim unperformed checks.
