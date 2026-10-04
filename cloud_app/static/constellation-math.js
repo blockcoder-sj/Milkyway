@@ -44,14 +44,14 @@
     // Overlap is allowed; projection must never move planets into vacant slots.
     for(const[hop,group]of groups){
       if(hop===0){out.push({...group[0],x:0,y:0,z:0});continue;}
-      const base=[0,24,55,92,132][hop],range=[0,18,24,36,20][hop],top=group[0].priority||1;
+      const base=[0,20,34,48,86][hop],range=[0,12,16,18,8][hop],top=group[0].priority||1;
       for(let i=0;i<group.length;i++){
         const n=group[i],category=topic(n),known=topics.findIndex(([name])=>name===category);
         const angle=known>=0?known*Math.PI*2/topics.length+(hash(n.id)%1000/1000-.5)*.65:i*golden+(hash(n.id)%1000)/10000;
         const vertical=flat?0:known>=0?.55*Math.sin(known*golden)+(hash(n.id+'z')%1000/1000-.5)*.25:.65*Math.sin(angle*.7+.4),ring=Math.sqrt(1-vertical*vertical);
         // Dense groups may overlap. Adding thousands of elements must not
         // push nearby business elements hundreds of units away from the focus.
-        const radius=base+range*(1-n.priority/top)+Math.log2(i+1)*[0,2.7,3,3.5,4][hop];
+        const radius=base+range*(1-n.priority/top)+Math.log2(i+1)*[0,1.8,2,2.3,1.2][hop];
         const position=semantic&&n.semantic?.position;
         if(Array.isArray(position)&&position.length===3&&position.every(Number.isFinite)){
           const norm=Math.hypot(position[0],position[1],flat?0:position[2])||1;

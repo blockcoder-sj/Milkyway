@@ -2062,3 +2062,27 @@ CodeRabbit·하위agent·DeepScan·제공사AI 호출0. 무료 자료 추가 조
 docs/SESSION_HANDOFF_20261004.md에 저장했다. AGENTS/HANDOFF/RESUME_PROMPT의
 최신 지시를 종료 상태로 갱신했고, 사용자 요청에 따라 Codex 기억 확장 노트도 저장한다.
 다음 작업 범위는 사용자가 지정한다. 이전 마일스톤 연속 진행 지시는 이번 종료보다 우선하지 않는다.
+
+## 2026-10-05 관계도 조작·초기화·전체 간격 수정 완료
+
+사용자가 관계도 UI 수정으로 재개했다. 일반 드래그는 이동, Shift+왼쪽 드래그는
+3D 회전으로 고정하고 동작 선택 메뉴를 제거했다. 드래그 중 Shift 전환을 지원한다.
+`처음 화면`은 원래 중심·전체 요소·카메라·표시/검색 설정·자동 회전·크게 보기까지
+초기화한다. 기존 전체 지도는 현재 표시 설정을 유지하며 복귀한다. Escape도 전체 복귀다.
+기업·섹터 반경과 그룹 내 간격 증가를 더 줄이고 의미 군집·전체 자료·우선순위는 유지했다.
+Energy7435개/8114연결 기준 동일 높이 평균 화면 중심 거리40.91% 축소.
+
+host frontend23개 통과/.534초, 격리 오프라인 전체777개 중756통과·21건너뜀/27.527초.
+일반 이동·Shift 회전·도중 Shift 전환·2D·터치·초기화 좌표 동일성·기본 설정 복구를 검증했다.
+기존 Chrome 탭 하나에서 Energy 전체→XOM9집중→확대/이동→초기화,
+표시 설정 변경 후 기본 복구, COP97전체→9집중→확대/이동→회전/자동 회전 후 초기화 확인.
+modifier drag를 재생할 API가 없어 Shift+드래그 자체는 Node pointer event 검사로 검증했다.
+Chrome 전체131.6~185.4ms/집중2.3ms, COP전체2~3.6ms/집중.8ms 표본이며60FPS 주장하지 않는다.
+
+직접 source/기능/성능/변경 보안 검토 완료. 실행 이미지
+sha256:d14ee901625d94043ad9fa1cdf53df37c6008b4a258cd797c20b93aca0af8887,
+289개 파일 SHA 일치. 원본 공개5테이블 행수/SHA·다른 서비스ID·개인 마운트·볼륨 목록 보존,
+quick_check ok·live/startup200·기존 운용 조건ready503. 앱만 교체했고paper/backtest미시작.
+무료 조사·복원·제공사 AI·CodeRabbit·하위agent·DeepScan은 수행하지 않았다.
+검토 docs/ENERGY_CONSTELLATION_CONTROLS_REVIEW_20261005.md,
+증거 runtime/verification-20261005/constellation-controls/. 이번 UI 요청 범위를 마무리한다.

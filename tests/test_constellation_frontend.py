@@ -25,6 +25,8 @@ assert.equal(G.rank(ns,es,'a')[1].id,'b');assert.equal(G.rank(ns,[...es,...es], 
 xyz=G.layout(ns,es,'b');assert.equal(xyz[0].id,'b');assert.equal(xyz[0].z,0);
 const extra=Array.from({length:3200},(_,i)=>({id:'unrelated'+i,name:'Unrelated'}));
 const expanded=G.layout([...ns,...extra],es,'a');
+// Entire groups remain compact even when thousands of unrelated items exist.
+assert(expanded.every(p=>Math.hypot(p.x,p.y,p.z)<110));
 for(const id of ['a','b','c']){const p=byId.get(id),q=expanded.find(n=>n.id===id);assert.equal(p.x,q.x);assert.equal(p.y,q.y);assert.equal(p.z,q.z);}
 assert.equal(G.neighbourhood(expanded).length,3);assert(G.neighbourhood(expanded).every(n=>n.hops<=1));
 assert.equal(G.neighbourhood(G.layout(ns,[],'a')).length,1);
@@ -55,7 +57,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
 const els=new Map(),listeners={},raf=new Map(),arcs=[];let serial=0,clock=0,intersection,selected;
 const paint=new Proxy({arc:(x,y,r)=>arcs.push({x,y,r}),measureText:t=>({width:t.length*6}),createRadialGradient:()=>({addColorStop(){}})},{get:(t,k)=>t[k]||(()=>{})});
 function el(key){if(!els.has(key))els.set(key,{value:key==='dimension'?'3d':'key',options:[{value:'semantic'},{value:'structure'}],dataset:{},hidden:false,children:[],textContent:'',getContext:()=>paint,getBoundingClientRect:()=>({width:800,height:560,left:0,top:0}),setPointerCapture(){},setAttribute(k,v){this[k]=v;},replaceChildren(...v){this.children=v;},addEventListener(k,f){this[k]=f;},querySelector(){return this.children[0];}});return els.get(key);}
-const target={querySelector:k=>el(k.slice(8)),classList:{toggle:()=>true},innerHTML:''};
+const classes=new Set();const target={querySelector:k=>el(k.slice(8)),classList:{toggle:k=>{if(classes.has(k)){classes.delete(k);return false;}classes.add(k);return true;},remove:k=>classes.delete(k)},innerHTML:''};
 const document={hidden:false,createElement:()=>el('new'+serial++),addEventListener:(k,f)=>listeners[k]=f};
 const window={devicePixelRatio:1,matchMedia:()=>({matches:false,addEventListener(){}})};
 const context=vm.createContext({window,document,performance:{now:()=>clock},requestAnimationFrame:f=>{const id=++serial;raf.set(id,f);return id;},cancelAnimationFrame:id=>raf.delete(id),ResizeObserver:class{observe(){}},IntersectionObserver:class{constructor(f){intersection=f;}observe(){}},URL,Map,Set,Math,Number,Intl,JSON});
@@ -64,7 +66,8 @@ const scene=window.MilkywayConstellation.create(target,{select:n=>selected=n});
 el('dimension').change();assert.equal(raf.size,0);
 const graph={focus_id:'root',nodes:[{id:'root',name:'Root',kind:'sector'},{id:'x',name:'<img unsafe>',symbol:'XOM',kind:'issuer'},{id:'y',name:'Other',kind:'factor'}],edges:[{id:'edge',source:'root',target:'x',kind:'customer'}]};
 function flush(){arcs.length=0;clock+=1000;const jobs=[...raf.values()];raf.clear();for(const f of jobs)f(clock);}
-scene.set(graph);flush();assert.equal(el('canvas').dataset.nodeCount,'3');assert.equal(raf.size,0);assert.equal(selected.id,'root');
+scene.set(graph);flush();const initialArcs=JSON.stringify(arcs);assert.equal(el('canvas').dataset.nodeCount,'3');assert.equal(raf.size,0);assert.equal(selected.id,'root');
+assert(!target.innerHTML.includes('cosmos-drag'));assert(target.innerHTML.includes('Shift+드래그: 3D 회전'));
 el('search').value='xom';el('search').input();assert.equal(el('matches').children[0].textContent,'<img unsafe> · 조사 기업');el('matches').children[0].click();flush();assert.equal(el('canvas').dataset.focusId,'x');assert.equal(raf.size,0);
 assert.equal(el('canvas').dataset.view,'focus');assert.equal(el('canvas').dataset.shownNodeCount,'2');assert.equal(arcs.filter(p=>p.r===28).length,1);
 const beforeZoom=arcs.find(p=>p.r===8);el('in').click();flush();const afterZoom=arcs.find(p=>Math.abs(p.r-8*Math.sqrt(1.25))<1e-6);
@@ -74,28 +77,37 @@ scene.focus('x');flush();
 // A pan translates the actual drawing, retains selection, and survives zoom.
 const center=()=>arcs.find(p=>p.r===28||Math.abs(p.r-28*Math.sqrt(1.25))<1e-6);
 const origin=center(),selectedId=selected.id;
-el('drag').value='move';el('canvas').pointerdown({button:0,pointerId:5,clientX:200,clientY:200});el('canvas').pointermove({pointerId:5,clientX:285,clientY:240});el('canvas').pointerup({pointerId:5,clientX:285,clientY:240});flush();
+el('canvas').pointerdown({button:0,pointerId:5,clientX:200,clientY:200});el('canvas').pointermove({pointerId:5,clientX:285,clientY:240});el('canvas').pointerup({pointerId:5,clientX:285,clientY:240});flush();
 assert.equal(center().x,origin.x+85);assert.equal(center().y,origin.y+40);assert.equal(selected.id,selectedId);
 el('in').click();flush();assert.equal(center().x,origin.x+85);assert.equal(center().y,origin.y+40);
-el('drag').value='rotate';el('canvas').pointerdown({button:2,pointerId:6,clientX:200,clientY:200});el('canvas').pointermove({pointerId:6,clientX:235,clientY:185});el('canvas').pointerup({pointerId:6,clientX:235,clientY:185});flush();assert.equal(center().x,origin.x+120);assert.equal(center().y,origin.y+25);
-const previous=arcs.find(p=>p.r>8&&p.r<10);el('canvas').pointerdown({button:0,pointerId:7,clientX:200,clientY:200});el('canvas').pointermove({pointerId:7,clientX:250,clientY:200});el('canvas').pointerup({pointerId:7,clientX:250,clientY:200});flush();assert.equal(center().x,origin.x+120);assert.notEqual(arcs.find(p=>p.r>8&&p.r<10).x,previous.x);
-el('canvas').wheel({deltaX:30,deltaY:0,preventDefault(){}});flush();assert.equal(center().x,origin.x+90);
-el('canvas').keydown({key:'ArrowDown',altKey:true,preventDefault(){}});flush();assert.equal(center().y,origin.y+55);
-el('canvas').pointerdown({button:0,pointerType:'touch',pointerId:8,clientX:100,clientY:100});el('canvas').pointerdown({button:0,pointerType:'touch',pointerId:9,clientX:200,clientY:100});el('canvas').pointermove({pointerId:8,clientX:140,clientY:130});el('canvas').pointermove({pointerId:9,clientX:240,clientY:130});el('canvas').pointerup({pointerId:8,clientX:140,clientY:130});el('canvas').pointerup({pointerId:9,clientX:240,clientY:130});flush();assert.equal(selected.id,selectedId);assert.equal(center().x,origin.x+130);assert.equal(center().y,origin.y+85);
+el('canvas').pointerdown({button:2,pointerId:6,clientX:200,clientY:200});el('canvas').pointermove({pointerId:6,clientX:235,clientY:185,shiftKey:true});el('canvas').pointerup({pointerId:6,clientX:235,clientY:185});flush();assert.equal(center().x,origin.x+120);assert.equal(center().y,origin.y+25);
+const previous=arcs.find(p=>p.r>8&&p.r<10);el('canvas').pointerdown({button:0,pointerId:7,clientX:200,clientY:200,shiftKey:true});el('canvas').pointermove({pointerId:7,clientX:250,clientY:220,shiftKey:true});el('canvas').pointerup({pointerId:7,clientX:250,clientY:220});flush();assert.equal(center().x,origin.x+120);assert.equal(center().y,origin.y+25);assert.notEqual(arcs.find(p=>p.r>8&&p.r<10).x,previous.x);
+// Pressing/releasing Shift during a drag changes modes immediately.
+el('canvas').pointerdown({button:0,pointerId:10,clientX:200,clientY:200});el('canvas').pointermove({pointerId:10,clientX:215,clientY:205,shiftKey:true});flush();assert.equal(center().x,origin.x+120);el('canvas').pointermove({pointerId:10,clientX:230,clientY:215});el('canvas').pointerup({pointerId:10,clientX:230,clientY:215});flush();assert.equal(center().x,origin.x+135);assert.equal(center().y,origin.y+35);
+el('canvas').wheel({deltaX:30,deltaY:0,preventDefault(){}});flush();assert.equal(center().x,origin.x+105);
+el('canvas').keydown({key:'ArrowDown',altKey:true,preventDefault(){}});flush();assert.equal(center().y,origin.y+65);
+el('canvas').pointerdown({button:0,pointerType:'touch',pointerId:8,clientX:100,clientY:100});el('canvas').pointerdown({button:0,pointerType:'touch',pointerId:9,clientX:200,clientY:100});el('canvas').pointermove({pointerId:8,clientX:140,clientY:130});el('canvas').pointermove({pointerId:9,clientX:240,clientY:130});el('canvas').pointerup({pointerId:8,clientX:140,clientY:130});el('canvas').pointerup({pointerId:9,clientX:240,clientY:130});flush();assert.equal(selected.id,selectedId);assert.equal(center().x,origin.x+145);assert.equal(center().y,origin.y+95);
 el('fit').click();flush();assert.equal(arcs.find(p=>p.r===18).x,400);assert.equal(arcs.find(p=>p.r===18).y,280);
 scene.focus('x');flush();el('dimension').value='2d';el('dimension').change();flush();assert.equal(el('canvas').dataset.view,'focus');
 scene.set(graph);flush();assert.equal(el('canvas').dataset.focusId,'x');
+el('canvas').pointerdown({button:0,pointerId:11,clientX:200,clientY:200,shiftKey:true});el('canvas').pointermove({pointerId:11,clientX:240,clientY:225,shiftKey:true});el('canvas').pointerup({pointerId:11,clientX:240,clientY:225});flush();assert.equal(center().x,440);assert.equal(center().y,305);
+el('dimension').value='3d';el('dimension').change();flush();
 el('motion').click();flush();assert.equal(raf.size,1);intersection([{isIntersecting:false}]);assert.equal(raf.size,0);intersection([{isIntersecting:true}]);flush();assert.equal(raf.size,1);
 document.hidden=true;listeners.visibilitychange();assert.equal(raf.size,0);document.hidden=false;listeners.visibilitychange();flush();assert.equal(raf.size,1);
 el('motion').click();flush();assert.equal(raf.size,0);
+el('labels').value='off';el('labels').change();el('expand').click();el('motion').click();flush();el('reset').click();flush();
+assert.equal(el('canvas').dataset.view,'all');assert.equal(selected.id,'root');assert.equal(el('canvas').dataset.shownNodeCount,'3');assert.equal(JSON.stringify(arcs),initialArcs);assert.equal(raf.size,0);assert.equal(el('dimension').value,'3d');assert.equal(el('labels').value,'key');assert.equal(el('placement').value,'structure');assert.equal(el('motion')['aria-pressed'],'false');assert.equal(classes.size,0);assert.equal(el('search').value,'');assert.equal(el('matches').children.length,0);
+el('near').click();flush();assert.equal(selected.id,'root');
 el('canvas').keydown({key:'Escape',preventDefault(){}});flush();assert.equal(selected.id,'root');
+assert.equal(el('canvas').dataset.view,'all');
 scene.clear();assert.equal(raf.size,0);scene.set(graph);flush();assert.equal(el('canvas').dataset.nodeCount,'3');
-const dense={focus_id:'root',nodes:[{id:'root',name:'Root',kind:'issuer'},...Array.from({length:20},(_,i)=>({id:'n'+i,name:'N'+i,kind:'company'}))],edges:Array.from({length:20},(_,i)=>({id:'e'+i,source:'root',target:'n'+i,kind:i<8?'customer':'classification',analytical:i>=8}))};
+const dense={focus_id:'root',semantic_status:'ready',revenue_groups:['segment','product'],nodes:[{id:'root',name:'Root',kind:'issuer'},...Array.from({length:20},(_,i)=>({id:'n'+i,name:'N'+i,kind:'company'}))],edges:Array.from({length:20},(_,i)=>({id:'e'+i,source:'root',target:'n'+i,kind:i<8?'customer':'classification',analytical:i>=8}))};
 scene.set(dense);flush();assert.equal(el('canvas').dataset.shownNodeCount,'21');scene.focus('root');flush();assert.equal(el('canvas').dataset.nodeCount,'21');assert.equal(el('canvas').dataset.shownNodeCount,'9');assert.equal(el('canvas').dataset.view,'focus');
 assert.equal(arcs.filter(p=>p.r===8).length,8);assert(el('status').textContent.includes('8개 집중 보기'));
 const planet=arcs.find(p=>p.r===8);el('canvas').pointerdown({button:0,pointerId:1,clientX:planet.x,clientY:planet.y});el('canvas').pointerup({pointerId:1,clientX:planet.x,clientY:planet.y});flush();assert.notEqual(selected.id,'root');assert.equal(el('canvas').dataset.view,'focus');
 el('fit').click();flush();assert.equal(el('canvas').dataset.shownNodeCount,'21');
 el('near').click();flush();assert.equal(el('canvas').dataset.view,'focus');el('return').click();flush();assert.equal(el('canvas').dataset.view,'all');assert.equal(el('canvas').dataset.focusId,'root');
+el('placement').value='structure';el('placement').change();el('basis').value='segment';el('basis').change();el('reset').click();flush();assert.equal(el('placement').value,'semantic');assert.equal(el('basis').value,'product');assert.equal(el('canvas').dataset.shownNodeCount,'21');el('near').click();flush();assert.equal(selected.id,'root');
 """)
 
     def test_sector_sources_paging_exact_edge_and_stale_owner_response(self):

@@ -2,11 +2,13 @@
 
 ## Resume context
 
-- Latest instruction on 2026-10-04: the user requested saving context and ending
-  this session after the Energy/semantic/3D work. Save the handoff, then stop.
-  Do not resume implementation, restoration, collection or app startup until
-  the user requests it. Preserve already running apps and services.
-  Read `docs/SESSION_HANDOFF_20261004.md` for the current checkpoint,
+- Latest instruction on 2026-10-05: the user resumed UI development, requesting
+  plain drag to pan, Shift+drag to rotate, an initial-view reset button and
+  closer spacing across company/sector maps. This supersedes the October 4
+  session pause for that scope. Preserve existing personal data and services;
+  do not restart the completed free-data investigation or restore old backups.
+  Read `docs/ENERGY_CONSTELLATION_CONTROLS_REVIEW_20261005.md` for this update,
+  `docs/SESSION_HANDOFF_20261004.md` for the preceding checkpoint,
   `docs/NEW_PC_RESUME_REVIEW_20261004.md` for actual restoration evidence,
   `docs/WORK_CONTEXT.md` for progress, and `docs/RESUME_PROMPT.md` for resuming.
   Earlier restart observations and resume instructions are historical.
