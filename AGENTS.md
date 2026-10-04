@@ -2,11 +2,14 @@
 
 ## Resume context
 
-- Latest instruction on 2026-10-04: the user resumed continuous Energy work and
-  requested testing in the already open Chrome. The restart pause is lifted.
-  Read `docs/NEW_PC_RESUME_REVIEW_20261004.md` for actual restoration evidence,
-  `docs/WORK_CONTEXT.md` for the latest progress, and `docs/RESUME_PROMPT.md`
-  for the continuation scope. Earlier restart observations are historical.
+- Latest instruction on 2026-10-04: the user requested saving context and ending
+  this session after the Energy/semantic/3D work. Save the handoff, then stop.
+  Do not resume implementation, restoration, collection or app startup until
+  the user requests it. Preserve already running apps and services.
+  Read `docs/SESSION_HANDOFF_20261004.md` for the current checkpoint,
+  `docs/NEW_PC_RESUME_REVIEW_20261004.md` for actual restoration evidence,
+  `docs/WORK_CONTEXT.md` for progress, and `docs/RESUME_PROMPT.md` for resuming.
+  Earlier restart observations and resume instructions are historical.
 - For cross-computer continuation, read `HANDOFF.md` and
   `docs/HANDOFF_OTHER_COMPUTER.md` first. The latest explicit user pause overrides
   older instructions to continue without stopping; resume on the user's request.

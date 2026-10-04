@@ -1,5 +1,9 @@
 # 재시작 후 붙여 넣을 프롬프트
 
+**최신 상태: 2026-10-04 사용자가 맥락 저장 후 작업 종료를 요청했습니다.**
+아래 맥락 확인 문구만으로 구현·복원·수집·앱 시작을 재개하지 않습니다.
+[세션 종료 인계](SESSION_HANDOFF_20261004.md)에 최종 상태와 범위를 저장했습니다.
+
 **2026-10-04 갱신:** 아래는 재시작 당시의 복원 프롬프트다. 이후 사용자가 재개했고
 복원·개발 환경·개인 앱 실행과 213개 Energy 조사·탐색 검수를 완료했다.
 현재는 HANDOFF.md와 [최종 검토](ENERGY_FINAL_REVIEW_20261004.md), WORK_CONTEXT의
@@ -14,10 +18,14 @@
 Milkyway 작업 맥락을 확인해.
 폴더는 /Users/kimseungzoo/Developer/4.Milkyway,
 GitHub 브랜치는 codex/ai-research-workflow야.
+마지막 구현 커밋은 27f26f20b72cd9b8e3d1886bf3e3ef7b89de016e야.
 AGENTS.md, HANDOFF.md, docs/HANDOFF_OTHER_COMPUTER.md,
-docs/ENERGY_FINAL_REVIEW_20261004.md, docs/WORK_CONTEXT.md 마지막 항목을 읽어.
-docs/ENERGY_CONSTELLATION_REVIEW_20261004.md와 무료 공시 추가 조사 종료 기록도 읽어.
+docs/SESSION_HANDOFF_20261004.md, docs/WORK_CONTEXT.md 마지막 항목을 읽어.
+docs/ENERGY_SEMANTIC_RAG_REVIEW_20261004.md와 무료 공시 추가 조사 종료 기록도 읽어.
 10월 4일 새 PC 복원·개발 환경·앱 실행과 확정한 Energy 기업213개 조사를 완료했어.
+기업·섹터 3D 지도 간격 축소·회전/화면 이동·전체 복귀,
+로컬 의미 검색·군집 배치·출처 기반 연관성 패널까지 완료했어.
+맥락 저장 후 종료했으니 우선 상태만 확인하고, 다음 작업 범위는 내가 지정할게.
 현재 Git/앱/볼륨 상태를 확인하고 기존 개인 데이터·백업·runtime을 보존해.
 과거 재시작 프롬프트의 복원 명령을 이미 복원된 볼륨에 다시 실행하지 마.
 새 작업은 내가 요청한 범위로 진행하고, 기존 Chrome 탭 하나를 재사용해.

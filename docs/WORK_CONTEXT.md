@@ -2048,3 +2048,17 @@ health live/startup200, 기존 운용 서비스/feed 조건의 ready503.
 CodeRabbit·하위agent·DeepScan·제공사AI 호출0. 무료 자료 추가 조사는 재개하지 않았다.
 검토 docs/ENERGY_SEMANTIC_RAG_REVIEW_20261004.md,
 증거 runtime/verification-20261004/semantic-rag/. 기존 원문ZIP·개인백업 보존.
+
+## 2026-10-04 맥락 저장·작업 종료
+
+사용자 요청: “오케 맥락저장하고 마무리하자”. 이 문서 저장·푸시 후 종료한다.
+새 재개 요청 전에는 구현·복원·자료 수집·앱 시작을 자동으로 진행하지 않는다.
+기존 실행 앱·Chrome·Docker 서비스는 그대로 두며 개인 runtime·backup·원문을 보존한다.
+
+마지막 구현 커밋 27f26f20b72cd9b8e3d1886bf3e3ef7b89de016e가 GitHub 원격과 일치했고,
+인계 변경 전 작업 트리가 깨끗했다. 종료 시점에도 app/personal-data/market-data/backup
+4개 실행·app healthy, live/startup200·ready503을 재확인했다. 재시작·복원·추가 구현은 하지 않았다.
+최종 완료 범위·검증·미포함 범위·개인 데이터 보존·다른 PC 준비·재개 순서는
+docs/SESSION_HANDOFF_20261004.md에 저장했다. AGENTS/HANDOFF/RESUME_PROMPT의
+최신 지시를 종료 상태로 갱신했고, 사용자 요청에 따라 Codex 기억 확장 노트도 저장한다.
+다음 작업 범위는 사용자가 지정한다. 이전 마일스톤 연속 진행 지시는 이번 종료보다 우선하지 않는다.
