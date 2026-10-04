@@ -1801,6 +1801,12 @@ def personal_company_detail(sector_id: str, symbol: str, user: User = Depends(cu
     return company_snapshot(settings, sector_id, symbol)
 
 
+@app.get("/api/energy-constellation")
+def personal_energy_constellation(user: User = Depends(current_user)):
+    from .energy_constellation import snapshot
+    return snapshot(settings)
+
+
 @app.get("/api/company-entities/{entity_key}")
 def personal_company_entity(entity_key: str, user: User = Depends(current_user)):
     from .company_entities import entity_snapshot

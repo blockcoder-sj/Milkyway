@@ -239,6 +239,8 @@ apply_energy_review(PUBLIC_COMPANIES)
 from .company_energy_current import apply as apply_energy_current, PRIVATE as CURRENT_PRIVATE, EDGES as CURRENT_EDGES
 apply_energy_current(PUBLIC_COMPANIES)
 PRIVATE_COMPANIES.update(CURRENT_PRIVATE)
+from .company_energy_supplement import apply as apply_energy_supplement
+apply_energy_supplement(PUBLIC_COMPANIES)
 # Apply every group's dated context; shared IDs can have several business roles.
 for _registry, _notes in [(key, notes) for context in (MATERIAL_COMMON_CONTEXT, NUCLEAR_COMMON_CONTEXT,
         PRODUCER_COMMON_CONTEXT, EXTENDED_COMMON_CONTEXT, DOWNSTREAM_COMMON_CONTEXT,

@@ -193,7 +193,7 @@ result.relations[0].business={title:'기업 사업',detail:'<script>검사 장�
 const ctx=vm.createContext({window:{MilkywayResearchView:{escape},MilkywayCompanyPrice:{create:()=>({setContext(){},clear(){}})},getSelection:()=>null},
  document:{querySelector:el,createElement:()=>panel,addEventListener(kind,fn){documentHandlers[kind]=fn;}},
  history:{state:null,pushState(value){this.state=value;},back(){}},setInterval(fn){poll=fn;},Intl,Date,Number,Math,Map,Set,URL,encodeURIComponent});
-for(const name of ['format.js','list-paging.js','market-directory.js','company-research-view.js','company-relations.js','company-network.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
+for(const name of ['format.js','list-paging.js','market-directory.js','company-research-view.js','company-relations.js','constellation-math.js','constellation.js','company-network.js','company-page.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+name,'utf8'),ctx);
 ctx.window.MilkywayCompany.initialize({getState:()=>state,openWorkspace:workspace=>{state.workspace=workspace;},
  api:async(path,options)=>{calls.push({path,options});if(rejectCollection&&options?.method==='POST')throw new Error('Collection queue full');if(delayed)return await new Promise(resolve=>{resolveDelayed=resolve});return response;}});
 function click(attribute,value){panelHandlers.click({target:{closest(selector){return selector==='['+attribute+']'?{dataset:{[attribute.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:String(value)}}:null;}}});}
@@ -203,9 +203,10 @@ function click(attribute,value){panelHandlers.click({target:{closest(selector){r
  assert(el('#companyQuote').innerHTML.includes('1,000,000'));
  assert(el('#companyGraph').innerHTML.includes('&lt;script&gt;'));assert(!el('#companyGraph').innerHTML.includes('<script>'));
  assert(el('#companyProducts').innerHTML.includes('&lt;img'));assert(!el('#companyProducts').innerHTML.includes('<img'));
- assert(!el('#companyProducts').innerHTML.includes('Product 8'));assert.equal(el('#companyRelationFilter').value,'business');
+ assert(!el('#companyProducts').innerHTML.includes('Product 8'));assert.equal(el('#companyRelationFilter').value,'all');
  click('data-product-page',2);assert(el('#companyProducts').innerHTML.includes('Product 8'));assert(!el('#companyProducts').innerHTML.includes('Product 0'));
  click('data-relation-page',2);assert(el('#companyRelationSummary').textContent.includes('현재 페이지 4개'));
+ assert(el('#companyGraph').innerHTML.includes('Company &lt;0&gt;'));assert(el('#companyGraph').innerHTML.includes('Company &lt;11&gt;'));
  el('#companyRelationFilter').value='supplier';el('#companyRelationFilter').change();
  assert(el('#companyRelationFocus').innerHTML.includes(result.relations[0].target_id));assert(!el('#companyRelationList').innerHTML.includes('&lt;1&gt;'));
  assert(el('#companyRelationFocus').innerHTML.includes('기업 사업'));assert(el('#companyRelationList').innerHTML.includes('&lt;script&gt;검사 장비'));

@@ -4,6 +4,9 @@
 복원·개발 환경·개인 앱 실행과 213개 Energy 조사·탐색 검수를 완료했다.
 현재는 HANDOFF.md와 [최종 검토](ENERGY_FINAL_REVIEW_20261004.md), WORK_CONTEXT의
 마지막 기록을 먼저 읽는다. 이 과거 프롬프트로 복원된 볼륨을 다시 덮어쓰지 않는다.
+후속 요청의 기업별·Energy 전체 3차원 지도도 완료했으며
+`ENERGY_CONSTELLATION_REVIEW_20261004.md`와 `ENERGY_FREE_DATA_CLOSURE_20261004.md`에
+검증 및 종료 범위를 남겼다.
 
 현재 상태에서 새 대화에 붙여 넣을 문구:
 
@@ -13,6 +16,7 @@ Milkyway 작업 맥락을 확인해.
 GitHub 브랜치는 codex/ai-research-workflow야.
 AGENTS.md, HANDOFF.md, docs/HANDOFF_OTHER_COMPUTER.md,
 docs/ENERGY_FINAL_REVIEW_20261004.md, docs/WORK_CONTEXT.md 마지막 항목을 읽어.
+docs/ENERGY_CONSTELLATION_REVIEW_20261004.md와 무료 공시 추가 조사 종료 기록도 읽어.
 10월 4일 새 PC 복원·개발 환경·앱 실행과 확정한 Energy 기업213개 조사를 완료했어.
 현재 Git/앱/볼륨 상태를 확인하고 기존 개인 데이터·백업·runtime을 보존해.
 과거 재시작 프롬프트의 복원 명령을 이미 복원된 볼륨에 다시 실행하지 마.

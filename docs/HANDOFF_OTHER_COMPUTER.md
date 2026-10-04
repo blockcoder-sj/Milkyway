@@ -4,6 +4,10 @@
 검증했다. 확정한 213개 기업 범위의 Energy 조사·탐색을 최종 검수했다.
 [최종 검토](ENERGY_FINAL_REVIEW_20261004.md),
 [기업별 검수표](ENERGY_SECTOR_COVERAGE_20261004.md), WORK_CONTEXT의 마지막 기록을 먼저 읽는다.
+후속 기업별·Energy 전체 3차원 지도는 [우주 지도 검토](ENERGY_CONSTELLATION_REVIEW_20261004.md),
+제한된 추가 공시 조사 종료는 [추가 확인 기록](ENERGY_FREE_DATA_CLOSURE_20261004.md)에 있다.
+추가 공개 자료 `runtime/handoff/milkyway-energy-constellation-20261004.zip`과
+대응 SHA/summary를 함께 복사하며 기존 원문 ZIP이나 개인 백업을 덮어쓰지 않는다.
 아래 10월 3일 중단·미완료 기록은 역사적 인계다. 복원한 볼륨에 과거 백업을 다시 덮어쓰지 않는다.
 공개 자료의 미확인 상태·다음 공시 갱신과 브로커 실운용·공개 OCI/KMS 배포는 구분한다.
 이번 최종 원문·영수증·검사 증거 추가 묶음은
