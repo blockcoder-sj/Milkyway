@@ -64,7 +64,7 @@ class EnergyConstellationTests(unittest.TestCase):
         self.assertEqual(len(edges), 501)
         self.assertTrue(all(e['target']==root and e['kind']=='customer' for e in edges))
         self.assertEqual(sum(n.get('symbol')=='XOM' for n in nodes.values()),
-                         1+sum(n.get('symbol')=='XOM' and n['kind'] in ('factor','product') for n in nodes.values()))
+                         1+sum(n.get('symbol')=='XOM' and n['kind'] in ('factor','product','segment','revenue') for n in nodes.values()))
 
     def test_cache_copies_and_invalidates_on_graph_change_and_fails_closed_at_limit(self):
         first = scene.snapshot(self.settings)
@@ -91,6 +91,53 @@ class EnergyConstellationTests(unittest.TestCase):
         self.assertTrue(all(r.share_exclusion and r.group=='revenue_type' for r in rows))
         eu = enrich(CompanyKnowledge(symbol='EU', name='enCore'))
         self.assertTrue(any('43,155,000' in f.detail and '네 번째 고객' in f.detail for f in eu.financial_context))
+
+    def test_stored_business_elements_revenue_scope_and_literal_evidence_retrieval(self):
+        from cloud_app.constellation_retrieval import search
+        root = self.graph.ingest(CompanyKnowledge(symbol='XOM', name='Exxon',
+            products=[dict(title='독립 검수 제품', detail='Evidence probe', original='UniqueEvidenceNeedle production', source=SOURCE)],
+            revenue_mix=[dict(group='product', member='probe:External', label='외부 공시 항목', value=80,
+                total=100, unit='USD', start='2025-01-01', end='2025-12-31', metric='probe:Revenue', source=SOURCE),
+                dict(group='segment', member='probe:Internal', label='내부 거래 포함 항목', value=95,
+                total=100, includes_intersegment=True, unit='USD', start='2025-01-01', end='2025-12-31', metric='probe:Revenue', source=SOURCE)]), 'us_10')
+        result = scene.snapshot(self.settings)
+        product = next(n for n in result['nodes'] if n['name']=='독립 검수 제품')
+        self.assertEqual(product['original'], 'UniqueEvidenceNeedle production')
+        external = next(n for n in result['nodes'] if n['name']=='외부 공시 항목')
+        internal = next(n for n in result['nodes'] if n['name']=='내부 거래 포함 항목')
+        self.assertEqual(external['measure']['share_pct'],80)
+        self.assertIsNone(internal['measure']['share_pct'])
+        hits = search(self.settings,'UniqueEvidenceNeedle')
+        self.assertEqual(hits['rows'][0]['node_id'],product['id'])
+        self.assertEqual(hits['rows'][0]['citation']['url'],SOURCE['url'])
+        self.assertTrue(hits['indexed_documents'] > 1000)
+        self.assertEqual(search(self.settings,'"UniqueEvidenceNeedle" OR NonexistentTestNeedle --')['rows'],[])
+        with self.graph.connection() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM company_profiles WHERE entity_id=?',(root,)).fetchone()[0],1)
+            self.assertEqual(db.execute('PRAGMA quick_check').fetchone()[0],'ok')
+        self.settings.production=True
+        with self.assertRaises(HTTPException) as caught: search(self.settings,'UniqueEvidenceNeedle')
+        self.assertEqual(caught.exception.status_code,404)
+        from fastapi.testclient import TestClient
+        from cloud_app import main
+        route = next(r for r in main.app.routes if r.path=='/api/energy-constellation/search')
+        self.assertIn(main.current_user, [dep.call for dep in route.dependant.dependencies])
+        self.settings.production=False
+        overrides=dict(main.app.dependency_overrides)
+        def denied():
+            raise HTTPException(401, 'Not authenticated')
+        try:
+            with patch.object(main, 'settings', self.settings):
+                client=TestClient(main.app)
+                main.app.dependency_overrides[main.current_user]=denied
+                self.assertEqual(client.get('/api/energy-constellation/search',params={'q':'UniqueEvidenceNeedle'}).status_code,401)
+                main.app.dependency_overrides[main.current_user]=lambda:SimpleNamespace(id='constellation-http-test')
+                response=client.get('/api/energy-constellation/search',params={'q':'UniqueEvidenceNeedle'})
+                self.assertEqual(response.status_code,200)
+                self.assertTrue(response.json()['rows'])
+                self.assertEqual(client.get('/api/energy-constellation/search',params={'q':'x'*241}).status_code,422)
+        finally:
+            main.app.dependency_overrides.clear();main.app.dependency_overrides.update(overrides)
 
 
 if __name__ == '__main__':

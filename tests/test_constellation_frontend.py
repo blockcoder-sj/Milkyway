@@ -16,7 +16,7 @@ class ConstellationFrontendTests(unittest.TestCase):
     def test_compact_neighbourhood_ranking_full_retention_and_stable_zoom_projection(self):
         self.node(r"""
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
-const window={};vm.runInNewContext(fs.readFileSync(process.argv[1]+'/constellation-math.js','utf8'),{window});
+const window={};vm.runInNewContext(fs.readFileSync(process.argv[1]+'/constellation-math.js','utf8'),{window,URL});
 const G=window.MilkywayConstellationMath,ns=['a','b','c','d'].map(id=>({id,name:id}));
 const es=[{source:'a',target:'b',kind:'customer'},{source:'a',target:'c',kind:'classification',analytical:true},{source:'b',target:'d',kind:'partner'}];
 let xyz=G.layout(ns,es,'a'),byId=new Map(xyz.map(n=>[n.id,n]));
@@ -39,6 +39,14 @@ for(const flat of [false,true]){
  }
 }
 const rows=Array.from({length:25},(_,i)=>({target_id:'c'+i,name:'N'+i,index:i,kind:'supplier'}));assert.equal(G.company({name:'Root'},rows).nodes.length,26);
+const source={url:'https://www.sec.gov/report',level:'primary'},base={group:'product',unit:'USD',start:'2025-01-01',end:'2025-12-31',total:100,metric:'Revenue',source};
+const full=G.company({name:'Root',products:[{title:'원유 A',detail:'원유',source},{title:'원유 B',detail:'원유',source},{title:'천연가스',detail:'천연가스',source}],drivers:[{title:'날씨',detail:'기후 조건',source}],revenue_mix:[{...base,label:'원유',value:80},{...base,label:'천연가스',value:20},{...base,label:'과거 항목',value:95,start:'2024-01-01',end:'2024-12-31'},{...base,label:'내부 매출',value:90,includes_intersegment:true},{...base,label:'미확인 분모',value:30,total:null}]},rows);
+assert.equal(full.nodes.length,35);assert.equal(full.edges.filter(e=>e.kind==='revenue').length,5);
+assert.equal(G.company({name:'Root',products:[{title:'Unsafe',source:{url:'https://user:pass@example.com'}},{title:'Wiki',source:{url:'https://en.wikipedia.org/wiki/Test'}}]},[]).nodes.length,1);
+assert.equal(full.nodes.find(n=>n.name==='원유').measure.share_pct,80);assert.equal(full.nodes.find(n=>n.name==='내부 매출').measure.share_pct,null);assert.equal(full.nodes.find(n=>n.name==='미확인 분모').measure.share_pct,null);
+const ranked=G.rank(full.nodes,full.edges,full.focus_id,'product');assert.equal(ranked[1].name,'원유');assert.equal(ranked[2].name,'천연가스');
+const oilNodes=G.layout(full.nodes,full.edges,full.focus_id).filter(n=>n.name==='원유 A'||n.name==='원유 B');const gas=G.layout(full.nodes,full.edges,full.focus_id).find(n=>n.name==='천연가스'&&n.kind==='product');
+assert.equal(oilNodes[0].category,oilNodes[1].category);assert(Math.hypot(oilNodes[0].x-oilNodes[1].x,oilNodes[0].y-oilNodes[1].y,oilNodes[0].z-oilNodes[1].z)<Math.hypot(oilNodes[0].x-gas.x,oilNodes[0].y-gas.y,oilNodes[0].z-gas.z));
 """)
 
     def test_scene_idle_visibility_search_recenter_keyboard_and_teardown(self):
@@ -70,10 +78,11 @@ el('motion').click();flush();assert.equal(raf.size,0);
 el('canvas').keydown({key:'Escape',preventDefault(){}});flush();assert.equal(selected.id,'root');
 scene.clear();assert.equal(raf.size,0);scene.set(graph);flush();assert.equal(el('canvas').dataset.nodeCount,'3');
 const dense={focus_id:'root',nodes:[{id:'root',name:'Root',kind:'issuer'},...Array.from({length:20},(_,i)=>({id:'n'+i,name:'N'+i,kind:'company'}))],edges:Array.from({length:20},(_,i)=>({id:'e'+i,source:'root',target:'n'+i,kind:i<8?'customer':'classification',analytical:i>=8}))};
-scene.set(dense);flush();assert.equal(el('canvas').dataset.nodeCount,'21');assert.equal(el('canvas').dataset.shownNodeCount,'9');assert.equal(el('canvas').dataset.view,'focus');
+scene.set(dense);flush();assert.equal(el('canvas').dataset.shownNodeCount,'21');scene.focus('root');flush();assert.equal(el('canvas').dataset.nodeCount,'21');assert.equal(el('canvas').dataset.shownNodeCount,'9');assert.equal(el('canvas').dataset.view,'focus');
 assert.equal(arcs.filter(p=>p.r===8).length,8);assert(el('status').textContent.includes('8개 집중 보기'));
 const planet=arcs.find(p=>p.r===8);el('canvas').pointerdown({button:0,pointerId:1,clientX:planet.x,clientY:planet.y});el('canvas').pointerup({pointerId:1,clientX:planet.x,clientY:planet.y});flush();assert.notEqual(selected.id,'root');assert.equal(el('canvas').dataset.view,'focus');
 el('fit').click();flush();assert.equal(el('canvas').dataset.shownNodeCount,'21');
+el('near').click();flush();assert.equal(el('canvas').dataset.view,'focus');el('return').click();flush();assert.equal(el('canvas').dataset.view,'all');assert.equal(el('canvas').dataset.focusId,'root');
 """)
 
     def test_sector_sources_paging_exact_edge_and_stale_owner_response(self):

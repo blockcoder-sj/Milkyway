@@ -4,7 +4,7 @@
   const relationView=window.MilkywayCompanyRelations,kinds=relationView.kinds;
   const level={primary:'공시·기업 원문',provider:'정보 제공사·공개 조사'};
   let reading=null,revenueGroup=null,network=null,prices=null,constellation=null;
-  let hooks,sector=null,symbol=null,entityKey=null,loadPath=null,data=null,epoch=0,loading=null,signature='',relationPage=1,productPage=1,peerPage=1,selected=null;
+  let hooks,sector=null,symbol=null,entityKey=null,loadPath=null,data=null,epoch=0,loading=null,signature='',relationPage=1,productPage=1,peerPage=1,selected=null,graphSelection=null;
   const validKey=value=>/^c_[a-f0-9]{32}$/.test(value||'');
   const companyLink=(edge,label=edge.name)=>validKey(edge.target_id)?`<a class="company-open" data-company-id="${esc(edge.target_id)}" href="#company/${edge.target_id}">${esc(label)}</a>`:'';
   const source=row=>reading?.cite(row)||'';
@@ -15,14 +15,14 @@
       <nav class="detail-jumps" aria-label="기업 상세 목차"><a href="#companyBriefSection">기업 핵심 정리</a><a href="#companySegmentsSection">매출 구성</a><a href="#companyRelationsSection">기업 관계도</a><a href="#companyProductsSection">제품·서비스</a><a href="#companyDriversSection">실적 관련 요인</a><a href="#companyFinancialsSection">공시·재무</a><a href="#companySourcesSection">출처</a></nav>
       <section id="companyBriefSection"><h3>기업 핵심 정리</h3><div id="companyBrief" class="company-brief-grid"></div></section>
       <section id="companySegmentsSection"><div class="section-head"><h3>사업·매출 구성</h3><label>매출 구분<select id="companyRevenueGroup"></select></label></div><div id="companyRevenue"></div><div id="companySegments" class="company-fact-grid"></div><details class="company-appendix"><summary>사업 구성·산업 분류 원자료</summary><div id="companySegmentOriginals" class="company-fact-grid"></div><div id="companyFacts" class="company-fact-grid"></div></details><h3>제품 시장점유율</h3><div id="companyMarketShares" class="company-fact-grid"></div></section>
-      <section id="companyRelationsSection"><div class="section-head"><h3>기업 관계도</h3><label>관계 종류<select id="companyRelationFilter"><option value="business">사업 관계 우선</option><option value="all">소유·지분·사업 거래 포함 전체</option>${Object.entries(kinds).map(([key,name])=>`<option value="${key}">${name}</option>`).join('')}</select></label></div><p class="fineprint">천체를 누르면 중심이 이동하고 아래에 관계 근거가 표시됩니다. 기업 상세는 근거 패널의 링크로 열 수 있습니다. 밝은 화살표는 공급사 → 고객사 또는 모회사 → 자회사 방향이며, 협력·경쟁에는 방향을 부여하지 않습니다. 실선은 출처로 확인한 관계이며 점선은 공시의 사업 범위를 대조한 분석용 비교입니다. 거리는 직접 관계·연결 단계와 탐색 우선순위 기준이며 실제 지분율·거래액·경제적 영향도가 아닙니다.</p><details class="company-graph-method"><summary>표시 순서·자료 범위·수집 방법</summary><p>관계도는 현재 필터에서 불러온 관계 전체를 한 번에 표시하고, 목록은 8개씩 나눕니다. 한 관계의 대표 근거는 기업·공시 원문을 우선하고 같은 등급에서는 최근 진술을 사용합니다. 직접 공급·고객·소유·사업 연결을 우선 배치하고 더 먼 연결은 바깥으로 배치합니다. 사업 규모나 투자 중요도 점수가 아닙니다. 발표된 계획과 현재 이행을 구분하며, 공개되지 않은 상대 회사는 추정하지 않습니다.</p><div id="companyReportAnalysis"></div></details><p id="companyRelationSummary" class="fineprint"></p><div class="company-graph-layout"><div id="companyGraph" role="region" aria-label="기업 3차원 관계도"></div><aside id="companyRelationFocus" class="company-fact" aria-live="polite"></aside></div><div id="companyRelationList"></div><div id="companyRelationPages"></div></section>
+      <section id="companyRelationsSection"><div class="section-head"><h3>기업 관계도</h3><label>관계 종류<select id="companyRelationFilter"><option value="business">사업 관계 우선</option><option value="all">소유·지분·사업 거래 포함 전체</option>${Object.entries(kinds).map(([key,name])=>`<option value="${key}">${name}</option>`).join('')}</select></label></div><p class="fineprint">전체 지도에는 기업 관계와 제품·사업 부문·실적 요인·확보한 매출 구성이 표시됩니다. 천체를 누르면 주변이 확대되고 아래에 관계 근거가 표시됩니다. 기업 상세는 근거 패널의 링크로 열 수 있습니다. 밝은 화살표는 공급사 → 고객사 또는 모회사 → 자회사 방향이며, 협력·경쟁에는 방향을 부여하지 않습니다. 실선은 출처로 확인한 관계이며 점선은 공시의 사업 범위를 대조한 분석용 비교입니다. 거리는 직접 관계·연결 단계와 탐색 우선순위 기준이며 실제 지분율·거래액·경제적 영향도가 아닙니다.</p><details class="company-graph-method"><summary>표시 순서·자료 범위·수집 방법</summary><p>전체 지도는 현재 관계 필터와 확보한 사업 요소 전체를 표시하며 목록은 기업 관계만 8개씩 나눕니다. 비중 기준을 제품·사업 부문 등으로 바꾸면 해당 기준의 최신 매출 비중을 우선 배치합니다. 비중이 없는 연결의 크기를 추정하지 않습니다. 같은 사업 키워드는 가깝게 배치하지만 실제 거래나 정량 영향력을 뜻하지 않습니다. 한 관계의 대표 근거는 기업·공시 원문을 우선하고 같은 등급에서는 최근 진술을 사용합니다. 직접 공급·고객·소유·사업 연결을 우선 배치하고 더 먼 연결은 바깥으로 배치합니다. 사업 규모나 투자 중요도 점수가 아닙니다. 발표된 계획과 현재 이행을 구분하며, 공개되지 않은 상대 회사는 추정하지 않습니다.</p><div id="companyReportAnalysis"></div></details><p id="companyRelationSummary" class="fineprint"></p><div class="company-graph-layout"><div id="companyGraph" role="region" aria-label="기업 3차원 관계도"></div><aside id="companyRelationFocus" class="company-fact" aria-live="polite"></aside></div><div id="companyRelationList"></div><div id="companyRelationPages"></div></section>
       <section id="companyProductsSection"><h3>제품·서비스</h3><div id="companyProducts" class="company-fact-grid"></div><div id="companyProductPages"></div><details class="company-appendix"><summary>제품·서비스 공시 발췌</summary><div id="companyProductOriginals" class="company-fact-grid"></div></details></section>
       <section id="companyDriversSection"><h3>실적에 관련된 요인</h3><p class="fineprint">원자료에 제시된 사업 조건·투입 요소를 정리합니다.</p><div id="companyDrivers" class="company-fact-grid"></div><details class="company-appendix"><summary>사업 조건·위험 요인 공시 발췌</summary><div id="companyDriverOriginals" class="company-fact-grid"></div></details></section>
       <section id="companyPeersSection"><h3>동일 섹터 기업 탐색</h3><p class="fineprint">시가총액순으로 수집된 동일 분류 기업 최대 80개입니다. 동일 섹터 분류만으로 직접 경쟁 관계를 뜻하지 않습니다. 전체 기업은 섹터 목록에서 볼 수 있습니다.</p><div id="companyPeers"></div><div id="companyPeerPages"></div></section>
       <section id="companyFinancialsSection"><h3>공시·재무 원자료</h3><p class="fineprint">재무 수치는 공시에 보고된 값이며 앱에서 재계산하지 않습니다. 매출·이익은 표에 표시한 연간 기간, 자산·부채·자본은 기말 기준입니다. 최신 분기 수치 또는 예상치와 혼동하지 마세요.</p><div id="companyFinancials"></div><div id="companyFilings"></div></section>
       <section id="companySourcesSection"><details id="companySourceDetails" class="detail-sources-toggle"><summary id="companySourceCount">출처 모음</summary><p class="fineprint">기업·공시 원문과 정보 제공사·공개 조사를 모았습니다. 본문의 번호를 누르면 해당 출처로 이동합니다. 기업 발표는 해당 기업의 진술이며 독립적인 계약 이행 검증을 뜻하지 않습니다.</p><div id="companySources"></div></details></section>`;
     $('#marketDetail').after(panel);
-    constellation=window.MilkywayConstellation?.create($('#companyGraph'),{select:node=>{selected=Number.isInteger(node?.index)?node.index:null;focus();},edge:edge=>{selected=edge.index;focus();}});
+    constellation=window.MilkywayConstellation?.create($('#companyGraph'),{select:inspectElement,edge:edge=>{if(edge.element){inspectElement(edge.element);return;}selected=edge.index;focus();}});
     const pricePanel=document.createElement('div');pricePanel.id='companyLivePrice';
     $('#companyQuote').before(pricePanel);
     prices=window.MilkywayCompanyPrice.create({api:(...args)=>hooks.api(...args),getState:()=>hooks.getState(),target:pricePanel,footer});
@@ -55,7 +55,18 @@
     });
   }
   function footer(nextReading){if(nextReading)reading=nextReading;if(reading){$('#companySourceCount').textContent=`출처 모음 · ${fmt(reading.count,0)}개`;$('#companySources').innerHTML=reading.footer();}}
-  function focus(){
+  function inspectElement(node){
+    graphSelection=node;
+    if(node?.record){
+      selected=null;
+      const detail=node.measure?window.MilkywayConstellationMath.measureText(node.measure):node.description;
+      $('#companyRelationFocus').innerHTML=reading.fact({title:node.name,detail,original:node.original||'',source:node.sources[0]})+(node.measure?'<p class="fineprint">같은 공시·기간·통화·매출 지표의 분모로만 계산합니다. 서로 다른 구분·포함 항목을 합산하지 않습니다. 이익 비중·시장점유율·주가 민감도와 다릅니다.</p>':'');
+      return;
+    }
+    selected=Number.isInteger(node?.index)?node.index:null;renderFocus();
+  }
+  function focus(){graphSelection=null;renderFocus();}
+  function renderFocus(){
     const edge=data?.relations[selected];
     if(!edge){$('#companyRelationFocus').innerHTML='<h4>관계 확인</h4><p>관계도나 아래 목록에서 기업을 선택하세요.</p>';return;}
     const evidence=edge.evidence?.length?edge.evidence:[edge];
@@ -65,13 +76,13 @@
     if(!data)return;
     const filter=$('#companyRelationFilter').value,rows=relationView.select(data.relations,filter),result=window.MilkywayPaging.slice(rows,relationPage);
     relationPage=result.page;
-    $('#companyRelationSummary').textContent=`${filter==='business'?'사업 관계':filter==='all'?'전체 관계':kinds[filter]} ${fmt(rows.length,0)}개 · 주요 연결 최대 8개 확대 · 전체 맞춤으로 불러온 관계 전체 보기 · 목록의 현재 페이지 ${fmt(result.rows.length,0)}개 · 자료에 등록된 기업만 표시`;
+    $('#companyRelationSummary').textContent=`${filter==='business'?'사업 관계':filter==='all'?'전체 관계':kinds[filter]} ${fmt(rows.length,0)}개 · 기업·제품·사업 부문·요인·매출 구성 전체 지도 · 선택하면 주요 연결 최대 8개 확대 · 목록의 현재 페이지 ${fmt(result.rows.length,0)}개 · 자료에 등록된 기업만 표시`;
     for(const option of $('#companyRelationFilter').options){if(kinds[option.value])option.textContent=`${kinds[option.value]} (${fmt(relationView.select(data.relations,option.value).length,0)})`;}
     if(constellation)constellation.set(window.MilkywayConstellationMath.company(data,rows));
     else $('#companyGraph').innerHTML=relationView.draw(data.name,data.symbol,rows)||'<p class="fineprint company-graph-empty">이 조건에서 출처를 확인한 사업 관계가 아직 등록되지 않았습니다. 관계 종류를 바꾸거나 기업 공시·자료 수집 상태를 확인하세요.</p>';
     $('#companyRelationList').innerHTML=result.rows.map(edge=>{const item=relationView.lead(edge);return `<div class="company-relation-row"><span class="relation-kind relation-${esc(edge.kind)}">${esc(kinds[edge.kind])}</span><div class="company-relation-business"><strong>${companyLink(edge)}</strong>${reading.business(edge)}<p><span class="fineprint">관계 근거</span> ${esc(item.detail||'사업 역할 설명 미등록')}</p></div><small>${esc(item.source.as_of||'기준일 미제공')} · ${esc(level[item.source.level])}${item.reverse?' · 역방향 표시':''}${edge.evidence?.length>1?' · 근거 '+fmt(edge.evidence.length,0)+'건':''}</small><button class="ghost compact" type="button" data-relation-index="${edge.index}" aria-label="${esc(edge.name)} 관계·출처">관계·출처</button>${['supplier','customer','partner','competitor'].includes(edge.kind)?`<button class="ghost compact" data-network-via="${esc(edge.target_id)}" aria-label="${esc(edge.name)} 업계 연결">업계 연결</button>`:''}</div>`;}).join('');
     $('#companyRelationPages').innerHTML=window.MilkywayPaging.controls(result,'data-relation-page');
-    selected??=result.rows[0]?.index;focus();
+    if(graphSelection)inspectElement(graphSelection);else{selected??=result.rows[0]?.index;focus();}
   }
   function products(){const result=window.MilkywayPaging.slice(data.products.filter(row=>!row.original),productPage);productPage=result.page;$('#companyProducts').innerHTML=result.rows.length?result.rows.map(fact).join(''):'<p class="fineprint">검토된 제품·서비스 정리 수신 대기</p>';$('#companyProductPages').innerHTML=window.MilkywayPaging.controls(result,'data-product-page');$('#companyProductOriginals').innerHTML=data.products.filter(row=>row.original).map(fact).join('')||'<p class="fineprint">확보한 발췌 없음</p>';}
   function peers(){
@@ -131,7 +142,7 @@
   async function present(path,hash,nextSector,nextSymbol,key,push){
     const parentCompany=entityKey,origin=nextSector||sector||history.state?.companyOrigin||null;
     sector=origin;symbol=nextSymbol;entityKey=key;loadPath=path;data=null;signature='';
-    network.reset();prices.clear();constellation?.clear();++epoch;relationPage=productPage=peerPage=1;selected=null;reading=null;revenueGroup=null;$('#companyRelationFilter').value='all';$('#companySourceDetails').open=false;
+    network.reset();prices.clear();constellation?.clear();++epoch;relationPage=productPage=peerPage=1;selected=null;graphSelection=null;reading=null;revenueGroup=null;$('#companyRelationFilter').value='all';$('#companySourceDetails').open=false;
     hooks.openWorkspace('company',false);
     if(push)history.pushState({companyOrigin:origin,parentCompany},'',hash);
     $('#companyTitle').textContent='기업 자료를 불러오고 있습니다';$('#companyError').textContent='';

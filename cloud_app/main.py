@@ -1807,6 +1807,14 @@ def personal_energy_constellation(user: User = Depends(current_user)):
     return snapshot(settings)
 
 
+@app.get("/api/energy-constellation/search")
+def personal_constellation_evidence(q: str = Query(min_length=1, max_length=240),
+                                   user: User = Depends(current_user)):
+    _rate_limit("constellation-evidence:" + user.id, 60, 3600)
+    from .constellation_retrieval import search
+    return search(settings, q)
+
+
 @app.get("/api/company-entities/{entity_key}")
 def personal_company_entity(entity_key: str, user: User = Depends(current_user)):
     from .company_entities import entity_snapshot
