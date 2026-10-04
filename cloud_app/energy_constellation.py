@@ -233,13 +233,13 @@ def _build(graph):
         edge(group, key, 'classification', '편집한 사업 분류 · 공식 지수 구성이나 거래 관계와 구별', origin, True)
         full_profile = enrich(CompanyKnowledge.model_validate_json(stored_profiles[key]) if key in stored_profiles
                               else CompanyKnowledge(name=profile['name'], symbol=item.symbol)).model_dump(mode='json')
-        for index, (field, product) in enumerate((field, card) for field in ('products', 'segments', 'drivers', 'facts') for card in full_profile.get(field, [])):
+        for index, (field, local_index, product) in enumerate((field, i, card) for field in ('products', 'segments', 'drivers', 'facts') for i,card in enumerate(full_profile.get(field, []))):
             topic = f'{field}:{item.symbol}:{index}'
             source = _origin(product.get('source'))
             if not source:
                 continue
             nodes[topic] = dict(id=topic, name=product['title'], kind='factor' if field == 'drivers' else 'segment' if field == 'segments' else 'product', symbol=item.symbol,
-                                description=product['detail'], original=product.get('original', ''), sources=[source])
+                                description=product['detail'], original=product.get('original', ''), sources=[source], semantic_id=f'{key}:{field}:{local_index}')
             edge(key, topic, 'exposure' if field == 'drivers' else 'business_scope',
                  '출처에 근거한 사업 영향·분석 기준. 영향의 크기·부호를 계산한 값은 아닙니다.' if field == 'drivers' else '공시에서 확인한 제품·설비·사업 범위. 별도 기업이나 외부 거래가 아닙니다.', source, field == 'drivers')
         latest = {}
@@ -255,7 +255,7 @@ def _build(graph):
             measure.update(share_pct=share, exclusion=row['share_exclusion'] or ('내부 거래 포함' if row['includes_intersegment'] else '일치하는 분모 미확인' if share is None else ''))
             topic = f'revenue:{item.symbol}:{index}'
             nodes[topic] = dict(id=topic, name=row['label'], kind='revenue', symbol=item.symbol,
-                description='같은 공시·기간·통화·매출 지표의 구성 항목입니다. 서로 다른 구분이나 포함 항목을 합산하지 않습니다.', measure=measure, latest=row['end'] == latest[row['group']], sources=[source])
+                description='같은 공시·기간·통화·매출 지표의 구성 항목입니다. 서로 다른 구분이나 포함 항목을 합산하지 않습니다.', measure=measure, latest=row['end'] == latest[row['group']], sources=[source], semantic_id=f'{key}:revenue:{index}')
             identity = 'revenue:' + topic
             edge(key, topic, 'revenue', nodes[topic]['description'], source, identity=identity)
             edges[identity].update(measure=measure, latest=row['end'] == latest[row['group']])

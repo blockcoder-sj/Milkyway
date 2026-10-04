@@ -5,6 +5,7 @@ requirements-lock.lock with --require-hashes --only-binary=:all:.
 Then build the image, run tests, and audit before accepting the new locks.
 """
 
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -18,7 +19,10 @@ def main() -> None:
     if sys.version_info[:2] != (3, 11) or sys.platform != "linux":
         raise SystemExit("Lock generation requires Python 3.11 on Linux")
     root = Path(__file__).resolve().parents[1]
-    for name in ("requirements", "requirements-audit", "requirements-lock"):
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--only',choices=('requirements','requirements-audit','requirements-lock','requirements-semantic'))
+    args=parser.parse_args()
+    for name in ((args.only,) if args.only else ("requirements", "requirements-audit", "requirements-lock")):
         with tempfile.TemporaryDirectory(prefix="milkyway-lock-") as directory:
             resolved = Path(directory, "resolved.txt")
             subprocess.run([

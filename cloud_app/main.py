@@ -1798,27 +1798,44 @@ def personal_market_detail(instrument_id: str, user: User = Depends(current_user
 @app.get("/api/company-details/{sector_id}/{symbol}")
 def personal_company_detail(sector_id: str, symbol: str, user: User = Depends(current_user)):
     from .company_service import company_snapshot
-    return company_snapshot(settings, sector_id, symbol)
+    from .constellation_semantics import decorate_company
+    return decorate_company(settings, company_snapshot(settings, sector_id, symbol))
 
 
 @app.get("/api/energy-constellation")
 def personal_energy_constellation(user: User = Depends(current_user)):
     from .energy_constellation import snapshot
-    return snapshot(settings)
+    from .constellation_semantics import decorate
+    return decorate(settings, snapshot(settings))
 
 
 @app.get("/api/energy-constellation/search")
 def personal_constellation_evidence(q: str = Query(min_length=1, max_length=240),
+                                   mode: str = Query('keyword', pattern='^(keyword|semantic)$'),
+                                   focus: str | None = Query(None, max_length=160),
                                    user: User = Depends(current_user)):
     _rate_limit("constellation-evidence:" + user.id, 60, 3600)
+    if mode=='semantic':
+        from .constellation_semantics import search
+        return search(settings, q, focus)
     from .constellation_retrieval import search
-    return search(settings, q)
+    return search(settings, q, focus)
+
+
+@app.get('/api/energy-constellation/analysis')
+def personal_constellation_analysis(node_id: str = Query(min_length=1, max_length=160),
+                                    basis: str = Query('relations', pattern='^(relations|product|segment|geography|revenue_type|end_market)$'),
+                                    company: bool = False, user: User = Depends(current_user)):
+    _rate_limit('constellation-analysis:'+user.id,120,3600)
+    from .constellation_semantics import analysis
+    return analysis(settings, node_id, basis, company)
 
 
 @app.get("/api/company-entities/{entity_key}")
 def personal_company_entity(entity_key: str, user: User = Depends(current_user)):
     from .company_entities import entity_snapshot
-    return entity_snapshot(settings, entity_key)
+    from .constellation_semantics import decorate_company
+    return decorate_company(settings, entity_snapshot(settings, entity_key))
 
 
 @app.get("/api/company-entities/{entity_key}/network")

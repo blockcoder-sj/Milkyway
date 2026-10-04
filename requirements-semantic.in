@@ -1,0 +1,5 @@
+# Resolve in the pinned image after requirements.lock; retain the base pins.
+-c requirements.lock
+onnxruntime==1.30.0
+tokenizers==0.23.2
+huggingface-hub==1.33.0

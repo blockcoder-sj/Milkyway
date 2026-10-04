@@ -6,23 +6,46 @@
   function create(target,hooks={}){
     const probe=document.createElement('canvas');
     if(!probe.getContext){return Object.freeze({set(value){target.innerHTML=value.rows?window.MilkywayCompanyRelations.draw(value.root_name,value.root_symbol,value.rows):'관계도를 지원하는 브라우저에서 확인하세요.';},clear(){target.innerHTML='';},highlight(){},focus(){}});}
-    target.innerHTML='<div class="cosmos"><div class="cosmos-toolbar"><label>이름·종목 검색<input class="cosmos-search" type="search" placeholder="기업·제품·외부 요인" autocomplete="off"></label><div class="cosmos-matches"></div><label>공간<select class="cosmos-dimension"><option value="3d">3D 우주 지도</option><option value="2d">2D 펼치기</option></select></label><label>이름표<select class="cosmos-labels"><option value="key">주요 이름</option><option value="more">더 많이</option><option value="off">숨기기</option></select></label><label>비중 기준<select class="cosmos-basis"><option value="relations">사업 연결</option></select></label><button type="button" class="ghost compact cosmos-fit">전체 지도</button><button type="button" class="ghost compact cosmos-near">선택 주변</button><button type="button" class="ghost compact cosmos-in" aria-label="관계도 확대">＋</button><button type="button" class="ghost compact cosmos-out" aria-label="관계도 축소">−</button><button type="button" class="ghost compact cosmos-motion" aria-pressed="false">천천히 회전</button><button type="button" class="ghost compact cosmos-expand">크게 보기</button></div><div class="cosmos-viewport"><canvas class="cosmos-canvas" tabindex="0" role="img" aria-label="3차원 관계도. 방향키로 회전, Shift와 방향키로 대상 선택, Enter로 중심 이동, 더하기·빼기로 확대합니다."></canvas><div class="cosmos-legend"></div><button type="button" class="ghost compact cosmos-return" hidden>전체 지도로 돌아가기</button><p class="cosmos-hint">천체 클릭: 주요 연결 확대·근거 확인 · 전체 지도: 모든 요소 · 드래그: 회전 · Shift+드래그: 이동 · 휠/두 손가락: 확대</p><div class="cosmos-tooltip" hidden></div></div><p class="cosmos-status" role="status"></p></div>';
+    target.innerHTML='<div class="cosmos"><div class="cosmos-toolbar"><label>이름·종목 검색<input class="cosmos-search" type="search" placeholder="기업·제품·외부 요인" autocomplete="off"></label><div class="cosmos-matches"></div><label>공간<select class="cosmos-dimension"><option value="3d">3D 우주 지도</option><option value="2d">2D 펼치기</option></select></label><label>드래그 동작<select class="cosmos-drag"><option value="rotate">회전</option><option value="move">화면 이동</option></select></label><label>이름표<select class="cosmos-labels"><option value="key">주요 이름</option><option value="more">더 많이</option><option value="off">숨기기</option></select></label><label>배치 기준<select class="cosmos-placement"><option value="semantic">의미 유사도</option><option value="structure">연결·사업 키워드</option></select></label><label>비중 기준<select class="cosmos-basis"><option value="relations">사업 연결</option></select></label><button type="button" class="ghost compact cosmos-fit">전체 지도</button><button type="button" class="ghost compact cosmos-near">선택 주변</button><button type="button" class="ghost compact cosmos-in" aria-label="관계도 확대">＋</button><button type="button" class="ghost compact cosmos-out" aria-label="관계도 축소">−</button><button type="button" class="ghost compact cosmos-motion" aria-pressed="false">천천히 회전</button><button type="button" class="ghost compact cosmos-expand">크게 보기</button></div><div class="cosmos-viewport"><canvas class="cosmos-canvas" tabindex="0" role="img" aria-label="3차원 관계도. 방향키로 회전, Alt와 방향키로 화면 이동, Shift와 방향키로 대상 선택, Enter로 중심 이동, 더하기·빼기로 확대합니다."></canvas><div class="cosmos-legend"></div><button type="button" class="ghost compact cosmos-return" hidden>전체 지도로 돌아가기</button><p class="cosmos-hint">천체 클릭: 주요 연결 확대·근거 확인 · 전체 지도: 모든 요소 · 드래그 동작: 회전/화면 이동 선택 · 우클릭·Shift+드래그: 이동 · 두 손가락: 이동·핀치 확대 · 휠: 확대</p><div class="cosmos-tooltip" hidden></div></div><p class="cosmos-status" role="status"></p><div class="cosmos-analysis" aria-live="polite"></div></div>';
     const $=name=>target.querySelector('.cosmos-'+name),canvas=$('canvas'),ctx=canvas.getContext('2d');
     if(!ctx){target.textContent='이 브라우저에서 관계도 화면을 만들지 못했습니다. 아래 관계 목록에서 확인하세요.';return Object.freeze({set(){},clear(){},highlight(){},focus(){}});}
     const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
     const camera={yaw:0,pitch:0,zoom:1,panX:0,panY:0,eye:5000,scale:.2};
     let model=null,nodes=[],screen=[],focus=null,hover=null,frame=0,active=false,visible=true,auto=false,last=0,transition=null;
-    let width=1,height=1,pointer=null,pinched=false,pinch=0,signature='',keyboard=0,selectedEdge=null;
+    let width=1,height=1,pointer=null,pinched=false,pinch=0,pinchCenter=null,signature='',keyboard=0,selectedEdge=null;
     let lastFocus=null,view='all',nearby=new Set(),extent=160,fullExtent=160;
     const touches=new Map(),stars=Array.from({length:110},(_,i)=>({x:G.hash('sx'+i)%10000/10000,y:G.hash('sy'+i)%10000/10000,r:i%9===0?1:.55}));
-    let evidenceSerial=0;
+    let evidenceSerial=0,analysisSerial=0,analysisButton,evidenceButton;
     if(hooks.evidenceSearch){
-      const button=document.createElement('button');button.type='button';button.className='ghost compact';button.textContent='자료 근거 검색';
+      const control=document.createElement('label');control.textContent='자료 검색';
+      const mode=document.createElement('select');mode.className='cosmos-search-mode';
+      for(const [value,label] of [['semantic','의미 검색'],['keyword','단어 검색']]){const o=document.createElement('option');o.value=value;o.textContent=label;mode.append(o);}
+      control.append(mode);$('search').parentElement.after(control);
+    }
+    if(hooks.analysis){
+      const button=document.createElement('button');button.type='button';button.className='ghost compact';button.textContent='연관성 분석';analysisButton=button;$('search').parentElement.after(button);
+      button.addEventListener('click',async()=>{
+        if(!model)return;const token=++analysisSerial,owner=model,id=focus;
+        button.disabled=true;button.textContent='근거 분석 중…';
+        try{const result=await hooks.analysis(model.nodes.find(n=>n.id===id),$('basis').value);
+          if(token!==analysisSerial||!active||model!==owner||focus!==id)return;
+          const esc=v=>window.MilkywayResearchView.escape(v);
+          const cite=s=>{try{const u=new URL(s?.url);if(u.protocol!=='https:'||u.username||u.password)return '';return `<a href="${esc(u.href)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>`;}catch{return '';}};
+          const item=n=>model.nodes.some(p=>p.id===n.node_id)?`<button type="button" class="ghost compact" data-analysis-focus="${esc(n.node_id)}">${esc(n.name)}</button>`:/^c_[a-f0-9]{32}$/.test(n.company_id||n.node_id||'')?`<a data-company-id="${esc(n.company_id||n.node_id)}" href="#company/${esc(n.company_id||n.node_id)}">${esc(n.name)} · 기업 구조 보기</a>`:`<strong>${esc(n.name)}</strong>`;
+          $('analysis').innerHTML=`<div class="cosmos-analysis-head"><h4>${esc(result.name)} · 근거 기반 연관성</h4><button type="button" class="ghost compact" data-analysis-close>접기</button></div><p>${esc(result.method)}</p><div class="cosmos-analysis-grid"><section><h5>출처로 확인한 연결</h5>${result.confirmed.map(n=>`<div>${item(n)}<p>${esc(n.detail)}</p>${cite(n.citation)}</div>`).join('')||'<p>확보한 거래·소유 연결 없음</p>'}</section><section><h5>설명의 의미가 비슷한 요소</h5><p>의미 유사도는 거래 관계·사업 비중이 아닙니다.</p>${result.similar.map(n=>`<div>${item(n)}<small>의미 유사도 ${Number(n.similarity).toFixed(3)}</small>${n.sources.map(cite).join('')}</div>`).join('')||'<p>이 범위에서 추천할 유사 요소 없음</p>'}</section><section><h5>공통·외부 요인으로 연결되는 경로</h5><p>기존 연결을 따라 탐색한 경로이며 인과·영향 크기를 계산하지 않습니다.</p>${result.paths.map(n=>`<div>${item(n)}${n.steps.map(step=>`<p>${esc(step.from_name)} → ${esc(step.to_name)} · ${esc(step.analytical?'분석·분류 경로':'확인된 연결')}<br>${esc(step.detail)} ${cite(step.citation)}</p>`).join('')}</div>`).join('')||'<p>확보한 3단계 이내 경로 없음</p>'}</section><section><h5>선택 기준의 공시 매출 구성</h5><p>구분·합계·포함 항목을 합산하지 않습니다. 매출 비중은 이익·주가 영향도가 아닙니다.</p>${result.revenue.map(n=>`<div><strong>${esc(n.name)}</strong><p>${esc(G.measureText(n.measure))}</p>${cite(n.citation)}</div>`).join('')||'<p>현재 비중 기준에서 확보한 매출 항목 없음</p>'}</section></div>`;
+          $('analysis').querySelector('[data-analysis-close]').addEventListener('click',()=>{$('analysis').replaceChildren();});
+          for(const b of $('analysis').querySelectorAll('[data-analysis-focus]'))b.addEventListener('click',()=>pick(b.dataset.analysisFocus));
+        }catch(error){if(token===analysisSerial&&active&&model===owner&&focus===id)$('analysis').textContent=error.message;}
+        finally{if(token===analysisSerial){button.disabled=false;button.textContent='연관성 분석';}}
+      });
+    }
+    if(hooks.evidenceSearch){
+      const button=document.createElement('button');button.type='button';button.className='ghost compact';button.textContent='자료 근거 검색';evidenceButton=button;
       $('search').parentElement.after(button);
       button.addEventListener('click',async()=>{
         const q=$('search').value.trim(),token=++evidenceSerial,owner=model;
         if(!q||!model)return;button.disabled=true;button.textContent='자료 근거 검색 중…';
-        try{const result=await hooks.evidenceSearch(q);if(token!==evidenceSerial||!active||model!==owner||$('search').value.trim()!==q)return;
+        try{const result=await hooks.evidenceSearch(q,$('search-mode').value,model.focus_id);if(token!==evidenceSerial||!active||model!==owner||$('search').value.trim()!==q)return;
           $('matches').replaceChildren(...result.rows.map(hit=>{const item=document.createElement('button');item.type='button';item.className='ghost compact';item.textContent=hit.title+' · 근거 발췌: '+hit.excerpt;
             item.addEventListener('click',()=>{pick(hit.node_id);const edge=model.edges.find(e=>e.id===hit.edge_id);if(edge){selectedEdge=edge.id;hooks.edge?.(edge);}request();});return item;}));
           if(!result.rows.length){const empty=document.createElement('span');empty.textContent='이 키워드와 일치하는 자료 근거가 없습니다.';$('matches').replaceChildren(empty);}
@@ -42,13 +65,13 @@
       canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);fit();}
     function rebuild(id,animate=true,overview=false){
       if(!model)return;
-      const next=G.layout(model.nodes,model.edges,id,$('dimension').value==='2d',$('basis').value);
+      const next=G.layout(model.nodes,model.edges,id,$('dimension').value==='2d',$('basis').value,$('placement').value==='semantic');
       const before=new Map(nodes.map(n=>[n.id,n]));focus=id;hover=null;keyboard=0;selectedEdge=null;
-      nodes=next;transition=animate&&before.size&&!reduced.matches?{start:performance.now(),from:before,to:next}:null;
+      $('analysis').replaceChildren();nodes=next;transition=animate&&before.size&&!reduced.matches?{start:performance.now(),from:before,to:next}:null;
       const neighbours=G.neighbourhood(next);nearby=new Set(neighbours.map(n=>n.id));
       fullExtent=Math.max(160,...next.map(n=>Math.hypot(n.x,n.y,n.z)));
       view=overview?'all':'focus';extent=overview?fullExtent:Math.max(100,...neighbours.map(n=>Math.hypot(n.x,n.y,n.z)))*1.15;
-      canvas.setAttribute('aria-label',(model.nodes.find(n=>n.id===id)?.name||'관계도')+' 중심 · 방향키로 회전, Shift+방향키 대상 선택, Enter 중심 이동');
+      canvas.setAttribute('aria-label',(model.nodes.find(n=>n.id===id)?.name||'관계도')+' 중심 · 방향키로 회전, Alt+방향키 화면 이동, Shift+방향키 대상 선택, Enter 중심 이동');
       camera.panX=camera.panY=0;camera.zoom=1;fit();hooks.select?.(model.nodes.find(n=>n.id===id),next);request();
     }
     function pick(id){if(model?.nodes.some(n=>n.id===id)){lastFocus=id;rebuild(id);$('search').value=model.nodes.find(n=>n.id===id).name;$('matches').replaceChildren();}}
@@ -115,30 +138,31 @@
     }
     const coordinates=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
     function hit(p){let best=null,distance=Infinity;for(const n of screen){const d=Math.hypot(n.sx-p.x,n.sy-p.y);if(d<n.radius+5&&(d<distance||d===distance&&n.depth<best.depth)){best=n;distance=d;}}return best;}
-    function showHover(id){hover=id;const n=model?.nodes.find(n=>n.id===id),tooltip=$('tooltip');tooltip.hidden=!n;if(n){tooltip.textContent=n.name+' · '+(labels[n.kind]||'연결 기업')+' · '+G.topic(n)+(n.measure?' · '+G.measureText(n.measure):'');canvas.setAttribute('aria-label',tooltip.textContent+' · Enter로 중심 이동, 방향키 회전, Shift+방향키 대상 선택');}else if(model){canvas.setAttribute('aria-label',(model.nodes.find(n=>n.id===focus)?.name||'관계도')+' 중심 · 방향키로 회전, Shift+방향키 대상 선택, Enter 중심 이동');}request();}
-    canvas.addEventListener('pointerdown',e=>{if(e.button!==0&&e.pointerType!=='touch')return;const p=coordinates(e);touches.set(e.pointerId,p);canvas.setPointerCapture(e.pointerId);pointer={id:e.pointerId,start:p,last:p,moved:false,pan:e.shiftKey||$('dimension').value==='2d'};
+    function showHover(id){hover=id;const n=model?.nodes.find(n=>n.id===id),tooltip=$('tooltip');tooltip.hidden=!n;if(n){tooltip.textContent=n.name+' · '+(labels[n.kind]||'연결 기업')+' · '+G.topic(n)+(n.measure?' · '+G.measureText(n.measure):'');canvas.setAttribute('aria-label',tooltip.textContent+' · Enter로 중심 이동, 방향키 회전, Shift+방향키 대상 선택');}else if(model){canvas.setAttribute('aria-label',(model.nodes.find(n=>n.id===focus)?.name||'관계도')+' 중심 · 방향키로 회전, Alt+방향키 화면 이동, Shift+방향키 대상 선택, Enter 중심 이동');}request();}
+    canvas.addEventListener('pointerdown',e=>{if(![0,1,2].includes(e.button)&&e.pointerType!=='touch')return;const p=coordinates(e);touches.set(e.pointerId,p);canvas.setPointerCapture(e.pointerId);pointer={id:e.pointerId,start:p,last:p,moved:false,pan:e.shiftKey||e.button===1||e.button===2||$('drag').value==='move'||$('dimension').value==='2d',select:e.button===0||e.pointerType==='touch'};
       if(touches.size===1)pinched=false;
-      if(touches.size===2){const[a,b]=[...touches.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);pinched=true;}});
+      if(touches.size===2){const[a,b]=[...touches.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);pinchCenter={x:(a.x+b.x)/2,y:(a.y+b.y)/2};pinched=true;}});
     canvas.addEventListener('pointermove',e=>{const p=coordinates(e);if(touches.has(e.pointerId))touches.set(e.pointerId,p);
-      if(touches.size>=2){const[a,b]=[...touches.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch)camera.zoom=G.clamp(camera.zoom*d/pinch,.4,20);pinch=d;fit();return;}
+      if(touches.size>=2){const[a,b]=[...touches.values()],d=Math.hypot(a.x-b.x,a.y-b.y);const center={x:(a.x+b.x)/2,y:(a.y+b.y)/2};if(pinchCenter){camera.panX+=center.x-pinchCenter.x;camera.panY+=center.y-pinchCenter.y;}if(pinch)camera.zoom=G.clamp(camera.zoom*d/pinch,.4,20);pinch=d;pinchCenter=center;transition=null;fit();return;}
       if(pointer?.id===e.pointerId){const dx=p.x-pointer.last.x,dy=p.y-pointer.last.y;if(Math.hypot(p.x-pointer.start.x,p.y-pointer.start.y)>4)pointer.moved=true;
         if(pointer.moved){transition=null;if(pointer.pan){camera.panX+=dx;camera.panY+=dy;}else{camera.yaw+=dx*.006;camera.pitch=G.clamp(camera.pitch+dy*.006,-1.4,1.4);}pointer.last=p;request();}return;}
       const id=hit(p)?.id||null;if(id!==hover)showHover(id);
     });
     canvas.addEventListener('pointerup',e=>{const p=coordinates(e),moved=pointer?.moved;touches.delete(e.pointerId);
-      if(!moved&&!pinched&&model){const n=hit(p);if(n)pick(n.id);else{
+      if(pointer?.id===e.pointerId&&pointer.select&&!moved&&!pinched&&model){const n=hit(p);if(n)pick(n.id);else{
         const positions=new Map(screen.map(n=>[n.id,n]));let best=null,bestDistance=6;
         for(const edge of model.edges){if(edge.source!==focus&&edge.target!==focus)continue;const a=positions.get(edge.source),b=positions.get(edge.target);if(!a||!b)continue;
           const dx=b.sx-a.sx,dy=b.sy-a.sy,t=G.clamp(((p.x-a.sx)*dx+(p.y-a.sy)*dy)/(dx*dx+dy*dy||1),0,1),d=Math.hypot(p.x-a.sx-t*dx,p.y-a.sy-t*dy);if(d<bestDistance){best=edge;bestDistance=d;}}
         if(best){selectedEdge=best.id;hooks.edge?.(best);}
-      }}pointer=null;if(!touches.size){pinched=false;pinch=0;}else{const[id,last]=[...touches][0];pointer={id,last,start:last,moved:true,pan:false};}request();
+      }}pointer=null;if(!touches.size){pinched=false;pinch=0;pinchCenter=null;}else{const[id,last]=[...touches][0];pointer={id,last,start:last,moved:true,pan:$('drag').value==='move'||$('dimension').value==='2d',select:false};}request();
     });
-    canvas.addEventListener('pointercancel',e=>{touches.delete(e.pointerId);pointer=null;pinch=0;pinched=true;});
+    canvas.addEventListener('pointercancel',e=>{touches.delete(e.pointerId);pointer=null;pinch=0;pinchCenter=null;pinched=true;});
     canvas.addEventListener('pointerleave',()=>showHover(null));
     function zoom(multiplier){camera.zoom=G.clamp(camera.zoom*multiplier,.4,20);fit();}
-    canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?.9:1.1);},{passive:false});
+    canvas.addEventListener('contextmenu',e=>e.preventDefault());
+    canvas.addEventListener('wheel',e=>{e.preventDefault();if(e.shiftKey||!e.ctrlKey&&Math.abs(e.deltaX)>Math.abs(e.deltaY)){camera.panX-=e.deltaX||e.deltaY;camera.panY-=e.shiftKey?0:e.deltaY;transition=null;request();}else if(e.deltaY)zoom(e.deltaY>0?.9:1.1);},{passive:false});
     canvas.addEventListener('keydown',e=>{
-      if(e.key.startsWith('Arrow')){e.preventDefault();if(e.shiftKey){const choices=view==='focus'?nodes.filter(n=>nearby.has(n.id)):nodes;keyboard=(keyboard+(e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:1)+choices.length)%Math.max(1,choices.length);showHover(choices[keyboard]?.id);}
+      if(e.key.startsWith('Arrow')){e.preventDefault();if(e.altKey){camera.panX+=e.key==='ArrowLeft'?-30:e.key==='ArrowRight'?30:0;camera.panY+=e.key==='ArrowUp'?-30:e.key==='ArrowDown'?30:0;transition=null;}else if(e.shiftKey){const choices=view==='focus'?nodes.filter(n=>nearby.has(n.id)):nodes;keyboard=(keyboard+(e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:1)+choices.length)%Math.max(1,choices.length);showHover(choices[keyboard]?.id);}
         else{if(e.key==='ArrowLeft')camera.yaw-=.12;if(e.key==='ArrowRight')camera.yaw+=.12;if(e.key==='ArrowUp')camera.pitch=G.clamp(camera.pitch-.12,-1.4,1.4);if(e.key==='ArrowDown')camera.pitch=G.clamp(camera.pitch+.12,-1.4,1.4);}request();}
       else if(e.key==='Enter'&&hover){e.preventDefault();pick(hover);}else if(e.key==='+'||e.key==='='){e.preventDefault();zoom(1.2);}else if(e.key==='-'){e.preventDefault();zoom(.8);}else if(e.key==='Escape'&&model){e.preventDefault();rebuild(model.focus_id);$('search').value='';}
     });
@@ -146,7 +170,7 @@
       $('matches').replaceChildren(...matches.map(n=>{const button=document.createElement('button');button.type='button';button.className='ghost compact';button.textContent=n.name+' · '+(labels[n.kind]||'기업');button.addEventListener('click',()=>pick(n.id));return button;}));});
     $('search').addEventListener('keydown',e=>{if(e.key==='Enter'){$('matches').querySelector('button')?.click();}if(e.key==='Escape'){$('matches').replaceChildren();}});
     function overview(){if(!model)return;rebuild(model.focus_id,false,true);fit(true);$('search').value='';}
-    $('fit').addEventListener('click',overview);$('return').addEventListener('click',overview);$('near').addEventListener('click',()=>pick(lastFocus||focus));$('basis').addEventListener('change',()=>rebuild(focus,false,view==='all')); $('in').addEventListener('click',()=>zoom(1.25));$('out').addEventListener('click',()=>zoom(.8));
+    $('fit').addEventListener('click',overview);$('return').addEventListener('click',overview);$('near').addEventListener('click',()=>pick(lastFocus||focus));$('placement').addEventListener('change',()=>rebuild(focus,false,view==='all'));$('basis').addEventListener('change',()=>rebuild(focus,false,view==='all')); $('in').addEventListener('click',()=>zoom(1.25));$('out').addEventListener('click',()=>zoom(.8));
     $('dimension').addEventListener('change',()=>{auto=false;motion();camera.yaw=camera.pitch=0;rebuild(focus,false,view==='all');});$('labels').addEventListener('change',request);
     function motion(){$('motion').setAttribute('aria-pressed',String(auto));$('motion').textContent=auto?'회전 멈춤':'천천히 회전';$('motion').disabled=reduced.matches||$('dimension').value==='2d';}
     $('motion').addEventListener('click',()=>{auto=!auto&&!reduced.matches;motion();request();});
@@ -156,15 +180,17 @@
     document.addEventListener('visibilitychange',()=>{if(document.hidden)cancel();else request();});
     reduced.addEventListener('change',()=>{if(reduced.matches){auto=false;transition=null;motion();cancel();request();}});
     return Object.freeze({set(value){
-      const next=JSON.stringify([value.focus_id,value.nodes.map(n=>[n.id,n.name,n.kind,n.index,n.measure,n.description,n.original]),value.edges.map(e=>[e.id,e.kind,e.measure,e.latest])]);
+      const next=JSON.stringify([value.focus_id,value.nodes.map(n=>[n.id,n.name,n.kind,n.index,n.measure,n.description,n.original,n.semantic]),value.edges.map(e=>[e.id,e.kind,e.measure,e.latest])]);
       model=value;active=true;
       if(next!==signature){signature=next;lastFocus=value.focus_id;
+        $('placement').value=value.semantic_status==='ready'?'semantic':'structure';$('placement').options[0].disabled=value.semantic_status!=='ready';
+        if(hooks.evidenceSearch){$('search-mode').value=value.semantic_status==='ready'?'semantic':'keyword';}
         const groups=value.revenue_groups||[...new Set(value.edges.filter(e=>e.kind==='revenue').map(e=>e.measure.group))];
         $('basis').replaceChildren(...['relations',...groups].map(g=>{const o=document.createElement('option');o.value=g;o.textContent=g==='relations'?'사업 연결':G.revenueGroups[g]+' 매출 비중';return o;}));$('basis').value=groups.includes('product')?'product':groups.includes('segment')?'segment':'relations';nodes=[];auto=false;motion();$('search').value='';$('matches').replaceChildren();
         const counts=new Map();for(const n of value.nodes)counts.set(n.kind,(counts.get(n.kind)||0)+1);
         $('legend').replaceChildren(...[...counts].map(([kind,count])=>{const span=document.createElement('span');span.className='cosmos-kind cosmos-'+kind;span.textContent=(labels[kind]||kind)+' '+count;return span;}));rebuild(value.focus_id,false,true);}
       resize();request();
-    },clear(){active=false;auto=false;transition=null;model=null;nodes=[];screen=[];signature='';touches.clear();pointer=null;cancel();$('matches').replaceChildren();$('tooltip').hidden=true;ctx.clearRect(0,0,width,height);},
+    },clear(){active=false;auto=false;transition=null;model=null;nodes=[];screen=[];signature='';touches.clear();pointer=null;cancel();$('analysis').replaceChildren();++analysisSerial;++evidenceSerial;if(analysisButton){analysisButton.disabled=false;analysisButton.textContent='연관성 분석';}if(evidenceButton){evidenceButton.disabled=false;evidenceButton.textContent='자료 근거 검색';}$('matches').replaceChildren();$('tooltip').hidden=true;ctx.clearRect(0,0,width,height);},
     focus:pick,highlight(index){const n=model?.nodes.find(n=>n.index===index);if(n)pick(n.id);}});
   }
   window.MilkywayConstellation=Object.freeze({create});

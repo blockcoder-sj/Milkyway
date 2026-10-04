@@ -23,8 +23,9 @@ COPY --from=pgtools /usr/lib/postgresql/16/bin/pg_restore /usr/local/bin/pg_rest
 RUN pg_dump --version && pg_restore --version
 
 WORKDIR /app
-COPY requirements.lock ./
+COPY requirements.lock requirements-semantic.lock ./
 RUN pip install --require-hashes --only-binary=:all: -r requirements.lock \
+    && pip install --require-hashes --only-binary=:all: -r requirements-semantic.lock \
     && pip uninstall -y setuptools wheel
 
 COPY --chown=app:app . .

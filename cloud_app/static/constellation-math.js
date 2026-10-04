@@ -37,19 +37,26 @@
   }
   const topics=[['원유',/원유|crude|upstream/i],['가스·LNG',/천연가스|\blng\b|natural gas|액화|\bngl\b/i],['정유·연료',/정유|refin|연료|fuel/i],['운송·저장',/운송|저장|파이프라인|midstream|pipeline|shipping|storage/i],['시추·서비스',/시추|유정|리그|drilling|fractur|oilfield/i],['전력',/발전|전력|electric|power/i],['석탄',/석탄|\bcoal\b/i],['우라늄',/우라늄|원자력|uranium|nuclear/i],['화학',/화학|chemical/i],['재생 에너지',/재생|바이오|renewable|biofuel/i]];
   function topic(n){const text=(n.name||'')+' '+(n.description||'');return topics.find(([,re])=>re.test(text))?.[0]||({issuer:'기업',company:'기업',product:'사업 요소',segment:'사업 부문',factor:'사업 요인',revenue:revenueGroups[n.measure?.group]||'매출 구성',group:'업종',sector:'섹터'}[n.kind]||'기타');}
-  function layout(nodes,edges,focus,flat=false,basis='relations'){
+  function layout(nodes,edges,focus,flat=false,basis='relations',semantic=true){
     const ordered=rank(nodes,edges,focus,basis),groups=new Map(),out=[];
     for(const n of ordered){if(!groups.has(n.hops))groups.set(n.hops,[]);groups.get(n.hops).push(n);}
     // The selected neighbourhood does not expand when unrelated nodes are added.
     // Overlap is allowed; projection must never move planets into vacant slots.
     for(const[hop,group]of groups){
       if(hop===0){out.push({...group[0],x:0,y:0,z:0});continue;}
-      const base=[0,65,210,410,700][hop],range=[0,60,70,120,0][hop],top=group[0].priority||1;
+      const base=[0,24,55,92,132][hop],range=[0,18,24,36,20][hop],top=group[0].priority||1;
       for(let i=0;i<group.length;i++){
         const n=group[i],category=topic(n),known=topics.findIndex(([name])=>name===category);
         const angle=known>=0?known*Math.PI*2/topics.length+(hash(n.id)%1000/1000-.5)*.65:i*golden+(hash(n.id)%1000)/10000;
         const vertical=flat?0:known>=0?.55*Math.sin(known*golden)+(hash(n.id+'z')%1000/1000-.5)*.25:.65*Math.sin(angle*.7+.4),ring=Math.sqrt(1-vertical*vertical);
-        const radius=base+range*(1-n.priority/top)+Math.sqrt(i)*[0,14,18,20,22][hop];
+        // Dense groups may overlap. Adding thousands of elements must not
+        // push nearby business elements hundreds of units away from the focus.
+        const radius=base+range*(1-n.priority/top)+Math.log2(i+1)*[0,2.7,3,3.5,4][hop];
+        const position=semantic&&n.semantic?.position;
+        if(Array.isArray(position)&&position.length===3&&position.every(Number.isFinite)){
+          const norm=Math.hypot(position[0],position[1],flat?0:position[2])||1;
+          out.push({...n,category:n.semantic.label,x:position[0]/norm*radius,y:position[1]/norm*radius,z:flat?0:position[2]/norm*radius});continue;
+        }
         out.push({...n,category,x:Math.cos(angle)*ring*radius,y:Math.sin(angle)*ring*radius,z:vertical*radius});
       }
     }return out;
@@ -85,7 +92,8 @@
       if(!accepted(record.source))continue;const id=root+':revenue:'+i,m=measure(record),n={id,name:record.label,kind:'revenue',description:measureText(m),measure:m,latest:record.end===latest.get(record.group),sources:[record.source],record};nodes.set(id,n);
       edges.push({id:'element:'+id,source:root,target:id,kind:'revenue',citation:record.source,measure:m,latest:record.end===latest.get(record.group),element:n});
     }
-    return {nodes:[...nodes.values()],edges,focus_id:root,rows,root_name:data.name,root_symbol:data.symbol,revenue_groups:[...latest.keys()]};
+    for(const n of nodes.values()){const semantic=data.constellation_semantics?.[n.id];if(semantic)n.semantic=semantic;}
+    return {nodes:[...nodes.values()],edges,focus_id:root,rows,root_name:data.name,root_symbol:data.symbol,revenue_groups:[...latest.keys()],semantic_status:data.semantic_status};
   }
   window.MilkywayConstellationMath=Object.freeze({clamp,hash,measure,measureText,revenueGroups,topic,weight,rank,layout,neighbourhood,project,company});
 })();

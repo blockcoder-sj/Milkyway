@@ -31,7 +31,7 @@ assert.equal(G.neighbourhood(G.layout(ns,[],'a')).length,1);
 for(const flat of [false,true]){
  const n=3200,nodes=Array.from({length:n},(_,i)=>({id:String(i),name:String(i)})),edges=nodes.slice(1).map(p=>({source:'0',target:p.id,kind:'customer'}));
  const world=G.layout(nodes,edges,'0',flat);assert.equal(world.length,n);assert(flat?world.every(n=>n.z===0):world.some(n=>n.z!==0));
- const near=G.neighbourhood(world);assert.equal(near.length,9);assert(near.slice(1).every(p=>Math.hypot(p.x,p.y,p.z)<110));
+ const near=G.neighbourhood(world);assert.equal(near.length,9);assert(near.slice(1).every(p=>Math.hypot(p.x,p.y,p.z)<33));
  const max=Math.max(...world.map(n=>Math.hypot(n.x,n.y,n.z))),local=Math.max(100,...near.map(p=>Math.hypot(p.x,p.y,p.z)))*1.15;
  for(const [w,h] of [[800,560],[340,480]]){const camera={yaw:flat?0:.7,pitch:flat?0:.3,eye:max*6,scale:Math.min(w,h)*.36/local,panX:0,panY:0};
  const screen=near.map(p=>G.project(p,camera,w,h));assert(screen.every(p=>p.sx>28&&p.sx<w-28&&p.sy>28&&p.sy<h-28));
@@ -54,7 +54,7 @@ assert.equal(oilNodes[0].category,oilNodes[1].category);assert(Math.hypot(oilNod
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
 const els=new Map(),listeners={},raf=new Map(),arcs=[];let serial=0,clock=0,intersection,selected;
 const paint=new Proxy({arc:(x,y,r)=>arcs.push({x,y,r}),measureText:t=>({width:t.length*6}),createRadialGradient:()=>({addColorStop(){}})},{get:(t,k)=>t[k]||(()=>{})});
-function el(key){if(!els.has(key))els.set(key,{value:key==='dimension'?'3d':'key',dataset:{},hidden:false,children:[],textContent:'',getContext:()=>paint,getBoundingClientRect:()=>({width:800,height:560,left:0,top:0}),setPointerCapture(){},setAttribute(k,v){this[k]=v;},replaceChildren(...v){this.children=v;},addEventListener(k,f){this[k]=f;},querySelector(){return this.children[0];}});return els.get(key);}
+function el(key){if(!els.has(key))els.set(key,{value:key==='dimension'?'3d':'key',options:[{value:'semantic'},{value:'structure'}],dataset:{},hidden:false,children:[],textContent:'',getContext:()=>paint,getBoundingClientRect:()=>({width:800,height:560,left:0,top:0}),setPointerCapture(){},setAttribute(k,v){this[k]=v;},replaceChildren(...v){this.children=v;},addEventListener(k,f){this[k]=f;},querySelector(){return this.children[0];}});return els.get(key);}
 const target={querySelector:k=>el(k.slice(8)),classList:{toggle:()=>true},innerHTML:''};
 const document={hidden:false,createElement:()=>el('new'+serial++),addEventListener:(k,f)=>listeners[k]=f};
 const window={devicePixelRatio:1,matchMedia:()=>({matches:false,addEventListener(){}})};
@@ -70,6 +70,19 @@ assert.equal(el('canvas').dataset.view,'focus');assert.equal(el('canvas').datase
 const beforeZoom=arcs.find(p=>p.r===8);el('in').click();flush();const afterZoom=arcs.find(p=>Math.abs(p.r-8*Math.sqrt(1.25))<1e-6);
 assert(Math.abs(afterZoom.x-400-1.25*(beforeZoom.x-400))<1e-6);assert(Math.abs(afterZoom.y-280-1.25*(beforeZoom.y-280))<1e-6);
 el('fit').click();flush();assert.equal(el('canvas').dataset.view,'all');assert.equal(el('canvas').dataset.shownNodeCount,'3');
+scene.focus('x');flush();
+// A pan translates the actual drawing, retains selection, and survives zoom.
+const center=()=>arcs.find(p=>p.r===28||Math.abs(p.r-28*Math.sqrt(1.25))<1e-6);
+const origin=center(),selectedId=selected.id;
+el('drag').value='move';el('canvas').pointerdown({button:0,pointerId:5,clientX:200,clientY:200});el('canvas').pointermove({pointerId:5,clientX:285,clientY:240});el('canvas').pointerup({pointerId:5,clientX:285,clientY:240});flush();
+assert.equal(center().x,origin.x+85);assert.equal(center().y,origin.y+40);assert.equal(selected.id,selectedId);
+el('in').click();flush();assert.equal(center().x,origin.x+85);assert.equal(center().y,origin.y+40);
+el('drag').value='rotate';el('canvas').pointerdown({button:2,pointerId:6,clientX:200,clientY:200});el('canvas').pointermove({pointerId:6,clientX:235,clientY:185});el('canvas').pointerup({pointerId:6,clientX:235,clientY:185});flush();assert.equal(center().x,origin.x+120);assert.equal(center().y,origin.y+25);
+const previous=arcs.find(p=>p.r>8&&p.r<10);el('canvas').pointerdown({button:0,pointerId:7,clientX:200,clientY:200});el('canvas').pointermove({pointerId:7,clientX:250,clientY:200});el('canvas').pointerup({pointerId:7,clientX:250,clientY:200});flush();assert.equal(center().x,origin.x+120);assert.notEqual(arcs.find(p=>p.r>8&&p.r<10).x,previous.x);
+el('canvas').wheel({deltaX:30,deltaY:0,preventDefault(){}});flush();assert.equal(center().x,origin.x+90);
+el('canvas').keydown({key:'ArrowDown',altKey:true,preventDefault(){}});flush();assert.equal(center().y,origin.y+55);
+el('canvas').pointerdown({button:0,pointerType:'touch',pointerId:8,clientX:100,clientY:100});el('canvas').pointerdown({button:0,pointerType:'touch',pointerId:9,clientX:200,clientY:100});el('canvas').pointermove({pointerId:8,clientX:140,clientY:130});el('canvas').pointermove({pointerId:9,clientX:240,clientY:130});el('canvas').pointerup({pointerId:8,clientX:140,clientY:130});el('canvas').pointerup({pointerId:9,clientX:240,clientY:130});flush();assert.equal(selected.id,selectedId);assert.equal(center().x,origin.x+130);assert.equal(center().y,origin.y+85);
+el('fit').click();flush();assert.equal(arcs.find(p=>p.r===18).x,400);assert.equal(arcs.find(p=>p.r===18).y,280);
 scene.focus('x');flush();el('dimension').value='2d';el('dimension').change();flush();assert.equal(el('canvas').dataset.view,'focus');
 scene.set(graph);flush();assert.equal(el('canvas').dataset.focusId,'x');
 el('motion').click();flush();assert.equal(raf.size,1);intersection([{isIntersecting:false}]);assert.equal(raf.size,0);intersection([{isIntersecting:true}]);flush();assert.equal(raf.size,1);
