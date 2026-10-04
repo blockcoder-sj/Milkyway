@@ -6,31 +6,35 @@
   function create(target,hooks={}){
     const probe=document.createElement('canvas');
     if(!probe.getContext){return Object.freeze({set(value){target.innerHTML=value.rows?window.MilkywayCompanyRelations.draw(value.root_name,value.root_symbol,value.rows):'관계도를 지원하는 브라우저에서 확인하세요.';},clear(){target.innerHTML='';},highlight(){},focus(){}});}
-    target.innerHTML='<div class="cosmos"><div class="cosmos-toolbar"><label>이름·종목 검색<input class="cosmos-search" type="search" placeholder="기업·제품·외부 요인" autocomplete="off"></label><div class="cosmos-matches"></div><label>공간<select class="cosmos-dimension"><option value="3d">3D 우주 지도</option><option value="2d">2D 펼치기</option></select></label><label>이름표<select class="cosmos-labels"><option value="key">주요 이름</option><option value="more">더 많이</option><option value="off">숨기기</option></select></label><button type="button" class="ghost compact cosmos-fit">전체 맞춤</button><button type="button" class="ghost compact cosmos-in" aria-label="관계도 확대">＋</button><button type="button" class="ghost compact cosmos-out" aria-label="관계도 축소">−</button><button type="button" class="ghost compact cosmos-motion" aria-pressed="false">천천히 회전</button><button type="button" class="ghost compact cosmos-expand">크게 보기</button></div><div class="cosmos-viewport"><canvas class="cosmos-canvas" tabindex="0" role="img" aria-label="3차원 관계도. 방향키로 회전, Shift와 방향키로 대상 선택, Enter로 중심 이동, 더하기·빼기로 확대합니다."></canvas><div class="cosmos-legend"></div><p class="cosmos-hint">천체 클릭: 중심 이동·근거 확인 · 드래그: 회전 · Shift+드래그: 이동 · 휠/두 손가락: 확대</p><div class="cosmos-tooltip" hidden></div></div><p class="cosmos-status" role="status"></p></div>';
+    target.innerHTML='<div class="cosmos"><div class="cosmos-toolbar"><label>이름·종목 검색<input class="cosmos-search" type="search" placeholder="기업·제품·외부 요인" autocomplete="off"></label><div class="cosmos-matches"></div><label>공간<select class="cosmos-dimension"><option value="3d">3D 우주 지도</option><option value="2d">2D 펼치기</option></select></label><label>이름표<select class="cosmos-labels"><option value="key">주요 이름</option><option value="more">더 많이</option><option value="off">숨기기</option></select></label><button type="button" class="ghost compact cosmos-fit">전체 맞춤</button><button type="button" class="ghost compact cosmos-in" aria-label="관계도 확대">＋</button><button type="button" class="ghost compact cosmos-out" aria-label="관계도 축소">−</button><button type="button" class="ghost compact cosmos-motion" aria-pressed="false">천천히 회전</button><button type="button" class="ghost compact cosmos-expand">크게 보기</button></div><div class="cosmos-viewport"><canvas class="cosmos-canvas" tabindex="0" role="img" aria-label="3차원 관계도. 방향키로 회전, Shift와 방향키로 대상 선택, Enter로 중심 이동, 더하기·빼기로 확대합니다."></canvas><div class="cosmos-legend"></div><p class="cosmos-hint">천체 클릭: 주요 연결 확대·근거 확인 · 전체 맞춤: 모든 요소 · 드래그: 회전 · Shift+드래그: 이동 · 휠/두 손가락: 확대</p><div class="cosmos-tooltip" hidden></div></div><p class="cosmos-status" role="status"></p></div>';
     const $=name=>target.querySelector('.cosmos-'+name),canvas=$('canvas'),ctx=canvas.getContext('2d');
     if(!ctx){target.textContent='이 브라우저에서 관계도 화면을 만들지 못했습니다. 아래 관계 목록에서 확인하세요.';return Object.freeze({set(){},clear(){},highlight(){},focus(){}});}
     const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
     const camera={yaw:0,pitch:0,zoom:1,panX:0,panY:0,eye:5000,scale:.2};
     let model=null,nodes=[],screen=[],focus=null,hover=null,frame=0,active=false,visible=true,auto=false,last=0,transition=null;
     let width=1,height=1,pointer=null,pinched=false,pinch=0,signature='',keyboard=0,selectedEdge=null;
+    let view='all',nearby=new Set(),extent=160,fullExtent=160;
     const touches=new Map(),stars=Array.from({length:110},(_,i)=>({x:G.hash('sx'+i)%10000/10000,y:G.hash('sy'+i)%10000/10000,r:i%9===0?1:.55}));
     function cancel(){if(frame)cancelAnimationFrame(frame);frame=0;last=0;}
     function request(){if(!frame&&active&&visible&&!document.hidden)frame=requestAnimationFrame(draw);}
     function fit(reset=false){
-      if(reset){camera.zoom=1;camera.panX=camera.panY=0;camera.yaw=camera.pitch=0;}
-      const max=Math.max(300,...nodes.map(n=>Math.hypot(n.x,n.y,n.z)));camera.eye=max*6;
-      camera.scale=Math.min(width,height)*.39/max*camera.zoom;request();
+      if(reset){view='all';extent=fullExtent;camera.zoom=1;camera.panX=camera.panY=0;camera.yaw=camera.pitch=0;}
+      camera.eye=fullExtent*6;
+      camera.scale=Math.min(width,height)*.36/extent*camera.zoom;request();
     }
     function resize(){const r=canvas.getBoundingClientRect();if(r.width<1||r.height<1)return;
       width=r.width;height=r.height;const dpr=Math.min(1.5,window.devicePixelRatio||1);
       canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);fit();}
-    function rebuild(id,animate=true){
+    function rebuild(id,animate=true,overview=false){
       if(!model)return;
       const next=G.layout(model.nodes,model.edges,id,$('dimension').value==='2d');
-      const before=new Map(nodes.map(n=>[n.id,n]));focus=id;hover=null;selectedEdge=null;
+      const before=new Map(nodes.map(n=>[n.id,n]));focus=id;hover=null;keyboard=0;selectedEdge=null;
       nodes=next;transition=animate&&before.size&&!reduced.matches?{start:performance.now(),from:before,to:next}:null;
+      const neighbours=G.neighbourhood(next);nearby=new Set(neighbours.map(n=>n.id));
+      fullExtent=Math.max(160,...next.map(n=>Math.hypot(n.x,n.y,n.z)));
+      view=overview?'all':'focus';extent=overview?fullExtent:Math.max(100,...neighbours.map(n=>Math.hypot(n.x,n.y,n.z)))*1.15;
       canvas.setAttribute('aria-label',(model.nodes.find(n=>n.id===id)?.name||'관계도')+' 중심 · 방향키로 회전, Shift+방향키 대상 선택, Enter 중심 이동');
-      camera.panX=camera.panY=0;camera.zoom=1;fit();hooks.select?.(model.nodes.find(n=>n.id===id));request();
+      camera.panX=camera.panY=0;camera.zoom=1;fit();hooks.select?.(model.nodes.find(n=>n.id===id),next);request();
     }
     function pick(id){if(model?.nodes.some(n=>n.id===id)){rebuild(id);$('search').value=model.nodes.find(n=>n.id===id).name;$('matches').replaceChildren();}}
     function color(node){return palette[node.kind]||palette.company;}
@@ -46,9 +50,11 @@
       }
       ctx.clearRect(0,0,width,height);
       for(const s of stars){ctx.fillStyle='#a591c555';ctx.beginPath();ctx.arc(s.x*width,s.y*height,s.r,0,Math.PI*2);ctx.fill();}
+      const focused=view==='focus',shown=focused?current.filter(n=>nearby.has(n.id)):current;
       const density=G.clamp(Math.sqrt(width*height/Math.max(1,nodes.length))*.12,.8,7);
-      const projected=current.map(n=>({...G.project(n,$('dimension').value==='2d'?{...camera,yaw:0,pitch:0}:camera,width,height),radius:n.id===focus?18:n.id===hover?7:n.hops===1&&nodes.length<500?Math.max(3.5,density):density}));
-      screen=G.separate(projected,width,height);const map=new Map(screen.map(n=>[n.id,n]));
+      const magnify=focused?G.clamp(Math.sqrt(camera.zoom),.7,2):1;
+      screen=shown.map(n=>({...G.project(n,$('dimension').value==='2d'?{...camera,yaw:0,pitch:0}:camera,width,height),radius:n.id===focus?(focused?28*magnify:18):focused?8*magnify:n.id===hover?7:n.hops===1&&nodes.length<500?Math.max(3.5,density):density}));
+      const map=new Map(screen.map(n=>[n.id,n]));
       const center=map.get(focus);if(center){glow(center);ctx.strokeStyle='#b898e51d';ctx.setLineDash([2,9]);for(const r of [55,110,170]){ctx.beginPath();ctx.ellipse(center.sx,center.sy,r,r*.72,0,0,Math.PI*2);ctx.stroke();}ctx.setLineDash([]);}
       // Batch far lines to keep the full sector scene affordable while retaining
       // every edge. Direct connections stay readable when a planet is focused.
@@ -83,12 +89,12 @@
         if(x<3||x+w>width-3||y+h>height-8||boxes.some(b=>x<b.x+b.w+3&&x+w+3>b.x&&y<b.y+b.h+3&&y+h+3>b.y))continue;
         boxes.push({x,y,w,h});ctx.fillStyle='#0b0914e8';ctx.fillRect(x,y,w,h);ctx.fillStyle='#ece3f7';ctx.textAlign='center';ctx.fillText(text,x+w/2,y+14);count++;
       }
-      $('status').textContent=`${model.nodes.length.toLocaleString('ko-KR')}개 요소 · ${model.edges.length.toLocaleString('ko-KR')}개 연결 · ${model.nodes.find(n=>n.id===focus)?.name||''} 중심`;
-      canvas.dataset.nodeCount=String(screen.length);canvas.dataset.focusId=focus;canvas.dataset.renderMs=(performance.now()-started).toFixed(2);
+      $('status').textContent=`${model.nodes.find(n=>n.id===focus)?.name||''} 중심 · ${focused?(nearby.size>1?'주요 직접 연결 '+(nearby.size-1)+'개 집중 보기':'확인된 직접 연결 없음'):'전체 보기'} · 전체 ${model.nodes.length.toLocaleString('ko-KR')}개 요소 / ${model.edges.length.toLocaleString('ko-KR')}개 연결`;
+      canvas.dataset.nodeCount=String(nodes.length);canvas.dataset.shownNodeCount=String(screen.length);canvas.dataset.view=view;canvas.dataset.focusId=focus;canvas.dataset.renderMs=(performance.now()-started).toFixed(2);
       if(transition||auto&&!reduced.matches)request();
     }
     const coordinates=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
-    function hit(p){return [...screen].sort((a,b)=>a.depth-b.depth).find(n=>Math.hypot(n.sx-p.x,n.sy-p.y)<n.radius+5);}
+    function hit(p){let best=null,distance=Infinity;for(const n of screen){const d=Math.hypot(n.sx-p.x,n.sy-p.y);if(d<n.radius+5&&(d<distance||d===distance&&n.depth<best.depth)){best=n;distance=d;}}return best;}
     function showHover(id){hover=id;const n=model?.nodes.find(n=>n.id===id),tooltip=$('tooltip');tooltip.hidden=!n;if(n){tooltip.textContent=n.name+' · '+(labels[n.kind]||'연결 기업');canvas.setAttribute('aria-label',tooltip.textContent+' · Enter로 중심 이동, 방향키 회전, Shift+방향키 대상 선택');}else if(model){canvas.setAttribute('aria-label',(model.nodes.find(n=>n.id===focus)?.name||'관계도')+' 중심 · 방향키로 회전, Shift+방향키 대상 선택, Enter 중심 이동');}request();}
     canvas.addEventListener('pointerdown',e=>{if(e.button!==0&&e.pointerType!=='touch')return;const p=coordinates(e);touches.set(e.pointerId,p);canvas.setPointerCapture(e.pointerId);pointer={id:e.pointerId,start:p,last:p,moved:false,pan:e.shiftKey||$('dimension').value==='2d'};
       if(touches.size===1)pinched=false;
@@ -112,7 +118,7 @@
     function zoom(multiplier){camera.zoom=G.clamp(camera.zoom*multiplier,.4,20);fit();}
     canvas.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?.9:1.1);},{passive:false});
     canvas.addEventListener('keydown',e=>{
-      if(e.key.startsWith('Arrow')){e.preventDefault();if(e.shiftKey){keyboard=(keyboard+(e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:1)+nodes.length)%Math.max(1,nodes.length);showHover(nodes[keyboard]?.id);}
+      if(e.key.startsWith('Arrow')){e.preventDefault();if(e.shiftKey){const choices=view==='focus'?nodes.filter(n=>nearby.has(n.id)):nodes;keyboard=(keyboard+(e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:1)+choices.length)%Math.max(1,choices.length);showHover(choices[keyboard]?.id);}
         else{if(e.key==='ArrowLeft')camera.yaw-=.12;if(e.key==='ArrowRight')camera.yaw+=.12;if(e.key==='ArrowUp')camera.pitch=G.clamp(camera.pitch-.12,-1.4,1.4);if(e.key==='ArrowDown')camera.pitch=G.clamp(camera.pitch+.12,-1.4,1.4);}request();}
       else if(e.key==='Enter'&&hover){e.preventDefault();pick(hover);}else if(e.key==='+'||e.key==='='){e.preventDefault();zoom(1.2);}else if(e.key==='-'){e.preventDefault();zoom(.8);}else if(e.key==='Escape'&&model){e.preventDefault();rebuild(model.focus_id);$('search').value='';}
     });
@@ -120,7 +126,7 @@
       $('matches').replaceChildren(...matches.map(n=>{const button=document.createElement('button');button.type='button';button.className='ghost compact';button.textContent=n.name+' · '+(labels[n.kind]||'기업');button.addEventListener('click',()=>pick(n.id));return button;}));});
     $('search').addEventListener('keydown',e=>{if(e.key==='Enter'){$('matches').querySelector('button')?.click();}if(e.key==='Escape'){$('matches').replaceChildren();}});
     $('fit').addEventListener('click',()=>{transition=null;fit(true);});$('in').addEventListener('click',()=>zoom(1.25));$('out').addEventListener('click',()=>zoom(.8));
-    $('dimension').addEventListener('change',()=>{auto=false;motion();camera.yaw=camera.pitch=0;rebuild(focus,false);});$('labels').addEventListener('change',request);
+    $('dimension').addEventListener('change',()=>{auto=false;motion();camera.yaw=camera.pitch=0;rebuild(focus,false,view==='all');});$('labels').addEventListener('change',request);
     function motion(){$('motion').setAttribute('aria-pressed',String(auto));$('motion').textContent=auto?'회전 멈춤':'천천히 회전';$('motion').disabled=reduced.matches||$('dimension').value==='2d';}
     $('motion').addEventListener('click',()=>{auto=!auto&&!reduced.matches;motion();request();});
     $('expand').addEventListener('click',()=>{const expanded=target.classList.toggle('cosmos-expanded');$('expand').textContent=expanded?'기본 크기':'크게 보기';resize();});
@@ -133,7 +139,7 @@
       model=value;active=true;
       if(next!==signature){signature=next;nodes=[];auto=false;motion();$('search').value='';$('matches').replaceChildren();
         const counts=new Map();for(const n of value.nodes)counts.set(n.kind,(counts.get(n.kind)||0)+1);
-        $('legend').replaceChildren(...[...counts].map(([kind,count])=>{const span=document.createElement('span');span.className='cosmos-kind cosmos-'+kind;span.textContent=(labels[kind]||kind)+' '+count;return span;}));rebuild(value.focus_id,false);}
+        $('legend').replaceChildren(...[...counts].map(([kind,count])=>{const span=document.createElement('span');span.className='cosmos-kind cosmos-'+kind;span.textContent=(labels[kind]||kind)+' '+count;return span;}));rebuild(value.focus_id,false,value.nodes.find(n=>n.id===value.focus_id)?.kind==='sector');}
       resize();request();
     },clear(){active=false;auto=false;transition=null;model=null;nodes=[];screen=[];signature='';touches.clear();pointer=null;cancel();$('matches').replaceChildren();$('tooltip').hidden=true;ctx.clearRect(0,0,width,height);},
     focus:pick,highlight(index){const n=model?.nodes.find(n=>n.index===index);if(n)pick(n.id);}});

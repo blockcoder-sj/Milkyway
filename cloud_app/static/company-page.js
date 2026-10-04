@@ -65,7 +65,7 @@
     if(!data)return;
     const filter=$('#companyRelationFilter').value,rows=relationView.select(data.relations,filter),result=window.MilkywayPaging.slice(rows,relationPage);
     relationPage=result.page;
-    $('#companyRelationSummary').textContent=`${filter==='business'?'사업 관계':filter==='all'?'전체 관계':kinds[filter]} ${fmt(rows.length,0)}개 · 관계도는 불러온 전체 · 목록의 현재 페이지 ${fmt(result.rows.length,0)}개 · 자료에 등록된 기업만 표시`;
+    $('#companyRelationSummary').textContent=`${filter==='business'?'사업 관계':filter==='all'?'전체 관계':kinds[filter]} ${fmt(rows.length,0)}개 · 주요 연결 최대 8개 확대 · 전체 맞춤으로 불러온 관계 전체 보기 · 목록의 현재 페이지 ${fmt(result.rows.length,0)}개 · 자료에 등록된 기업만 표시`;
     for(const option of $('#companyRelationFilter').options){if(kinds[option.value])option.textContent=`${kinds[option.value]} (${fmt(relationView.select(data.relations,option.value).length,0)})`;}
     if(constellation)constellation.set(window.MilkywayConstellationMath.company(data,rows));
     else $('#companyGraph').innerHTML=relationView.draw(data.name,data.symbol,rows)||'<p class="fineprint company-graph-empty">이 조건에서 출처를 확인한 사업 관계가 아직 등록되지 않았습니다. 관계 종류를 바꾸거나 기업 공시·자료 수집 상태를 확인하세요.</p>';

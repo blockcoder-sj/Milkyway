@@ -7,6 +7,9 @@
 [기업별 전수 검수표](docs/ENERGY_SECTOR_COVERAGE_20261004.md)를 먼저 읽으세요.
 이후 요청한 기업별·섹터 전체 3차원 지도는
 [우주 지도 검토](docs/ENERGY_CONSTELLATION_REVIEW_20261004.md)에 기록했습니다.
+이후 확대 화면의 간격·선택 동작은
+[선택 확대 수정 검토](docs/ENERGY_CONSTELLATION_FOCUS_REVIEW_20261004.md)에 기록했습니다.
+요소 선택은 주요 직접 연결 최대 8개를 확대하고 `전체 맞춤`으로 전체를 복귀합니다.
 무료 자료 추가 조사는 [종료 기록](docs/ENERGY_FREE_DATA_CLOSURE_20261004.md)에 따라
 LBRT 매출 구분·EU 익명 고객 집중도를 보강하고 마무리했습니다.
 아래 재시작·중간 마일스톤 기록은 당시 상태입니다. 이미 복원한 개인 볼륨에

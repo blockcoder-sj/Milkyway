@@ -13,7 +13,7 @@ class ConstellationFrontendTests(unittest.TestCase):
             capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
 
-    def test_full_graph_ranking_and_dense_nonoverlap_in_three_dimensions_and_projection(self):
+    def test_compact_neighbourhood_ranking_full_retention_and_stable_zoom_projection(self):
         self.node(r"""
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
 const window={};vm.runInNewContext(fs.readFileSync(process.argv[1]+'/constellation-math.js','utf8'),{window});
@@ -23,20 +23,20 @@ let xyz=G.layout(ns,es,'a'),byId=new Map(xyz.map(n=>[n.id,n]));
 assert.equal(byId.get('a').x,0);assert(Math.hypot(byId.get('b').x,byId.get('b').y,byId.get('b').z)<Math.hypot(byId.get('c').x,byId.get('c').y,byId.get('c').z));
 assert.equal(G.rank(ns,es,'a')[1].id,'b');assert.equal(G.rank(ns,[...es,...es], 'a')[1].priority,G.rank(ns,es,'a')[1].priority);
 xyz=G.layout(ns,es,'b');assert.equal(xyz[0].id,'b');assert.equal(xyz[0].z,0);
-function noOverlap(points,space){
- const bins=new Map(),cell=space==='world'?24:8;
- for(const p of points){const x=space==='world'?p.x:p.sx,y=space==='world'?p.y:p.sy,z=space==='world'?p.z:0,r=space==='world'?12:p.radius;
- const reach=space==='world'?1:Math.ceil((r+18)/cell);
- for(let a=-reach;a<=reach;a++)for(let b=-reach;b<=reach;b++)for(let c=space==='world'?-1:0;c<=(space==='world'?1:0);c++)for(const q of bins.get([Math.floor(x/cell)+a,Math.floor(y/cell)+b,Math.floor(z/cell)+c].join(','))||[]){assert(Math.hypot(x-q.x,y-q.y,z-q.z)>=r+q.r-1e-6);}
- const k=[Math.floor(x/cell),Math.floor(y/cell),Math.floor(z/cell)].join(',');if(!bins.has(k))bins.set(k,[]);bins.get(k).push({x,y,z,r});
- }
-}
+const extra=Array.from({length:3200},(_,i)=>({id:'unrelated'+i,name:'Unrelated'}));
+const expanded=G.layout([...ns,...extra],es,'a');
+for(const id of ['a','b','c']){const p=byId.get(id),q=expanded.find(n=>n.id===id);assert.equal(p.x,q.x);assert.equal(p.y,q.y);assert.equal(p.z,q.z);}
+assert.equal(G.neighbourhood(expanded).length,3);assert(G.neighbourhood(expanded).every(n=>n.hops<=1));
+assert.equal(G.neighbourhood(G.layout(ns,[],'a')).length,1);
 for(const flat of [false,true]){
  const n=3200,nodes=Array.from({length:n},(_,i)=>({id:String(i),name:String(i)})),edges=nodes.slice(1).map(p=>({source:'0',target:p.id,kind:'customer'}));
- const world=G.layout(nodes,edges,'0',flat);noOverlap(world,'world');assert(flat?world.every(n=>n.z===0):world.some(n=>n.z!==0));
- const max=Math.max(...world.map(n=>Math.hypot(n.x,n.y,n.z)));
- for(const [w,h] of [[800,560],[340,480]]){const radius=Math.max(.8,Math.sqrt(w*h/n)*.12),camera={yaw:flat?0:.7,pitch:flat?0:.3,eye:max*6,scale:Math.min(w,h)*.39/max,panX:0,panY:0};
- const screen=G.separate(world.map(p=>({...G.project(p,camera,w,h),radius:p.id==='0'?18:radius})),w,h);assert.equal(screen.length,n);noOverlap(screen,'screen');assert(screen.every(p=>p.sx>=p.radius&&p.sx<=w-p.radius&&p.sy>=p.radius&&p.sy<=h-p.radius));}
+ const world=G.layout(nodes,edges,'0',flat);assert.equal(world.length,n);assert(flat?world.every(n=>n.z===0):world.some(n=>n.z!==0));
+ const near=G.neighbourhood(world);assert.equal(near.length,9);assert(near.slice(1).every(p=>Math.hypot(p.x,p.y,p.z)<110));
+ const max=Math.max(...world.map(n=>Math.hypot(n.x,n.y,n.z))),local=Math.max(100,...near.map(p=>Math.hypot(p.x,p.y,p.z)))*1.15;
+ for(const [w,h] of [[800,560],[340,480]]){const camera={yaw:flat?0:.7,pitch:flat?0:.3,eye:max*6,scale:Math.min(w,h)*.36/local,panX:0,panY:0};
+ const screen=near.map(p=>G.project(p,camera,w,h));assert(screen.every(p=>p.sx>28&&p.sx<w-28&&p.sy>28&&p.sy<h-28));
+ for(const p of near){const a=G.project(p,camera,w,h),b=G.project(p,{...camera,scale:camera.scale*2},w,h);assert(Math.abs(b.sx-w/2-2*(a.sx-w/2))<1e-6);assert(Math.abs(b.sy-h/2-2*(a.sy-h/2))<1e-6);}
+ }
 }
 const rows=Array.from({length:25},(_,i)=>({target_id:'c'+i,name:'N'+i,index:i,kind:'supplier'}));assert.equal(G.company({name:'Root'},rows).nodes.length,26);
 """)
@@ -44,8 +44,8 @@ const rows=Array.from({length:25},(_,i)=>({target_id:'c'+i,name:'N'+i,index:i,ki
     def test_scene_idle_visibility_search_recenter_keyboard_and_teardown(self):
         self.node(r"""
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
-const els=new Map(),listeners={},raf=new Map();let serial=0,clock=0,intersection,selected;
-const paint=new Proxy({measureText:t=>({width:t.length*6}),createRadialGradient:()=>({addColorStop(){}})},{get:(t,k)=>t[k]||(()=>{})});
+const els=new Map(),listeners={},raf=new Map(),arcs=[];let serial=0,clock=0,intersection,selected;
+const paint=new Proxy({arc:(x,y,r)=>arcs.push({x,y,r}),measureText:t=>({width:t.length*6}),createRadialGradient:()=>({addColorStop(){}})},{get:(t,k)=>t[k]||(()=>{})});
 function el(key){if(!els.has(key))els.set(key,{value:key==='dimension'?'3d':'key',dataset:{},hidden:false,children:[],textContent:'',getContext:()=>paint,getBoundingClientRect:()=>({width:800,height:560,left:0,top:0}),setPointerCapture(){},setAttribute(k,v){this[k]=v;},replaceChildren(...v){this.children=v;},addEventListener(k,f){this[k]=f;},querySelector(){return this.children[0];}});return els.get(key);}
 const target={querySelector:k=>el(k.slice(8)),classList:{toggle:()=>true},innerHTML:''};
 const document={hidden:false,createElement:()=>el('new'+serial++),addEventListener:(k,f)=>listeners[k]=f};
@@ -55,15 +55,25 @@ for(const file of ['constellation-math.js','constellation.js'])vm.runInContext(f
 const scene=window.MilkywayConstellation.create(target,{select:n=>selected=n});
 el('dimension').change();assert.equal(raf.size,0);
 const graph={focus_id:'root',nodes:[{id:'root',name:'Root',kind:'sector'},{id:'x',name:'<img unsafe>',symbol:'XOM',kind:'issuer'},{id:'y',name:'Other',kind:'factor'}],edges:[{id:'edge',source:'root',target:'x',kind:'customer'}]};
-function flush(){clock+=1000;const jobs=[...raf.values()];raf.clear();for(const f of jobs)f(clock);}
+function flush(){arcs.length=0;clock+=1000;const jobs=[...raf.values()];raf.clear();for(const f of jobs)f(clock);}
 scene.set(graph);flush();assert.equal(el('canvas').dataset.nodeCount,'3');assert.equal(raf.size,0);assert.equal(selected.id,'root');
 el('search').value='xom';el('search').input();assert.equal(el('matches').children[0].textContent,'<img unsafe> · 조사 기업');el('matches').children[0].click();flush();assert.equal(el('canvas').dataset.focusId,'x');assert.equal(raf.size,0);
+assert.equal(el('canvas').dataset.view,'focus');assert.equal(el('canvas').dataset.shownNodeCount,'2');assert.equal(arcs.filter(p=>p.r===28).length,1);
+const beforeZoom=arcs.find(p=>p.r===8);el('in').click();flush();const afterZoom=arcs.find(p=>Math.abs(p.r-8*Math.sqrt(1.25))<1e-6);
+assert(Math.abs(afterZoom.x-400-1.25*(beforeZoom.x-400))<1e-6);assert(Math.abs(afterZoom.y-280-1.25*(beforeZoom.y-280))<1e-6);
+el('fit').click();flush();assert.equal(el('canvas').dataset.view,'all');assert.equal(el('canvas').dataset.shownNodeCount,'3');
+scene.focus('x');flush();el('dimension').value='2d';el('dimension').change();flush();assert.equal(el('canvas').dataset.view,'focus');
 scene.set(graph);flush();assert.equal(el('canvas').dataset.focusId,'x');
 el('motion').click();flush();assert.equal(raf.size,1);intersection([{isIntersecting:false}]);assert.equal(raf.size,0);intersection([{isIntersecting:true}]);flush();assert.equal(raf.size,1);
 document.hidden=true;listeners.visibilitychange();assert.equal(raf.size,0);document.hidden=false;listeners.visibilitychange();flush();assert.equal(raf.size,1);
 el('motion').click();flush();assert.equal(raf.size,0);
 el('canvas').keydown({key:'Escape',preventDefault(){}});flush();assert.equal(selected.id,'root');
 scene.clear();assert.equal(raf.size,0);scene.set(graph);flush();assert.equal(el('canvas').dataset.nodeCount,'3');
+const dense={focus_id:'root',nodes:[{id:'root',name:'Root',kind:'issuer'},...Array.from({length:20},(_,i)=>({id:'n'+i,name:'N'+i,kind:'company'}))],edges:Array.from({length:20},(_,i)=>({id:'e'+i,source:'root',target:'n'+i,kind:i<8?'customer':'classification',analytical:i>=8}))};
+scene.set(dense);flush();assert.equal(el('canvas').dataset.nodeCount,'21');assert.equal(el('canvas').dataset.shownNodeCount,'9');assert.equal(el('canvas').dataset.view,'focus');
+assert.equal(arcs.filter(p=>p.r===8).length,8);assert(el('status').textContent.includes('8개 집중 보기'));
+const planet=arcs.find(p=>p.r===8);el('canvas').pointerdown({button:0,pointerId:1,clientX:planet.x,clientY:planet.y});el('canvas').pointerup({pointerId:1,clientX:planet.x,clientY:planet.y});flush();assert.notEqual(selected.id,'root');assert.equal(el('canvas').dataset.view,'focus');
+el('fit').click();flush();assert.equal(el('canvas').dataset.shownNodeCount,'21');
 """)
 
     def test_sector_sources_paging_exact_edge_and_stale_owner_response(self):
