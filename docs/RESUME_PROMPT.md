@@ -1,6 +1,11 @@
 # 재시작 후 붙여 넣을 프롬프트
 
-**최신 상태: 2026-10-05 사용자가 관계도 조작·간격 수정을 요청하며 재개했습니다.**
+**최신 요청: 2026-10-11 맥락 저장·작업 중단·관련 실행 작업 종료.**
+[최신 인계](SESSION_HANDOFF_20261011.md)에 현재 중단 상태와 재개 순서를 저장했습니다.
+Milkyway 서비스 4개는 종료했으며 볼륨·개인 데이터·백업은 보존했습니다.
+아래 맥락 확인 문구만으로 앱을 시작하거나 작업을 재개하지 않습니다.
+
+**이전 완료 상태: 2026-10-05 관계도 조작·간격 수정.**
 [드래그·초기화·간격 검토](ENERGY_CONSTELLATION_CONTROLS_REVIEW_20261005.md)가 최신입니다.
 일반 드래그 이동·Shift+드래그 3D 회전·처음 화면 초기화와 전체 그룹 간격 축소를 반영했습니다.
 [세션 종료 인계](SESSION_HANDOFF_20261004.md)는 이전 상태입니다.
@@ -22,6 +27,7 @@ Milkyway 작업 맥락을 확인해.
 GitHub 브랜치는 codex/ai-research-workflow야.
 현재 HEAD와 원격을 확인하고, 최신 관계도 수정 검토를 먼저 읽어.
 AGENTS.md, HANDOFF.md, docs/HANDOFF_OTHER_COMPUTER.md,
+docs/SESSION_HANDOFF_20261011.md,
 docs/ENERGY_CONSTELLATION_CONTROLS_REVIEW_20261005.md,
 docs/SESSION_HANDOFF_20261004.md, docs/WORK_CONTEXT.md 마지막 항목을 읽어.
 docs/ENERGY_SEMANTIC_RAG_REVIEW_20261004.md와 무료 공시 추가 조사 종료 기록도 읽어.
@@ -29,6 +35,8 @@ docs/ENERGY_SEMANTIC_RAG_REVIEW_20261004.md와 무료 공시 추가 조사 종�
 기업·섹터 3D 지도 간격 축소·회전/화면 이동·전체 복귀,
 로컬 의미 검색·군집 배치·출처 기반 연관성 패널까지 완료했어.
 10월 5일 일반 드래그 이동·Shift 드래그 회전·처음 화면 버튼과 전체 간격 축소까지 반영했어.
+10월 11일 맥락 저장 후 작업을 중단하고 Milkyway 서비스 4개를 종료했어.
+컨테이너·볼륨·개인 데이터·백업은 그대로야. 내가 재개 요청하기 전에는 앱을 시작하지 마.
 우선 상태를 확인하고, 다음 작업 범위는 내가 지정할게.
 현재 Git/앱/볼륨 상태를 확인하고 기존 개인 데이터·백업·runtime을 보존해.
 과거 재시작 프롬프트의 복원 명령을 이미 복원된 볼륨에 다시 실행하지 마.

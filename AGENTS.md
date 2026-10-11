@@ -2,7 +2,13 @@
 
 ## Resume context
 
-- Latest instruction on 2026-10-05: the user resumed UI development, requesting
+- Latest instruction on 2026-10-11: save context and pause work. The user also
+  requested stopping Milkyway-related runtime to reduce memory pressure.
+  Read `docs/SESSION_HANDOFF_20261011.md` first. The four personal services are
+  stopped with containers, volumes and data preserved. Do not implement,
+  restore, collect or start the app until the user resumes. Other projects'
+  services and the shared Docker engine must be preserved.
+- Prior instruction on 2026-10-05: the user resumed UI development, requesting
   plain drag to pan, Shift+drag to rotate, an initial-view reset button and
   closer spacing across company/sector maps. This supersedes the October 4
   session pause for that scope. Preserve existing personal data and services;

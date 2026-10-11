@@ -2086,3 +2086,22 @@ quick_check ok·live/startup200·기존 운용 조건ready503. 앱만 교체했�
 무료 조사·복원·제공사 AI·CodeRabbit·하위agent·DeepScan은 수행하지 않았다.
 검토 docs/ENERGY_CONSTELLATION_CONTROLS_REVIEW_20261005.md,
 증거 runtime/verification-20261005/constellation-controls/. 이번 UI 요청 범위를 마무리한다.
+
+## 2026-10-11 맥락 저장·작업 중단·관련 런타임 종료
+
+사용자가 맥락 저장을 요청한 뒤 작업 중단과 Milkyway 관련 Docker/메모리 사용 작업
+종료를 명시했다. 마지막 구현 f2b2608ad90cecb422e37f30273496c23f1c2fa7의 GitHub
+원격 일치·깨끗한 작업 트리를 확인했다. 구현 결과·검증 한계·재개 순서는
+`docs/SESSION_HANDOFF_20261011.md`에 저장하고 문서만 커밋·푸시한다.
+AGENTS/HANDOFF/RESUME_PROMPT 최신 상태를 중단으로 갱신하고 Codex 기억 확장 노트도 저장한다.
+
+종료 전 앱 healthy·live/startup200·ready503, 기존 d14ee901 이미지 확인.
+Milkyway app/personal-data/market-data/backup4개를 SIGTERM 종료했으며 모두exited143,
+실행0개·localhost8080연결 종료를 확인했다. 종료 전 메모리 표본 합계909.6MiB.
+컨테이너ID·마운트·볼륨 목록 보존, 개인 DB·키·백업·원문·모델은 삭제/복원하지 않았다.
+FANcy postgres가 실행 중이어서 다른 프로젝트와 Docker Desktop은 보존했다.
+Chrome 조회 창/탭에 Milkyway는 없었고, VSCode 사용자 UI 변경 감지 후 추가 조작 중단.
+현재 Codex 저장 세션은 강제 종료하지 않았다. 시스템 free percentage는전후43%로 같았다.
+증거 runtime/verification-20261011/context-stop/. 코드수정·재검수·제공사AI·보안스캔·
+CodeRabbit·agent·빌드·재시작·수집은하지 않았다. 새 재개 요청 전에는 앱을 시작하지 않는다.
+재개 시 현재 상태를 확인한 뒤 기존4개 컨테이너만 compose start하며 과거 볼륨 복원은 금지한다.
