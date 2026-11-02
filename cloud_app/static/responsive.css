@@ -1,0 +1,149 @@
+/* Keep intrinsic text and form sizes inside their grid/flex tracks. */
+.panel,
+.stack,
+.section-head > *,
+.featured-title > *,
+.strategy-head > *,
+.backtest-head > *,
+.account-top > *,
+.manual-grid > *,
+.manual-factor > *,
+.settings-heading > *,
+.profile-summary > div {
+  min-width: 0;
+}
+
+label,
+input,
+textarea,
+select {
+  min-width: 0;
+}
+
+input,
+textarea,
+select {
+  max-width: 100%;
+}
+
+.featured-title,
+.strategy-head,
+.backtest-head,
+.account-top,
+.settings-heading {
+  flex-wrap: wrap;
+}
+
+.featured-title > div {
+  flex: 1 1 220px;
+}
+
+.featured-title h4,
+.strategy h4,
+.backtest h4,
+.account h4,
+.profile-summary strong,
+.profile-summary small,
+.settings-copy {
+  overflow-wrap: anywhere;
+}
+
+.strategy-actions {
+  flex-wrap: wrap;
+}
+
+/* A collapsed optional editor should not reserve an empty desktop column. */
+.personal-mode .strategy-builder {
+  min-height: 0;
+}
+
+.personal-mode .strategy-workbench:has(#manualBuilder > details:not([open])) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Wide data belongs to its scroll region, not to the page width. */
+.research-table,
+.history-table-wrap {
+  min-width: 0;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+}
+
+.company-page .research-table table,
+.market-detail-page .research-table table {
+  min-width: 560px;
+}
+
+dialog {
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+
+.profile-dialog {
+  max-height: min(780px, calc(100dvh - 32px));
+}
+
+.terminal-toolbar,
+.chart-periods {
+  flex-wrap: wrap;
+}
+
+.terminal-series > label,
+#detailChartControls > * {
+  min-width: 0;
+}
+
+.cosmos-toolbar input,
+.cosmos-toolbar select {
+  max-width: 100%;
+}
+
+@media (max-width: 850px) {
+  .strategy-workbench,
+  .lower-grid,
+  .insight-grid,
+  .backtest-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .section-head,
+  .detail-chart-heading,
+  .detail-dialog-heading,
+  .cosmos-analysis-head {
+    flex-wrap: wrap;
+  }
+
+  .market-controls .source-note,
+  .heatmap-controls .source-note {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .profile-dialog {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .manual-factor {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .settings-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cosmos-toolbar > label {
+    flex: 1 1 120px;
+  }
+
+  .cosmos-toolbar > label:first-child {
+    flex-basis: 100%;
+  }
+
+  .cosmos-toolbar input {
+    width: 100%;
+  }
+}
