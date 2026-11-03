@@ -122,7 +122,7 @@ class CompanyGraph:
         # descriptor to close before it can establish SQLite locks on that file.
         with _FILE_CREATION_LOCK:
             try:
-                descriptor = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+                descriptor = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_RDWR | getattr(os, 'O_NOFOLLOW', 0), 0o600)
             except FileExistsError:
                 if not stat.S_ISREG(os.stat(self.path, follow_symlinks=False).st_mode):
                     raise ValueError("Unsafe company graph file")
