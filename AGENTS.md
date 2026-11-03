@@ -1,5 +1,16 @@
 # Milkyway project instructions
 
+## Current beginner distribution
+
+- On 2026-11-03 the user requested a smaller beginner download. Keep sector
+  summary cards visible and noninteractive. Company/sector research, financial
+  catalogues, graph views and semantic dependencies are excluded from Git and
+  default collection. Preserve the original files under the gitignored
+  `runtime/archives/sector-research-20261103/`; do not restore or collect them
+  without a new request. Major-index/FX charts and paper trading remain in scope.
+- Current implementation and running status are recorded at the end of
+  `docs/WORK_CONTEXT.md`. October pause observations below are historical.
+
 ## Resume context
 
 - Latest instruction on 2026-10-11: save context and pause work. The user also

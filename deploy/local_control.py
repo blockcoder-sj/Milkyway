@@ -1,6 +1,6 @@
 """Owner-run loopback launcher for the personal paper workstation.
 
-Only six fixed Milkyway services can be started/restarted. There is no shell,
+Only seven fixed Milkyway services can be started/restarted. There is no shell,
 arbitrary command, Docker socket in the web app, volume deletion or restore API.
 The browser uses an owner-only capability and an exact loopback Origin.
 """
@@ -28,7 +28,7 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 ROOT = Path(__file__).resolve().parents[1]
 PORT = 19480
 SERVICE = "milkyway-local-control-v1"
-SERVICES = ("app", "paper-worker", "personal-data", "backtest-worker", "market-data", "backup")
+SERVICES = ("app", "paper-worker", "personal-data", "backtest-worker", "market-data", "market-details", "backup")
 STATE_DIR = ROOT / "runtime/local-control"
 ACCOUNT = re.compile(r"^[a-f0-9]{32}$")
 TOKEN = re.compile(r"^[a-f0-9]{64}$")

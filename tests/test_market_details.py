@@ -116,9 +116,9 @@ class MarketDetailTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             settings=SimpleNamespace(personal_local_mode=True,production=False,dataset_dir=Path(temp)/'data')
             old=dict(title='Old selection',publisher='BBC',url='https://news.google.com/rss/articles/old',published_at=dt.datetime.now(dt.timezone.utc).isoformat())
-            _write_cache(service.cache_path(settings,'us_45'),{'news':{'rows':[old],'selection_version':1}})
-            with patch.object(service._provider,'run',return_value={'news':{'rows':[],'selection_version':2,'fetched_at':NOW.isoformat()}}):service.refresh_detail(settings,'us_45')
-            result=service.read_cache(settings,'us_45')
+            _write_cache(service.cache_path(settings,'nasdaq100'),{'news':{'rows':[old],'selection_version':1}})
+            with patch.object(service._provider,'run',return_value={'news':{'rows':[],'selection_version':2,'fetched_at':NOW.isoformat()}}):service.refresh_detail(settings,'nasdaq100')
+            result=service.read_cache(settings,'nasdaq100')
             self.assertEqual(result.news.rows,[]);self.assertEqual(result.news.selection_version,2)
 
     def test_korean_market_cap_units_and_partial_snapshot(self):

@@ -143,7 +143,6 @@ function selectSectorCountry(country) {
 function openWorkspace(workspace, updateHash = true) {
   if (!["market", "strategy", "detail", "company"].includes(workspace)) return;
   if (workspace !== "detail") window.MilkywayMarketDetail?.leave();
-  if (workspace !== "company") window.MilkywayCompany?.leave();
   state.workspace = workspace;
   $$('[data-workspace-page]').forEach((section) => section.classList.toggle("hidden", section.dataset.workspacePage !== workspace));
   $$('[data-open-workspace]').forEach((link) => {
@@ -455,13 +454,9 @@ async function enterApp(me = null) {
   state.csrf = state.me.csrf;
   profileController.render();
   const detail = location.hash.match(/^#detail\/([a-z0-9_]+)$/);
-  const company = location.hash.match(/^#company\/([a-z0-9_]+)\/([A-Z0-9.-]+)$/);
-  const entity = location.hash.match(/^#company\/(c_[a-f0-9]{32})$/);
   const requested = location.hash === "#market" ? "market" : location.hash === "#strategy" ? "strategy" : null;
-  await showDashboard(requested || "market", !detail && !company && !entity);
+  await showDashboard(requested || "market", !detail);
   if (detail && state.config.personal_local_mode) await window.MilkywayMarketDetail.open(detail[1],false);
-  if (company && state.config.personal_local_mode) await window.MilkywayCompany.open(company[1],company[2],false);
-  if (entity && state.config.personal_local_mode) await window.MilkywayCompany.openEntity(entity[1],false);
 }
 
 function openBacktest(id) {
@@ -669,14 +664,9 @@ window.MilkywayRuntime.initialize({api, refresh, getState: () => state, ensureSe
   state.me = me; state.csrf = me.csrf;
 }});
 window.MilkywayMarketDetail.initialize({api, openWorkspace, getState: () => state});
-window.MilkywayCompany.initialize({api, openWorkspace, getState: () => state});
 addEventListener("popstate", () => {
   const detail=location.hash.match(/^#detail\/([a-z0-9_]+)$/);
-  const company=location.hash.match(/^#company\/([a-z0-9_]+)\/([A-Z0-9.-]+)$/);
-  const entity=location.hash.match(/^#company\/(c_[a-f0-9]{32})$/);
   if(detail) window.MilkywayMarketDetail.open(detail[1],false);
-  else if(company) window.MilkywayCompany.open(company[1],company[2],false);
-  else if(entity) window.MilkywayCompany.openEntity(entity[1],false);
   else openWorkspace(location.hash==="#strategy"?"strategy":"market",false);
 });
 window.MilkywayResearch.initialize({api, refresh, toast, getState: () => state, openAccountHistory});

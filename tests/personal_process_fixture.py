@@ -63,18 +63,6 @@ def run():
         elif args.role == "seed":
             result = personal_data.refresh_personal_data(["AAPL", "MSFT"], config.get_settings())
             assert result["ready"], result
-        elif args.role == "company-data":
-            from cloud_app import company_worker
-            from cloud_app.company_schemas import CompanyKnowledge
-            from cloud_app.database import utcnow
-            def synthetic_company(payload, configuration, deadline):
-                relations = [dict(name="Offline private subsidiary", entity_id="Q123",
-                    kind="subsidiary", source=dict(label="Offline fixture statement",
-                    url="https://example.test/company-report", level="primary"))] if payload["symbol"] else []
-                return CompanyKnowledge(symbol=payload["symbol"], entity_id=payload.get("entity_id"), name=payload["name"],
-                    relations=relations, description="Synthetic offline company collection", fetched_at=utcnow()).model_dump(mode="json")
-            with patch.object(company_worker._provider, "run", side_effect=synthetic_company):
-                company_worker.main()
         else:
             os.environ["WORKER_ROLE"] = args.role
             from cloud_app.worker import main

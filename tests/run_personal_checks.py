@@ -229,7 +229,7 @@ def run_checks(args):
         wait_for("web startup", lambda: client.request("/health/startup")[0] == 200)
         public = client.expect(200, "/api/config")
         assert public["personal_local_mode"] is True and public["local_demo_data"] is False
-        for asset in ("/", "/static/personal.js", "/static/app.js", "/static/profile.js", "/static/company-page.js", "/static/company.css"):
+        for asset in ("/", "/static/personal.js", "/static/app.js", "/static/profile.js"):
             assert client.expect(200, asset, raw=True)
         record("clean_startup_and_packaged_assets")
         registration = client.expect(201, "/api/auth/register", "POST", {

@@ -1,4 +1,7 @@
 /* Keep intrinsic text and form sizes inside their grid/flex tracks. */
+.sector-summary-card,
+.sector-summary-card:hover { cursor:default; transform:none; }
+.market-chart-summary { display:block; }
 #personalRuntimeControls { margin: 18px 0; }
 .runtime-state { display:flex; align-items:center; gap:10px; }
 .runtime-state h4 { margin:0; font-size:22px; line-height:1.4; overflow-wrap:anywhere; }

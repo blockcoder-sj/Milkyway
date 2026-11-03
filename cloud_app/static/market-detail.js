@@ -35,10 +35,8 @@
       <section id="detailSourcesSection"><details class="detail-sources-toggle"><summary id="detailSourceCount">출처 모음</summary><p class="fineprint">시세·기업·뉴스는 수집 시점, 사업 점유율은 발표 기준일을 따릅니다. 원자료를 확인하고 수치의 범위를 비교하세요.</p><div id="detailSources"></div></details></section>`;
     $('#market').after(panel);
     window.MilkywayMarketDirectory.initialize();
-    window.MilkywayEnergyGuide.initialize();
-    window.MilkywayEnergyConstellation?.initialize(hooks);
     chart=window.MilkywayMarketChart.create($('#detailChart'),$('#detailChartTooltip'),$('#detailChartLegend'));
-    $('#detailBack').addEventListener('click',()=>{closeChart();window.MilkywayEnergyConstellation?.render(false);identity=null;++epoch;hooks.openWorkspace('market');});
+    $('#detailBack').addEventListener('click',()=>{closeChart();identity=null;++epoch;hooks.openWorkspace('market');});
     $('#detailSeries').addEventListener('change',()=>{range();draw();});
     $('#detailPeriod').addEventListener('change',()=>{range();draw();});
     for(const id of ['detailStart','detailEnd'])$('#'+id).addEventListener('change',()=>{$('#detailPeriod').value='custom';draw();});
@@ -139,8 +137,6 @@
     $('#detailCompaniesTitle').textContent=data.group==='sectors'?'섹터 기업 백과':data.group==='fx'?'통화정책 원문':data.group==='indices'?'구성·산출 원문':'계약 명세와 거래소';
     $('#detailCompanyNote').textContent=(context.companies_note||'이 항목의 공식 구성·관련 정보는 아래 산출기관 원문에서 확인할 수 있습니다.')+(companies.length?` 수집 ${time(data.companies.fetched_at)}${data.companies.stale?' · 갱신 지연':''}`:'');
     window.MilkywayMarketDirectory.render(data);
-    window.MilkywayEnergyGuide.render(data.industry_guide);
-    window.MilkywayEnergyConstellation?.render(data.industry_guide);
     $("#detailCosmosJump").hidden=!data.industry_guide;
     const shares=context.market_share||[];
     $('#detailMarketShare').innerHTML=shares.length?shares.map(share=>`<article class="detail-share-fact"><h4>${esc(share.title)}</h4><p>${esc(share.period)} · 발표 ${esc(share.published_at)} · 확인 ${esc(share.checked_at)}</p><p>${esc(share.scope)}</p><div class="detail-watchpoints">${share.values.map(row=>`<span>${esc(row.name)} <strong>${fmt(row.value)}%</strong></span>`).join('')}</div>${methods.help('published-share',['발표기관이 공표한 비율을 그대로 옮긴 값입니다. 앱에서 재계산하지 않습니다.','파운드리 사업 매출을 기준으로 한 점유율입니다. 개별 매출 원자료와 전체 분모는 앱에 저장되어 있지 않아 여기서 수치를 재현할 수 없습니다. 발표기관 원문의 조사 범위·산식을 확인하세요.'])}${link(share.provider+' 원자료',share.url)}</article>`).join(''):data.group==='sectors'?'<p class="fineprint">사업별 실제 시장점유율은 비교 범위·기준일을 확인한 자료가 있을 때만 제공합니다. 현재 이 업종의 검증된 수치는 등록되지 않았습니다.</p>':'';
@@ -160,14 +156,16 @@
   }
   async function open(id,push=true,expanded=false){
     if(!/^[a-z0-9_]{1,30}$/.test(id)||!hooks.getState().config.personal_local_mode)return;
+    if (!window.MilkywayMarket.detailAvailable(id)) {
+      hooks.openWorkspace('market',false); history.replaceState(null,'','#market'); return;
+    }
     closeChart();identity=id;data=null;signature='';++epoch;hooks.openWorkspace('detail',false);
-    window.MilkywayEnergyGuide.render(null);
-    window.MilkywayEnergyConstellation?.render(false);
+
     if(push)history.pushState(null,'','#detail/'+id);
     $('#detailTitle').textContent='상세 정보를 불러오고 있습니다';$('#detailError').textContent='';
     for(const selector of ['#detailFacts','#detailCategory','#detailCompanyNote','#detailChartStatus','#detailChartTooltip','#detailChartMethod','#detailChartLegend','#detailChartWarning','#detailChartRange','#detailQuote','#detailIntro','#detailCompanies','#detailMarketShare','#detailNews','#detailSources','#detailMetrics','#detailPriceTable','#detailChart'])$(selector).innerHTML='';
     $('#detailPeriod').value='3';$('#detailSeries').dataset.identity='';
     await refresh();if(expanded&&identity===id)expandChart();
   }
-  window.MilkywayMarketDetail=Object.freeze({leave(){closeChart();window.MilkywayEnergyConstellation?.render(false);identity=null;++epoch;},initialize(options){hooks=options;mount();setInterval(()=>{if(!document.hidden)refresh();},15000);},open,quote});
+  window.MilkywayMarketDetail=Object.freeze({leave(){closeChart();identity=null;++epoch;},initialize(options){hooks=options;mount();setInterval(()=>{if(!document.hidden)refresh();},15000);},open,quote});
 })();

@@ -109,17 +109,6 @@ services:
         condition: service_healthy
     command: [python, -m, cloud_app.market_detail_worker]
 
-  company-data:
-    <<: *service
-    cpu_shares: 128
-    environment:
-      <<: *environment
-      SEC_CONTACT_EMAIL: ${SEC_CONTACT_EMAIL:-}
-    depends_on:
-      app:
-        condition: service_healthy
-    command: [python, -m, cloud_app.company_worker]
-
   backup:
     <<: *service
     depends_on:

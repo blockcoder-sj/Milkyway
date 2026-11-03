@@ -66,20 +66,7 @@ def refresh_broker(settings, session):
                                              ('secret', connection.encrypted_api_secret, 'App Secret')):
                 configuration[field] = decrypt_market_credential(encrypted, settings,
                     owner_id=connection.user_id, provider=provider, environment=connection.environment, label=label)
-            from .company_prices import active, Price, currency_for
-            symbols = active(settings, connection.user_id)
-            collected = _provider.run({'company_symbols': symbols}, configuration, deadline=time.monotonic() + (35 if provider == 'toss' else 5))
-            companies = collected.get('company_prices', {})
-            if not isinstance(companies, dict) or len(companies)>12:
-                raise ValueError('Invalid watched company prices')
-            for symbol, value in companies.items():
-                if symbol in symbols:
-                    try:
-                        quote = Price.model_validate(value)
-                        if quote.symbol == symbol and quote.currency == currency_for(symbol) and quote.method in {'websocket', 'poll'}:
-                            cache['companies'][symbol] = quote.model_dump(mode='json')
-                    except (ValueError, TypeError):
-                        continue
+            collected = _provider.run({}, configuration, deadline=time.monotonic() + (35 if provider == 'toss' else 5))
             for key, value in collected.items():
                 if key in CAPABILITIES[provider]:
                     try:

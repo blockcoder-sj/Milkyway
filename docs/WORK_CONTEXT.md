@@ -2180,3 +2180,32 @@ runtime/verification-20261103/personal-recovery/에 있다.
 다음에 런타임 중지를 요청하면 개인 6서비스와 작은 실행기를 중지한다. 다른 프로젝트·
 공유 Docker 엔진·볼륨은 보존한다. 실행기만 중지하는 명령은
 python3 deploy/local_control.py stop 이며 페이퍼 서비스는 그대로 유지된다.
+
+## 2026-11-03 초보자 배포에서 섹터 상세·연구 자료 분리
+
+사용자가 섹터 정보가 초보자에게 과하므로 GitHub 다운로드에서 제외하고 카드를
+클릭할 수 없게 요청했다. 미국 11개·한국 8개 섹터 등락 요약은 유지한다. 제목·
+그래프·카드에 링크/클릭 대상을 넣지 않고 예전 상세 주소는 시장으로 돌린다.
+지수·환율 상세 차트, 전략·백테스트·페이퍼와 복구 기능은 유지한다.
+
+연구 관련 202개 파일·4.85MiB를 Git 최신 트리에서 제외했다. 원본은 gitignored
+runtime/archives/sector-research-20261103/에 보존했고 전체 SHA를 확인했다.
+기업 자료·관계도·의미 검색 의존성과 company-data 수집을 배포에서 제거했다.
+시장 worker의 기업 watch도 제거했으나 체결용 member quote는 변경하지 않았다.
+market-details는 지수·환율 차트만 수집하며, 시작·복구 목록은 이 서비스를 포함한
+7개다. 작은 실행기를 새 소스로 다시 시작했으며 현재 PID는 40485다.
+
+전체 415개 중 405개 통과·10개 건너뜀/14.862초, 호스트 프런트 12개와 실행기 13개
+통과. 격리 실제 앱/worker 프로세스 검사 7단계를 통과했다. Chrome 928px에서
+미국·한국 섹터 클릭 차단, 이전 주소 차단, S&P/원달러 차트, 같은 계좌의 개장 대기와
+가로 넘침 없음을 확인했다. 처음 HTML에서 누락한 차트 스크립트는 수정 후 재확인했다.
+
+원장 10테이블 행수·전체행 SHA, 기존 마운트와 다른 컨테이너를 보존했다.
+app·market-data만 교체하고 차트용 market-details를 추가했다. 배포 중 실행기와의
+생성 충돌은 순차 실행으로 해소했고 실행기의 최종 상태는 complete다.
+최종 앱 39afcb45의 cloud_app 83개 파일 SHA 일치, ready 200.
+상세 STARTER_DISTRIBUTION_REVIEW_20261103.md, 증거 runtime/verification-20261103/starter/.
+원본 개인 연구 DB·모델·캐시·백업은 삭제하지 않았다. 현재 Git 이력은 유지하며
+배포는 codex/ai-research-workflow의 ZIP 또는 depth 1 clone을 사용한다. main은 이전
+버전이다. 코드 기능·성능·직접 소스·변경 보안 검토를 마쳤다. 실주문·AI 제공사 호출·
+공개 배포·CodeRabbit·하위 agent·Deep Scan은 수행하지 않았다.

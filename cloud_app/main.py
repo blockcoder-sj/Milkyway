@@ -601,10 +601,6 @@ def startup() -> None:
     if errors:
         raise RuntimeError("Startup configuration failed: " + "; ".join(errors))
     prepare_runtime_database()
-    if settings.personal_local_mode and not settings.production:
-        from .company_entities import bootstrap, seed_research
-        bootstrap(settings)
-        seed_research(settings)
     if _broker_enabled():
         broker_preflight(settings, "app")
     _migrate_legacy_credentials()
@@ -651,6 +647,7 @@ def public_config():
     return {"personal_local_mode": settings.personal_local_mode,
             "local_auto_login": local_login_enabled(settings),
             "local_demo_data": settings.local_demo_data,
+            "sector_details_enabled": False,
             "quote_interval_seconds": settings.quote_interval_seconds}
 
 
@@ -1819,90 +1816,30 @@ def _market_connection_identity(session, user):
 def personal_market_detail(instrument_id: str, user: User = Depends(current_user)):
     from .market_catalog import BY_ID
     from .market_details import detail_snapshot
-    if not settings.personal_local_mode or settings.production or instrument_id not in BY_ID:
+    if (not settings.personal_local_mode or settings.production or instrument_id not in BY_ID
+            or BY_ID[instrument_id].group == "sectors"):
         raise HTTPException(404, "시장 항목을 찾을 수 없습니다")
     return detail_snapshot(settings, instrument_id)
 
 
-@app.get("/api/company-details/{sector_id}/{symbol}")
-def personal_company_detail(sector_id: str, symbol: str, user: User = Depends(current_user)):
-    from .company_service import company_snapshot
-    from .constellation_semantics import decorate_company
-    return decorate_company(settings, company_snapshot(settings, sector_id, symbol))
 
 
-@app.get("/api/energy-constellation")
-def personal_energy_constellation(user: User = Depends(current_user)):
-    from .energy_constellation import snapshot
-    from .constellation_semantics import decorate
-    return decorate(settings, snapshot(settings))
 
 
-@app.get("/api/energy-constellation/search")
-def personal_constellation_evidence(q: str = Query(min_length=1, max_length=240),
-                                   mode: str = Query('keyword', pattern='^(keyword|semantic)$'),
-                                   focus: str | None = Query(None, max_length=160),
-                                   user: User = Depends(current_user)):
-    _rate_limit("constellation-evidence:" + user.id, 60, 3600)
-    if mode=='semantic':
-        from .constellation_semantics import search
-        return search(settings, q, focus)
-    from .constellation_retrieval import search
-    return search(settings, q, focus)
 
 
-@app.get('/api/energy-constellation/analysis')
-def personal_constellation_analysis(node_id: str = Query(min_length=1, max_length=160),
-                                    basis: str = Query('relations', pattern='^(relations|product|segment|geography|revenue_type|end_market)$'),
-                                    company: bool = False, user: User = Depends(current_user)):
-    _rate_limit('constellation-analysis:'+user.id,120,3600)
-    from .constellation_semantics import analysis
-    return analysis(settings, node_id, basis, company)
 
 
-@app.get("/api/company-entities/{entity_key}")
-def personal_company_entity(entity_key: str, user: User = Depends(current_user)):
-    from .company_entities import entity_snapshot
-    from .constellation_semantics import decorate_company
-    return decorate_company(settings, entity_snapshot(settings, entity_key))
 
 
-@app.get("/api/company-entities/{entity_key}/network")
-def personal_company_network(entity_key: str, via: str, page: int = Query(1, ge=1, le=50),
-                             kind: str = Query("all", pattern="^(all|supplier|customer|partner|competitor)$"),
-                             user: User = Depends(current_user)):
-    from .company_network import network_snapshot
-    return network_snapshot(settings, entity_key, via, page, kind)
 
 
-@app.get("/api/company-entities/{entity_key}/price")
-def personal_company_price(entity_key: str, symbol: str | None = Query(None, max_length=20),
-                           user: User = Depends(current_user), session: Session = Depends(get_db)):
-    from .company_prices import snapshot
-    return snapshot(settings, entity_key, symbol,
-                    connection_identity=_market_connection_identity(session, user))
 
 
-@app.post("/api/company-entities/{entity_key}/price-watch", status_code=202)
-def personal_company_price_watch(entity_key: str, symbol: str | None = Query(None, max_length=20),
-                                 user: User = Depends(csrf_guard)):
-    from .company_prices import watch
-    _rate_limit('company-price-watch:' + user.id, 30, 60)
-    return watch(settings, entity_key, user.id, symbol)
 
 
-@app.post("/api/company-entities/{entity_key}/refresh", status_code=202)
-def personal_company_entity_refresh(entity_key: str, user: User = Depends(csrf_guard)):
-    from .company_entities import enqueue_entity
-    _rate_limit("company-research:" + user.id, 60, 3600)
-    return enqueue_entity(settings, entity_key)
 
 
-@app.post("/api/company-details/{sector_id}/{symbol}/refresh", status_code=202)
-def personal_company_refresh(sector_id: str, symbol: str, user: User = Depends(csrf_guard)):
-    from .company_service import enqueue_company
-    _rate_limit("company-research:" + user.id, 60, 3600)
-    return enqueue_company(settings, sector_id, symbol)
 
 
 @app.get("/api/market-overview")
@@ -2045,6 +1982,7 @@ def dashboard(user: User = Depends(current_user), session: Session = Depends(get
     return {
         "personal_local_mode": False,
         "local_demo_data": settings.local_demo_data,
+            "sector_details_enabled": False,
         "market": [row for rows in market_groups.values() for row in rows],
         "market_groups": market_groups,
         "sector_heatmap": us_sector_heatmap,

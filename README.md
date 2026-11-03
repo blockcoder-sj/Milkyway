@@ -17,6 +17,10 @@
 표시합니다. 증권사 연결 전에도 공개 참고 데이터를 1분마다 수집하며 출처·기준 시각·
 전일 대비·지연 상태를 함께 표시합니다. [항목·데이터 의미·구조](docs/MARKET_DASHBOARD.md)
 
+초보자용 배포본은 섹터 등락 요약만 표시합니다. 섹터 카드는 클릭되지 않으며 기업
+분석·재무 자료·관계도·의미 검색 모델을 포함하거나 자동 수집하지 않습니다.
+주요 지수·환율의 상세 차트와 전략·백테스트·페이퍼 운용은 사용할 수 있습니다.
+
 ## 학회원 개인용 빠른 시작
 
 Docker Desktop(Windows/macOS) 또는 Docker Engine + Compose(Linux)를 실행하고,
@@ -24,7 +28,7 @@ Docker Desktop(Windows/macOS) 또는 Docker Engine + Compose(Linux)를 실행하
 비공개 저장소라면 먼저 저장소 접근 권한이 필요합니다.
 
 ```bash
-git clone https://github.com/blockcoder-sj/Milkyway.git
+git clone --depth 1 --branch codex/ai-research-workflow https://github.com/blockcoder-sj/Milkyway.git
 cd Milkyway
 docker compose -f compose.personal.yaml up -d --build
 ```

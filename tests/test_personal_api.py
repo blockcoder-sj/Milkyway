@@ -75,53 +75,8 @@ class PersonalApiTests(unittest.TestCase):
         with patch.object(main,'settings',replace(self.settings,personal_local_mode=False)):
             with self.assertRaises(HTTPException):main.personal_market_detail('sp500',self.user)
 
-    def test_company_routes_read_cache_and_queue_public_work_with_csrf(self):
-        from cloud_app import company_worker
-        with patch.object(company_worker._provider, 'run') as external:
-            payload = main.personal_company_detail('kr_13', '005930.KS', self.user)
-            self.assertEqual(payload['symbol'], '005930.KS')
-            queued = main.personal_company_refresh('kr_13', '005930.KS', self.user)
-            self.assertEqual(queued['status'], 'queued')
-            external.assert_not_called()
-        routes = {route.path: route for route in main.app.routes if hasattr(route, 'dependant')}
-        refresh = routes['/api/company-details/{sector_id}/{symbol}/refresh']
-        self.assertIn(main.csrf_guard, [dep.call for dep in refresh.dependant.dependencies])
-        with patch.object(main, 'settings', replace(self.settings, personal_local_mode=False)):
-            with self.assertRaises(HTTPException): main.personal_company_detail('kr_13', '005930.KS', self.user)
 
-    def test_entity_routes_require_authentication_and_csrf_and_known_identity(self):
-        payload = main.personal_company_detail('kr_13', '005930.KS', self.user)
-        entity = main.personal_company_entity(payload['entity_key'], self.user)
-        self.assertEqual(entity['entity_key'], payload['entity_key'])
-        routes = {route.path: route for route in main.app.routes if hasattr(route, 'dependant')}
-        self.assertIn(main.current_user, [d.call for d in routes['/api/company-entities/{entity_key}'].dependant.dependencies])
-        self.assertIn(main.csrf_guard, [d.call for d in routes['/api/company-entities/{entity_key}/refresh'].dependant.dependencies])
-        with self.assertRaises(HTTPException):
-            main.personal_company_entity('c_' + '0'*32, self.user)
 
-    def test_company_network_route_is_authenticated_bounded_and_cache_only(self):
-        from cloud_app.company_graph import CompanyGraph
-        from cloud_app.company_schemas import CompanyKnowledge
-        source = dict(label='Synthetic filing', url='https://www.sec.gov/report.htm',
-                      as_of='2025-12-31', level='primary')
-        graph = CompanyGraph(self.settings)
-        graph.ingest(CompanyKnowledge(symbol='AAA', name='Root', relations=[dict(
-            name='Middle', symbol='BBB', kind='supplier', detail='공시된 공급 관계', source=source)]))
-        root, via = graph.by_symbol('AAA')['id'], graph.by_symbol('BBB')['id']
-        with patch('cloud_app.company_worker._provider.run') as external:
-            payload = main.personal_company_network(root, via, 1, 'all', self.user)
-            self.assertEqual(payload['via']['id'], via)
-            external.assert_not_called()
-        route = next(row for row in main.app.routes
-                     if row.path == '/api/company-entities/{entity_key}/network')
-        self.assertIn(main.current_user, [dep.call for dep in route.dependant.dependencies])
-        parameters = main.app.openapi()['paths'][route.path]['get']['parameters']
-        query = {row['name']: row['schema'] for row in parameters}
-        self.assertEqual((query['page']['minimum'], query['page']['maximum']), (1, 50))
-        self.assertEqual(query['kind']['pattern'], '^(all|supplier|customer|partner|competitor)$')
-        with patch.object(main, 'settings', replace(self.settings, personal_local_mode=False)):
-            with self.assertRaises(HTTPException):
-                main.personal_company_network(root, via, 1, 'all', self.user)
 
     def test_new_install_dashboard_works_before_history_or_keys(self):
         payload=main.dashboard(self.user,self.session)

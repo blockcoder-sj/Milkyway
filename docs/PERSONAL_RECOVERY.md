@@ -60,7 +60,7 @@ Docker 안내와 OS 권한 안내는 본인이 확인한다. Python이 없다면
 
 시작·복구 실행기는 본인 PC의 127.0.0.1:19480에서만 동작한다. 웹 앱의 인증된
 개인 모드와 비공개 연결 토큰으로 통신한다. 다른 Origin·Host·명령은 거절한다.
-명령은 app·paper-worker·personal-data·backtest-worker·market-data·backup의 시작과
+명령은 app·paper-worker·personal-data·backtest-worker·market-data·market-details·backup의 시작과
 필요한 재시작으로 제한한다. 웹 앱에 Docker 소켓을 연결하지 않는다.
 
 시작·복구 실행기를 끝내려면 `python3 deploy/local_control.py stop`을 사용한다.

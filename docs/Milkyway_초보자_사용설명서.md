@@ -46,7 +46,7 @@ docker compose version
 **Git을 쓰는 방법**
 
 ```console
-git clone https://github.com/blockcoder-sj/Milkyway.git
+git clone --depth 1 --branch codex/ai-research-workflow https://github.com/blockcoder-sj/Milkyway.git
 cd Milkyway
 ```
 
@@ -54,7 +54,7 @@ cd Milkyway
 
 **ZIP으로 받는 방법**
 
-1. GitHub 저장소의 `Code` → `Download ZIP`을 선택합니다. [GitHub 공식 다운로드 안내](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives).
+1. 브랜치를 `codex/ai-research-workflow`로 선택한 뒤 `Code` → `Download ZIP`을 선택합니다. [GitHub 공식 다운로드 안내](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives).
 2. ZIP을 **압축 해제**합니다. ZIP 내부에서 실행하지 않습니다.
 3. 터미널에서 압축 해제한 폴더로 이동합니다. 경로에 공백이 있으면 큰따옴표로 감쌉니다.
 
@@ -76,7 +76,7 @@ docker compose -f compose.personal.yaml up -d --build
 docker compose -f compose.personal.yaml ps
 ```
 
-`app`, `paper-worker`, `backtest-worker`, `personal-data`, `market-data`, `backup`이 실행되어야 합니다. `app`의 `healthy`는 웹 서버와 DB가 준비되었다는 뜻이며, 증권사 인증이나 실제 체결 성공까지 뜻하지는 않습니다.
+`app`, `paper-worker`, `backtest-worker`, `personal-data`, `market-data`, `market-details`, `backup`이 실행되어야 합니다. `app`의 `healthy`는 웹 서버와 DB가 준비되었다는 뜻이며, 증권사 인증이나 실제 체결 성공까지 뜻하지는 않습니다.
 
 브라우저에서 **http://localhost:8080** 을 엽니다. 다른 PC에서는 접속할 수 없도록 본인 PC에만 바인딩되어 있습니다.
 
@@ -88,8 +88,9 @@ docker compose -f compose.personal.yaml ps
 
 상단 `시장`에서는 한국·미국 주요 지수와 환율, 선물·원자재, 섹터 지수를 봅니다.
 증권사 연결 전에 사용할 수 있는 공개 참고 데이터이며 1분마다 갱신합니다.
-각 카드의 `지표 정보` 또는 `섹터 정보`를 펼치면 기준값·범위·수집 시각·원본 링크를
-확인합니다. 기준 시각이 오래되거나 수집이 실패하면 지연 표시가 붙습니다.
+주요 지수·환율 카드는 눌러 상세 차트를 봅니다. 섹터 카드는 등락 요약만 표시하며
+클릭되지 않습니다. 기업 분석·재무 자료·관계도는 초보자용 배포본에서 제외했습니다.
+기준 시각이 오래되거나 수집이 실패하면 지연 표시가 붙습니다.
 `내 전략 종목 · 증권사 시세`가 실제 페이퍼 체결용 가격입니다.
 [시장 화면 항목과 데이터 의미](MARKET_DASHBOARD.md)
 

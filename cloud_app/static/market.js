@@ -27,11 +27,13 @@
   function card(row, sector = false) {
     const stale = row.status === "stale" || row.status === "unavailable";
     const format = value => number(value, row.group === "fx" && row.unit === "USD" ? 4 : row.group === "fx" && row.unit === "JPY" ? 3 : 2);
-    return `<article class="market-card ${sector ? "sector-index-card" : ""} ${stale ? "market-stale" : ""}" data-market-card="${escape(row.id)}">
-      <div class="market-card-top"><strong><a class="market-detail-link" data-market-detail="${escape(row.id)}" href="#detail/${encodeURIComponent(row.id)}">${escape(row.label)}</a></strong><small>${escape(row.unit)}</small></div>
+    const label = sector ? escape(row.label) : `<a class="market-detail-link" data-market-detail="${escape(row.id)}" href="#detail/${encodeURIComponent(row.id)}">${escape(row.label)}</a>`;
+    const chart = sector ? `<div class="market-chart-summary">${sparkline(row.sparkline)}</div>` : `<a class="market-chart-link" data-market-detail="${escape(row.id)}" data-chart-expand href="#detail/${encodeURIComponent(row.id)}" aria-label="${escape(row.label)} 차트 크게 보기">${sparkline(row.sparkline)}</a>`;
+    return `<article class="market-card ${sector ? "sector-index-card sector-summary-card" : ""} ${stale ? "market-stale" : ""}" ${sector ? 'aria-disabled="true"' : `data-market-card="${escape(row.id)}"`}>
+      <div class="market-card-top"><strong>${label}</strong><small>${escape(row.unit)}</small></div>
       <div class="market-price-line"><span class="market-value">${format(row.value)}</span><b class="market-change ${direction(row.change_pct)}">${change(row.change_pct)}</b></div>
       <div class="market-delta">전일 대비 ${finite(row.change) && row.change > 0 ? "+" : ""}${format(row.change)} ${escape(row.unit === "%" ? "%p" : row.unit)}</div>
-      <a class="market-chart-link" data-market-detail="${escape(row.id)}" data-chart-expand href="#detail/${encodeURIComponent(row.id)}" aria-label="${escape(row.label)} 차트 크게 보기">${sparkline(row.sparkline)}</a>
+      ${chart}
       ${stale?'<small class="market-stale-note">갱신 확인 필요</small>':''}</article>`;
   }
   const renderedCards = new WeakMap();
@@ -61,12 +63,13 @@
       return (sort === "asc" ? 1 : -1) * (a.change_pct - b.change_pct);
     });
     $("#sectorHeatmapTitle").textContent = country === "kr" ? "한국 주요 업종 지수" : "미국 S&P 500 · 11개 섹터";
-    $("#heatmapMeta").textContent = `${rows.filter(row => finite(row.value)).length}/${rows.length}개 수신 · 전일 기준 대비`;
+    $("#heatmapMeta").textContent = `${rows.filter(row => finite(row.value)).length}/${rows.length}개 수신 · 등락 요약`;
     $("#heatmapMethod").textContent = country === "kr"
       ? "증권사 우선으로 조회하고 Yahoo Finance로 보완하는 코스피 주요 8개 업종 지수입니다. 전체 업종 목록이 아니며 금융업과 증권·보험의 구성 범위는 겹칩니다. 기준 시각과 지연 여부를 확인하세요."
       : "Yahoo Finance가 제공하는 S&P 500의 GICS 11개 섹터 지수입니다. 지수값과 공급자 전일 기준값으로 등락률을 계산합니다. 기준 시각과 지연 여부를 확인하세요.";
     $("#sectorHeatmap").className = "sector-index-grid";
     renderCards("#sectorHeatmap", rows, true);
   }
-  window.MilkywayMarket = {renderMarket, renderSectors};
+  const detailAvailable = (id) => !/^(us_|kr_)/.test(String(id));
+  window.MilkywayMarket = {renderMarket, renderSectors, detailAvailable};
 })();

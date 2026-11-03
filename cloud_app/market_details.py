@@ -10,7 +10,6 @@ from .market_detail_catalog import context_for
 from .market_detail_feed import collect_detail, merge_news
 from .market_service import _write_cache
 from .provider_process import ProviderProcess
-from .sector_classifications import Classification
 
 UTC=dt.timezone.utc
 REFRESH_SECONDS=900
@@ -36,7 +35,7 @@ class CompanyRow(BaseModel):
     source:str=Field(max_length=80)
     url:str=Field(max_length=2000)
     displayed_share_pct:float|None=Field(default=None,ge=0,le=100)
-    classification:Classification|None=None
+    classification:dict|None=None
     directory_basis:str|None=Field(default=None,max_length=200)
     directory_group:str|None=Field(default=None,max_length=80)
 
@@ -82,7 +81,7 @@ class DetailCache(BaseModel):
 
 
 def cache_path(settings,identity):
-    if identity not in BY_ID or not settings.personal_local_mode or settings.production:
+    if identity not in BY_ID or BY_ID[identity].group == 'sectors' or not settings.personal_local_mode or settings.production:
         raise ValueError('Unknown personal market instrument')
     return settings.dataset_dir.parent/'market-details'/(identity+'.json')
 
@@ -95,22 +94,8 @@ def read_cache(settings,identity):
         return DetailCache()
 
 
-def classified_companies(settings, identity, cache=None):
-    """Reconcile a local directory without any HTTP/provider calls."""
-    from .sector_classifications import read_view, reconcile
-    part = (cache or read_cache(settings, identity)).companies
-    if not identity.startswith('us_'):
-        return part, None
-    view = read_view(settings)
-    rows, audit = reconcile([row.model_dump(mode='json') for row in part.rows], identity, view)
-    if identity == 'us_10' and settings.personal_local_mode and not settings.production:
-        from .energy_issuers import augment
-        rows, added, omitted = augment(rows, identity, view)
-        audit = {**audit, 'research_added': added, 'omitted': audit.get('omitted', 0) + omitted}
-    return DetailPart[CompanyRow](**{**part.model_dump(mode='json'), 'rows': rows}), audit
-
-
 def refresh_detail(settings,identity):
+    cache_path(settings, identity)  # Reject disabled sectors before any provider call.
     old=read_cache(settings,identity).model_dump(mode='json')
     try:
         result=_provider.run({'id':identity},{},deadline=time.monotonic()+60)
@@ -132,11 +117,10 @@ def refresh_detail(settings,identity):
 
 
 def detail_snapshot(settings,identity,now=None):
+    cache_path(settings, identity)
     instrument=BY_ID[identity]
     now=now or dt.datetime.now(UTC)
     cache=read_cache(settings,identity)
-    classified, audit=classified_companies(settings, identity, cache)
-    cache.companies=classified
     result=cache.model_dump(mode='json')
     for key in ('history','companies','news','related_history'):
         part=getattr(cache,key)
@@ -146,12 +130,6 @@ def detail_snapshot(settings,identity,now=None):
     earliest=years_ago(now).date().isoformat()
     for key in ('history','related_history'):
         result[key]['rows']=[row for row in result[key]['rows'] if earliest<=row['date']<=now.date().isoformat()]
-    result['companies']['classification_audit']=audit
-    if identity == 'us_10':
-        from .energy_guide import snapshot as energy_guide
-        result['industry_guide'] = energy_guide()
-        from .energy_issuers import summary as issuer_summary
-        result['issuer_directory'] = issuer_summary()
     return {**result,'id':identity,'label':instrument.label,'symbol':instrument.symbol,'unit':instrument.unit,
             'group':instrument.group,'market':instrument.market,'context':context_for(identity),
             'refresh_seconds':REFRESH_SECONDS,'maximum_years':3}

@@ -111,16 +111,8 @@ class TossDisplay:
         self.next_fx = 0
         self.retry_at = 0
         self.auth_lock = threading.Lock()
-        self.next_indices = self.next_stocks = 0
+        self.next_indices = 0
         self.indices = {}
-        self.stock_rows = {}
-        self.stock_symbols = ()
-        from .company_price_stream import TossCompanyStream
-        self.company_stream = TossCompanyStream(self.stock_token)
-
-    def stock_token(self):
-        with self.auth_lock:
-            return self.client._headers()['Authorization'].removeprefix('Bearer ')
 
     def request(self, path, params):
         with self.auth_lock:
@@ -135,7 +127,7 @@ class TossDisplay:
         finally:
             response.close()
 
-    def snapshot(self, symbols=()):
+    def snapshot(self):
         rows = dict(self.indices)
         if time.monotonic() >= max(self.next_indices, self.retry_at):
             self.next_indices = time.monotonic() + 15
@@ -155,38 +147,6 @@ class TossDisplay:
                 pass
         if self.fx:
             rows['usdkrw'] = self.fx
-        from .company_prices import Price, broker_symbol, currency_for, WATCH_LIMIT
-        if len(symbols) > WATCH_LIMIT:
-            raise ValueError('Too many watched stocks')
-        selected = {broker_symbol(symbol): symbol for symbol in symbols}
-        # REST supplies the initial snapshot; the stream starts at the next trade.
-        if selected and (time.monotonic() >= self.next_stocks or tuple(sorted(symbols)) != self.stock_symbols):
-            self.next_stocks = time.monotonic() + 15
-            self.stock_symbols = tuple(sorted(symbols))
-            try:
-                values = self.request('/api/v1/prices', {'symbols': ','.join(sorted(selected))})['result']
-                if not isinstance(values, list) or len(values) > WATCH_LIMIT:
-                    raise ValueError('Invalid company price batch')
-                for value in values:
-                    symbol = selected.get(value.get('symbol'))
-                    if symbol and value.get('currency') == currency_for(symbol):
-                        try:
-                            self.stock_rows[symbol] = Price(symbol=symbol, currency=value['currency'],
-                                value=value['lastPrice'], observed_at=value.get('timestamp'),
-                                fetched_at=dt.datetime.now(UTC), method='poll').model_dump(mode='json')
-                        except (ValueError, TypeError):
-                            continue
-            except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, requests.RequestException):
-                self.next_stocks = time.monotonic() + 60
-        streamed = self.company_stream.snapshot(list(symbols))
-        companies = {symbol: value for symbol, value in self.stock_rows.items() if symbol in symbols}
-        for symbol, value in streamed.items():
-            # A late old frame cannot replace a newer REST trade.
-            previous = companies.get(symbol)
-            if not previous or not previous.get('observed_at') or dt.datetime.fromisoformat(value['observed_at']) >= dt.datetime.fromisoformat(previous['observed_at']):
-                companies[symbol] = value
-        self.stock_rows = {symbol: value for symbol, value in self.stock_rows.items() if symbol in symbols}
-        rows['company_prices'] = companies
         return rows
 
 
@@ -269,6 +229,4 @@ def collect_broker(_payload, configuration):
             _adapter = KisDisplay(configuration)
         else:
             return {}
-    if configuration['provider'] == 'toss':
-        return _adapter.snapshot(_payload.get('company_symbols', []))
     return _adapter.snapshot()

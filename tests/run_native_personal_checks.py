@@ -68,37 +68,25 @@ def run():
     try:
         start("app")
         wait_for("native app startup", lambda: client.request("/health/startup")[0] == 200, timeout=25)
-        for role in ("paper", "backtest", "personal-data", "company-data"):
+        for role in ("paper", "backtest", "personal-data"):
             start(role)
         wait_for("native workers", lambda: client.request("/health/ready")[0] == 200, timeout=25)
         assert client.request("/api/research/sessions")[0] == 401
-        assert client.request("/api/company-details/kr_13/005930.KS")[0] == 401
-        assert client.request('/api/company-entities/c_' + '0'*32)[0] == 401
+        assert client.request("/api/company-details/kr_13/005930.KS")[0] == 404
+        assert client.request('/api/company-entities/c_' + '0'*32)[0] == 404
         registration = client.expect(201, "/api/auth/register", "POST", {
             "email": EMAIL, "password": PASSWORD, "display_name": "Offline process check", "invite_code": INVITE})
         client.csrf = registration["csrf"]
-        for asset in ("/", "/static/research.js", "/static/research/api.js", "/static/research/view.js", "/static/research/panel.js", "/static/company-relations.js", "/static/company-page.js", "/static/company.css"):
+        for asset in ("/", "/static/research.js", "/static/research/api.js", "/static/research/view.js", "/static/research/panel.js"):
             client.expect(200, asset, raw=True)
         record("real_startup_workers_authentication_and_assets")
         client.csrf = "wrong"
         assert client.request("/api/research/sessions", "POST", {"title": "Denied"})[0] == 403
-        assert client.request("/api/company-details/kr_13/005930.KS/refresh", "POST")[0] == 403
+        assert client.request("/api/company-details/kr_13/005930.KS/refresh", "POST")[0] == 404
         client.csrf = registration["csrf"]
-        client.expect(202, "/api/company-details/kr_13/005930.KS/refresh", "POST")
-        def company_collected():
-            value = client.request("/api/company-details/kr_13/005930.KS")[1]
-            return bool(value.get('fetched_at')) and any(edge.get('entity_id') == 'Q123' for edge in value.get('relations', []))
-        wait_for("queued company worker", company_collected, timeout=15)
-        record("company_auth_csrf_queue_and_separate_worker")
-        company = client.expect(200, "/api/company-details/kr_13/005930.KS")
-        assert company['brief'] and company['description'] != 'Synthetic offline company collection'
-        private = next(edge['target_id'] for edge in company['relations'] if edge['entity_id'] == 'Q123')
-        private_path = '/api/company-entities/' + private
-        page = client.expect(200, private_path)
-        assert page['symbol'] is None and page['relations'][0]['target_id'] == company['entity_key']
-        assert page['collectable'] is False
-        client.expect(409, private_path + '/refresh', 'POST')
-        record('canonical_private_company_navigation_and_reverse_evidence')
+        assert client.request("/api/market-details/us_10")[0] == 404
+        assert client.request("/api/company-details/kr_13/005930.KS")[0] == 404
+        record("starter_sector_and_company_details_disabled")
         room = client.expect(201, "/api/research/sessions", "POST", {"title": "Offline native check"})
         path = "/api/research/sessions/" + room["id"]
         turn = client.expect(201, path + "/messages", "POST", {"request_id": "native-request-1", "prompt": "AAPL MSFT momentum"})
