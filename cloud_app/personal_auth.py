@@ -15,12 +15,12 @@ LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 def local_login_enabled(settings: Settings) -> bool:
     return (
-        settings.personal_local_mode
-        and settings.app_env == "development"
-        and not settings.authority_enabled
-        and settings.credential_backend == "local"
-        and settings.max_users == 1
-        and urlsplit(settings.public_base_url).hostname in LOOPBACK_HOSTS
+        getattr(settings, "personal_local_mode", False)
+        and getattr(settings, "app_env", None) == "development"
+        and getattr(settings, "authority_enabled", True) is False
+        and getattr(settings, "credential_backend", None) == "local"
+        and getattr(settings, "max_users", None) == 1
+        and urlsplit(getattr(settings, "public_base_url", "")).hostname in LOOPBACK_HOSTS
     )
 
 

@@ -85,17 +85,29 @@ _personal_quote_client = None
 def _personal_quote_execute(payload, configuration):
     """Runs only in the killable child, retaining OAuth between polls."""
     global _personal_quote_client
-    if _personal_quote_client is None:
-        if configuration["provider"] == "kis":
-            _personal_quote_client = KisQuoteProvider(KisCredentials(
-                api_key=configuration["key"], api_secret=configuration["secret"],
-                paper=configuration["environment"] == "paper"), source="kis_member")
-        else:
-            _personal_quote_client = TossQuoteProvider(TossCredentials(
-                client_id=configuration["key"], client_secret=configuration["secret"]), source="toss_member")
-    # The parent hard deadline also bounds slow response bodies and socket stalls.
-    return [{**value.__dict__, "observed_at": value.observed_at.isoformat()}
-            for value in _personal_quote_client.fetch(payload["tickers"])]
+    from fastapi import HTTPException
+    import requests
+    from .toss_quotes import TossAuthenticationError, TossIpNotAllowedError, TossRateLimitError
+    try:
+        if _personal_quote_client is None:
+            if configuration["provider"] == "kis":
+                _personal_quote_client = KisQuoteProvider(KisCredentials(
+                    api_key=configuration["key"], api_secret=configuration["secret"],
+                    paper=configuration["environment"] == "paper"), source="kis_member")
+            else:
+                _personal_quote_client = TossQuoteProvider(TossCredentials(
+                    client_id=configuration["key"], client_secret=configuration["secret"]), source="toss_member")
+        # The parent hard deadline also bounds slow response bodies and socket stalls.
+        return [{**value.__dict__, "observed_at": value.observed_at.isoformat()}
+                for value in _personal_quote_client.fetch(payload["tickers"])]
+    except TossIpNotAllowedError as exc:
+        raise HTTPException(403, "quote_ip_not_allowed") from exc
+    except TossAuthenticationError as exc:
+        raise HTTPException(401, "quote_authentication_failed") from exc
+    except TossRateLimitError as exc:
+        raise HTTPException(429, "quote_rate_limited") from exc
+    except requests.RequestException as exc:
+        raise HTTPException(503, "quote_network_unavailable") from exc
 
 
 class PersonalQuoteProvider(QuoteProvider):
@@ -656,6 +668,7 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
     error_count = 0
     fetched_quotes: list[tuple[MemberFeedConfig, str, list]] = []
     failed_users: set[str] = set()
+    failure_reasons: dict[str, str] = {}
     last_progress = time.monotonic()
     with ThreadPoolExecutor(max_workers=min(_MEMBER_QUOTE_WORKERS, len(tasks))) as executor:
         futures = {
@@ -673,6 +686,9 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
             except Exception as exc:
                 error_count += 1
                 failed_users.add(user_id)
+                known = {"quote_ip_not_allowed", "quote_authentication_failed", "quote_rate_limited", "quote_network_unavailable"}
+                detail = getattr(exc, "detail", "")
+                failure_reasons[user_id] = detail if isinstance(detail, str) and detail in known else "quote_timeout" if isinstance(exc, TimeoutError) else "quote_provider_unavailable"
                 if getattr(settings, "personal_local_mode", False):
                     # Invalidate attempted symbols on failure. Unrequested
                     # symbols retain their explicitly age-bounded cached marks.
@@ -705,6 +721,10 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
         if getattr(settings, "personal_local_mode", False):
             session.execute(delete(MemberQuote).where(MemberQuote.user_id == user_id,
                 MemberQuote.ticker.in_(attempted_symbols[user_id])))
+            heartbeat(session, "personal-feed:" + user_id, json.dumps({
+                "state": failure_reasons.get(user_id, "connected" if values else "no_quotes"),
+                "received": len(values), "requested": len(attempted_symbols[user_id]),
+            }, ensure_ascii=False))
         quote_count += store_member_quotes(session, user_id, values)
         # Hold the connection-row lock through this write/transaction so a
         # concurrent replace/delete purges these rows after we commit.

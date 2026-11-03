@@ -35,6 +35,11 @@ docker compose -f compose.personal.yaml up -d --build
 4. 일봉 자동 준비가 끝나면 탐색용 백테스트를 실행하고 페이퍼 계좌를 만듭니다.
 5. 미국 정규장에 PC와 Docker를 켜 둡니다. 화면의 운영 상태·계좌별 대기 사유·최근 시세를 확인합니다. 시장 탭의 공개 참고 시세는 페이퍼 체결에 사용하지 않습니다.
 
+PC를 껐다 켰거나 실행이 멈췄다면 Mac의 `Milkyway-Start.command`, Windows의
+`Milkyway-Start.cmd`를 실행합니다. 이 실행기에는 Python 3.9 이상이 필요합니다.
+열린 화면에서는 **운용 상태 → 자동매매 복구·재개** 한 번으로 프로세스와 선택 계좌를
+점검하고 기존 기록을 이어갑니다. [상태 표시·인터넷 끊김·시작과 복구](docs/PERSONAL_RECOVERY.md)
+
 [처음부터 따라 하는 사용설명서·문제 해결](docs/Milkyway_초보자_사용설명서.md) ·
 [검증 범위와 남은 실환경 확인](docs/Milkyway_검수보고서.md)
 

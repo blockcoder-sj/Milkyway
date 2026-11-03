@@ -59,12 +59,13 @@ async function api(path, options = {}) {
   let body = {};
   try { body = await response.json(); } catch { throw new Error("서버 응답을 읽지 못했습니다. 실행한 요청은 자동으로 다시 보내지 않습니다. 기록을 새로고침해 상태를 확인하세요."); }
   if (!response.ok) {
-    if (response.status === 401) throw new Error(state.config.local_auto_login
+    const failure = (message) => Object.assign(new Error(message), {status:response.status});
+    if (response.status === 401) throw failure(state.config.local_auto_login
       ? "로컬 세션이 만료되었습니다. 새로고침하면 자동으로 다시 연결됩니다. 저장된 기록은 유지됩니다."
       : "로그인이 만료되었습니다. 다시 로그인해 주세요. 저장된 기록은 유지됩니다.");
-    if (response.status === 429) throw new Error(typeof body.detail === "string" ? body.detail : "요청 한도에 도달했습니다. 잠시 기다린 뒤 다시 시도해 주세요.");
+    if (response.status === 429) throw failure(typeof body.detail === "string" ? body.detail : "요청 한도에 도달했습니다. 잠시 기다린 뒤 다시 시도해 주세요.");
     const detail = Array.isArray(body.detail) ? body.detail.map((item) => `${(item.loc || []).filter((value) => value !== "body").join(".")}: ${item.msg}`).join("\n") : body.detail;
-    throw new Error(typeof detail === "string" ? detail : `요청을 처리하지 못했습니다 (HTTP ${response.status}). 사용설명서의 문제 해결을 확인하세요.`);
+    throw failure(typeof detail === "string" ? detail : `요청을 처리하지 못했습니다 (HTTP ${response.status}). 사용설명서의 문제 해결을 확인하세요.`);
   }
   return body;
 }
@@ -662,6 +663,11 @@ const profileController = window.MilkywayProfile.create({
 });
 profileController.bind();
 window.MilkywayPersonal.initialize({api, refresh, toast, getState: () => state});
+window.MilkywayRuntime.initialize({api, refresh, getState: () => state, ensureSession: async (options = {}) => {
+  if (!state.config.local_auto_login) return;
+  const me = await api("/api/auth/local", {method:"POST", headers:{"X-Milkyway-Local":"1"}, body:"{}", ...options});
+  state.me = me; state.csrf = me.csrf;
+}});
 window.MilkywayMarketDetail.initialize({api, openWorkspace, getState: () => state});
 window.MilkywayCompany.initialize({api, openWorkspace, getState: () => state});
 addEventListener("popstate", () => {

@@ -195,6 +195,10 @@ class StatusBody(BaseModel):
     status: str
 
 
+class PersonalResumeBody(BaseModel):
+    account_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+
+
 _attempt_lock = threading.Lock()
 _attempts: dict[str, deque[float]] = defaultdict(deque)
 _attempt_windows: dict[str, int] = {}
@@ -615,9 +619,13 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    connect_sources = "'self'"
+    if local_login_enabled(settings):
+        from .personal_runtime import CONTROL_URL
+        connect_sources += " " + CONTROL_URL
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
-        "connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+        f"connect-src {connect_sources}; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
     )
     if request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
@@ -1649,6 +1657,25 @@ def list_accounts(user: User = Depends(current_user), session: Session = Depends
         select(PaperAccount).where(PaperAccount.user_id == user.id).order_by(PaperAccount.created_at)
     ).all()
     return [account_snapshot(session, row) for row in rows]
+
+
+@app.get("/api/personal/operation")
+def personal_operation(account_id: str | None = None, user: User = Depends(current_user), session: Session = Depends(get_db)):
+    from .personal_runtime import operation_status
+    return operation_status(session, settings, user.id, account_id)
+
+
+@app.get("/api/personal/control")
+def personal_control(user: User = Depends(current_user)):
+    from .personal_runtime import control_connection
+    return control_connection(settings)
+
+
+@app.post("/api/personal/resume")
+def personal_resume(body: PersonalResumeBody, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+    from .personal_runtime import resume_and_check
+    _rate_limit("personal-resume:" + user.id, 12, 60)
+    return resume_and_check(session, settings, user.id, body.account_id)
 
 
 @app.patch("/api/accounts/{account_id}")

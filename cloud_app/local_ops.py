@@ -1,4 +1,4 @@
-"""Personal-install backups, recovery and diagnostics (no broker network calls)."""
+"""Personal-install backups, diagnostics and resume with a read-only quote probe."""
 from __future__ import annotations
 
 import argparse
@@ -278,13 +278,47 @@ def reset_password(runtime: Path, email: str, password: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("backup", "backup-loop", "restore", "doctor", "reset-password"))
+    parser.add_argument("command", choices=("backup", "backup-loop", "restore", "doctor", "reset-password", "resume", "pair-control"))
     parser.add_argument("archive", nargs="?")
     parser.add_argument("--replace", action="store_true")
     parser.add_argument("--runtime", type=Path, default=Path("/app/runtime"))
     parser.add_argument("--destination", type=Path, default=Path("/app/backups"))
     args = parser.parse_args()
-    if args.command == "reset-password":
+    if args.command in {"resume", "pair-control"}:
+        from .config import get_settings
+        from .personal_runtime import require_personal, resume_and_check
+        settings = get_settings()
+        require_personal(settings)
+        if args.command == "pair-control":
+            import re, sys
+            from . import config
+            value = sys.stdin.read(1025).strip()
+            if not re.fullmatch(r"[a-f0-9]{64}", value):
+                raise ValueError("Invalid local control capability")
+            root = config.ROOT / "runtime"
+            descriptor, temporary = tempfile.mkstemp(prefix=".control-new-", dir=root)
+            try:
+                with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                    os.fchmod(handle.fileno(), 0o600)
+                    json.dump({"token": value}, handle)
+                    handle.flush(); os.fsync(handle.fileno())
+                os.replace(temporary, root / ".local-control.json")
+                _sync_directory(root)
+            finally:
+                Path(temporary).unlink(missing_ok=True)
+            print(json.dumps({"paired": True}))
+        else:
+            from .database import SessionLocal
+            from .personal_auth import local_owner
+            from fastapi import HTTPException
+            with SessionLocal() as session:
+                try:
+                    owner = local_owner(session)
+                    result = resume_and_check(session, settings, owner.id, args.archive)
+                    print(json.dumps(result, ensure_ascii=False, default=str))
+                except HTTPException as exc:
+                    print(json.dumps({"blocked": True, "message": str(exc.detail)}, ensure_ascii=False))
+    elif args.command == "reset-password":
         if not args.archive:
             parser.error("reset-password requires your account email")
         password = getpass.getpass("New password (10–128 characters): ")

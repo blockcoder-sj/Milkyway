@@ -194,6 +194,11 @@
     document.body.classList.toggle("personal-mode", isPersonal());
     if (isPersonal()) {
       $("#market .section-head h3").textContent = "주요 지수·환율";
+      if (window.MilkywayRuntime) {
+        window.MilkywayRuntime.onDashboard(dashboard);
+        renderBuilder();
+        return;
+      }
     }
     const operational = dashboard.operational || {};
     const worker = dashboard.worker || {};
