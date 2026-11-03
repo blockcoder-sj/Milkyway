@@ -16,6 +16,10 @@ import urllib.error
 import urllib.request
 import webbrowser
 
+for stream in (sys.stdout, sys.stderr):
+    if hasattr(stream, 'reconfigure'):
+        stream.reconfigure(encoding='utf-8', errors='replace')
+
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from cloud_app.native_platform import flock, LOCK_EX, LOCK_NB, protect_directory

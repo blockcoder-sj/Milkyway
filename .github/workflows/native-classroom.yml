@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONUTF8: '1'
+
 jobs:
   native:
     strategy:
@@ -26,6 +29,7 @@ jobs:
       - name: Install and verify native startup, restart and backup
         shell: bash
         run: |
+          python -m compileall -q run_milkyway.py cloud_app tests/run_classroom_smoke.py
           python -m venv .venv
           if [ "$RUNNER_OS" = "Windows" ]; then
             qlab_python=.venv/Scripts/python.exe
