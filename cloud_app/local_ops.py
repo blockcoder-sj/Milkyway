@@ -6,7 +6,7 @@ from contextlib import contextmanager
 import datetime as dt
 import hashlib
 import getpass
-import fcntl
+from . import native_platform as fcntl
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -32,12 +32,8 @@ def _database(path, *, timeout=10):
         connection.close()
 
 
-def _sync_directory(path: Path) -> None:
-    descriptor = os.open(path, os.O_RDONLY)
-    try:
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
+def _sync_directory(path):
+    fcntl.sync_directory(path)
 
 
 def _integrity(path: Path) -> None:

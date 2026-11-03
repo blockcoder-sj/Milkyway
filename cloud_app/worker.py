@@ -133,6 +133,11 @@ class PaperTickDeadlineExceeded(RuntimeError):
 def _paper_tick_deadline(seconds: float):
     """Hard-bound the whole production paper tick on the Unix worker."""
 
+    if os.name == "nt" and get_settings().personal_local_mode:
+        from .native_platform import windows_deadline
+        with windows_deadline(seconds):
+            yield
+        return
     if not hasattr(signal, "setitimer") or threading.current_thread() is not threading.main_thread():
         raise RuntimeError("paper tick deadlines require the main Unix worker thread")
     previous_handler = signal.getsignal(signal.SIGALRM)
@@ -372,6 +377,11 @@ def _prune_backtest_results(session, user_id: str, settings) -> None:
 def _backtest_deadline(seconds: int):
     """Interrupt CPU-bound work in the worker main thread on POSIX."""
 
+    if os.name == "nt" and get_settings().personal_local_mode:
+        from .native_platform import windows_deadline
+        with windows_deadline(seconds):
+            yield
+        return
     if threading.current_thread() is not threading.main_thread() or not hasattr(
         signal, "setitimer"
     ):
@@ -955,3 +965,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+                                                                                                                                                                                                                                                                                                                                                                                            

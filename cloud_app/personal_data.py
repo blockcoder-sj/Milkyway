@@ -8,7 +8,7 @@ The current generation is immutable so a refresh cannot corrupt an active reader
 from __future__ import annotations
 
 import datetime as dt
-import fcntl
+from . import native_platform as fcntl
 import gzip
 import hashlib
 import json
@@ -257,11 +257,7 @@ _history_process = ProviderProcess(_download_history)
 
 
 def _sync_directory(path):
-    descriptor = os.open(path, os.O_RDONLY)
-    try:
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
+    fcntl.sync_directory(path)
 
 
 def _csv_content_digest(path):

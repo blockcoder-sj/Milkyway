@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import parse_qsl, unquote, urlsplit
+from .native_platform import sync_directory, mode_is_private
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,7 +106,7 @@ def _secret(name: str) -> str:
             raise RuntimeError("{}_FILE must name a regular file".format(name))
         if metadata.st_size < 1 or metadata.st_size > 4096:
             raise RuntimeError("{}_FILE size is invalid".format(name))
-        if metadata.st_mode & 0o077:
+        if not mode_is_private(metadata):
             raise RuntimeError("{}_FILE must not be accessible by group or others".format(name))
         with os.fdopen(descriptor, "rb", closefd=False) as handle:
             payload = handle.read(4097)
@@ -158,15 +159,11 @@ def persistent_local_secret(path: Path) -> str:
             os.unlink(temporary)
     # Publish the directory entry durably before a caller can commit data
     # encrypted/signed with this key. This also covers a concurrent creator.
-    directory = os.open(root, os.O_RDONLY)
-    try:
-        os.fsync(directory)
-    finally:
-        os.close(directory)
+    sync_directory(root)
     descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
     with os.fdopen(descriptor, "r", encoding="utf-8") as handle:
         metadata = os.fstat(handle.fileno())
-        if not stat.S_ISREG(metadata.st_mode) or metadata.st_mode & 0o077 or not 32 <= metadata.st_size <= 4096:
+        if not stat.S_ISREG(metadata.st_mode) or not mode_is_private(metadata) or not 32 <= metadata.st_size <= 4096:
             raise RuntimeError("Local key must be an owner-only regular file")
         value = handle.read(4097).strip()
     if len(value) < 32 or len(value) > 4096:
