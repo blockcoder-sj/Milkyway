@@ -47,10 +47,14 @@ def main():
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0)
 
     def wait_ready():
+        nonlocal base
         deadline = time.monotonic() + 90
         while time.monotonic() < deadline:
             if process.poll() is not None:
                 raise RuntimeError('Launcher exited before readiness')
+            location = ROOT / 'runtime/url.txt'
+            if location.exists():
+                base = location.read_text(encoding='utf-8').strip().replace('localhost', '127.0.0.1')
             try:
                 if request('/health/ready')['status'] == 'ready':
                     return

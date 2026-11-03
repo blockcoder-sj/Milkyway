@@ -241,7 +241,7 @@ def start(args):
             job.close()
             for handle in handles:
                 handle.close()
-            print("종료 완료. 다음에도 같은 폴더의 시작 파일을 실행하세요", flush=True)
+            print("종료 완료. 다음에도 같은 폴더에서 같은 명령을 실행하세요", flush=True)
 
 
 def main():
