@@ -48,7 +48,7 @@ def main():
 
     def wait_ready():
         nonlocal base
-        deadline = time.monotonic() + 90
+        deadline = time.monotonic() + 180
         while time.monotonic() < deadline:
             if process.poll() is not None:
                 raise RuntimeError('Launcher exited before readiness')

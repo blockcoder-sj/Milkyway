@@ -30,14 +30,12 @@ jobs:
         shell: bash
         run: |
           python -m compileall -q run_milkyway.py cloud_app tests/run_classroom_smoke.py
-          python -m venv .venv
+          python tests/run_classroom_smoke.py
           if [ "$RUNNER_OS" = "Windows" ]; then
             qlab_python=.venv/Scripts/python.exe
           else
             qlab_python=.venv/bin/python
           fi
-          "$qlab_python" -m pip install --disable-pip-version-check -r requirements-native.txt
-          "$qlab_python" tests/run_classroom_smoke.py
           if [ "$RUNNER_OS" = "macOS" ]; then
             APP_ENV=development "$qlab_python" -m unittest tests.test_personal_data tests.test_personal_paper tests.test_personal_api tests.test_paper_sessions tests.test_local_ops tests.test_provider_process
           fi

@@ -51,17 +51,22 @@ def prepare():
     arguments = [str(executable), str(Path(__file__).resolve()), *sys.argv[1:]]
     if os.name != 'nt':
         os.execv(str(executable), arguments)
+    bootstrap_job = WindowsJob()
     child = subprocess.Popen(arguments, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    bootstrap_job.assign(child)
     try:
-        result = child.wait()
-    except KeyboardInterrupt:
-        child.send_signal(signal.CTRL_BREAK_EVENT)
         try:
-            result = child.wait(timeout=30)
-        except subprocess.TimeoutExpired:
-            child.kill()
-            child.wait()
-            result = 1
+            result = child.wait()
+        except KeyboardInterrupt:
+            child.send_signal(signal.CTRL_BREAK_EVENT)
+            try:
+                result = child.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait()
+                result = 1
+    finally:
+        bootstrap_job.close()
     raise SystemExit(result)
 
 
