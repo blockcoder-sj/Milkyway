@@ -52,6 +52,22 @@ class PersonalAuthTests(unittest.TestCase):
     def enter(self, client=None):
         return (client or self.client).post("/api/auth/local", headers=self.headers, json={})
 
+    def test_entry_html_updates_without_reusing_a_cached_layout(self):
+        static = Path(self.directory.name) / "static"
+        static.mkdir()
+        entry = static / "index.html"
+        entry.write_text("<html>previous layout</html>", encoding="utf-8")
+        with patch.object(main, "STATIC", static):
+            previous = self.client.get("/")
+            self.assertEqual(previous.status_code, 200)
+            self.assertEqual(previous.headers.get("cache-control"), "no-store")
+            updated = '<html><link rel="stylesheet" href="/static/responsive.css?v=next">current layout</html>'
+            entry.write_text(updated, encoding="utf-8")
+            current = self.client.get("/", headers={"If-None-Match": previous.headers["etag"]})
+            self.assertEqual(current.status_code, 200)
+            self.assertEqual(current.headers.get("cache-control"), "no-store")
+            self.assertEqual(current.text, updated)
+
     def test_fresh_install_creates_one_owner_and_reuses_session(self):
         self.assertTrue(self.client.get("/api/config").json()["local_auto_login"])
         self.assertEqual(self.client.get("/api/auth/me").status_code, 401)

@@ -628,7 +628,9 @@ async def security_headers(request: Request, call_next):
 
 @app.get("/")
 def index():
-    return FileResponse(STATIC / "index.html")
+    # The entry document selects versioned assets. Reusing an older HTML shell
+    # can omit a newly added stylesheet even while the current CSS is available.
+    return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/health/live")
