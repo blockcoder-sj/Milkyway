@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import fcntl
+from cloud_app import native_platform as fcntl
 import hashlib
 import json
 import os

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import threading
+import time
 
 if os.name != "nt":
     from fcntl import flock, LOCK_EX, LOCK_NB, LOCK_UN
@@ -15,21 +16,27 @@ else:
 
     def flock(handle, operation):
         # Lock the same first byte in every process, including the backup worker.
-        position = handle.tell()
+        descriptor = handle if isinstance(handle, int) else handle.fileno()
+        if not isinstance(handle, int):
+            handle.flush()
+        position = os.lseek(descriptor, 0, os.SEEK_CUR)
         try:
-            if os.fstat(handle.fileno()).st_size == 0:
-                handle.write("\0")
-                handle.flush()
-            handle.seek(0)
+            if os.fstat(descriptor).st_size == 0 and not operation & LOCK_UN:
+                os.write(descriptor, b"\0")
+            os.lseek(descriptor, 0, os.SEEK_SET)
             mode = msvcrt.LK_UNLCK if operation & LOCK_UN else msvcrt.LK_NBLCK
-            try:
-                msvcrt.locking(handle.fileno(), mode, 1)
-            except OSError as error:
-                if error.errno not in {13, 36}:
-                    raise
-                raise BlockingIOError("Local file is locked by another process") from error
+            while True:
+                try:
+                    msvcrt.locking(descriptor, mode, 1)
+                    break
+                except OSError as error:
+                    if error.errno not in {13, 36} or operation & LOCK_UN:
+                        raise
+                    if operation & LOCK_NB:
+                        raise BlockingIOError("Local file is locked by another process") from error
+                    time.sleep(.05)
         finally:
-            handle.seek(position)
+            os.lseek(descriptor, position, os.SEEK_SET)
 
 
 def sync_directory(path):
