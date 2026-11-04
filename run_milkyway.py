@@ -174,7 +174,7 @@ def start(args):
             processes[role] = process
             job.assign(process)
 
-        def wait_for(path, seconds=120):
+        def wait_for(path, seconds=600):
             deadline = time.monotonic() + seconds
             opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
             while time.monotonic() < deadline:
