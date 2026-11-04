@@ -30,6 +30,23 @@ TOKEN_PATTERN = re.compile(r"^[a-f0-9]{64}$")
 _probe_slot = threading.BoundedSemaphore(1)
 
 
+def quote_budget(session, specifications):
+    """Reserve next targets plus holdings without limiting the analysis universe."""
+    selected, reserved = set(), 0
+    for spec, account_id in specifications:
+        held = set(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account_id)).all()) if account_id else set()
+        if spec.universe == "us_market":
+            reserved += max(2*spec.portfolio.max_positions, len(held)+spec.portfolio.max_positions)
+        else:
+            selected.update(spec.symbols); selected.update(held)
+    return len(selected)+reserved
+
+
+def quote_limit(session, user_id):
+    connection = session.get(MarketDataConnection, user_id)
+    return 200 if connection and connection.provider == "toss" else 20
+
+
 def require_personal(settings):
     if not local_login_enabled(settings):
         raise HTTPException(404, "Not found")
@@ -112,7 +129,13 @@ def _probe_connection(session, settings, user_id, account_id):
         return {"state": "credentials_required", "checked_at": utcnow().isoformat()}
     config_value = _member_feed_config(connection)
     version = _member_feed_version(config_value)
-    symbols = sorted(set(StrategySpec.model_validate_json(row.strategy.spec_json).symbols))
+    spec = StrategySpec.model_validate_json(row.strategy.spec_json)
+    symbols = set(spec.symbols)
+    if spec.universe == "us_market":
+        from .us_universe import status
+        symbols.update(status(settings, user_id, spec).get("candidates", []))
+    symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == row.id)).all())
+    symbols = sorted(symbols)
     session.commit()  # No database transaction is held during provider networking.
     known = {"quote_ip_not_allowed", "quote_authentication_failed", "quote_rate_limited", "quote_network_unavailable"}
     received = 0
@@ -167,7 +190,7 @@ def operation_status(session, settings, user_id, account_id=None, *, now=None):
     choice = next(c for c in choices if c["id"] == selected.id)
     result["account_name"] = selected.name
     if choice["expired"]:
-        return state("session_finished", "지정 거래일 운용 종료", "하루 전용 계좌의 운용이 끝났습니다. 기록은 그대로 보존합니다. 여러 날 이어가려면 날짜를 비운 계속 운용 계좌를 만들어 주세요.")
+        return state("session_finished", "운용 기간 종료", "설정한 운용 기간이 끝났습니다. 기록은 보존하며, 새 기간을 시험하려면 새 페이퍼 계좌를 만들어 주세요.")
     if selected.status in {"review_required", "configuration_required"}:
         return state("review_required", "계좌 검토가 필요합니다", account_snapshot(session, selected)["execution_detail"], "error")
     if selected.status != "active":
@@ -181,6 +204,12 @@ def operation_status(session, settings, user_id, account_id=None, *, now=None):
     try:
         spec = StrategySpec.model_validate_json(selected.strategy.spec_json)
         symbols = set(spec.symbols)
+        if spec.universe == "us_market":
+            from .us_universe import status as universe_status
+            result["universe"] = universe_status(settings, user_id, spec)
+            if not result["universe"].get("ready"):
+                return state("waiting_universe", "미국 전체 종목 분석 중", "전체 거래 가능 종목의 일봉과 전략 점수를 준비하고 있습니다. 진행률을 확인해 주세요.")
+            symbols.update(result["universe"].get("candidates", []))
         symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == selected.id)).all())
     except ValueError:
         return state("configuration_required", "전략 설정을 확인해 주세요", "저장한 실행 규칙을 읽을 수 없어 체결을 대기합니다.", "error")
@@ -233,6 +262,8 @@ def operation_status(session, settings, user_id, account_id=None, *, now=None):
     if not result["data_ready"]:
         return state("waiting_data", "일봉·분할·배당 확인 대기", data.get("error") or "필요한 자료를 자동으로 확인 중입니다. 준비 전에는 체결하지 않습니다.")
     if len(recent) != len(symbols) or not symbols:
+        if recent:
+            return state("waiting_quotes", "일부 종목 시세 갱신 대기", f"최신 시세 {len(recent)}/{len(symbols)}종목. 시세가 오래된 종목의 체결을 보류하고 계속 조회합니다. 갱신되면 자동으로 재개합니다.")
         return state("waiting_quotes", "인터넷·증권사 시세 확인 중", "최신 시세가 부족해 매매를 대기합니다. 연결이 돌아오면 자동으로 다시 시도합니다. 계속 실패하면 허용 IP와 시세 권한을 확인해 주세요.")
     snapshot = account_snapshot(session, selected)
     if snapshot["execution_status"] in {"review_required", "configuration_required", "waiting_data", "price_discontinuity"}:
@@ -251,18 +282,15 @@ def resume_account(session, settings, user_id, account_id=None):
                 raise HTTPException(409, "재개할 페이퍼 계좌가 없습니다. 전략에서 계좌를 먼저 만들어 주세요.")
             choice = next(c for c in choices if c["id"] == row.id)
             if not choice["resumable"]:
-                reason = "지정 거래일이 종료된 계좌는 재개할 수 없습니다." if choice["expired"] else "전략·보유 종목 검토가 필요해 자동으로 재개하지 않습니다."
+                reason = "운용 기간이 종료된 계좌는 재개할 수 없습니다." if choice["expired"] else "전략·보유 종목 검토가 필요해 자동으로 재개하지 않습니다."
                 raise HTTPException(409, reason)
-            symbols = set()
             try:
-                for account in rows:
-                    if account.status == "active" or account.id == row.id:
-                        symbols.update(StrategySpec.model_validate_json(account.strategy.spec_json).symbols)
-                        symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
+                specifications = [(StrategySpec.model_validate_json(account.strategy.spec_json), account.id) for account in rows if account.status == "active" or account.id == row.id]
             except ValueError as exc:
                 raise HTTPException(409, "저장한 전략 규칙을 확인해 주세요.") from exc
-            if len(symbols) > 20:
-                raise HTTPException(409, "활성 계좌 전체 종목은 20개까지입니다. 다른 계좌를 정지한 뒤 재개해 주세요.")
+            limit = quote_limit(session, user_id)
+            if quote_budget(session, specifications) > limit:
+                raise HTTPException(409, f"동시 시세 감시는 {limit}종목까지입니다. 다른 계좌를 정지한 뒤 재개해 주세요.")
             changed = row.status != "active"
             row.status = "active"
             session.commit()

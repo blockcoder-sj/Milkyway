@@ -182,3 +182,9 @@ dialog {
     width: 100%;
   }
 }
+
+.account-actions { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; }
+.strategy-actions { flex-wrap:wrap; }
+.universe-preparation { margin-top:16px; border-top:1px solid var(--line); padding-top:16px; }
+.universe-preparation p { margin:8px 0; font-size:13px; }
+.universe-preparation small { color:var(--muted); line-height:1.5; }

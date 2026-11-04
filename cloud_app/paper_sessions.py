@@ -16,6 +16,13 @@ def as_utc(value):
     return value.replace(tzinfo=dt.timezone.utc) if value.tzinfo is None else value.astimezone(dt.timezone.utc)
 
 
+def period_bounds(days: int, now: dt.datetime):
+    if isinstance(days, bool) or not isinstance(days, int) or not 1 <= days <= 30:
+        raise ValueError("운용 기간은 1~30일입니다")
+    opens = as_utc(now)
+    return opens.astimezone(ZoneInfo("America/New_York")).date(), (opens, opens + dt.timedelta(days=days))
+
+
 def session_bounds(day: dt.date, now: dt.datetime):
     """Reject expired/non-trading dates; calendar includes DST and early closes."""
     eastern = ZoneInfo("America/New_York")
@@ -77,7 +84,9 @@ def session_payload(session, account, now):
     run = session.get(PersonalPaperSession, account.id)
     if run is None:
         return None
-    return {"session_date": run.session_date.isoformat(), "opens_at": as_utc(run.opens_at).isoformat(),
+    period = as_utc(run.closes_at) - as_utc(run.opens_at) >= dt.timedelta(days=1)
+    return {"mode": "period" if period else "day", "duration_days": int((as_utc(run.closes_at)-as_utc(run.opens_at)).total_seconds()/86400) if period else None,
+        "session_date": run.session_date.isoformat(), "opens_at": as_utc(run.opens_at).isoformat(),
         "closes_at": as_utc(run.closes_at).isoformat(), "expired": as_utc(now) >= as_utc(run.closes_at),
         "completed_at": as_utc(run.completed_at).isoformat() if run.completed_at else None,
         "summary": json.loads(run.summary_json) if run.summary_json else None}

@@ -101,6 +101,14 @@ services:
         condition: service_healthy
     command: [python, -m, cloud_app.market_worker]
 
+  universe-data:
+    <<: *service
+    cpu_shares: 128
+    depends_on:
+      app:
+        condition: service_healthy
+    command: [python, -m, cloud_app.us_universe]
+
   market-details:
     <<: *service
     cpu_shares: 128

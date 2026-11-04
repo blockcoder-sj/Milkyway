@@ -2,96 +2,18 @@
 (() => {
   const $ = (selector) => document.querySelector(selector);
   const escape = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"}[char]));
-  const factors = {momentum: "모멘텀 (최근 상승)", mean_reversion: "평균회귀 (최근 하락)", low_volatility: "저변동성", moving_average: "이동평균 추세", volume_momentum: "거래량 모멘텀", rsi: "RSI (상대강도)"};
   let hooks;
   let connectionBusy = false;
   const isPersonal = () => Boolean(hooks?.getState().config?.personal_local_mode || hooks?.getState().dashboard?.personal_local_mode);
   const isDemo = () => Boolean(hooks?.getState().config?.local_demo_data || hooks?.getState().dashboard?.local_demo_data);
 
-  function numberField(name, label, value, min, max, step = 1) {
-    const grouped = ["initial_cash", "min_average_volume"].includes(name);
-    return `<label><span>${label}</span><input name="${name}" type="${grouped ? "text" : "number"}" ${grouped ? 'inputmode="decimal"' : ""} value="${grouped ? window.MilkywayFormat.number(value,20) : value}" min="${min}" max="${max}" step="${step}" required></label>`;
-  }
-  function addFactor(kind = "momentum", lookback = 20, weight = 1) {
-    const container = $("#manualFactors");
-    if (container.children.length >= 5) return;
-    const row = document.createElement("div");
-    row.className = "manual-factor";
-    row.innerHTML = `<label>선정 기준<select data-factor-kind>${Object.entries(factors).map(([value, text]) => `<option value="${value}">${text}</option>`).join("")}</select></label><label>관찰 거래일<input data-factor-lookback type="number" min="2" max="252" value="${lookback}" required></label><label>가중치<input data-factor-weight type="number" min="-5" max="5" step="0.1" value="${weight}" required></label><button type="button" class="ghost compact" aria-label="선정 기준 삭제">삭제</button>`;
-    row.querySelector("select").value = kind;
-    row.querySelector("button").addEventListener("click", () => {
-      if (container.children.length === 1) { hooks.toast("선정 기준은 하나 이상 필요합니다", true); return; }
-      row.remove();
-      $("#addManualFactor").disabled = false;
-    });
-    container.append(row);
-    $("#addManualFactor").disabled = container.children.length >= 5;
-  }
-
   function renderBuilder() {
-    if ($("#manualStrategyForm")) {
-      $("#manualSymbolsLabel").classList.toggle("hidden", !isPersonal());
-      $("#manualSymbols").required = isPersonal();
-    } else {
-      const section = document.createElement("section");
-      section.id = "manualBuilder";
-      section.innerHTML = `<details><summary>직접 규칙 입력 (선택)</summary><div class="section-head"><div><p class="eyebrow">MY STRATEGY</p><h3>내 규칙으로 전략 만들기</h3></div></div>
-        <p class="section-copy">AI 키 없이 직접 설정합니다. 점수가 높은 종목을 선정하고, 완료된 전일 데이터로 판단합니다.</p>
-        <form id="manualStrategyForm" class="stack">
-          <label>전략 이름<input name="name" minlength="2" maxlength="100" value="나의 20일 모멘텀" required></label>
-          <label id="manualSymbolsLabel">미국 주식 종목 코드 (1~20개)<input id="manualSymbols" name="symbols" maxlength="240" placeholder="예: AAPL, MSFT, NVDA" value="AAPL, MSFT, NVDA" autocapitalize="characters" spellcheck="false"><small>쉼표 또는 공백으로 구분합니다. 이 종목들 안에서만 매매 후보를 고릅니다.</small></label>
-          <div id="manualFactors" class="stack"></div><button id="addManualFactor" class="ghost" type="button">선정 기준 추가 (최대 5개)</button>
-          <p class="fineprint">양수 가중치는 해당 기준을 선호하고 음수는 반대로 적용합니다. 0은 사용하지 않습니다.</p>
-          <div class="manual-grid">${numberField("initial_cash", "초기 가상자금 (USD)", 100000, 1000, 10000000)}${numberField("max_positions", "최대 보유 종목 수", 3, 1, 50)}${numberField("rebalance_days", "리밸런싱 간격 (달력일)", 1, 1, 30)}${numberField("stop_loss", "손절 기준 (%)", -5, -50, -0.5, 0.5)}</div>
-          <details><summary>필터·거래비용 설정</summary><div class="manual-grid">${numberField("min_price", "최소 주가 (USD)", 5, 1, 1000, 0.01)}${numberField("min_average_volume", "최소 일평균 거래량", 200000, 0, 1000000000)}${numberField("history_days", "최소 가격 이력 (거래일)", 60, 20, 252)}${numberField("cost_pct", "편도 가상 거래비용 (%)", 0.3, 0, 2, 0.01)}</div><label class="consent-row"><input name="no_stop" type="checkbox">손절 사용 안 함</label></details>
-          <label>설명 (선택)<textarea name="description" maxlength="1000" rows="2" placeholder="이 전략으로 확인하고 싶은 가설"></textarea></label>
-          <p id="manualStrategyError" class="error" role="alert"></p><button class="primary" type="submit">전략 저장</button>
-        </form></details><hr class="builder-divider">`;
-      $("#strategyBuilder").prepend(section);
-      $("#addManualFactor").addEventListener("click", () => addFactor());
-      addFactor();
-      $("#manualStrategyForm").addEventListener("submit", saveStrategy);
-      $("#manualSymbolsLabel").classList.toggle("hidden", !isPersonal());
-      $("#manualSymbols").required = isPersonal();
-    }
     const aiAvailable = !isPersonal() && Boolean(hooks.getState().dashboard?.ai_enabled);
+    $("#strategyBuilder").classList.toggle("hidden", !aiAvailable);
     $("#aiForm").classList.toggle("hidden", !aiAvailable);
     $("#aiConnectBtn").classList.toggle("hidden", isPersonal());
     $("#aiForm").previousElementSibling.classList.toggle("hidden", !aiAvailable);
     $("#aiForm").previousElementSibling.previousElementSibling.classList.toggle("hidden", !aiAvailable);
-  }
-
-  async function saveStrategy(event) {
-    event.preventDefault();
-    const form = event.target;
-    const value = Object.fromEntries(new FormData(form));
-    const error = $("#manualStrategyError");
-    const button = form.querySelector("button[type=submit]");
-    error.textContent = "";
-    const selectedFactors = [...$("#manualFactors").children].map((row) => ({kind: row.querySelector("[data-factor-kind]").value, lookback: Number(row.querySelector("[data-factor-lookback]").value), weight: Number(row.querySelector("[data-factor-weight]").value)}));
-    const symbols = [...new Set(value.symbols.toUpperCase().split(/[\s,]+/).filter(Boolean))];
-    if (isPersonal() && (symbols.length < 1 || symbols.length > 20 || symbols.some((symbol) => !/^[A-Z][A-Z0-9.-]{0,14}$/.test(symbol)))) { error.textContent = "미국 주식 종목 코드를 1~20개 입력해 주세요. 예: AAPL, MSFT"; return; }
-    if (isPersonal() && Number(value.max_positions) > symbols.length) { error.textContent = "최대 보유 종목 수를 입력한 종목 수 이하로 설정해 주세요."; return; }
-    if (!selectedFactors.some((factor) => factor.weight !== 0)) { error.textContent = "하나 이상의 선정 기준 가중치를 0이 아닌 값으로 설정해 주세요."; return; }
-    let cash, volume;
-    try {
-      cash = window.MilkywayFormat.parse(value.initial_cash);
-      volume = window.MilkywayFormat.parse(value.min_average_volume);
-      if (cash < 1000 || cash > 10000000 || volume < 0 || volume > 1000000000) throw new Error("자금 또는 거래량이 허용 범위를 벗어났습니다");
-    } catch (failure) { error.textContent = failure.message; return; }
-    const spec = {schema_version: 1, name: value.name.trim(), description: value.description.trim(), factors: selectedFactors,
-      filters: {min_price: Number(value.min_price), min_average_volume: volume, history_days: Number(value.history_days)},
-      portfolio: {initial_cash: cash, max_positions: Number(value.max_positions), rebalance_days: Number(value.rebalance_days), cost_per_side: Number(value.cost_pct) / 100, stop_loss_pct: value.no_stop ? null : Number(value.stop_loss) / 100}};
-    if (isPersonal()) spec.symbols = symbols;
-    button.disabled = true;
-    button.textContent = "전략 저장 중…";
-    try {
-      await hooks.api("/api/strategies", {method: "POST", body: JSON.stringify({spec, original_prompt: ""})});
-      hooks.toast("전략을 저장했습니다. 아래 내 전략에서 백테스트 또는 페이퍼 계좌를 시작하세요.");
-      await hooks.refresh();
-      $("#strategyList").scrollIntoView({behavior: "smooth", block: "center"});
-    } catch (failure) { error.textContent = failure.message; }
-    finally { button.disabled = false; button.textContent = "전략 저장"; }
   }
 
   function renderConnection(connection) {

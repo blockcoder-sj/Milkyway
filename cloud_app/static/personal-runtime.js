@@ -85,6 +85,16 @@
     $("#runtimeChecks").innerHTML = '<div><span>프로그램</span><strong>응답 미확인</strong></div><div><span>자동매매</span><strong>상태 미확인</strong></div>';
   }
 
+  function renderUniverse(value) {
+    let panel = $("#universePreparation");
+    if (!panel) { panel=document.createElement("div"); panel.id="universePreparation"; panel.className="universe-preparation"; $("#operationFacts").after(panel); }
+    panel.hidden = !value.state || value.state === "waiting";
+    if (panel.hidden) return;
+    const progress = `${Number(value.processed || 0).toLocaleString()}/${Number(value.total || 0).toLocaleString()}종목`;
+    const error = {rate_limited:"요청 한도 · 잠시 뒤 자동 재시도",ip_not_allowed:"토스 허용 IP 확인 필요",authentication_failed:"토스 키 확인 필요",provider_unavailable:"자료 수신 대기 · 자동 재시도"}[value.error] || "";
+    panel.innerHTML = `<strong>미국 전체 자동 선별 · ${value.state === "ready" ? "분석 준비 완료" : "자료 준비 중"}</strong><p>${escape(progress)} · 기준 일봉 ${escape(value.required_session || "확인 중")}${value.eligible != null ? ` · 조건 통과 ${Number(value.eligible).toLocaleString()}종목` : ""}${value.unavailable_history ? ` · 일봉 검증 불가 ${Number(value.unavailable_history).toLocaleString()}종목 제외` : ""}</p><small>토스 거래 가능 보통주·ADR·REIT · ETF·워런트 제외${error ? " · "+escape(error) : ""}</small>`;
+  }
+
   async function poll() {
     if (!personal() || polling || !hooks.getState().me) return;
     polling = true;
@@ -95,6 +105,7 @@
     }
     try {
       const suffix = selected ? `?account_id=${encodeURIComponent(selected)}` : "";
+      const requestedAccount = selected;
       let data = await request("/api/personal/operation" + suffix);
       if (control?.available) {
         try { data = processView(data, await controlRequest("/v1/services")); }
@@ -103,7 +114,9 @@
           $("#runtimeLauncherHint").hidden = false;
         }
       }
+      if (requestedAccount !== selected) return;
       render(data);
+      try { renderUniverse(await request("/api/personal/universe")); } catch { /* Operation diagnostics remain available independently. */ }
     } catch (error) {
       try {
         if (error.status === 404 && selected) {
@@ -220,5 +233,6 @@
     addEventListener("offline", () => { if (current) render(current, false); else disconnected(); });
     addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
   }
-  window.MilkywayRuntime = {initialize, onDashboard, poll, recover, disconnected, view, processView};
+  function selectAccount(id) { remember(id); poll(); }
+  window.MilkywayRuntime = {initialize, onDashboard, poll, recover, disconnected, view, processView, selectAccount};
 })();

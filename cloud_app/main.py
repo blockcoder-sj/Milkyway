@@ -189,6 +189,7 @@ class AccountBody(BaseModel):
     strategy_id: str
     name: str = Field(min_length=2, max_length=100)
     session_date: dt.date | None = None
+    run_days: int | None = Field(default=None, ge=1, le=30)
 
 
 class StatusBody(BaseModel):
@@ -1138,6 +1139,13 @@ def put_market_data_connection(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
 
+    if settings.personal_local_mode:
+        from .personal_runtime import quote_budget
+        active = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user.id, PaperAccount.status == "active")).all()
+        limit = 200 if provider == "toss" else 20
+        if quote_budget(session, [(StrategySpec.model_validate_json(a.strategy.spec_json), a.id) for a in active]) > limit:
+            raise HTTPException(409, f"이 증권사의 동시 시세 범위는 {limit}종목입니다. 운용 계좌를 일부 정지한 뒤 연결해 주세요.")
+
     row = session.get(MarketDataConnection, user.id)
     expected_version = _market_data_connection_version(row)
     supplied_key = body.api_key.get_secret_value() if body.api_key else ""
@@ -1319,15 +1327,40 @@ def list_strategies(user: User = Depends(current_user), session: Session = Depen
     return [_strategy_payload(row) for row in rows]
 
 
+@app.delete("/api/strategies/{strategy_id}")
+def delete_strategy(strategy_id: str, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+    from .personal_runtime import require_personal
+    from .research_models import ResearchSession
+    require_personal(settings)
+    with quota_allocation(session, "accounts", "global"):
+        with quota_allocation(session, "accounts", user.id):
+            row = _owned_strategy(session, user, strategy_id)
+            if session.scalar(select(PaperAccount.id).where(PaperAccount.strategy_id == row.id, PaperAccount.user_id == user.id).limit(1)):
+                raise HTTPException(409, "이 전략으로 만든 페이퍼 계좌를 먼저 삭제해 주세요. 운용 기록은 계좌에서 CSV로 저장할 수 있습니다.")
+            if session.scalar(select(BacktestJob.id).where(BacktestJob.strategy_id == row.id, BacktestJob.status == "running").limit(1)):
+                raise HTTPException(409, "실행 중인 백테스트가 끝난 뒤 전략을 삭제해 주세요.")
+            from sqlalchemy import update
+            session.execute(update(ResearchSession).where(ResearchSession.user_id == user.id, ResearchSession.selected_strategy_id == row.id).values(selected_strategy_id=None))
+            session.delete(row)
+            session.commit()
+    return {"deleted": strategy_id}
+
+
 @contextmanager
 def _strategy_creation(session: Session, user: User, spec: StrategySpec, prompt: str):
+    if spec.universe == "us_market" and (not settings.personal_local_mode or settings.production):
+        raise HTTPException(422, "미국 전체 자동 선별은 개인 로컬 운용에서만 지원합니다")
     if spec.symbols and not settings.personal_local_mode:
         raise HTTPException(status_code=422, detail="직접 종목 지정은 개인 로컬 모드에서만 지원합니다")
     if settings.personal_local_mode:
-        if not spec.symbols:
-            raise HTTPException(status_code=422, detail="개인 전략의 미국 주식 티커를 1~20개 입력해 주세요")
-        if spec.portfolio.max_positions > len(spec.symbols):
+        if not spec.symbols and spec.universe == "selected":
+            raise HTTPException(status_code=422, detail="미국 전체 시장을 선택하거나 직접 분석할 티커를 1~100개 입력해 주세요")
+        if spec.universe == "selected" and spec.portfolio.max_positions > len(spec.symbols):
             raise HTTPException(status_code=422, detail="최대 보유 종목 수는 선택한 티커 수 이하여야 합니다")
+        if spec.universe == "us_market":
+            connection = session.get(MarketDataConnection, user.id)
+            if connection is None or connection.provider != "toss":
+                raise HTTPException(409, "미국 전체 시장 종목 목록을 준비하려면 본인 토스 API를 먼저 연결해 주세요")
     with quota_allocation(session, "strategies", user.id):
         if settings.personal_local_mode:
             existing = session.scalars(select(Strategy).where(Strategy.user_id == user.id)).all()
@@ -1585,16 +1618,14 @@ def _ensure_shared_quote_capacity(
 def _ensure_personal_quote_capacity(session: Session, user_id: str, spec: StrategySpec, *, account_id: str | None = None) -> None:
     if not settings.personal_local_mode:
         return
-    symbols = set(spec.symbols)
-    if account_id:
-        symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account_id)).all())
-    active = session.scalars(select(PaperAccount).where(
-        PaperAccount.user_id == user_id, PaperAccount.status == "active")).all()
-    for account in active:
-        symbols.update(StrategySpec.model_validate_json(account.strategy.spec_json).symbols)
-        symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
-    if len(symbols) > 20:
-        raise HTTPException(status_code=409, detail="활성 계좌 전체의 종목 합계는 20개까지입니다. 다른 계좌를 일시정지한 뒤 다시 시도하세요")
+    from .personal_runtime import quote_budget, quote_limit
+    active = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user_id, PaperAccount.status == "active")).all()
+    specifications = [(StrategySpec.model_validate_json(row.strategy.spec_json), row.id) for row in active if row.id != account_id]
+    specifications.append((spec, account_id))
+    limit = quote_limit(session, user_id)
+    if quote_budget(session, specifications) > limit:
+        raise HTTPException(409, f"활성 계좌의 동시 시세 감시는 {limit}종목까지입니다. 전체 시장 분석 범위와는 별도이며, 다른 계좌를 정지한 뒤 재개할 수 있습니다.")
+
 
 
 @contextmanager
@@ -1602,8 +1633,16 @@ def _account_creation(body, user, session):
     strategy = _owned_strategy(session, user, body.strategy_id)
     spec = StrategySpec.model_validate_json(strategy.spec_json)
     day = getattr(body, "session_date", None)
+    run_days = getattr(body, "run_days", None)
     bounds = None
-    if day is not None:
+    if day is not None and run_days is not None:
+        raise HTTPException(422, "하루 거래일과 운용 기간 중 하나만 선택하세요")
+    if run_days is not None:
+        if not settings.personal_local_mode or settings.production:
+            raise HTTPException(422, "기간 지정은 개인 로컬 모드에서만 지원합니다")
+        from .paper_sessions import period_bounds
+        day, bounds = period_bounds(run_days, utcnow())
+    if day is not None and bounds is None:
         if not settings.personal_local_mode or settings.production:
             raise HTTPException(422, "거래일 지정은 개인 로컬 모드에서만 지원합니다")
         from .paper_sessions import session_bounds
@@ -1656,6 +1695,21 @@ def list_accounts(user: User = Depends(current_user), session: Session = Depends
     return [account_snapshot(session, row) for row in rows]
 
 
+@app.delete("/api/accounts/{account_id}")
+def delete_account(account_id: str, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+    from .personal_runtime import require_personal
+    require_personal(settings)
+    with quota_allocation(session, "accounts", "global"):
+        with quota_allocation(session, "accounts", user.id):
+            row = session.scalar(select(PaperAccount).where(PaperAccount.id == account_id, PaperAccount.user_id == user.id).with_for_update())
+            if row is None:
+                raise HTTPException(404, "계좌를 찾을 수 없습니다")
+            session.delete(row)
+            session.execute(delete(RuntimeHeartbeat).where(RuntimeHeartbeat.component == "paper-account:" + account_id))
+            session.commit()
+    return {"deleted": account_id}
+
+
 @app.get("/api/personal/operation")
 def personal_operation(account_id: str | None = None, user: User = Depends(current_user), session: Session = Depends(get_db)):
     from .personal_runtime import operation_status
@@ -1666,6 +1720,14 @@ def personal_operation(account_id: str | None = None, user: User = Depends(curre
 def personal_control(user: User = Depends(current_user)):
     from .personal_runtime import control_connection
     return control_connection(settings)
+
+
+@app.get("/api/personal/universe")
+def personal_universe(user: User = Depends(current_user)):
+    from .personal_runtime import require_personal
+    from .us_universe import status
+    require_personal(settings)
+    return status(settings, user.id)
 
 
 @app.post("/api/personal/resume")
@@ -1857,9 +1919,16 @@ def _personal_dashboard(user: User, session: Session) -> dict:
     ai_status = configuration_status(settings)
     accounts = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user.id).order_by(PaperAccount.created_at)).all()
     required_symbols = set()
+    universe_preparing = False
     for account in accounts:
         if account.status == "active":
-            required_symbols.update(StrategySpec.model_validate_json(account.strategy.spec_json).symbols)
+            spec = StrategySpec.model_validate_json(account.strategy.spec_json)
+            required_symbols.update(spec.symbols)
+            if spec.universe == "us_market":
+                from .us_universe import status as universe_status
+                preparation = universe_status(settings, user.id, spec)
+                universe_preparing = universe_preparing or not preparation.get("ready")
+                required_symbols.update(preparation.get("candidates", []))
             required_symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
     data = personal_data_status(settings, symbols=sorted(required_symbols) if required_symbols else None)
     snapshots = [account_snapshot(session, row) for row in accounts]
@@ -1888,6 +1957,8 @@ def _personal_dashboard(user: User, session: Session) -> dict:
         state, message = "credentials_required", "프로필에서 본인의 증권사 시세 API를 연결해 주세요."
     elif not active:
         state, message = "account_required", "전략을 저장하고 페이퍼 계좌를 만들어 활성화해 주세요."
+    elif universe_preparing:
+        state, message = "waiting_universe", "미국 전체 종목의 일봉과 전략 점수를 준비 중입니다. 완료되면 자동으로 운용합니다."
     elif not data.get("ready") or data.get("stale") or not data.get("action_ready", True):
         state, message = "waiting_data", "일봉 데이터를 준비 중입니다. 이전 기록은 유지되며 데이터가 준비되면 자동으로 재개합니다."
     elif not open_now:
@@ -2050,8 +2121,8 @@ install_research_routes(
         get_settings=lambda: settings,
         rate_limit=_rate_limit,
         strategy_creation=_strategy_creation,
-        account_creation=lambda strategy_id, name, user, session: _account_creation(
-            AccountBody(strategy_id=strategy_id, name=name), user, session),
+        account_creation=lambda strategy_id, name, user, session, run_days: _account_creation(
+            AccountBody(strategy_id=strategy_id, name=name, run_days=run_days), user, session),
         strategy_payload=_strategy_payload,
         account_snapshot=account_snapshot,
         owned_strategy=_owned_strategy,

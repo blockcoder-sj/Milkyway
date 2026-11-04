@@ -12,7 +12,7 @@ class ResearchBase(DeclarativeBase):
 
 
 class PersonalPaperSession(ResearchBase):
-    """One regular US session; kept outside the public deployment schema."""
+    """A bounded personal run; kept outside the public deployment schema."""
     __tablename__ = "personal_paper_sessions"
     account_id: Mapped[str] = mapped_column(ForeignKey(PaperAccount.id, ondelete="CASCADE"), primary_key=True)
     session_date: Mapped[dt.date] = mapped_column(Date)

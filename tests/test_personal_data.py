@@ -265,7 +265,7 @@ class PersonalDataTests(unittest.TestCase):
 
     def test_symbol_validation_and_production_scope(self):
         self.assertEqual(self.spec.model_copy().symbols, ["AAPL"])
-        for symbols in (["../../secret"], ["AAPL;exit"], ["한글"], ["A" + str(i) for i in range(21)]):
+        for symbols in (["../../secret"], ["AAPL;exit"], ["한글"], ["A" + str(i) for i in range(101)]):
             with self.assertRaises(ValueError):
                 StrategySpec(name="Bad symbols", symbols=symbols, factors=[{"kind": "momentum"}])
         with self.assertRaises(ValueError):

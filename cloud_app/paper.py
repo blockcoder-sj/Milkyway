@@ -207,7 +207,12 @@ def collect_watchlist_ordered(session: Session, user_id: str | None = None) -> t
         # pending. Candidate calculation must never block stop/valuation quotes.
         for account in accounts:
             try:
-                append(_spec(account).symbols)
+                spec = _spec(account)
+                if spec.universe == "us_market":
+                    from .us_universe import status
+                    append(status(get_settings(), account.user_id, spec).get("candidates", []))
+                else:
+                    append(spec.symbols)
             except ValueError:
                 _execution_state(session, account, "invalid_strategy", "전략 설정을 확인하세요")
         return tuple(tickers)
@@ -778,7 +783,11 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
             if age < spec.portfolio.rebalance_days:
                 continue
         try:
-            targets = latest_candidates(spec, bundle, now=et_now) if personal else latest_candidates(spec, bundle)
+            if personal and spec.universe == "us_market":
+                from .us_universe import candidates
+                targets = candidates(get_settings(), account.user_id, spec)
+            else:
+                targets = latest_candidates(spec, bundle, now=et_now) if personal else latest_candidates(spec, bundle)
         except (ValueError, FileNotFoundError, RuntimeError):
             if not personal:
                 raise
@@ -789,6 +798,9 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
             logger.warning("no strict-PIT candidates for account %s", account.id)
             continue
         positions = _account_positions(session, account.id)
+        if personal and spec.universe == "us_market" and not _personal_actions_current(get_settings(), set(targets) | set(positions), et_now):
+            _execution_state(session, account, "waiting_history", "선정 종목의 당일 기업행사 확인 후 자동으로 재개합니다")
+            continue
         prices = quote_map(
             session, set(targets) | set(positions), user_id=account.user_id
         )
@@ -844,6 +856,8 @@ def account_snapshot(session: Session, account: PaperAccount) -> dict:
         execution = {"status": "market_closed", "detail": "미국 정규장 시작을 기다리고 있습니다"}
     if run and (run["expired"] or run["completed_at"]):
         execution = {"status": "session_finished", "detail": "지정 거래일 종료 · 추가 체결 중지. 잔고와 마지막 확인 평가액은 보존하며 공식 종가와 다를 수 있습니다."}
+        if run.get("mode") == "period":
+            execution["detail"] = "설정한 운용 기간 종료 · 추가 체결 중지. 잔고와 마지막 확인 평가액을 보존합니다."
     return {
         "paper_session": run,
         "execution_status": execution.get("status", "waiting_session"),

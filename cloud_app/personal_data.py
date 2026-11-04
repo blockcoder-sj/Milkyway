@@ -36,7 +36,7 @@ from .bounded_io import read_bounded_file, read_bounded_json
 from .local_demo import _atomic_json
 from .provider_process import ProviderProcess
 
-SYMBOL_PATTERN = re.compile(r"^[A-Z][A-Z0-9]{0,5}(?:[.-][A-Z])?$")
+SYMBOL_PATTERN = re.compile(r"^(?=.{1,20}$)[A-Z][A-Z0-9]*(?:[.-][A-Z0-9]+)?$")
 MAX_PERSONAL_SYMBOLS = 100
 MAX_HISTORY_ROWS = 850
 MAX_PERSONAL_PRICE_BYTES = 512 * 1024

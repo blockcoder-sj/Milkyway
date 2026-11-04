@@ -61,7 +61,7 @@ class LocalControlTests(unittest.TestCase):
         with patch.object(c,"_inventory",return_value=inventory),patch.object(c,"compose") as compose,patch.object(c,"command",return_value=Mock(returncode=0)):
             c._start_services(False)
             compose.assert_called_once_with("up","-d","--no-deps","--no-build","paper-worker",timeout=90)
-        self.assertEqual(set(control.SERVICES),{"app","paper-worker","personal-data","backtest-worker","market-data","market-details","backup"})
+        self.assertEqual(set(control.SERVICES),{"app","paper-worker","personal-data","backtest-worker","market-data","market-details","universe-data","backup"})
 
     def test_recovery_restarts_only_stale_worker_and_resumes_exact_account(self):
         c=control.Controller(token="a"*64,port=8080)

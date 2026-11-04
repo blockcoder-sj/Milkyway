@@ -217,16 +217,26 @@ function accountCards(rows) {
   element.innerHTML = rows.map((account) => {
     const run = account.paper_session;
     const finished = run && (run.expired || run.completed_at);
-    const label = finished ? "지정 거래일 종료" : account.status === "active" ? "운용 허용 · 상태 확인 필요" : ["review_required", "configuration_required"].includes(account.status) ? "전략·보유 종목 검토 필요" : "일시정지";
+    const label = finished ? (run.mode === "period" ? "운용 기간 종료" : "지정 거래일 종료") : account.status === "active" ? "운용 허용 · 상태 확인 필요" : ["review_required", "configuration_required"].includes(account.status) ? "전략·보유 종목 검토 필요" : "일시정지";
     const control = finished ? '<span class="status-pill">종료</span>' : ["review_required", "configuration_required"].includes(account.status)
       ? '<span class="status-pill warn">REVIEW</span>'
       : `<button class="ghost compact account-toggle" data-id="${escapeHtml(account.id)}" data-status="${account.status === "active" ? "paused" : "active"}">${account.status === "active" ? "정지" : "재개"}</button>`;
     const positions = account.positions.map((position) => `<span class="chip">${escapeHtml(position.ticker)} ${pct(position.pnl_pct)}</span>`).join("") || `<span class="chip">${finished ? "보유 종목 없음" : "첫 리밸런싱 대기"}</span>`;
-    const schedule = run ? `<p class="fineprint">미국 거래일 ${escapeHtml(run.session_date)} · 자동 중지 ${escapeHtml(new Date(run.closes_at).toLocaleString("ko-KR"))}${run.summary ? `<br>체결 ${number(run.summary.fill_count, 0)}건 · 종료 시 마지막 확인 평가액 ${money(run.summary.last_known_equity)} (공식 종가 미확인)` : ""}</p>` : "";
-    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div>${control}</div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div>${schedule}<p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button></div>`;
+    const schedule = run ? `<p class="fineprint">${run.mode === "period" ? `${run.duration_days}일 운용` : `미국 거래일 ${escapeHtml(run.session_date)}`} · 자동 중지 ${escapeHtml(new Date(run.closes_at).toLocaleString("ko-KR"))}${run.summary ? `<br>체결 ${number(run.summary.fill_count, 0)}건 · 종료 시 마지막 확인 평가액 ${money(run.summary.last_known_equity)} (공식 종가 미확인)` : ""}</p>` : "";
+    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div><div class="account-actions">${control}<button class="ghost compact account-delete" data-id="${escapeHtml(account.id)}">계좌 삭제</button></div></div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div>${schedule}<p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button></div>`;
   }).join("");
   $$('.account-toggle').forEach((button) => button.addEventListener("click", () => toggleAccount(button.dataset.id, button.dataset.status)));
+  $$('.account-delete').forEach(button => button.addEventListener('click', () => deleteItem('accounts', button.dataset.id)));
   $$('.account-history-open').forEach((button) => button.addEventListener("click", () => openAccountHistory(button.dataset.id)));
+}
+
+async function deleteItem(kind, id) {
+  const account = kind === "accounts";
+  const row = state.dashboard?.[account ? "accounts" : "strategies"]?.find(item => item.id === id);
+  const detail = account ? "계좌 운용을 멈추고 잔고·보유 종목·체결·자산 기록을 삭제합니다. 필요한 기록은 먼저 CSV로 저장하세요." : "전략과 연결된 백테스트 기록을 삭제합니다. 이 전략의 페이퍼 계좌가 있으면 먼저 삭제해야 합니다.";
+  if (!window.confirm(`${row?.name || "선택한 항목"}\n${detail}\n삭제 후 되돌릴 수 없습니다. 삭제할까요?`)) return;
+  try { await api(`/api/${kind}/${encodeURIComponent(id)}`, {method:"DELETE"}); toast(account ? "페이퍼 계좌를 삭제했습니다" : "전략을 삭제했습니다"); await refresh(); }
+  catch (error) { toast(error.message, true); }
 }
 
 async function toggleAccount(id, status) {
@@ -259,7 +269,8 @@ async function openAccountHistory(id) {
 function dataFacts(data) {
   if (window.MilkywayPersonal.isPersonal()) {
     const personal = state.dashboard.personal_data || {};
-    $("#dataFacts").innerHTML = `<dt>선정 범위</dt><dd>내 전략에 입력한 종목</dd><dt>일봉 출처</dt><dd>Yahoo · 자동 준비·갱신</dd><dt>준비 상태</dt><dd>${escapeHtml(personal.message || personal.status || "전략 저장 후 준비")}</dd><dt>완료 세션</dt><dd>${escapeHtml(personal.last_completed_session || data.last_completed_session || "준비 중")}</dd><dt>성과 판정</dt><dd>탐색용 · 생존편향 있음</dd>`;
+    const wholeMarket = state.strategies.some(row => row.spec?.universe === "us_market");
+    $("#dataFacts").innerHTML = `<dt>선정 범위</dt><dd>${wholeMarket ? "전략별 미국 전체 자동 선별 또는 선택 종목" : "내 전략에 입력한 종목"}</dd><dt>일봉 출처</dt><dd>${wholeMarket ? "전체 시장: 토스 · 기업행사 확인: Yahoo" : "Yahoo · 자동 준비·갱신"}</dd><dt>준비 상태</dt><dd>${escapeHtml(personal.message || personal.status || "전략 저장 후 준비")}</dd><dt>완료 세션</dt><dd>${escapeHtml(personal.last_completed_session || data.last_completed_session || "준비 중")}</dd><dt>성과 판정</dt><dd>탐색용 · 생존편향 있음</dd>`;
     return;
   }
   const lag = Number(data.trading_session_lag || 0);
@@ -287,9 +298,10 @@ function renderStrategies() {
       <div class="strategy-head"><div><h4>${escapeHtml(strategy.name)}</h4><p>${escapeHtml(strategy.description)}</p></div></div>
       <p>${escapeHtml((strategy.spec.symbols || []).join(", "))}</p><div class="factor-row">${strategy.spec.factors.map((factor) => `<span class="badge">${escapeHtml(factor.kind)} ${Number(factor.lookback)}d × ${Number(factor.weight)}</span>`).join("")}<span class="badge amber">${Number(strategy.spec.portfolio.max_positions)}종목 · ${Number(strategy.spec.portfolio.rebalance_days)}일</span></div>
       <details class="code-preview"><summary>저장된 전략 규격 보기</summary><pre>${escapeHtml(strategy.code_preview)}</pre></details>
-      <div class="strategy-actions"><button class="ghost run-backtest" data-id="${escapeHtml(strategy.id)}">백테스트</button><button class="ghost new-account" data-id="${escapeHtml(strategy.id)}">페이퍼 계좌</button></div>
+      <div class="strategy-actions"><button class="ghost run-backtest" data-id="${escapeHtml(strategy.id)}">백테스트</button><button class="ghost new-account" data-id="${escapeHtml(strategy.id)}">페이퍼 계좌</button><button class="ghost strategy-delete" data-id="${escapeHtml(strategy.id)}">전략 삭제</button></div>
     </div>`).join("");
   $$('.run-backtest').forEach((button) => button.addEventListener("click", () => openBacktest(button.dataset.id)));
+  $$('.strategy-delete').forEach(button => button.addEventListener('click', () => deleteItem('strategies', button.dataset.id)));
   $$('.new-account').forEach((button) => button.addEventListener("click", () => openAccount(button.dataset.id)));
 }
 
@@ -459,16 +471,24 @@ async function enterApp(me = null) {
   if (detail && state.config.personal_local_mode) await window.MilkywayMarketDetail.open(detail[1],false);
 }
 
-function openBacktest(id) {
+async function openBacktest(id) {
   const form = $("#backtestForm");
   form.strategy_id.value = id;
-  const data = state.dashboard.data;
+  const data = {...state.dashboard.data};
+  const strategy = state.strategies.find((row) => row.id === id);
+  if (strategy?.spec?.universe === "us_market") {
+    try {
+      const universe = await api("/api/personal/universe");
+      if (universe.state !== "ready" || !universe.first_session) return toast("미국 전체 종목의 일봉 준비를 기다려 주세요");
+      data.first_completed_session = universe.first_session;
+      data.last_completed_session = universe.required_session;
+    } catch (error) { return toast(error.message); }
+  }
   const hasStrict = !window.MilkywayPersonal.isPersonal() && !window.MilkywayPersonal.isDemo() && data.forward_data_gate_ready && data.first_certified_execution_date <= data.last_completed_session;
   form.bias_mode.querySelector('option[value="strict"]').disabled = !hasStrict;
   form.bias_mode.value = hasStrict ? "strict" : "exploratory";
   const today = new Date().toISOString().slice(0, 10);
   const fallbackStart = `${new Date().getFullYear()}-01-02`;
-  const strategy = state.strategies.find((row) => row.id === id);
   const warmupDays = Math.max(strategy?.spec?.filters?.history_days || 60, ...((strategy?.spec?.factors || []).map((factor) => factor.lookback + 1)));
   const firstDate = new Date(`${data.first_completed_session || fallbackStart}T00:00:00Z`);
   firstDate.setUTCDate(firstDate.getUTCDate() + Math.ceil(warmupDays * 7 / 5) + 10);
@@ -484,7 +504,7 @@ function openBacktest(id) {
 function openAccount(id) {
   $("#accountForm").strategy_id.value = id;
   $("#accountForm").elements.session_date.value = "";
-  $("#paperSessionField").classList.toggle("hidden", !state.config?.personal_local_mode);
+  $("#paperSessionField").classList.toggle("hidden", !state.config?.personal_local_mode || Boolean($("#accountForm [name=run_days]").value));
   $("#accountDialog").showModal();
 }
 
@@ -694,13 +714,20 @@ $("#backtestForm").addEventListener("submit", async (event) => {
   finally { button.disabled = false; }
 });
 
+$("#accountForm [name=run_days]").addEventListener("change", event => {
+  $("#paperSessionField").classList.toggle("hidden", !state.config?.personal_local_mode || Boolean(event.target.value));
+  $("#accountForm [name=session_date]").disabled = Boolean(event.target.value);
+});
+
 $("#accountForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = event.target.querySelector("button[type=submit]");
   button.disabled = true;
   const body = formObject(event.target);
   if (!body.session_date) delete body.session_date;
-  try { await api("/api/accounts", {method: "POST", body: JSON.stringify(body)}); $("#accountDialog").close(); toast("페이퍼 계좌를 만들었습니다"); await refresh(); }
+  if (body.run_days) { body.run_days = Number(body.run_days); delete body.session_date; }
+  else delete body.run_days;
+  try { const account = await api("/api/accounts", {method: "POST", body: JSON.stringify(body)}); $("#accountDialog").close(); toast("페이퍼 계좌를 만들었습니다"); await refresh(); window.MilkywayRuntime?.selectAccount(account.id); }
   catch (error) { toast(error.message, true); }
   finally { button.disabled = false; }
 });

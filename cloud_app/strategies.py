@@ -101,7 +101,8 @@ class StrategySpec(StrictSpecModel):
     schema_version: Literal[1] = 1
     name: str = Field(min_length=2, max_length=100)
     description: str = Field(default="", max_length=1000)
-    symbols: list[str] = Field(default_factory=list, max_length=20)
+    universe: Literal["selected", "us_market"] = "selected"
+    symbols: list[str] = Field(default_factory=list, max_length=100)
     factors: list[FactorSpec] = Field(min_length=1, max_length=5)
     filters: FilterSpec = Field(default_factory=FilterSpec)
     portfolio: PortfolioSpec = Field(default_factory=PortfolioSpec)
@@ -110,7 +111,7 @@ class StrategySpec(StrictSpecModel):
     @classmethod
     def validate_symbols(cls, values):
         from .personal_data import normalize_symbols
-        return normalize_symbols(values, maximum=20)
+        return normalize_symbols(values, maximum=100)
 
     @field_validator("name", "description", mode="before")
     @classmethod
@@ -119,6 +120,8 @@ class StrategySpec(StrictSpecModel):
 
     @model_validator(mode="after")
     def require_nonzero_factor(self):
+        if self.universe == "us_market" and self.symbols:
+            raise ValueError("미국 전체 시장 전략은 고정 티커 목록을 사용하지 않습니다")
         combined = {}
         for factor in self.factors:
             key = (factor.kind, factor.lookback)
@@ -572,9 +575,19 @@ def run_strategy_backtest(
     settings: Settings | None = None,
 ) -> dict:
     settings = settings or get_settings()
+    if spec.universe == "us_market":
+        from .us_universe import dataset_settings
+        settings = dataset_settings(settings)
     bundle = get_dataset_bundle(settings)
+    if spec.universe == "us_market":
+        warmup = max(spec.filters.history_days, *[f.lookback + 1 for f in spec.factors])
+        if len(bundle.index) <= warmup:
+            raise ValueError("미국 전체 시장 전략의 준비 일봉이 부족합니다")
+        first, last = bundle.index[warmup].date().isoformat(), bundle.index[-1].date().isoformat()
+        if start < first or end > last:
+            raise ValueError(f"미국 전체 시장 백테스트 가능 기간은 {first}~{last}입니다. 시작일·종료일을 조정하세요")
     personal = bool(getattr(settings, "personal_local_mode", False) and not settings.production)
-    if personal and (not spec.symbols or any(symbol not in bundle.data for symbol in spec.symbols)):
+    if personal and spec.universe == "selected" and (not spec.symbols or any(symbol not in bundle.data for symbol in spec.symbols)):
         raise ValueError("전략 종목의 과거 일봉을 준비한 뒤 다시 시도해 주세요.")
     if bias_mode == "strict" and not bundle.forward_data_gate_ready:
         raise ValueError(
@@ -637,6 +650,8 @@ def run_strategy_backtest(
         ).format(bundle.first_certified_execution_date)
         if personal:
             caveat = "직접 선택한 현재 종목의 Yahoo 일봉을 사용한 탐색 결과입니다. 과거 상장 종목 전체를 반영한 PIT 성과가 아니며, 조정 주가와 실제 가상 체결 가격은 다를 수 있습니다."
+            if spec.universe == "us_market":
+                caveat = "현재 토스에서 거래 가능한 미국 보통주·ADR·REIT의 수정 일봉으로 계산한 탐색 결과입니다. 과거 상장폐지 종목 전체를 재현한 PIT 성과가 아니며 생존편향이 있습니다."
         elif settings.local_demo_data:
             caveat = "합성 가격을 이용한 기능 실습 결과이며 실제 시장 성과가 아닙니다."
     return {
@@ -673,6 +688,8 @@ def strategy_code_preview(spec: StrategySpec, settings: Settings | None = None) 
         "# Safe strategy DSL preview; execution always uses backtest_core.run_backtest",
         "score = 0",
     ]
+    if spec.universe == "us_market":
+        lines.insert(1, "current_toss_us_equities = discover_all_tradable_us_common_equities()  # current membership, not historical PIT")
     if selected_universe:
         lines.insert(1, "selected_symbols = {}  # user-selected current universe".format(repr(spec.symbols)))
     for factor in spec.factors:
@@ -684,7 +701,7 @@ def strategy_code_preview(spec: StrategySpec, settings: Settings | None = None) 
     lines.extend(
         [
             "score = score.shift(1)  # no same-close lookahead",
-            "eligible = {} & trailing_liquidity_filter(".format("selected_symbols" if selected_universe else "pit_membership"),
+            "eligible = {} & trailing_liquidity_filter(".format("current_toss_us_equities" if spec.universe == "us_market" else "selected_symbols" if selected_universe else "pit_membership"),
             "    history_days={}, min_price={}, min_average_volume={})".format(
                 spec.filters.history_days,
                 spec.filters.min_price,

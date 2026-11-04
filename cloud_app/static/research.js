@@ -154,10 +154,12 @@
     $("#researchDeploy").addEventListener("submit", event => {
       event.preventDefault();
       const body = Object.fromEntries(new FormData(event.target));
+      if (body.run_days) body.run_days = Number(body.run_days); else delete body.run_days;
       act(async () => {
         deployId ||= crypto.randomUUID();
-        await api.deploy(room.id, {...body, request_id: deployId});
+        const account = await api.deploy(room.id, {...body, request_id: deployId});
         deployId = null;
+        window.MilkywayRuntime?.selectAccount(account.id);
         await reload();
         await hooks.refresh();
         hooks.toast("페이퍼 계좌를 만들었습니다. 아래 계좌 상태를 확인하세요");

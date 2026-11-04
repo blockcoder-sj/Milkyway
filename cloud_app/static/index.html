@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/static/styles.css?v=20261003-energy-directory">
   <link rel="stylesheet" href="/static/research.css?v=20261002-7">
   <link rel="stylesheet" href="/static/market-chart.css?v=20260930-2">
-  <link rel="stylesheet" href="/static/responsive.css?v=20261103-starter-1">
+  <link rel="stylesheet" href="/static/responsive.css?v=20261105-us-market-1">
 </head>
 <body>
   <canvas id="marketBackdrop" aria-hidden="true"></canvas>
@@ -191,6 +191,7 @@
       <div class="section-head"><div><p class="eyebrow">PAPER ACCOUNT</p><h3>페이퍼 계좌 시작</h3></div><button type="button" class="icon-btn" data-close aria-label="닫기">×</button></div>
       <input name="strategy_id" type="hidden">
       <label>계좌 이름<input name="name" maxlength="100" value="Paper Account" required></label>
+      <label id="paperDurationField">운용 기간<select name="run_days"><option value="">계속 운용</option><option value="7" selected>지금부터 1주일 · 자동 종료</option></select></label>
       <label id="paperSessionField" class="hidden">하루만 운용할 미국 거래일 (선택)<input name="session_date" type="date"><span class="fineprint">미국 동부 날짜 기준. 비워 두면 계속 운용합니다. 지정하면 정규장 마감에 자동 중지하고 잔고·기록을 보존합니다.</span></label>
       <p class="fineprint">전략에 설정된 초기자본으로 시작하며 실제 주문은 전송하지 않습니다.</p>
       <button class="primary" type="submit">계좌 만들기</button>
@@ -231,8 +232,8 @@
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="/static/format.js?v=20261001-6" defer></script>
-  <script src="/static/personal.js?v=20261103-runtime-1" defer></script>
-  <script src="/static/personal-runtime.js?v=20261103-runtime-3" defer></script>
+  <script src="/static/personal.js?v=20261105-us-market-1" defer></script>
+  <script src="/static/personal-runtime.js?v=20261105-us-market-1" defer></script>
   <script src="/static/market-methods.js?v=20261001-6" defer></script>
   <script src="/static/market.js?v=20261103-starter-1" defer></script>
   <script src="/static/market-chart.js?v=20261001-6" defer></script>
@@ -240,11 +241,11 @@
   <script src="/static/market-directory.js?v=20261003-energy-directory" defer></script>
   <script src="/static/market-detail.js?v=20261103-starter-1" defer></script>
   <script src="/static/research/api.js?v=20261001-6" defer></script>
-  <script src="/static/research/panel.js?v=20261001-6" defer></script>
-  <script src="/static/research/view.js?v=20261002-7" defer></script>
-  <script src="/static/research/tuning.js?v=20261001-6" defer></script>
-  <script src="/static/research.js?v=20261002-3" defer></script>
+  <script src="/static/research/panel.js?v=20261105-us-market-1" defer></script>
+  <script src="/static/research/view.js?v=20261105-us-market-1" defer></script>
+  <script src="/static/research/tuning.js?v=20261105-us-market-1" defer></script>
+  <script src="/static/research.js?v=20261105-us-market-1" defer></script>
   <script src="/static/profile.js?v=20261001-6" defer></script>
-  <script src="/static/app.js?v=20261103-starter-1" defer></script>
+  <script src="/static/app.js?v=20261105-us-market-1" defer></script>
 </body>
 </html>

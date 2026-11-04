@@ -303,7 +303,12 @@ class ResearchService:
             )
             if existing:
                 account = self.db.get(PaperAccount, existing.account_id)
-                if existing.strategy_id != body.strategy_id or account.name != body.name.strip():
+                if account is None:
+                    raise HTTPException(409, "이 요청으로 만든 계좌는 삭제됐습니다. 새 계좌 만들기로 다시 시작해 주세요.")
+                from .paper_sessions import session_payload
+                schedule = session_payload(self.db, account, utcnow())
+                days = schedule.get("duration_days") if schedule else None
+                if existing.strategy_id != body.strategy_id or account.name != body.name.strip() or days != body.run_days:
                     raise HTTPException(409, "같은 요청 ID의 계좌 설정이 다릅니다")
                 return self.services.account_snapshot(self.db, account)
             if body.strategy_id not in {v.strategy_id for v in versions(self.db, room)}:
@@ -328,7 +333,7 @@ class ResearchService:
                 raise HTTPException(
                     409, "이 버전의 개발·검증 비교를 완료하고 검증 구간 거래 결과를 확인하세요"
                 )
-            with self.services.account_creation(body.strategy_id, body.name, self.user, self.db) as account:
+            with self.services.account_creation(body.strategy_id, body.name, self.user, self.db, body.run_days) as account:
                 self.db.add(
                     ResearchDeployment(
                         session_id=room.id,

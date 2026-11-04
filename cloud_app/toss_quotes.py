@@ -81,6 +81,12 @@ class TossQuoteClient:
     def _raise_for_status(self, response, payload: dict | None = None) -> None:
         code = self._error_code(payload)
         if response.status_code == 401 or code in {"invalid-token", "expired-token"}:
+            from . import toss_token_cache
+            if toss_token_cache.enabled():
+                request = getattr(response, "request", None)
+                authorization = getattr(request, "headers", {}).get("Authorization", "")
+                rejected = authorization[7:] if isinstance(authorization, str) and authorization.startswith("Bearer ") else None
+                toss_token_cache.invalidate(self, rejected)
             raise TossAuthenticationError("Toss Open API authentication was rejected")
         if response.status_code == 403:
             raise TossIpNotAllowedError("Toss Open API server IP is not allowed")
@@ -94,6 +100,13 @@ class TossQuoteClient:
             raise TossOpenApiError("Toss Open API request was rejected ({})".format(code))
 
     def authenticate(self) -> None:
+        from . import toss_token_cache
+        if toss_token_cache.enabled():
+            toss_token_cache.authenticate(self, self._authenticate)
+        else:
+            self._authenticate()
+
+    def _authenticate(self) -> None:
         response = self.session.post(
             self.base_url + "/oauth2/token",
             data={
@@ -134,7 +147,8 @@ class TossQuoteClient:
             return False
 
     def _headers(self) -> dict[str, str]:
-        if not self.token or dt.datetime.now(dt.timezone.utc) >= self.token_expires_at:
+        from . import toss_token_cache
+        if toss_token_cache.enabled() or not self.token or dt.datetime.now(dt.timezone.utc) >= self.token_expires_at:
             self.authenticate()
         return {"Authorization": "Bearer " + self.token, "Accept": "application/json"}
 

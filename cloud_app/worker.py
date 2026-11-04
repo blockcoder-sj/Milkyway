@@ -118,8 +118,9 @@ class PersonalQuoteProvider(QuoteProvider):
 
     def fetch(self, tickers):
         wanted = sorted(set(tickers))
-        if len(wanted) > 20:
-            raise ValueError("개인 시세 조회는 활성 계좌 전체에서 최대 20개 종목입니다")
+        maximum = 200 if self.configuration.get("provider") == "toss" else 20
+        if len(wanted) > maximum:
+            raise ValueError(f"이 증권사의 동시 시세 조회는 최대 {maximum}개 종목입니다")
         values = self.runner.run({"tickers": wanted}, self.configuration,
                                  deadline=time.monotonic() + self.timeout_seconds)
         return [QuoteValue(**{**value, "observed_at": dt.datetime.fromisoformat(value["observed_at"])})
@@ -889,9 +890,14 @@ def refresh_personal_history(settings) -> None:
             return
         symbols = set()
         invalid = 0
-        for encoded in session.scalars(select(Strategy.spec_json)).all():
+        for strategy in session.scalars(select(Strategy)).all():
             try:
-                symbols.update(StrategySpec.model_validate_json(encoded).symbols)
+                spec = StrategySpec.model_validate_json(strategy.spec_json)
+                if spec.universe == "us_market":
+                    from .us_universe import status as universe_status
+                    symbols.update(universe_status(settings, strategy.user_id, spec).get("candidates", []))
+                else:
+                    symbols.update(spec.symbols)
             except ValueError:
                 invalid += 1
         # Preserve split/action monitoring for held symbols after a strategy edit.

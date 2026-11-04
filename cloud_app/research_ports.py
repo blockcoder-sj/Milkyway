@@ -15,7 +15,7 @@ class ResearchServices:
     get_settings: Callable[[], Settings]
     rate_limit: Callable[[str, int, int], Any]
     strategy_creation: Callable[[Session, User, StrategySpec, str], AbstractContextManager[Strategy]]
-    account_creation: Callable[[str, str, User, Session], AbstractContextManager[PaperAccount]]
+    account_creation: Callable[[str, str, User, Session, int | None], AbstractContextManager[PaperAccount]]
     strategy_payload: Callable[[Strategy], dict]
     account_snapshot: Callable[[Session, PaperAccount], dict]
     owned_strategy: Callable[[Session, User, str], Strategy]

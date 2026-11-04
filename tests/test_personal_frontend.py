@@ -96,9 +96,7 @@ vm.runInContext(bootstrap, ctx);
         personal = (STATIC / "personal.js").read_text()
         for expected in ('id="operationMessage"', 'id="connectionError"', 'id="accountHistoryDialog"'):
             self.assertIn(expected, html)
-        self.assertIn('hooks.api("/api/strategies"', personal)
-        self.assertIn('factors: selectedFactors', personal)
-        self.assertIn('spec.symbols = symbols', personal)
+        self.assertNotIn('manualStrategyForm', personal)
         self.assertIn('/export?kind=fills', app)
         self.assertIn('/export?kind=equity', app)
         self.assertIn('/api/backtests?limit=50&offset=', app)

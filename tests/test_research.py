@@ -34,7 +34,7 @@ class ResearchTests(unittest.TestCase):
         self.settings = replace(main.settings, personal_local_mode=True, app_env="development", authority_enabled=False,
             shared_ai_enabled=False, credential_backend="local", quote_provider="member", dataset_dir=self.root / "data", terminal_events_path=self.root / "events.jsonl",
             max_outstanding_backtests_per_user=8)
-        self.patches = [patch.object(main, "settings", self.settings), patch.object(research_ai, "ROOT", self.root),
+        self.patches = [patch.object(main, "settings", self.settings), patch("cloud_app.paper.get_settings",return_value=self.settings), patch.object(research_ai, "ROOT", self.root),
                         patch.dict(os.environ, {"OPENAI_API_KEY": "", "OPENAI_MODEL": "", "OPENAI_REASONING_EFFORT": ""})]
         for item in self.patches: item.start()
         self.actor = self.user
@@ -287,7 +287,7 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(len(self.db.scalars(select(BacktestJob)).all()), 4)
         strategy_id = body["strategy_ids"][0]
         deploy_path = f'/api/research/sessions/{self.room["id"]}/deploy'
-        deploy = {"strategy_id": strategy_id, "request_id": "deploy-0001", "name": "My paper"}
+        deploy = {"strategy_id": strategy_id, "request_id": "deploy-0001", "name": "My paper", "run_days":7}
         self.assertEqual(self.client.post(deploy_path, json=deploy).status_code, 409)
         self.run_jobs(4)
         room = self.client.get(f'/api/research/sessions/{self.room["id"]}').json()
@@ -301,7 +301,9 @@ class ResearchTests(unittest.TestCase):
         response = self.client.post(deploy_path, json=deploy)
         self.assertEqual(response.status_code, 201, response.text)
         account_id = response.json()["id"]
+        self.assertEqual(response.json()["paper_session"]["duration_days"],7)
         self.assertEqual(self.client.post(deploy_path, json=deploy).json()["id"], account_id)
+        self.assertEqual(self.client.post(deploy_path, json=dict(deploy,run_days=1)).status_code,409)
         self.assertEqual(len(self.db.scalars(select(PaperAccount)).all()), 1)
         self.db.add(PaperFill(account_id=account_id, ticker="AAPL", side="buy", shares=1, price=100,
                              fee=.3, reason="rebalance", dedupe_key="synthetic-research-fill")); self.db.commit()

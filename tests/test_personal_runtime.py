@@ -59,6 +59,8 @@ class PersonalRuntimeTests(unittest.TestCase):
         self.assertTrue(self.status()["ready_to_trade"])
         quote=self.db.get(MemberQuote,(self.user.id,"MSFT"));quote.observed_at=self.now-dt.timedelta(minutes=10);self.db.commit()
         self.assertEqual(self.status()["state"],"waiting_quotes")
+        self.assertEqual(self.status()["title"],"일부 종목 시세 갱신 대기")
+        self.assertIn("1/2",self.status()["message"])
         self.assertFalse(self.status()["ready_to_trade"])
         quote.observed_at=self.now+dt.timedelta(seconds=1);self.db.commit()
         self.assertFalse(self.status()["ready_to_trade"])
@@ -173,6 +175,7 @@ class PersonalRuntimeTests(unittest.TestCase):
             with self.assertRaises(HTTPException) as exc:fn(self.db,self.settings,"another-owner",self.account.id)
             self.assertEqual(exc.exception.status_code,404)
         self.account.status="paused"
+        self.db.get(MarketDataConnection,self.user.id).provider="kis"
         spec=StrategySpec(name="20",symbols=["X"+chr(65+i) for i in range(20)],factors=[{"kind":"momentum"}])
         strategy=Strategy(user_id=self.user.id,name="20",spec_json=spec.model_dump_json());self.db.add(strategy);self.db.flush()
         self.db.add(PaperAccount(user_id=self.user.id,strategy_id=strategy.id,name="other",initial_cash=100000,cash=100000));self.db.commit()

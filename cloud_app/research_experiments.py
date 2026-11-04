@@ -33,6 +33,7 @@ class DeployBody(BaseModel):
     strategy_id: str
     request_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{8,64}$")
     name: str = Field(min_length=2, max_length=100)
+    run_days: int | None = Field(default=None, ge=1, le=30)
 
 
 def experiment_payload(db, experiment):
@@ -87,19 +88,28 @@ def enqueue_experiment(db, user, room, body, settings, allowed_ids):
         if daily + count > settings.max_backtests_per_user_day or outstanding + count > settings.max_outstanding_backtests_per_user or total + count > settings.max_outstanding_backtests_total:
             raise HTTPException(429, "백테스트 대기열 또는 일일 한도입니다. 실행 중인 작업이 끝난 뒤 후보를 줄여 다시 시도하세요")
         try:
-            bundle = get_dataset_bundle(settings)
             specs = []
             for strategy_id in body.strategy_ids:
                 strategy = db.scalar(select(Strategy).where(Strategy.id == strategy_id, Strategy.user_id == user.id))
                 if strategy is None:
                     raise ValueError("missing strategy")
                 spec = StrategySpec.model_validate_json(strategy.spec_json)
+                specs.append(spec)
+            if len({spec.universe for spec in specs}) != 1:
+                raise HTTPException(422, "같은 분석 대상 범위의 전략끼리 비교해 주세요")
+            if specs[0].universe == "us_market":
+                from .us_universe import dataset_settings
+                bundle = get_dataset_bundle(dataset_settings(settings, user.id))
+            else:
+                bundle = get_dataset_bundle(settings)
+            for spec in specs:
                 needed = max(spec.filters.history_days, *(factor.lookback + 1 for factor in spec.factors))
                 for symbol in spec.symbols:
                     frame = bundle.data.get(symbol)
                     if frame is None or frame.index.max().date() < body.end_date or len(frame.loc[frame.index.date < body.start_date]) < needed:
                         raise ValueError("insufficient history")
-                specs.append(spec)
+                if spec.universe == "us_market" and (len(bundle.index[bundle.index.date < body.start_date]) < needed):
+                    raise ValueError("insufficient whole-market warmup")
             if len({(spec.portfolio.initial_cash, spec.portfolio.cost_per_side) for spec in specs}) != 1:
                 raise HTTPException(422, "공정한 비교를 위해 후보의 초기자금과 편도 비용을 같게 설정하세요")
             if body.end_date > bundle.index.max().date():
