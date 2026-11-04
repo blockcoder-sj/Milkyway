@@ -38,7 +38,8 @@ class NativeUpdateTests(unittest.TestCase):
 
     def test_update_keeps_private_files_and_installs_new_code(self):
         private = {"runtime/club.sqlite3": b"synthetic ledger", "backups/previous.zip": b"backup",
-                   ".env": b"synthetic private settings", ".venv/keep": b"environment", "logs/keep": b"log"}
+                   ".env": b"synthetic private settings", ".env.example": b"synthetic personal example key",
+                   ".venv/keep": b"environment", "logs/keep": b"log"}
         for name, data in private.items():
             p = self.root / name
             p.parent.mkdir(parents=True, exist_ok=True)

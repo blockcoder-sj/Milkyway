@@ -66,6 +66,10 @@ python3.14 -c "import urllib.request;exec(compile(urllib.request.urlopen('https:
 전략 화면에서 가설 대화 → 버전 저장 → 개발·검증 비교 → 개선 → 페이퍼 운용을
 진행할 수 있습니다. 기본 모델은 `gpt-5.4-mini`, 추론은 `none`입니다.
 `.env`에 본인 키를 넣고 **요청마다 1회 호출을 승인**합니다. 자동매매에는 AI 호출이 없습니다.
+Docker 없이 Python 실행에서도 `run_milkyway.py`와 같은 폴더의 `.env`를 읽습니다.
+`.env.example`에 이미 키를 넣었다면 그 파일을 복사해 이름을 `.env`로 바꾸고 재실행하면 됩니다.
+이번 업데이트부터는 `.env`가 없을 때 `.env.example`의 AI 설정도 그대로 읽습니다.
+기존 `.env`가 있으면 해당 파일을 우선하며, 두 파일과 개인 기록을 업데이트로 덮어쓰지 않습니다.
 [키 설정·전체 흐름·지원 범위](docs/AI_RESEARCH_GUIDE.md)
 
 ## 시장 화면

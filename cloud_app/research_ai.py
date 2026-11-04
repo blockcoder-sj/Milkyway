@@ -96,14 +96,17 @@ def local_configuration(settings) -> LocalAI:
     if not settings.personal_local_mode or settings.production:
         raise ValueError("AI 연구는 개인 로컬 모드에서만 사용할 수 있습니다")
     values = {}
-    path = Path(ROOT) / ".env"
-    try:
-        raw = read_bounded_file(path, maximum_bytes=16384, allow_empty=True)
-        values = dotenv_values(stream=io.StringIO(raw.decode("utf-8")), interpolate=False)
-    except FileNotFoundError:
-        pass
-    except (OSError, ValueError, UnicodeError):
-        raise ValueError(".env 파일을 읽을 수 없습니다. 파일 형식과 권한을 확인하세요") from None
+    # ZIP users sometimes enter their key in the provided example. Keep .env
+    # authoritative, but accept that file when .env has not been created yet.
+    for filename in (".env", ".env.example"):
+        try:
+            raw = read_bounded_file(Path(ROOT) / filename, maximum_bytes=16384, allow_empty=True)
+            values = dotenv_values(stream=io.StringIO(raw.decode("utf-8-sig")), interpolate=False)
+        except FileNotFoundError:
+            continue
+        except (OSError, ValueError, UnicodeError):
+            raise ValueError(f"{filename} 파일을 읽을 수 없습니다. 파일 형식과 권한을 확인하세요") from None
+        break
     key = (os.getenv("OPENAI_API_KEY") or values.get("OPENAI_API_KEY") or "").strip()
     model = (os.getenv("OPENAI_MODEL") or values.get("OPENAI_MODEL") or "gpt-5.4-mini").strip()
     validate_provider_model("openai", model)

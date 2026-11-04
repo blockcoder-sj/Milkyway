@@ -10,15 +10,40 @@
 기존 `.env`를 열어 빈 키 칸만 채웁니다. 새로 설치했다면 `.env.example`을
 `.env`로 복사합니다. 기존 `.env`를 덮어쓰지 마세요.
 
+Docker 없이 `run_milkyway.py`로 실행해도 같은 폴더의 `.env`를 읽습니다.
+`.env.example`에 이미 키를 입력했다면 그 파일을 복사해 `.env`라는 이름으로 저장하고
+재실행하면 됩니다. 파일 이름 뒤에 `.txt`를 붙이지 않습니다.
+최신 Python 실습 브랜치는 `.env`가 없으면 `.env.example`도 읽습니다.
+기존 `.env`는 빈 키를 포함해 항상 우선하며, 설정 확인 자체에는 AI 요청이 없습니다.
+
+이미 설치한 Python 사용자도 GitHub 업데이트 없이 아래 한 줄로 `.env.example`을
+`.env`로 복사하고 실행할 수 있습니다. 먼저 실행 창에서 Ctrl+C로 종료하고,
+`run_milkyway.py`가 있는 폴더의 터미널에서 실행합니다. 기존 `.env`는 보존합니다.
+
+```powershell
+# Windows
+py -3.14 -c "from pathlib import Path; import runpy; p=Path('.env'); p.exists() or p.write_bytes(Path('.env.example').read_bytes()); runpy.run_path('run_milkyway.py',run_name='__main__')"
+```
+
+```bash
+# Mac
+python3.14 -c "from pathlib import Path; import runpy; p=Path('.env'); p.exists() or p.write_bytes(Path('.env.example').read_bytes()); runpy.run_path('run_milkyway.py',run_name='__main__')"
+```
+
+수동으로 파일을 만들 때도 `run_milkyway.py`와 같은 폴더에 다음 항목을 저장합니다.
+
 ```dotenv
 OPENAI_API_KEY=여기에_본인_API_키
 OPENAI_MODEL=gpt-5.4-mini
 OPENAI_REASONING_EFFORT=none
 ```
 
-`.env`는 Git과 Docker 이미지에서 제외됩니다. Compose가 앱 프로세스에만
+`.env`는 Git과 Docker 이미지에서 제외됩니다. Docker 사용 시 Compose가 앱 프로세스에만
 키를 전달하고 페이퍼·백테스트 worker에는 전달하지 않습니다.
 이 PC의 파일은 소유자만 읽고 쓰는 권한으로 준비했습니다.
+
+Python 사용자는 키를 저장하고 Ctrl+C로 종료한 뒤 평소 실행 명령을 다시 실행합니다.
+아래 명령은 Docker 사용자의 실행·재시작 방법입니다.
 
 ```bash
 cd Milkyway
