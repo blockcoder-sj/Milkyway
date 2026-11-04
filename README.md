@@ -22,7 +22,7 @@ python3.14 run_milkyway.py
 
 첫 실행은 전용 `.venv`와 해시로 고정한 구성요소를 설치합니다. 이후에는 같은 환경을
 재사용합니다. 기존 Python 3.12·3.13도 지원하며 명령의 버전 부분을 맞춥니다.
-웹과 paper/backtest/personal-data/backup을 함께 시작하고 브라우저를 엽니다.
+웹과 운용·백테스트·일봉·시장 시세·시장 상세·백업 프로세스를 함께 시작하고 브라우저를 엽니다.
 실제 접속 주소는 터미널에 표시됩니다. AI 키·Git 설치·Docker가 필요하지 않습니다.
 
 프로필에서 본인 토스 API를 연결하고 직접 규칙과 계속 운용 페이퍼 계좌를 만듭니다.
@@ -36,6 +36,30 @@ python3.14 run_milkyway.py
 Windows는 파일 잠금·사용자별 폴더 권한·자식 프로세스 정리를 별도로 적용합니다.
 Windows의 처리 시간 초과는 해당 프로세스를 종료하고 감독 프로세스가 다시 시작합니다.
 Python 3.15와 Windows ARM64는 이번 확인 범위에 포함하지 않습니다.
+
+## 이미 ZIP으로 설치했다면: 한 줄 업데이트
+
+밀키웨이 실행 창에서 **Ctrl+C**를 누르고 `종료 완료`를 확인합니다.
+VS Code에서 **기존 밀키웨이 폴더**를 열고 아래 명령 하나를 실행합니다.
+Git 설치나 ZIP 재다운로드·폴더 교체가 필요하지 않습니다.
+
+```powershell
+# Windows: 이전 버전에도 동작하는 업데이트 명령
+py -3.14 -c "import urllib.request;exec(compile(urllib.request.urlopen('https://raw.githubusercontent.com/blockcoder-sj/Milkyway/codex/week10-python/update_milkyway.py',timeout=30).read(262144),'update_milkyway.py','exec'))"
+```
+
+```bash
+# Mac: 이전 버전에도 동작하는 업데이트 명령
+python3.14 -c "import urllib.request;exec(compile(urllib.request.urlopen('https://raw.githubusercontent.com/blockcoder-sj/Milkyway/codex/week10-python/update_milkyway.py',timeout=30).read(262144),'update_milkyway.py','exec'))"
+```
+
+`업데이트 완료`가 표시되면 평소의 `py -3.14 run_milkyway.py` 또는
+`python3.14 run_milkyway.py`로 다시 실행합니다. 업데이트는 자동으로 매매를 재개하지 않습니다.
+이번 업데이트 이후에는 실행 명령 끝에 `update`를 붙여도 됩니다.
+
+최신 실습 브랜치의 코드를 받고 `runtime`, `backups`, `logs`, `.venv`, `.env`를 보존합니다.
+키를 읽거나 다시 입력하지 않습니다. 실행 중이면 업데이트를 차단하고, 파일 교체 오류는
+교체 전 코드로 복원합니다. 개인 폴더를 지우거나 새 폴더로 옮기지 않습니다.
 
 ## AI 가설 연구
 

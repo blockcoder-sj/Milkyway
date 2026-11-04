@@ -41,7 +41,7 @@ def prepare():
             print("[1/2] 밀키웨이 전용 Python 환경을 준비합니다", flush=True)
             subprocess.run([sys.executable, "-m", "venv", str(ROOT / ".venv")], check=True)
         requirements = ROOT / "requirements-native.txt"
-        fingerprint = hashlib.sha256(requirements.read_bytes()).hexdigest()
+        fingerprint = hashlib.sha256(requirements.read_bytes() + (ROOT / "requirements-native.lock").read_bytes()).hexdigest()
         marker = ROOT / ".venv/.qlab-requirements"
         if not marker.exists() or marker.read_text() != fingerprint:
             print("[2/2] 필요한 구성요소를 설치합니다. 처음 한 번은 몇 분 기다려 주세요", flush=True)
@@ -157,6 +157,8 @@ def start(args):
             "paper": ["-m", "cloud_app.worker"],
             "backtest": ["-m", "cloud_app.worker"],
             "personal-data": ["-m", "cloud_app.worker"],
+            "market-data": ["-m", "cloud_app.market_worker"],
+            "market-details": ["-m", "cloud_app.market_detail_worker"],
             "backup": ["-m", "cloud_app.local_ops", "backup-loop", "--runtime", str(ROOT / "runtime"), "--destination", str(ROOT / "backups")],
         }
         processes, handles, retries = {}, [], {role: deque() for role in workers}
@@ -251,10 +253,14 @@ def start(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("start", "doctor", "backup"), nargs="?", default="start")
+    parser.add_argument("action", choices=("start", "update", "doctor", "backup"), nargs="?", default="start")
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
+    if args.action == "update":
+        from update_milkyway import main as update
+        update(ROOT)
+        return
     prepare()
     if args.action == "start":
         start(args)
