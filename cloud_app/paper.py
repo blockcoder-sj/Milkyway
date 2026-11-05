@@ -562,7 +562,8 @@ def _fill(
     reason: str,
     dedupe_key: str,
 ) -> bool:
-    if reason in {"rebalance", "stop_loss"} and not _session_allows_execution(session, account):
+    executed_at = utcnow()
+    if reason in {"rebalance", "stop_loss"} and not _session_allows_execution(session, account, executed_at):
         return False
     if not all(math.isfinite(float(value)) for value in (shares, price, fee_rate)):
         raise ValueError("Non-finite paper fill input")
@@ -621,6 +622,7 @@ def _fill(
             fee=fee,
             reason=reason,
             dedupe_key=dedupe_key,
+            executed_at=executed_at,
         )
     )
     # Subsequent fills, stops and equity queries share this transaction while
@@ -636,11 +638,12 @@ def _account_positions(session: Session, account_id: str) -> dict[str, PaperPosi
     return {row.ticker: row for row in rows}
 
 
-def _session_allows_execution(session, account):
+def _session_allows_execution(session, account, now=None):
     if not getattr(get_settings(), "personal_local_mode", False):
         return True
     from .paper_sessions import session_allows_execution
-    return session_allows_execution(session, account, utcnow())
+    now = now or utcnow()
+    return session_allows_execution(session, account, now) and regular_market_open(now)
 
 
 def mark_and_stop_accounts(session: Session) -> int:
@@ -728,7 +731,7 @@ def _market_context(now: dt.datetime | None = None) -> tuple[dt.datetime, bool, 
         return et_now, False, False
     open_at = et_now.replace(hour=hours[0], minute=hours[1], second=0, microsecond=0)
     close_at = et_now.replace(hour=hours[2], minute=hours[3], second=0, microsecond=0)
-    market_open = open_at <= et_now <= close_at
+    market_open = open_at <= et_now < close_at
     rebalance_window = open_at + dt.timedelta(minutes=5) <= et_now <= close_at - dt.timedelta(minutes=15)
     return et_now, market_open, rebalance_window
 

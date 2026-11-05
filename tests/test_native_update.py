@@ -142,7 +142,7 @@ class NativeUpdateTests(unittest.TestCase):
 class NativeDisplaySupervisionTests(unittest.TestCase):
     def test_launcher_starts_restarts_and_stops_market_display_workers(self):
         with tempfile.TemporaryDirectory() as directory:
-            processes, modules = [], []
+            processes, modules, log_handles = [], [], []
             class Process:
                 def __init__(self, module):
                     self.module, self.pid = module, 10000 + len(processes)
@@ -156,11 +156,14 @@ class NativeDisplaySupervisionTests(unittest.TestCase):
                 module = arguments[2]
                 process = Process(module)
                 processes.append(process); modules.append(module)
+                log_handles.append(kwargs['stdout'])
                 return process
             loops = 0
             def tick(seconds):
                 nonlocal loops
                 loops += 1
+                self.assertTrue(all(handle.closed for handle in log_handles),
+                                'Parent log descriptors must be released after each child starts')
                 if loops == 1:
                     next(p for p in processes if p.module == "cloud_app.market_worker").returncode = 1
                 else:

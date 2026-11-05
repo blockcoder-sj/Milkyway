@@ -161,18 +161,19 @@ def start(args):
             "market-details": ["-m", "cloud_app.market_detail_worker"],
             "backup": ["-m", "cloud_app.local_ops", "backup-loop", "--runtime", str(ROOT / "runtime"), "--destination", str(ROOT / "backups")],
         }
-        processes, handles, retries = {}, [], {role: deque() for role in workers}
+        processes, retries = {}, {role: deque() for role in workers}
         job = WindowsJob()
         def spawn(role):
-            output = (ROOT / "logs" / (role + ".log")).open("a", encoding="utf-8")
-            handles.append(output)
             child_env = dict(env)
             if role in {"paper", "backtest", "personal-data"}:
                 child_env["WORKER_ROLE"] = role
-            process = subprocess.Popen([sys.executable, *workers[role]], cwd=ROOT,
-                env=child_env, stdout=output, stderr=subprocess.STDOUT,
-                start_new_session=os.name != "nt",
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0)
+            # Popen gives the child its own descriptor. The supervisor must not
+            # retain another open log handle after every service restart.
+            with (ROOT / "logs" / (role + ".log")).open("a", encoding="utf-8") as output:
+                process = subprocess.Popen([sys.executable, *workers[role]], cwd=ROOT,
+                    env=child_env, stdout=output, stderr=subprocess.STDOUT,
+                    start_new_session=os.name != "nt",
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0)
             processes[role] = process
             job.assign(process)
 
@@ -246,8 +247,6 @@ def start(args):
                     process.kill()
                     process.wait(timeout=5)
             job.close()
-            for handle in handles:
-                handle.close()
             print("종료 완료. 다음에도 같은 폴더에서 같은 명령을 실행하세요", flush=True)
 
 

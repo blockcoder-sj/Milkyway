@@ -125,8 +125,8 @@ def _discard_member_provider(user_id):
 
 
 
-class PaperTickDeadlineExceeded(RuntimeError):
-    """The complete quote and ledger tick exceeded its liveness budget."""
+class PaperTickDeadlineExceeded(BaseException):
+    """Abort the tick even through libraries' ordinary Exception recovery paths."""
 
 
 @contextmanager
@@ -142,14 +142,28 @@ def _paper_tick_deadline(seconds: float):
         raise RuntimeError("paper tick deadlines require the main Unix worker thread")
     previous_handler = signal.getsignal(signal.SIGALRM)
 
+    def force_exit():
+        # A stuck executor's __exit__ can wait before our exception handler is
+        # reached. The supervisor replaces this process; SQLite rolls back its
+        # uncommitted transaction on exit, including when graceful unwind hangs.
+        try:
+            os.write(2, b"Paper tick watchdog exceeded; supervisor will restart.\n")
+        finally:
+            os._exit(124)
+
+    watchdog = threading.Timer(max(0.001, float(seconds)) + 1.0, force_exit)
+    watchdog.daemon = True
+
     def expired(_signum, _frame):
         raise PaperTickDeadlineExceeded("paper tick deadline was exceeded")
 
     signal.signal(signal.SIGALRM, expired)
-    signal.setitimer(signal.ITIMER_REAL, max(0.001, float(seconds)))
     try:
+        watchdog.start()
+        signal.setitimer(signal.ITIMER_REAL, max(0.001, float(seconds)))
         yield
     finally:
+        watchdog.cancel()
         signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, previous_handler)
 
@@ -776,9 +790,12 @@ def run_paper_tick(provider, settings=None) -> None:
                 session.flush()
                 # Keep the next-open contract aligned with backtest_core: rebalance
                 # first, then apply the intraday stop to post-rebalance holdings.
-                guard_personal_price_discontinuities(session, settings)
-                rebalance_count = rebalance_due_accounts(session)
-                stop_count = mark_and_stop_accounts(session)
+                # Provider I/O can cross the close. Preserve collected quotes,
+                # but evaluate no trading orders after the regular session ends.
+                if regular_market_open():
+                    guard_personal_price_discontinuities(session, settings)
+                    rebalance_count = rebalance_due_accounts(session)
+                    stop_count = mark_and_stop_accounts(session)
             heartbeat(
                 session,
                 "paper-worker",

@@ -1,4 +1,9 @@
 import os
+from pathlib import Path
+import sqlite3
+import subprocess
+import sys
+import tempfile
 import time
 import unittest
 import threading
@@ -62,6 +67,43 @@ def partial_kis_quotes(payload, configuration):
 
 
 class ProviderProcessTests(unittest.TestCase):
+    @unittest.skipIf(os.name == 'nt', 'Unix signal deadline; Windows uses a process watchdog')
+    def test_paper_deadline_is_not_swallowed_by_generic_provider_recovery(self):
+        from cloud_app import worker
+        with self.assertRaises(worker.PaperTickDeadlineExceeded):
+            with worker._paper_tick_deadline(.03):
+                try:
+                    time.sleep(.1)
+                except Exception:
+                    pass
+
+    @unittest.skipIf(os.name == 'nt', 'Unix signal deadline; Windows already hard-exits via its watchdog')
+    def test_watchdog_bounds_stuck_executor_cleanup_and_rolls_back_sqlite(self):
+        script = '''
+import sqlite3,sys,time
+from concurrent.futures import ThreadPoolExecutor
+from cloud_app.worker import _paper_tick_deadline
+connection=sqlite3.connect(sys.argv[1])
+connection.execute("CREATE TABLE ledger (cash INTEGER)")
+connection.execute("INSERT INTO ledger VALUES (100)")
+connection.commit()
+connection.execute("UPDATE ledger SET cash=0")
+with _paper_tick_deadline(.1):
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        executor.submit(time.sleep,60)
+        time.sleep(60)
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'rollback.sqlite3'
+            result = subprocess.run([sys.executable, '-B', '-c', script, str(path)],
+                                    capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 124, result.stderr)
+            connection = sqlite3.connect(path)
+            try:
+                self.assertEqual(connection.execute('SELECT cash FROM ledger').fetchone()[0], 100)
+            finally:
+                connection.close()
+
     def test_normal_partial_quote_progress_arrives_without_losing_oauth_state(self):
         from cloud_app import credential_broker as broker
         configuration = SimpleNamespace(quote_deadline_seconds=1, quote_max_provider_calls=125)
