@@ -196,6 +196,91 @@ class PersonalDataTests(unittest.TestCase):
         self.assertEqual(status["fresh_symbols"], ["AAPL"])
         self.assertIn("완료된 일봉은 준비", status["error"])
 
+    def action_frames(self):
+        daily = frame_ending("2026-09-25", rows=50)
+        daily["Stock Splits"], daily["Dividends"] = 0., 0.
+        daily.loc[pd.Timestamp("2026-09-25"), "Close"] = np.nan
+        intraday = daily.iloc[[-2]].copy()
+        intraday.index = pd.DatetimeIndex(["2026-09-25T13:30:00Z"])
+        return daily, intraday
+
+    def test_missing_current_daily_close_recovers_from_intraday_without_signal_leakage(self):
+        daily, intraday = self.action_frames()
+        intraday["Stock Splits"], intraday["Dividends"] = 2., .5
+        future = intraday.copy()
+        future.index = pd.DatetimeIndex(["2026-09-25T14:05:00Z"])
+        future["Stock Splits"], future["Dividends"] = 9., 7.
+        download = unittest.mock.Mock(side_effect=[daily, pd.concat([intraday, future])])
+        def execute(payload, configuration, **kwargs):
+            return history._download_history(payload, configuration)
+        with patch.dict("sys.modules", {"yfinance": SimpleNamespace(download=download)}), \
+             patch.object(history._history_process, "run", side_effect=execute):
+            status = history.refresh_personal_data(["AAPL"], self.settings, now=NOW)
+        self.assertTrue(status["ready"], status)
+        self.assertEqual(download.call_args_list[1].kwargs["interval"], "5m")
+        bundle = get_dataset_bundle(self.settings)
+        self.assertEqual(bundle.data["AAPL"].index.max().date().isoformat(), "2026-09-24")
+        self.assertEqual(bundle.manifest["prices"]["AAPL"]["action_check_source"], "yahoo_intraday_5m")
+        self.assertEqual(latest_candidates(self.spec, bundle, now=NOW), ["AAPL"])
+        self.assertEqual(bundle.manifest["corporate_actions"]["AAPL"],
+                         [{"date": "2026-09-25", "split_ratio": 2., "dividend": .5}])
+
+    def test_intraday_action_fallback_rejects_future_only_or_incomplete_responses(self):
+        daily, intraday = self.action_frames()
+        future = intraday.copy()
+        future.index = pd.DatetimeIndex(["2026-09-25T14:05:00Z"])
+        naive = intraday.copy()
+        naive.index = naive.index.tz_localize(None)
+        premarket = intraday.copy()
+        premarket.index = pd.DatetimeIndex(["2026-09-25T13:00:00Z"])
+        malformed = intraday.copy()
+        malformed["Dividends"] = None
+        for response in [future, naive, premarket, intraday.drop(columns="Dividends"), malformed, pd.DataFrame()]:
+            with self.subTest(response=str(response.index)):
+                download = unittest.mock.Mock(side_effect=[daily, response])
+                with patch.dict("sys.modules", {"yfinance": SimpleNamespace(download=download)}):
+                    result = history._download_history(
+                        {"symbols": ["AAPL"], "required_session": "2026-09-24",
+                         "action_day": "2026-09-25", "as_of": NOW.isoformat()},
+                        {"target": str(self.root / "action-failure")})
+                self.assertIsNone(result["prices"]["AAPL"]["action_checked_on"])
+                self.assertEqual(result["prices"]["AAPL"]["last_date"], "2026-09-24")
+
+    def test_intraday_action_fallback_outage_keeps_completed_history(self):
+        daily, _ = self.action_frames()
+        download = unittest.mock.Mock(side_effect=[daily, TimeoutError("synthetic outage")])
+        with patch.dict("sys.modules", {"yfinance": SimpleNamespace(download=download)}):
+            result = history._download_history(
+                {"symbols": ["AAPL"], "required_session": "2026-09-24",
+                 "action_day": "2026-09-25", "as_of": NOW.isoformat()},
+                {"target": str(self.root / "action-outage")})
+        self.assertIsNone(result["prices"]["AAPL"]["action_checked_on"])
+        self.assertEqual(result["prices"]["AAPL"]["last_date"], "2026-09-24")
+
+    def test_intraday_action_fallback_never_certifies_before_regular_open(self):
+        daily, intraday = self.action_frames()
+        download = unittest.mock.Mock(side_effect=[daily, intraday])
+        with patch.dict("sys.modules", {"yfinance": SimpleNamespace(download=download)}):
+            result = history._download_history(
+                {"symbols": ["AAPL"], "required_session": "2026-09-24",
+                 "action_day": "2026-09-25", "as_of": "2026-09-25T12:00:00+00:00"},
+                {"target": str(self.root / "before-open")})
+        self.assertEqual(download.call_count, 1)
+        self.assertIsNone(result["prices"]["AAPL"]["action_checked_on"])
+
+    def test_conflicting_daily_and_intraday_actions_remain_unverified(self):
+        daily, intraday = self.action_frames()
+        daily.loc[pd.Timestamp("2026-09-25"), "Stock Splits"] = 2.
+        intraday["Stock Splits"] = 3.
+        download = unittest.mock.Mock(side_effect=[daily, intraday])
+        with patch.dict("sys.modules", {"yfinance": SimpleNamespace(download=download)}):
+            result = history._download_history(
+                {"symbols": ["AAPL"], "required_session": "2026-09-24",
+                 "action_day": "2026-09-25", "as_of": NOW.isoformat()},
+                {"target": str(self.root / "conflicting-actions")})
+        self.assertIsNone(result["prices"]["AAPL"]["action_checked_on"])
+        self.assertEqual(result["corporate_actions"]["AAPL"][0]["split_ratio"], 2.)
+
     def test_invalid_prices_never_replace_valid_dataset(self):
         first = self.refresh()
         def tampered(payload, configuration, **kwargs):
