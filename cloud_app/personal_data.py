@@ -37,7 +37,7 @@ from .local_demo import _atomic_json
 from .provider_process import ProviderProcess
 
 SYMBOL_PATTERN = re.compile(r"^[A-Z][A-Z0-9]{0,5}(?:[.-][A-Z])?$")
-MAX_PERSONAL_SYMBOLS = 100
+MAX_PERSONAL_SYMBOLS = 1000
 MAX_HISTORY_ROWS = 850
 MAX_PERSONAL_PRICE_BYTES = 512 * 1024
 HISTORY_DEADLINE_SECONDS = 75
@@ -356,7 +356,7 @@ def _content_inventory(metadata):
             for symbol, item in metadata.items()}
 
 
-def refresh_personal_data(symbols, settings, now=None) -> dict:
+def refresh_personal_data(symbols, settings, now=None, *, retain_cached=True) -> dict:
     """Refresh selected history once per completed session and retain good data.
 
     Validation/provider failures are visible status, not deletion. A lock spans
@@ -380,8 +380,10 @@ def refresh_personal_data(symbols, settings, now=None) -> dict:
         except (OSError, ValueError):
             pass
         # Keep cached symbols for backtests and paused strategies when an active
-        # account worker asks for a subset. The global admission cap remains 100.
-        requested = normalize_symbols(sorted(set(requested) | set(old_manifest.get("prices", {}))))
+        # account worker asks for a subset. Automatic rotation can instead retain
+        # only the explicitly requested execution/action-monitoring universe.
+        if retain_cached:
+            requested = normalize_symbols(sorted(set(requested) | set(old_manifest.get("prices", {}))))
         status = personal_data_status(settings, symbols=requested, now=now)
         eastern_now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(EASTERN)
         action_day = eastern_now.date().isoformat()
@@ -413,6 +415,8 @@ def refresh_personal_data(symbols, settings, now=None) -> dict:
             metadata = outcome["prices"]
             actions = outcome.get("corporate_actions", {})
             for symbol, previous in old_manifest.get("prices", {}).items():
+                if symbol not in requested:
+                    continue
                 if symbol in metadata and metadata[symbol]["last_date"] >= previous["last_date"]:
                     continue
                 if symbol in status["invalid_symbols"]:

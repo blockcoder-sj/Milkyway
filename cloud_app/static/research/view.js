@@ -26,7 +26,7 @@
     const number = (value, decimals=0) => window.MilkywayFormat.number(value,decimals,decimals);
     const percent = value => `${number(value*100,2)}%`;
     const rows = [
-      ["대상 종목", spec.symbols.join(", ")],
+      ["대상 종목", spec.universe === "us_all" ? "미국 상장 보통주·ADR·REIT 전체 · 매 판단 시 자동 선정" : spec.symbols.join(", ")],
       ["초기 자금", `${number(p.initial_cash,2)} USD`],
       ["보유·배분", `전체 자산 기준 · 최대 ${number(p.max_positions)}종목 · 전체 투자 목표 ${percent(p.investment_fraction)} · 종목당 목표 상한 ${percent(p.max_position_fraction)} · 남는 자금은 현금`],
       ["리밸런싱", `${number(p.rebalance_days)}달력일 간격 · ${p.rebalance_weights ? "동일 목표 비중으로 재조정" : "교체 종목만 거래 · 유지 종목의 수량 유지"} · 휴장일에는 다음 거래 가능 시점에 실행`],
@@ -34,7 +34,8 @@
       ["거래 비용", `매수·매도 각각 ${percent(p.cost_per_side)}`],
       ["종목 필터", `가격 ${number(f.min_price,2)} USD 이상 · ${number(f.history_days)}거래일 이력 · 해당 기간 평균 거래량 ${number(f.min_average_volume)}주 이상`],
     ];
-    const count = Math.min(p.max_positions, spec.symbols.length);
+    if (spec.universe === "us_all") rows.push(["판단 자료", "가격 신호: 최신 토스 시세 + 완료 일봉 · 거래량 신호: 완료 일봉 · 누락·지연·미래 시세 제외 · 전체 목록 갱신 및 탐색 후 실행"]);
+    const count = spec.universe === "us_all" ? p.max_positions : Math.min(p.max_positions, spec.symbols.length);
     if (count > 0 && Number.isFinite(p.investment_fraction) && Number.isFinite(p.max_position_fraction)) {
       const target = Math.min(p.investment_fraction / count, p.max_position_fraction);
       rows.splice(3, 0, ["비중 계산 예시", `${number(count)}종목이 모두 편입되면 전체 자산 기준 종목당 ${percent(target)} · 현금 ${percent(Math.max(0,1-count*target))} (비용 반영 전). 실제 비중은 체결 비용·가격 변동 및 기존 수량 유지 여부에 따라 달라집니다.`]);

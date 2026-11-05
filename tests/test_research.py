@@ -77,6 +77,45 @@ class ResearchTests(unittest.TestCase):
     def key(self):
         (self.root / ".env").write_text("OPENAI_API_KEY=synthetic-test-key-never-valid\nOPENAI_MODEL=gpt-5.4-mini\n")
 
+    def test_approved_research_saves_full_market_strategy_without_fixed_tickers(self):
+        self.key()
+        def automatic(request, key):
+            response = self.provider_reply(request, key)
+            response["reply"]["strategy"].update(universe="us_all", symbols=[])
+            response["reply"]["strategy"]["portfolio"]["max_positions"] = 10
+            return response
+        self.provider.side_effect = automatic
+        turn = self.prepare("미국 상장주식 전체에서 상승 추세 종목을 자동 선정해")
+        self.provider.assert_not_called()
+        approved = self.approve(turn)
+        self.assertEqual(approved.status_code, 200, approved.text)
+        strategy = self.db.scalar(select(Strategy).where(Strategy.user_id == self.user.id))
+        spec = json.loads(strategy.spec_json)
+        self.assertEqual(spec["universe"], "us_all")
+        self.assertEqual(spec["symbols"], [])
+        self.assertEqual(spec["portfolio"]["max_positions"], 10)
+        self.assertEqual(self.provider.call_count, 1)
+
+    def test_existing_fixed_strategy_can_convert_to_automatic_without_an_ai_call(self):
+        self.key()
+        turn = self.prepare()
+        self.assertEqual(self.approve(turn).status_code, 200)
+        original = self.db.scalar(select(Strategy).where(Strategy.user_id == self.user.id))
+        saved = json.loads(original.spec_json)
+        body = {"request_id":"convert-us-market-0001", "universe":"us_all", "symbols":[],
+                **{key:saved[key] for key in ("portfolio","filters","factors")}}
+        response = self.client.post(f'/api/research/sessions/{self.room["id"]}/versions/{original.id}/adjust',json=body)
+        self.assertEqual(response.status_code,201,response.text)
+        self.assertEqual(self.provider.call_count,1)
+        self.db.expire_all()
+        versions = self.db.scalars(select(Strategy).where(Strategy.user_id == self.user.id)).all()
+        self.assertEqual(len(versions),2)
+        original = self.db.get(Strategy,original.id)
+        self.assertEqual(json.loads(original.spec_json)["symbols"],["AAPL","MSFT"])
+        revised = next(row for row in versions if row.id != original.id)
+        self.assertEqual(json.loads(revised.spec_json)["universe"],"us_all")
+        self.assertEqual(json.loads(revised.spec_json)["symbols"],[])
+
     def test_structured_output_schema_requires_all_fields_and_forbids_extras(self):
         request = research_ai.make_request("gpt-5.4-mini", {"hypothesis":"simple"})
         format = request["text"]["format"]

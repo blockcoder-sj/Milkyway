@@ -10,6 +10,33 @@ STATIC = ROOT / "cloud_app" / "static"
 
 class PersonalFrontendTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("node"), "Node is needed for UI checks")
+    def test_manual_automatic_strategy_saves_without_a_ticker(self):
+        script = r'''
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const elements=new Map();
+function element(id){if(!elements.has(id))elements.set(id,{textContent:'',disabled:false,scrollIntoView(){}});return elements.get(id);}
+element('#manualFactors').children=[{querySelector(selector){return {value:selector.includes('kind')?'momentum':selector.includes('lookback')?'20':'1'}}}];
+const values={universe:'us_all',symbols:'',name:'Automatic market',description:'',max_positions:'5',initial_cash:'100000',investment_pct:'80',position_pct:'20',rebalance_days:'1',stop_loss:'-5',min_price:'5',min_average_volume:'200000',history_days:'60',cost_pct:'.3'};
+const button={}, form={querySelector(){return button}}, requests=[];
+const window={},context=vm.createContext({window,document:{querySelector:element},FormData:class{*[Symbol.iterator](){yield*Object.entries(values)}},console});
+vm.runInContext(fs.readFileSync(process.argv[1]+'/format.js','utf8'),context);
+const source=fs.readFileSync(process.argv[1]+'/personal.js','utf8').replace('window.MilkywayPersonal = {initialize,','window.MilkywayPersonal = {saveStrategy, initialize,');
+vm.runInContext(source,context);
+window.MilkywayPersonal.initialize({getState:()=>({config:{personal_local_mode:true}}),api:async(path,request)=>requests.push(JSON.parse(request.body)),toast(){},refresh:async()=>{}});
+(async()=>{
+ await window.MilkywayPersonal.saveStrategy({preventDefault(){},target:form});
+ assert.equal(requests.length,1,element('#manualStrategyError').textContent);
+ assert.equal(requests[0].spec.universe,'us_all');assert.deepEqual(requests[0].spec.symbols,[]);
+ assert.equal(requests[0].spec.portfolio.rebalance_weights,true);assert.equal(requests[0].spec.portfolio.investment_fraction,.8);
+ values.universe='selected';
+ await window.MilkywayPersonal.saveStrategy({preventDefault(){},target:form});
+ assert.equal(requests.length,1);assert(element('#manualStrategyError').textContent.includes('1~20'));
+})().catch(error=>{console.error(error);process.exitCode=1});
+'''
+        result = subprocess.run(["node", "-e", script, str(STATIC)], text=True, capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for UI checks")
     def test_one_session_account_shows_schedule_and_disables_resume_after_expiry(self):
         script = r'''
 const assert = require("node:assert/strict"), fs = require("node:fs"), vm = require("node:vm");
@@ -98,7 +125,8 @@ vm.runInContext(bootstrap, ctx);
             self.assertIn(expected, html)
         self.assertIn('hooks.api("/api/strategies"', personal)
         self.assertIn('factors: selectedFactors', personal)
-        self.assertIn('spec.symbols = symbols', personal)
+        self.assertIn('spec.symbols = value.universe === \"selected\" ? symbols : []', personal)
+        self.assertIn('미국 상장주식 전체 · 종목과 비중 자동 결정', personal)
         self.assertIn('/export?kind=fills', app)
         self.assertIn('/export?kind=equity', app)
         self.assertIn('/api/backtests?limit=50&offset=', app)

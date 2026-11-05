@@ -17,7 +17,7 @@ from sqlalchemy import func, select
 from .bounded_io import read_bounded_file
 from .database import BacktestJob, EquityPoint, PaperAccount, PaperFill, Strategy, quota_allocation, utcnow
 from .research_models import ResearchDeployment, ResearchExperiment, ResearchRun
-from .strategies import StrategySpec, get_dataset_bundle, run_strategy_backtest
+from .strategies import StrategySpec, get_dataset_bundle, run_strategy_backtest, validate_auto_backtest_history
 
 
 class ExperimentBody(BaseModel):
@@ -87,13 +87,25 @@ def enqueue_experiment(db, user, room, body, settings, allowed_ids):
         if daily + count > settings.max_backtests_per_user_day or outstanding + count > settings.max_outstanding_backtests_per_user or total + count > settings.max_outstanding_backtests_total:
             raise HTTPException(429, "백테스트 대기열 또는 일일 한도입니다. 실행 중인 작업이 끝난 뒤 후보를 줄여 다시 시도하세요")
         try:
-            bundle = get_dataset_bundle(settings)
+            candidates = [db.scalar(select(Strategy).where(Strategy.id == i, Strategy.user_id == user.id)) for i in body.strategy_ids]
+            if any(row is None for row in candidates):
+                raise ValueError("missing strategy")
+            candidate_specs = [StrategySpec.model_validate_json(row.spec_json) for row in candidates]
+            if len({spec.universe for spec in candidate_specs}) != 1:
+                raise HTTPException(422, "같은 선정 범위의 전략끼리 비교하세요")
+            dataset_settings = settings
+            if candidate_specs[0].universe == "us_all":
+                from .auto_universe import backtest_settings, prepare_backtest_generation
+                prepare_backtest_generation(settings)
+                dataset_settings = backtest_settings(settings)
+            bundle = get_dataset_bundle(dataset_settings)
             specs = []
             for strategy_id in body.strategy_ids:
                 strategy = db.scalar(select(Strategy).where(Strategy.id == strategy_id, Strategy.user_id == user.id))
                 if strategy is None:
                     raise ValueError("missing strategy")
                 spec = StrategySpec.model_validate_json(strategy.spec_json)
+                validate_auto_backtest_history(spec, bundle, body.start_date.isoformat())
                 needed = max(spec.filters.history_days, *(factor.lookback + 1 for factor in spec.factors))
                 for symbol in spec.symbols:
                     frame = bundle.data.get(symbol)
@@ -128,6 +140,9 @@ def run_pinned_backtest(spec, arguments, experiment, settings):
     # Generation names are server-produced; never accept arbitrary paths from a request.
     if not re.fullmatch(r"[0-9a-f]{32}", experiment.generation):
         raise ValueError("invalid research generation")
+    if spec.universe == "us_all":
+        from .auto_universe import backtest_settings
+        settings = backtest_settings(settings)
     root = settings.dataset_dir / "generations"
     generation = root / experiment.generation
     if generation.is_symlink() or generation.resolve().parent != root.resolve():

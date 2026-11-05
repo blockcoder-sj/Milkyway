@@ -30,19 +30,20 @@
 
   function renderBuilder() {
     if ($("#manualStrategyForm")) {
-      $("#manualSymbolsLabel").classList.toggle("hidden", !isPersonal());
-      $("#manualSymbols").required = isPersonal();
+      $("#manualUniverseLabel").classList.toggle("hidden", !isPersonal());
+      $("#manualSymbolsLabel").classList.toggle("hidden", !isPersonal() || $("#manualUniverse").value !== "selected");
+      $("#manualSymbols").required = isPersonal() && $("#manualUniverse").value === "selected";
     } else {
       const section = document.createElement("section");
       section.id = "manualBuilder";
       section.innerHTML = `<details><summary>직접 규칙 입력 (선택)</summary><div class="section-head"><div><p class="eyebrow">MY STRATEGY</p><h3>내 규칙으로 전략 만들기</h3></div></div>
-        <p class="section-copy">AI 키 없이 직접 설정합니다. 점수가 높은 종목을 선정하고, 완료된 전일 데이터로 판단합니다.</p>
+        <p class="section-copy">AI 키 없이 직접 설정합니다. 미국 전체에서 전략 점수가 높은 종목을 자동 선정합니다. 가격 신호는 최신 토스 시세와 완료 일봉, 거래량 신호는 완료 일봉을 사용합니다.</p>
         <form id="manualStrategyForm" class="stack">
           <label>전략 이름<input name="name" minlength="2" maxlength="100" value="나의 20일 모멘텀" required></label>
-          <label id="manualSymbolsLabel">미국 주식 종목 코드 (1~20개)<input id="manualSymbols" name="symbols" maxlength="240" placeholder="예: AAPL, MSFT, NVDA" value="AAPL, MSFT, NVDA" autocapitalize="characters" spellcheck="false"><small>쉼표 또는 공백으로 구분합니다. 이 종목들 안에서만 매매 후보를 고릅니다.</small></label>
+          <label id="manualUniverseLabel">선정 범위<select id="manualUniverse" name="universe"><option value="us_all">미국 상장주식 전체 · 종목과 비중 자동 결정</option><option value="selected">내가 지정한 종목 안에서 선정</option></select><small>보통주·ADR·REIT 대상입니다. ETF·우선주·파생증권·OTC는 제외합니다. 신규 종목도 목록 갱신 때 반영하며, 데이터가 없는 종목은 제외 건수에 표시합니다.</small></label><label id="manualSymbolsLabel" class="hidden">직접 지정할 미국 주식 (1~20개)<input id="manualSymbols" name="symbols" maxlength="240" placeholder="예: AAPL, MSFT" value="" autocapitalize="characters" spellcheck="false"></label>
           <div id="manualFactors" class="stack"></div><button id="addManualFactor" class="ghost" type="button">선정 기준 추가 (최대 5개)</button>
           <p class="fineprint">양수 가중치는 해당 기준을 선호하고 음수는 반대로 적용합니다. 0은 사용하지 않습니다.</p>
-          <div class="manual-grid">${numberField("initial_cash", "초기 가상자금 (USD)", 100000, 1000, 10000000)}${numberField("max_positions", "최대 보유 종목 수", 3, 1, 50)}${numberField("rebalance_days", "리밸런싱 간격 (달력일)", 1, 1, 30)}${numberField("stop_loss", "손절 기준 (%)", -5, -50, -0.5, 0.5)}</div>
+          <div class="manual-grid">${numberField("initial_cash", "초기 가상자금 (USD)", 100000, 1000, 10000000)}${numberField("max_positions", "최대 보유 종목 수", 3, 1, 50)}${numberField("investment_pct", "전체 투자 비중 (%)", 80, 5, 100)}${numberField("position_pct", "종목당 비중 상한 (%)", 40, 1, 100)}${numberField("rebalance_days", "리밸런싱 간격 (달력일)", 1, 1, 30)}${numberField("stop_loss", "손절 기준 (%)", -5, -50, -0.5, 0.5)}</div>
           <details><summary>필터·거래비용 설정</summary><div class="manual-grid">${numberField("min_price", "최소 주가 (USD)", 5, 1, 1000, 0.01)}${numberField("min_average_volume", "최소 일평균 거래량", 200000, 0, 1000000000)}${numberField("history_days", "최소 가격 이력 (거래일)", 60, 20, 252)}${numberField("cost_pct", "편도 가상 거래비용 (%)", 0.3, 0, 2, 0.01)}</div><label class="consent-row"><input name="no_stop" type="checkbox">손절 사용 안 함</label></details>
           <label>설명 (선택)<textarea name="description" maxlength="1000" rows="2" placeholder="이 전략으로 확인하고 싶은 가설"></textarea></label>
           <p id="manualStrategyError" class="error" role="alert"></p><button class="primary" type="submit">전략 저장</button>
@@ -51,8 +52,13 @@
       $("#addManualFactor").addEventListener("click", () => addFactor());
       addFactor();
       $("#manualStrategyForm").addEventListener("submit", saveStrategy);
-      $("#manualSymbolsLabel").classList.toggle("hidden", !isPersonal());
-      $("#manualSymbols").required = isPersonal();
+      $("#manualUniverse").addEventListener("change", () => {
+        $("#manualSymbolsLabel").classList.toggle("hidden", $("#manualUniverse").value !== "selected");
+        $("#manualSymbols").required = $("#manualUniverse").value === "selected";
+      });
+      $("#manualUniverseLabel").classList.toggle("hidden", !isPersonal());
+      $("#manualSymbolsLabel").classList.toggle("hidden", !isPersonal() || $("#manualUniverse").value !== "selected");
+      $("#manualSymbols").required = isPersonal() && $("#manualUniverse").value === "selected";
     }
     const aiAvailable = !isPersonal() && Boolean(hooks.getState().dashboard?.ai_enabled);
     $("#aiForm").classList.toggle("hidden", !aiAvailable);
@@ -70,8 +76,8 @@
     error.textContent = "";
     const selectedFactors = [...$("#manualFactors").children].map((row) => ({kind: row.querySelector("[data-factor-kind]").value, lookback: Number(row.querySelector("[data-factor-lookback]").value), weight: Number(row.querySelector("[data-factor-weight]").value)}));
     const symbols = [...new Set(value.symbols.toUpperCase().split(/[\s,]+/).filter(Boolean))];
-    if (isPersonal() && (symbols.length < 1 || symbols.length > 20 || symbols.some((symbol) => !/^[A-Z][A-Z0-9.-]{0,14}$/.test(symbol)))) { error.textContent = "미국 주식 종목 코드를 1~20개 입력해 주세요. 예: AAPL, MSFT"; return; }
-    if (isPersonal() && Number(value.max_positions) > symbols.length) { error.textContent = "최대 보유 종목 수를 입력한 종목 수 이하로 설정해 주세요."; return; }
+    if (isPersonal() && value.universe === "selected" && (symbols.length < 1 || symbols.length > 20 || symbols.some((symbol) => !/^[A-Z][A-Z0-9.-]{0,14}$/.test(symbol)))) { error.textContent = "미국 주식 종목 코드를 1~20개 입력해 주세요. 예: AAPL, MSFT"; return; }
+    if (isPersonal() && value.universe === "selected" && Number(value.max_positions) > symbols.length) { error.textContent = "최대 보유 종목 수를 입력한 종목 수 이하로 설정해 주세요."; return; }
     if (!selectedFactors.some((factor) => factor.weight !== 0)) { error.textContent = "하나 이상의 선정 기준 가중치를 0이 아닌 값으로 설정해 주세요."; return; }
     let cash, volume;
     try {
@@ -81,8 +87,8 @@
     } catch (failure) { error.textContent = failure.message; return; }
     const spec = {schema_version: 1, name: value.name.trim(), description: value.description.trim(), factors: selectedFactors,
       filters: {min_price: Number(value.min_price), min_average_volume: volume, history_days: Number(value.history_days)},
-      portfolio: {initial_cash: cash, max_positions: Number(value.max_positions), rebalance_days: Number(value.rebalance_days), cost_per_side: Number(value.cost_pct) / 100, stop_loss_pct: value.no_stop ? null : Number(value.stop_loss) / 100}};
-    if (isPersonal()) spec.symbols = symbols;
+      portfolio: {initial_cash: cash, max_positions: Number(value.max_positions), rebalance_days: Number(value.rebalance_days), cost_per_side: Number(value.cost_pct) / 100, stop_loss_pct: value.no_stop ? null : Number(value.stop_loss) / 100, investment_fraction:Number(value.investment_pct)/100, max_position_fraction:Number(value.position_pct)/100, rebalance_weights:true}};
+    if (isPersonal()) { spec.universe = value.universe; spec.symbols = value.universe === "selected" ? symbols : []; }
     button.disabled = true;
     button.textContent = "전략 저장 중…";
     try {
@@ -100,7 +106,7 @@
     const block = $("#marketDataConnectionSettings");
     block.querySelector("h4").textContent = "내 증권사 시세 연결";
     block.querySelector(".eyebrow").textContent = "PERSONAL QUOTE API";
-    block.querySelector(".settings-billing-note").textContent = "이 PC의 서버가 키를 암호화해 보관합니다. 현재가 조회에만 사용하며 증권사 주문은 보내지 않습니다. 과거 일봉은 Yahoo에서 별도로 받습니다. 키와 백업은 공유하지 마세요.";
+    block.querySelector(".settings-billing-note").textContent = "이 PC의 서버가 키를 암호화해 보관합니다. 시세·일봉 조회에 사용하며 증권사 주문은 보내지 않습니다. 전체 종목 탐색은 토스 일봉을 우선하고 Yahoo로 보완합니다. 키와 백업은 공유하지 마세요.";
     $("#marketDataConnectionSummary").textContent = connection.connected
       ? `${connection.provider?.toUpperCase()} · ${connection.environment} · 인증 확인됨. 장중 최신 시세 수신 여부는 운용 상태에서 따로 확인하세요.`
       : "증권사에서 발급받은 본인 키를 연결하세요. KIS 또는 토스증권의 미국 주식 시세를 사용합니다.";
@@ -212,6 +218,7 @@
       ["정규장", typeof operational.market_open === "boolean" ? operational.market_open ? "열림" : "장외 또는 휴장 · 신규 체결 대기" : "미국 동부시간 09:30~16:00, 거래일 기준"],
       ["최근 시세", operational.last_quote_at ? new Date(operational.last_quote_at).toLocaleString("ko-KR") : "수신 기록 없음"],
     ];
+    if (isPersonal() && dashboard.automatic_universe) facts.push(["전체 종목 탐색", dashboard.automatic_universe.message || "준비 중"]);
     if (isPersonal()) facts.push(["과거 일봉", data.message || data.status || "전략 저장 후 자동 준비"], ["수신 방식", `REST 주기 조회 · ${Number(hooks.getState().config?.quote_interval_seconds || 15)}초 주기 · 종목별 수신 간격·공급자 지연은 다를 수 있음`]);
     const backup = dashboard.workers?.backup;
     if (isPersonal() && backup) facts.push(["백업", `${backup.alive ? "프로세스 응답" : "프로세스 응답 없음 · 확인 필요"} · ${backup.detail || "시작 대기"}`]);

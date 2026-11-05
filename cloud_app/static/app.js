@@ -221,9 +221,11 @@ function accountCards(rows) {
     const control = finished ? '<span class="status-pill">종료</span>' : ["review_required", "configuration_required"].includes(account.status)
       ? '<span class="status-pill warn">REVIEW</span>'
       : `<button class="ghost compact account-toggle" data-id="${escapeHtml(account.id)}" data-status="${account.status === "active" ? "paused" : "active"}">${account.status === "active" ? "정지" : "재개"}</button>`;
+    const selection = account.automatic_selection;
+    const coverage = selection ? `<p class="fineprint">전체 ${Number(selection.universe_count).toLocaleString()}종목 · 평가 가능 ${Number(selection.evaluated_count).toLocaleString()} · 제외 ${Object.values(selection.excluded || {}).reduce((a,b)=>a+Number(b),0).toLocaleString()} · ${selection.fresh ? "최신 탐색" : "탐색 갱신 대기"} ${shortTime(selection.created_at)} · 목표 ${Object.entries(selection.weights || {}).map(([ticker,weight])=>`${escapeHtml(ticker)} ${pct(weight)}`).join(", ")}</p>` : "";
     const positions = account.positions.map((position) => `<span class="chip">${escapeHtml(position.ticker)} ${pct(position.pnl_pct)}</span>`).join("") || `<span class="chip">${finished ? "보유 종목 없음" : "첫 리밸런싱 대기"}</span>`;
     const schedule = run ? `<p class="fineprint">미국 거래일 ${escapeHtml(run.session_date)} · 자동 중지 ${escapeHtml(new Date(run.closes_at).toLocaleString("ko-KR"))}${run.summary ? `<br>체결 ${number(run.summary.fill_count, 0)}건 · 종료 시 마지막 확인 평가액 ${money(run.summary.last_known_equity)} (공식 종가 미확인)` : ""}</p>` : "";
-    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div>${control}</div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div>${schedule}<p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button></div>`;
+    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div>${control}</div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div>${coverage}${schedule}<p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button></div>`;
   }).join("");
   $$('.account-toggle').forEach((button) => button.addEventListener("click", () => toggleAccount(button.dataset.id, button.dataset.status)));
   $$('.account-history-open').forEach((button) => button.addEventListener("click", () => openAccountHistory(button.dataset.id)));
@@ -259,7 +261,7 @@ async function openAccountHistory(id) {
 function dataFacts(data) {
   if (window.MilkywayPersonal.isPersonal()) {
     const personal = state.dashboard.personal_data || {};
-    $("#dataFacts").innerHTML = `<dt>선정 범위</dt><dd>내 전략에 입력한 종목</dd><dt>일봉 출처</dt><dd>Yahoo · 자동 준비·갱신</dd><dt>준비 상태</dt><dd>${escapeHtml(personal.message || personal.status || "전략 저장 후 준비")}</dd><dt>완료 세션</dt><dd>${escapeHtml(personal.last_completed_session || data.last_completed_session || "준비 중")}</dd><dt>성과 판정</dt><dd>탐색용 · 생존편향 있음</dd>`;
+    $("#dataFacts").innerHTML = `<dt>선정 범위</dt><dd>전략별 전체 미국 자동 선정 또는 직접 지정</dd><dt>일봉 출처</dt><dd>Yahoo · 자동 준비·갱신</dd><dt>준비 상태</dt><dd>${escapeHtml(personal.message || personal.status || "전략 저장 후 준비")}</dd><dt>완료 세션</dt><dd>${escapeHtml(personal.last_completed_session || data.last_completed_session || "준비 중")}</dd><dt>성과 판정</dt><dd>탐색용 · 생존편향 있음</dd>`;
     return;
   }
   const lag = Number(data.trading_session_lag || 0);
@@ -285,7 +287,7 @@ function renderStrategies() {
   element.innerHTML = state.strategies.map((strategy) => `
     <div class="strategy">
       <div class="strategy-head"><div><h4>${escapeHtml(strategy.name)}</h4><p>${escapeHtml(strategy.description)}</p></div></div>
-      <p>${escapeHtml((strategy.spec.symbols || []).join(", "))}</p><div class="factor-row">${strategy.spec.factors.map((factor) => `<span class="badge">${escapeHtml(factor.kind)} ${Number(factor.lookback)}d × ${Number(factor.weight)}</span>`).join("")}<span class="badge amber">${Number(strategy.spec.portfolio.max_positions)}종목 · ${Number(strategy.spec.portfolio.rebalance_days)}일</span></div>
+      <p>${strategy.spec.universe === "us_all" ? "미국 상장주식 전체 · 최신 시세로 자동 선정·배분" : escapeHtml((strategy.spec.symbols || []).join(", "))}</p><div class="factor-row">${strategy.spec.factors.map((factor) => `<span class="badge">${escapeHtml(factor.kind)} ${Number(factor.lookback)}d × ${Number(factor.weight)}</span>`).join("")}<span class="badge amber">${Number(strategy.spec.portfolio.max_positions)}종목 · ${Number(strategy.spec.portfolio.rebalance_days)}일</span></div>
       <details class="code-preview"><summary>저장된 전략 규격 보기</summary><pre>${escapeHtml(strategy.code_preview)}</pre></details>
       <div class="strategy-actions"><button class="ghost run-backtest" data-id="${escapeHtml(strategy.id)}">백테스트</button><button class="ghost new-account" data-id="${escapeHtml(strategy.id)}">페이퍼 계좌</button></div>
     </div>`).join("");

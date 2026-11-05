@@ -207,9 +207,14 @@ def collect_watchlist_ordered(session: Session, user_id: str | None = None) -> t
         # pending. Candidate calculation must never block stop/valuation quotes.
         for account in accounts:
             try:
-                append(_spec(account).symbols)
+                spec = _spec(account)
+                if spec.universe == "us_all":
+                    from .auto_universe import decision_for
+                    append(decision_for(get_settings(), spec, utcnow())["targets"])
+                else:
+                    append(spec.symbols)
             except ValueError:
-                _execution_state(session, account, "invalid_strategy", "전략 설정을 확인하세요")
+                _execution_state(session, account, "waiting_selection", "전략 데이터·전체 종목 탐색 준비 중; 자동 재시도합니다")
         return tuple(tickers)
     et_now, _market_open, rebalance_window = _market_context()
     due_accounts = [
@@ -746,19 +751,17 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
     if not force and not rebalance_window:
         return 0
     personal = getattr(get_settings(), "personal_local_mode", False)
+    bundle = None
     try:
         bundle = get_dataset_bundle()
     except (ValueError, FileNotFoundError, RuntimeError):
         if not personal:
             raise
-        for account in session.scalars(select(PaperAccount).where(PaperAccount.status == "active")).all():
-            _execution_state(session, account, "waiting_history", "전략 일봉 데이터 준비 중; 자동 재시도합니다")
-        return 0
     if not personal and not bundle.forward_data_gate_ready:
         logger.error("paper rebalance blocked: latest forward data quality gate failed")
         return 0
     required_session = prev_trading_day(et_now.date())
-    dataset_session = bundle.index.max().date()
+    dataset_session = bundle.index.max().date() if bundle is not None else required_session
     if not personal and dataset_session < required_session:
         logger.error(
             "paper rebalance blocked: dataset last session=%s required=%s",
@@ -781,11 +784,20 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
             if age < spec.portfolio.rebalance_days:
                 continue
         try:
-            targets = latest_candidates(spec, bundle, now=et_now) if personal else latest_candidates(spec, bundle)
+            if personal and spec.universe == "us_all":
+                from .auto_universe import decision_for
+                targets = decision_for(get_settings(), spec, et_now)["targets"]
+                held = set(_account_positions(session, account.id))
+                if not _personal_actions_current(get_settings(), set(targets) | held, et_now):
+                    raise ValueError("기업행사 확인 대기")
+            else:
+                if bundle is None:
+                    raise ValueError("전략 일봉 준비 대기")
+                targets = latest_candidates(spec, bundle, now=et_now) if personal else latest_candidates(spec, bundle)
         except (ValueError, FileNotFoundError, RuntimeError):
             if not personal:
                 raise
-            _execution_state(session, account, "waiting_history", "선택 종목 일봉 데이터가 최신이 아닙니다; 자동 재시도합니다")
+            _execution_state(session, account, "waiting_history", "전체 종목 탐색·최신 일봉·기업행사 확인 대기; 자동 재시도합니다" if spec.universe == "us_all" else "선택 종목 일봉 데이터가 최신이 아닙니다; 자동 재시도합니다")
             continue
         if not targets:
             _execution_state(session, account, "no_candidates", "전략 조건을 통과한 종목이 없습니다")
@@ -847,7 +859,23 @@ def account_snapshot(session: Session, account: PaperAccount) -> dict:
         execution = {"status": "market_closed", "detail": "미국 정규장 시작을 기다리고 있습니다"}
     if run and (run["expired"] or run["completed_at"]):
         execution = {"status": "session_finished", "detail": "지정 거래일 종료 · 추가 체결 중지. 잔고와 마지막 확인 평가액은 보존하며 공식 종가와 다를 수 있습니다."}
+    selection = None
+    if getattr(get_settings(), "personal_local_mode", False):
+        try:
+            from .auto_universe import decision_for
+            spec = _spec(account)
+            if spec.universe == "us_all":
+                selection = decision_for(get_settings(), spec, utcnow(), require_fresh=False)
+                selection = {**selection, "fresh":False}
+                try:
+                    decision_for(get_settings(), spec, utcnow())
+                    selection["fresh"] = True
+                except ValueError:
+                    pass
+        except (ValueError, OSError):
+            pass
     return {
+        "automatic_selection": selection,
         "paper_session": run,
         "execution_status": execution.get("status", "waiting_session"),
         "execution_detail": execution.get("detail", "미국 정규장 또는 데이터 준비 대기 중입니다"),

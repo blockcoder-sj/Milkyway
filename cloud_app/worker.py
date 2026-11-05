@@ -106,8 +106,9 @@ class PersonalQuoteProvider(QuoteProvider):
 
     def fetch(self, tickers):
         wanted = sorted(set(tickers))
-        if len(wanted) > 20:
-            raise ValueError("개인 시세 조회는 활성 계좌 전체에서 최대 20개 종목입니다")
+        maximum = 200 if self.configuration["provider"] == "toss" else 20
+        if len(wanted) > maximum:
+            raise ValueError("개인 시세 조회의 체결 종목 용량을 초과했습니다")
         values = self.runner.run({"tickers": wanted}, self.configuration,
                                  deadline=time.monotonic() + self.timeout_seconds)
         return [QuoteValue(**{**value, "observed_at": dt.datetime.fromisoformat(value["observed_at"])})
@@ -490,7 +491,11 @@ def process_one_backtest() -> bool:
             else:
                 if getattr(runtime_settings, "personal_local_mode", False):
                     from .personal_data import refresh_personal_data
-                    refresh_personal_data(spec.symbols, runtime_settings)
+                    if spec.universe == "us_all":
+                        from .auto_universe import prepare_backtest_generation
+                        prepare_backtest_generation(runtime_settings)
+                    else:
+                        refresh_personal_data(spec.symbols, runtime_settings)
                 result = run_strategy_backtest(spec, **arguments)
         encoded_result = json.dumps(
             result, ensure_ascii=False, default=str, separators=(",", ":")
@@ -886,7 +891,7 @@ def _apply_authorized_paper_work(settings, work):
         _finish_authorized_paper_work(settings, work)
 
 
-def refresh_personal_history(settings) -> None:
+def refresh_personal_history(settings) -> bool | None:
     """History networking is isolated from the quote/stop worker and DB locks."""
     from .personal_data import refresh_personal_data
     session = SessionLocal()
@@ -895,25 +900,49 @@ def refresh_personal_history(settings) -> None:
             session.rollback()
             return
         symbols = set()
+        automatic = []
         invalid = 0
         for encoded in session.scalars(select(Strategy.spec_json)).all():
             try:
-                symbols.update(StrategySpec.model_validate_json(encoded).symbols)
+                spec = StrategySpec.model_validate_json(encoded)
+                symbols.update(spec.symbols)
+                if spec.universe == "us_all":
+                    automatic.append(spec)
             except ValueError:
                 invalid += 1
         # Preserve split/action monitoring for held symbols after a strategy edit.
         symbols.update(collect_holding_watchlist_ordered(session))
         heartbeat(session, "personal-data", "refreshing {} symbols".format(len(symbols)))
         session.commit()
+        busy = False
+        if automatic:
+            from . import auto_universe
+            connection = session.scalar(select(MarketDataConnection).where(MarketDataConnection.provider == "toss"))
+            configuration = None
+            if connection:
+                provider = _member_provider(_member_feed_config(connection), settings)
+                configuration = dict(provider.configuration)
+            session.commit()
+            if configuration:
+                busy, selected = auto_universe.refresh(settings, automatic, configuration)
+                symbols.update(selected)
+                heartbeat(session, "personal-data", auto_universe.status(settings).get("message", "전체 종목 탐색 중"))
+                session.commit()
+            else:
+                auto_universe._atomic_json(auto_universe.root_for(settings) / "status.json",
+                    {"status":"connection_required", "message":"전체 미국 자동 탐색을 위해 토스 시세를 연결하세요"})
         if symbols:
-            status = refresh_personal_data(sorted(symbols), settings)
+            status = refresh_personal_data(sorted(symbols), settings, retain_cached=not automatic)
             detail = "ready={} latest={} missing={} stale={} invalid_strategies={}".format(
                 status.get("ready", False), status.get("latest_session", ""),
                 len(status.get("missing_symbols", [])), len(status.get("stale_symbols", [])), invalid)
         else:
             detail = "waiting for a saved strategy"
+        if automatic:
+            detail = auto_universe.status(settings).get("message", detail)
         heartbeat(session, "personal-data", detail)
         session.commit()
+        return busy
     except Exception as exc:
         session.rollback()
         logger.exception("personal history refresh failed")
@@ -945,8 +974,8 @@ def main() -> int:
         broker_preflight(settings, "paper" if role == "all" else role)
     if role == "personal-data":
         while True:
-            refresh_personal_history(settings)
-            time.sleep(60.0)
+            busy = refresh_personal_history(settings)
+            time.sleep(1.0 if busy else 60.0)
     provider = None
     if role in {"all", "paper"}:
         provider = (

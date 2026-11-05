@@ -1314,12 +1314,14 @@ def list_strategies(user: User = Depends(current_user), session: Session = Depen
 
 @contextmanager
 def _strategy_creation(session: Session, user: User, spec: StrategySpec, prompt: str):
+    if spec.universe == "us_all" and not settings.personal_local_mode:
+        raise HTTPException(status_code=422, detail="전체 미국 종목 자동 선정은 개인 로컬 모드에서 지원합니다")
     if spec.symbols and not settings.personal_local_mode:
         raise HTTPException(status_code=422, detail="직접 종목 지정은 개인 로컬 모드에서만 지원합니다")
     if settings.personal_local_mode:
-        if not spec.symbols:
-            raise HTTPException(status_code=422, detail="개인 전략의 미국 주식 티커를 1~20개 입력해 주세요")
-        if spec.portfolio.max_positions > len(spec.symbols):
+        if spec.universe == "selected" and not spec.symbols:
+            raise HTTPException(status_code=422, detail="미국 전체 자동 선정을 선택하거나 직접 지정할 티커를 입력하세요")
+        if spec.universe == "selected" and spec.portfolio.max_positions > len(spec.symbols):
             raise HTTPException(status_code=422, detail="최대 보유 종목 수는 선택한 티커 수 이하여야 합니다")
     with quota_allocation(session, "strategies", user.id):
         if settings.personal_local_mode:
@@ -1447,7 +1449,12 @@ def create_backtest(body: BacktestBody, user: User = Depends(csrf_guard), sessio
     if settings.personal_local_mode and body.bias_mode != "exploratory":
         raise HTTPException(status_code=422, detail="개인 선택 종목 백테스트는 탐색용(exploratory)으로 실행해 주세요")
     try:
-        summary = get_dataset_summary(settings)
+        dataset_settings = settings
+        if settings.personal_local_mode and StrategySpec.model_validate_json(strategy.spec_json).universe == "us_all":
+            from .auto_universe import backtest_settings, prepare_backtest_generation
+            prepare_backtest_generation(settings)
+            dataset_settings = backtest_settings(settings)
+        summary = get_dataset_summary(dataset_settings)
     except (ValueError, FileNotFoundError, OSError):
         raise HTTPException(status_code=409, detail="전략 가격 이력을 준비 중입니다. 데이터 상태를 확인하고 잠시 후 다시 실행해 주세요")
     first_execution = dt.date.fromisoformat(summary.first_certified_execution_date)
@@ -1578,16 +1585,28 @@ def _ensure_shared_quote_capacity(
 def _ensure_personal_quote_capacity(session: Session, user_id: str, spec: StrategySpec, *, account_id: str | None = None) -> None:
     if not settings.personal_local_mode:
         return
-    symbols = set(spec.symbols)
-    if account_id:
-        symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account_id)).all())
+    connection = session.get(MarketDataConnection, user_id)
+    automatic = spec.universe == "us_all"
+    held = set(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account_id)).all()) if account_id else set()
+    symbols = set() if automatic else set(spec.symbols) | held
+    reserve = spec.portfolio.max_positions + max(len(held), spec.portfolio.max_positions) if automatic else 0
     active = session.scalars(select(PaperAccount).where(
         PaperAccount.user_id == user_id, PaperAccount.status == "active")).all()
     for account in active:
-        symbols.update(StrategySpec.model_validate_json(account.strategy.spec_json).symbols)
-        symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
-    if len(symbols) > 20:
-        raise HTTPException(status_code=409, detail="활성 계좌 전체의 종목 합계는 20개까지입니다. 다른 계좌를 일시정지한 뒤 다시 시도하세요")
+        if account.id == account_id:
+            continue
+        active_spec = StrategySpec.model_validate_json(account.strategy.spec_json)
+        held = set(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
+        if active_spec.universe == "us_all":
+            automatic = True
+            reserve += active_spec.portfolio.max_positions + max(len(held), active_spec.portfolio.max_positions)
+        else:
+            symbols.update(active_spec.symbols)
+            symbols.update(held)
+    if automatic and (connection is None or connection.provider != "toss"):
+        raise HTTPException(status_code=409, detail="전체 미국 종목 자동 운용에는 토스 시세 연결이 필요합니다")
+    if len(symbols) + reserve > (200 if automatic else 20):
+        raise HTTPException(status_code=409, detail="활성 계좌의 체결 시세 용량을 초과했습니다. 자동 선정은 목표·보유 종목 200개, 직접 지정은 20개까지입니다")
 
 
 @contextmanager
@@ -1891,11 +1910,25 @@ def _personal_dashboard(user: User, session: Session) -> dict:
     ai_status = configuration_status(settings)
     accounts = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user.id).order_by(PaperAccount.created_at)).all()
     required_symbols = set()
+    automatic_specs = []
+    selection_current = True
     for account in accounts:
         if account.status == "active":
-            required_symbols.update(StrategySpec.model_validate_json(account.strategy.spec_json).symbols)
+            spec = StrategySpec.model_validate_json(account.strategy.spec_json)
+            required_symbols.update(spec.symbols)
+            if spec.universe == "us_all":
+                automatic_specs.append(spec)
+                from .auto_universe import decision_for
+                try:
+                    required_symbols.update(decision_for(settings, spec, utcnow())["targets"])
+                except (ValueError, OSError):
+                    selection_current = False
             required_symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
     data = personal_data_status(settings, symbols=sorted(required_symbols) if required_symbols else None)
+    from .auto_universe import status as auto_status
+    screening = auto_status(settings)
+    if automatic_specs and not selection_current:
+        data = {**data, "ready":False, "error":screening.get("message")}
     snapshots = [account_snapshot(session, row) for row in accounts]
     connection = session.get(MarketDataConnection, user.id)
     worker = _worker_payload(session, "paper-worker")
@@ -1943,6 +1976,7 @@ def _personal_dashboard(user: User, session: Session) -> dict:
     return {
         "personal_local_mode": True, "local_demo_data": False,
         "operational": {"status": state, "message": message, "market_open": open_now, "last_quote_at": last_quote},
+        "automatic_universe": screening,
         "personal_data": {**data, "status": "ready" if data.get("ready") and not data.get("stale") else "waiting_data",
                           "message": data.get("error") or "선택 종목 일봉 자동 갱신", "last_completed_session": last,
                           "symbol_count": len(data.get("symbols", []))},

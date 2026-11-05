@@ -73,7 +73,6 @@ _EXCLUDED_SECURITY_TERMS = (
     " units",
     " preferred",
     " preference",
-    " depositary shares",
     " debt securities",
     " debenture",
     " bond",
@@ -133,7 +132,7 @@ def _equity_like(name: str, *, etf: str, test_issue: str, next_shares: str = "N"
     if str(next_shares).upper() == "Y":
         return False
     normalized = _normalized_name(name)
-    return not any(term in normalized for term in _EXCLUDED_SECURITY_TERMS)
+    return not any(re.search(r"\b" + re.escape(term.strip(" ,")) + r"\b", normalized) for term in _EXCLUDED_SECURITY_TERMS)
 
 
 def _record(

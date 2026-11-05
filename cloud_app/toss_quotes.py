@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import math
 import re
 from dataclasses import dataclass
 from typing import Iterable
@@ -193,6 +194,53 @@ class TossQuoteClient:
             except Exception:
                 response.close()
                 raise
+
+    def daily_candles(self, symbol: str, *, count: int = 320) -> list[list]:
+        """Bounded adjusted daily pages; inclusive cursors are de-duplicated."""
+        if not _SYMBOL_PATTERN.fullmatch(symbol) or not 1 <= count <= 850:
+            raise ValueError("Invalid daily candle request")
+        rows, before, seen_cursors = {}, None, set()
+        for _ in range(7):
+            params = {"symbol": symbol, "interval": "1d", "count": min(200, count), "adjusted": "true"}
+            if before: params["before"] = before
+            for attempt in range(2):
+                response = self.session.get(self.base_url + "/api/v1/candles", headers=self._headers(),
+                                            params=params, timeout=10, stream=True)
+                try:
+                    self._raise_for_status(response)
+                    payload = read_requests_json(response, maximum_bytes=_MAX_QUOTE_RESPONSE_BYTES)
+                    self._raise_for_status(response, payload)
+                    result = payload.get("result")
+                    if not isinstance(result, dict) or not isinstance(result.get("candles"), list) or len(result["candles"]) > 200:
+                        raise TossOpenApiError("Invalid candle page")
+                    break
+                except TossAuthenticationError:
+                    if attempt: raise
+                    self.token = ""
+                    self.authenticate()
+                finally:
+                    response.close()
+            for candle in result["candles"]:
+                if candle.get("currency") != "USD":
+                    raise TossOpenApiError("US history currency is not USD")
+                self._observed_at(candle.get("timestamp"))
+                # Daily API timestamps label sessions; preserve the source's
+                # calendar-date label rather than shifting a midnight KST bar.
+                day = dt.date.fromisoformat(candle["timestamp"][:10]).isoformat()
+                row = [day, *[float(candle[key]) for key in ("openPrice", "highPrice", "lowPrice", "closePrice", "volume")]]
+                if any(not math.isfinite(v) or v <= 0 for v in row[1:5]) or not math.isfinite(row[5]) or row[5] < 0:
+                    raise TossOpenApiError("Invalid candle numeric value")
+                if day in rows and rows[day] != row:
+                    raise TossOpenApiError("Conflicting inclusive candle pages")
+                rows[day] = row
+            if len(rows) >= count or not result.get("nextBefore"):
+                break
+            cursor = result["nextBefore"]
+            self._observed_at(cursor)
+            if cursor in seen_cursors:
+                raise TossOpenApiError("Candle pagination made no progress")
+            seen_cursors.add(cursor); before = cursor
+        return [rows[day] for day in sorted(rows)][-count:]
 
     def get_prices(self, tickers: Iterable[str]) -> list[dict]:
         symbols = self._normalize_symbols(tickers)

@@ -123,6 +123,15 @@ class PersonalApiTests(unittest.TestCase):
             with self.assertRaises(HTTPException):
                 main.personal_company_network(root, via, 1, 'all', self.user)
 
+    def test_automatic_strategy_creation_requires_no_ticker_or_credentials(self):
+        spec = StrategySpec(name="Whole US market", universe="us_all", symbols=[], factors=[{"kind":"momentum"}], portfolio={"max_positions":10})
+        result = main.create_strategy(main.StrategyBody(spec=spec), self.user, self.session)
+        self.assertEqual(result["spec"]["universe"], "us_all")
+        self.assertEqual(result["spec"]["symbols"], [])
+        with self.assertRaises(HTTPException) as error:
+            main._ensure_personal_quote_capacity(self.session, self.user.id, spec)
+        self.assertIn("토스", str(error.exception.detail))
+
     def test_new_install_dashboard_works_before_history_or_keys(self):
         payload=main.dashboard(self.user,self.session)
         self.assertTrue(payload["personal_local_mode"])

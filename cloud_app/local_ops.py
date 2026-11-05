@@ -109,6 +109,10 @@ def _create_backup_locked(runtime: Path, destination: Path) -> Path:
             relative = path.relative_to(runtime)
             if any(part.startswith(".restore-") for part in relative.parts) or relative.name == "RESTORE_IN_PROGRESS":
                 continue
+            # Screening files are rebuildable, atomically replaced caches.
+            # Research generations are immutable and published under refresh.lock.
+            if relative.parts[0] == "auto-market" and (len(relative.parts) < 2 or relative.parts[1] != "backtests"):
+                continue
             if path.is_symlink():
                 raise RuntimeError("Runtime backup refuses symbolic links")
             if not path.is_file() or path.name.startswith((".session-new-", ".secret-new-")):
@@ -197,7 +201,7 @@ def restore_backup(archive: Path, runtime: Path, destination: Path, *, replace: 
         _sync_directory(runtime)
         # Older backups may predate all history/keys. Do not keep a newer
         # install's mutable pointers or signing/encryption roots in that case.
-        for name in ("personal-data/current.json", "personal-data/refresh-status.json", ".session_secret", ".market_credential_secret", ".ai_credential_secret"):
+        for name in ("personal-data/current.json", "personal-data/refresh-status.json", "auto-market/catalog.json", "auto-market/progress.json", "auto-market/decisions.json", "auto-market/status.json", "auto-market/backtests/current.json", ".session_secret", ".market_credential_secret", ".ai_credential_secret"):
             if name not in manifest["files"]:
                 (runtime / name).unlink(missing_ok=True)
         # The DB is replaced last. A failed restore is recoverable from `safety`.
