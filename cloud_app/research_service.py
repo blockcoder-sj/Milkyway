@@ -277,7 +277,9 @@ class ResearchService:
         room = owned_session(self.db, self.user, session_id)
         with quota_allocation(self.db, "research", self.user.id):
             require_idle(self.db, room)
-            if strategy_id not in {row.strategy_id for row in versions(self.db, room)}:
+            if strategy_id not in {row.strategy_id for row in versions(self.db, room)} or self.db.scalar(
+                select(Strategy.id).where(Strategy.id == strategy_id, Strategy.user_id == self.user.id)
+            ) is None:
                 raise HTTPException(404, "이 연구의 전략 버전이 아닙니다")
             room.selected_strategy_id = strategy_id
             self.db.commit()
@@ -303,6 +305,8 @@ class ResearchService:
             )
             if existing:
                 account = self.db.get(PaperAccount, existing.account_id)
+                if account is None:
+                    raise HTTPException(409, "이 요청으로 만든 계좌는 삭제되었습니다. 새 요청으로 계좌를 만드세요")
                 if existing.strategy_id != body.strategy_id or account.name != body.name.strip():
                     raise HTTPException(409, "같은 요청 ID의 계좌 설정이 다릅니다")
                 return self.services.account_snapshot(self.db, account)

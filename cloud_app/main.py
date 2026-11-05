@@ -40,6 +40,7 @@ from .ai_credentials import (
     validate_api_key,
     validate_provider_model,
 )
+from .personal_resources import DeleteBody
 from .config import get_settings, member_ai_credentials_enabled
 from .credential_store import credential_ciphertext_prefix
 from .credential_broker_client import (
@@ -1302,6 +1303,22 @@ def _strategy_payload(row: Strategy) -> dict:
         "code_preview": strategy_code_preview(spec),
         "created_at": row.created_at,
     }
+
+
+@app.delete("/api/strategies/{strategy_id}", status_code=204)
+def delete_strategy(strategy_id: str, body: "DeleteBody", user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+    from . import personal_resources
+    personal_resources.require_local(settings)
+    personal_resources.delete_strategy(session, user.id, strategy_id)
+    return Response(status_code=204)
+
+
+@app.delete("/api/accounts/{account_id}", status_code=204)
+def delete_account(account_id: str, body: "DeleteBody", user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+    from . import personal_resources
+    personal_resources.require_local(settings)
+    personal_resources.delete_account(session, user.id, account_id)
+    return Response(status_code=204)
 
 
 @app.get("/api/strategies")

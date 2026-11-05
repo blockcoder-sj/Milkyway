@@ -10,31 +10,48 @@ STATIC = ROOT / "cloud_app" / "static"
 
 class PersonalFrontendTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("node"), "Node is needed for UI checks")
-    def test_manual_automatic_strategy_saves_without_a_ticker(self):
+    def test_delete_confirmation_errors_and_refresh_do_not_send_duplicate_requests(self):
         script = r'''
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const elements=new Map();
-function element(id){if(!elements.has(id))elements.set(id,{textContent:'',disabled:false,scrollIntoView(){}});return elements.get(id);}
-element('#manualFactors').children=[{querySelector(selector){return {value:selector.includes('kind')?'momentum':selector.includes('lookback')?'20':'1'}}}];
-const values={universe:'us_all',symbols:'',name:'Automatic market',description:'',max_positions:'5',initial_cash:'100000',investment_pct:'80',position_pct:'20',rebalance_days:'1',stop_loss:'-5',min_price:'5',min_average_volume:'200000',history_days:'60',cost_pct:'.3'};
-const button={}, form={querySelector(){return button}}, requests=[];
-const window={},context=vm.createContext({window,document:{querySelector:element},FormData:class{*[Symbol.iterator](){yield*Object.entries(values)}},console});
-vm.runInContext(fs.readFileSync(process.argv[1]+'/format.js','utf8'),context);
-const source=fs.readFileSync(process.argv[1]+'/personal.js','utf8').replace('window.MilkywayPersonal = {initialize,','window.MilkywayPersonal = {saveStrategy, initialize,');
-vm.runInContext(source,context);
-window.MilkywayPersonal.initialize({getState:()=>({config:{personal_local_mode:true}}),api:async(path,request)=>requests.push(JSON.parse(request.body)),toast(){},refresh:async()=>{}});
+const source=fs.readFileSync(process.argv[1]+'/app.js','utf8');
+const code=source.slice(source.indexOf('async function deleteResource('),source.indexOf('async function toggleAccount('));
+let confirmed=false, personal=true, requests=[], messages=[], refreshes=0, fail=false, refreshed=false;
+const history={open:true,dataset:{accountId:'a/one'},close(){this.open=false}};
+const state={dashboard:{accounts:[{id:'a/one',name:'Synthetic account'}]},strategies:[{id:'s',name:'Strategy'}],refreshPromise:null,backtestOffset:50,backtestPage:[{}]};
+const context=vm.createContext({state,window:{confirm:()=>confirmed,MilkywayPersonal:{isPersonal:()=>personal}},
+ $:()=>history,toast:(...args)=>messages.push(args),encodeURIComponent,
+ api:async(path,options)=>{requests.push({path,options});if(fail)throw new Error('연결된 계좌를 먼저 삭제하세요')},
+ refresh:async()=>{assert(refreshed);refreshes++},console});
+vm.runInContext(code,context);
+const button={disabled:false};
 (async()=>{
- await window.MilkywayPersonal.saveStrategy({preventDefault(){},target:form});
- assert.equal(requests.length,1,element('#manualStrategyError').textContent);
- assert.equal(requests[0].spec.universe,'us_all');assert.deepEqual(requests[0].spec.symbols,[]);
- assert.equal(requests[0].spec.portfolio.rebalance_weights,true);assert.equal(requests[0].spec.portfolio.investment_fraction,.8);
- values.universe='selected';
- await window.MilkywayPersonal.saveStrategy({preventDefault(){},target:form});
- assert.equal(requests.length,1);assert(element('#manualStrategyError').textContent.includes('1~20'));
+ await context.deleteResource('account','a/one',button);assert.equal(requests.length,0);
+ confirmed=true;personal=false;
+ await context.deleteResource('account','a/one',button);assert.equal(requests.length,0);personal=true;
+ let completeOld;state.refreshPromise=new Promise(resolve=>{completeOld=()=>{refreshed=true;state.refreshPromise=null;resolve()}});
+ const deleting=context.deleteResource('account','a/one',button);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(requests.length,1);assert(button.disabled);assert.equal(refreshes,0);
+ await context.deleteResource('account','a/one',button);assert.equal(requests.length,1);
+ completeOld();await deleting;
+ assert.equal(requests[0].path,'/api/accounts/a%2Fone');assert.equal(requests[0].options.method,'DELETE');
+ assert.deepEqual(JSON.parse(requests[0].options.body),{confirm:true});assert.equal(refreshes,1);
+ assert.equal(history.open,false);assert(!button.disabled);assert.equal(state.backtestOffset,0);
+ fail=true;await context.deleteResource('strategy','s',button);
+ assert.equal(requests.length,2);assert(!button.disabled);assert(messages.at(-1)[0].includes('연결된 계좌'));assert.equal(messages.at(-1)[1],true);
 })().catch(error=>{console.error(error);process.exitCode=1});
 '''
-        result = subprocess.run(["node", "-e", script, str(STATIC)], text=True, capture_output=True, timeout=20)
+        result = subprocess.run(["node", "-e", script, str(STATIC)], capture_output=True, text=True, timeout=20)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_standalone_manual_builder_is_removed_but_research_tuning_remains(self):
+        personal = (STATIC / "personal.js").read_text()
+        for removed in ("manualStrategyForm", "manualSymbols", "manualFactors", "직접 규칙 입력", "function saveStrategy"):
+            self.assertNotIn(removed, personal)
+        panel = (STATIC / "research/panel.js").read_text()
+        self.assertIn("미국 상장주식 전체에서 자동 선정", panel)
+        self.assertIn("researchTuningForm", panel)
+        self.assertIn(".personal-mode #strategyBuilder{display:none}", (STATIC / "styles.css").read_text())
 
     @unittest.skipUnless(shutil.which("node"), "Node is needed for UI checks")
     def test_one_session_account_shows_schedule_and_disables_resume_after_expiry(self):
@@ -44,7 +61,8 @@ const source = fs.readFileSync(process.argv[1] + "/app.js", "utf8");
 const part = source.slice(source.indexOf("function accountCards("), source.indexOf("async function toggleAccount("));
 const element = {}, count = {};
 const ctx = vm.createContext({$: id => id === "#accountCards" ? element : count, $$: () => [],
-  money: x => String(x), pct: x => String(x), number: x => String(x), escapeHtml: x => String(x).replaceAll("<", "&lt;")});
+  window:{MilkywayPersonal:{isPersonal:()=>true}},
+  shortTime:()=>"now", money: x => String(x), pct: x => String(x), number: x => String(x), escapeHtml: x => String(x).replaceAll("<", "&lt;")});
 vm.runInContext(part, ctx);
 const row = {id:"a", name:"one day", status:"active", positions:[], equity:100000, initial_cash:100000, cash:100000, return_pct:0,
   paper_session:{session_date:"2026-10-02", closes_at:"2026-10-02T20:00:00Z", expired:false}};
@@ -52,6 +70,11 @@ ctx.rows = [row]; vm.runInContext("accountCards(rows)", ctx);
 assert.match(element.innerHTML, /미국 거래일 2026-10-02/);
 assert.match(element.innerHTML, /자동 중지/);
 assert.match(element.innerHTML, /account-toggle/);
+assert.match(element.innerHTML, /account-delete/);
+row.automatic_selection={universe_count:6500,evaluated_count:6200,excluded:{history:300},fresh:true,created_at:"2026-11-05",weights:{AAA:.4}};
+vm.runInContext("accountCards(rows)",ctx);
+assert.match(element.innerHTML,/AAA 40/);
+
 row.status="paused"; row.paper_session.expired=true;
 row.paper_session.summary={fill_count:0,last_known_equity:100000};
 vm.runInContext("accountCards(rows)", ctx);
@@ -123,10 +146,8 @@ vm.runInContext(bootstrap, ctx);
         personal = (STATIC / "personal.js").read_text()
         for expected in ('id="operationMessage"', 'id="connectionError"', 'id="accountHistoryDialog"'):
             self.assertIn(expected, html)
-        self.assertIn('hooks.api("/api/strategies"', personal)
-        self.assertIn('factors: selectedFactors', personal)
-        self.assertIn('spec.symbols = value.universe === \"selected\" ? symbols : []', personal)
-        self.assertIn('미국 상장주식 전체 · 종목과 비중 자동 결정', personal)
+        self.assertIn('account-delete', app)
+        self.assertIn('strategy-delete', app)
         self.assertIn('/export?kind=fills', app)
         self.assertIn('/export?kind=equity', app)
         self.assertIn('/api/backtests?limit=50&offset=', app)
@@ -143,7 +164,7 @@ const root = process.argv[1];
 const elements = new Map();
 function element(selector) {
   if (!elements.has(selector)) elements.set(selector, {
-    innerHTML: "", textContent: "", className: "", disabled: false, open: false, style: {},
+    innerHTML: "", textContent: "", className: "", disabled: false, open: false, style: {}, dataset: {},
     classList: {toggle() {}, add() {}, remove() {}, contains() {return false;}},
     addEventListener() {}, setAttribute() {}, showModal() {this.open = true;},
     querySelectorAll() {return [];},

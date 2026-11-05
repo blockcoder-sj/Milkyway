@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-05",
+  "branch": "codex/week10-python",
+  "parent": "b9659a8f422bbc34d4176fae49f1d9d7f0e2e703",
+  "features": [
+    "Remove the standalone manual rule-entry form and its creation/submission JavaScript; keep saved-version research tuning",
+    "Hide the unused legacy cloud builder in personal mode without leaving an empty form panel",
+    "Local-owner strategy and paper-account DELETE endpoints requiring CSRF and an explicit confirm=true body",
+    "Account deletion atomically removes holdings, fills, equity, schedule, admitted symbols and its execution heartbeat; no brokerage orders",
+    "Strategy deletion requires removing linked paper accounts and completing running backtests; queued/completed jobs are removed with the strategy",
+    "Pending/running AI requests block strategy deletion instead of changing approved input",
+    "Research conversations and ID tombstones retained, selected deleted strategy cleared, deleted executable reply removed; surviving version numbers remain monotonic",
+    "Deleted experiment candidates invalidate comparisons so those experiments cannot deploy remaining candidates as validated",
+    "Replaying an old deployment request cannot recreate a deleted account",
+    "Confirmation UI, double-click suppression, post-delete fresh GET, history-dialog closure, asset versions updated",
+    "Correct automatic target-weight percentage presentation"
+  ],
+  "verified": {
+    "suite": {
+      "tests": 839,
+      "seconds": 51.728,
+      "result": "passed"
+    },
+    "owning_checks": [
+      "HTTP owner isolation, CSRF, confirmation-body validation and local-only guards",
+      "Ledger/schedule cascade with another account and strategy preserved",
+      "Failed final deletion rolls back all child deletions",
+      "Linked account/running backtest guards and queued-job removal",
+      "Delete older/current research versions, clear current selection and save a later version without number reuse",
+      "Pending AI request does not spend during deletion rejection",
+      "Deployment replay after deletion returns a conflict instead of recreating the account",
+      "Deletion invalidates a mixed-candidate experiment",
+      "Actual spawned Toss quote adapter + loopback HTTP + SQLite: deletion during quote I/O creates no late fill and another account continues",
+      "Executable Node confirmation cancel, unavailable mode, duplicate click, old refresh promise, DELETE body/URL, error and button recovery",
+      "Standalone manual form absent and research tuning retained",
+      "Percentage weights displayed as percent rather than raw fractions"
+    ],
+    "review": {
+      "functionality": "Direct service/HTTP/research/worker source review and regression tests",
+      "performance": "Indexed account child deletes in one transaction and no provider/network I/O in deletion; SQLite write reservation taken before reads",
+      "code_quality": "No schema migration, data remains backward-readable; research request tombstones retain replay and numbering semantics; git diff --check passed",
+      "security": "Owner check before child mutation; existing CSRF guard; explicit confirmation; personal nonproduction nonauthority mode only; fixed SQL statements; no real records deleted or credentials transmitted"
+    }
+  },
+  "limits": [
+    "Deletion is permanent in the running app; historical backups and research conversation prose are retained",
+    "Strategies linked to paper accounts or running backtests cannot be removed until those dependencies are cleared",
+    "No real broker or actual AI-provider calls were used in verification",
+    "Not a full-repository security scan or public-deployment approval"
+  ],
+  "universe_clarification": "A new research strategy defaults to all current US-listed common equities/ADRs/REITs without a user-supplied ticker list. Supported execution logic remains the six implemented price/volume factor families; missing/stale data is excluded visibly."
+}

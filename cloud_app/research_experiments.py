@@ -49,6 +49,12 @@ def experiment_payload(db, experiment):
             "job_id": job.id, "status": state, "metrics": result.get("metrics") if consistent else None,
             "error": job.error if consistent else "비교 데이터 지문이 달라 결과를 사용할 수 없습니다"}
     status = "failed" if "failed" in states else "completed" if states and all(s == "completed" for s in states) else "running"
+    missing_strategy = db.scalar(select(ResearchRun.job_id).where(
+        ResearchRun.experiment_id == experiment.id,
+        ~ResearchRun.strategy_id.in_(select(Strategy.id)),
+    ).limit(1))
+    if missing_strategy:
+        status = "invalidated"
     ranked = []
     if status == "completed":
         for candidate in candidates.values():
@@ -60,7 +66,7 @@ def experiment_payload(db, experiment):
             "start_date": str(experiment.start_date), "split_date": str(experiment.split_date), "end_date": str(experiment.end_date),
             "dataset_fingerprint": experiment.fingerprint, "candidates": list(candidates.values()),
             "development_leader": max(ranked)[1] if ranked else None,
-            "caveat": "개발 구간 기준 후보 순위입니다. 검증 구간은 별도 초기자금으로 실행합니다. 반복해서 본 검증 결과는 최종 미사용 데이터가 아닙니다."}
+            "caveat": "삭제된 전략이 포함되어 이 비교를 사용할 수 없습니다. 남은 버전으로 새 비교를 실행하세요." if missing_strategy else "개발 구간 기준 후보 순위입니다. 검증 구간은 별도 초기자금으로 실행합니다. 반복해서 본 검증 결과는 최종 미사용 데이터가 아닙니다."}
 
 
 def enqueue_experiment(db, user, room, body, settings, allowed_ids):

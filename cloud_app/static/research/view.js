@@ -6,7 +6,7 @@
   }[character]));
   const labels = Object.freeze({
     awaiting_approval: "승인 대기", running: "실행 중", completed: "완료",
-    cancelled: "취소", expired: "승인 만료", failed: "실패", queued: "대기",
+    cancelled: "취소", expired: "승인 만료", failed: "실패", queued: "대기", invalidated: "전략 삭제로 무효",
   });
   const status = value => escape(labels[value] || value);
   const metric = (values, key, suffix = "") => Number.isFinite(values?.[key])
@@ -129,7 +129,7 @@
       const blocked = room.turns.some(turn => ["awaiting_approval", "running"].includes(turn.status));
       const savedVersions = new Map(room.versions.map(version=>[version.id,version]));
       $("#researchTurns").innerHTML = room.turns.length ? room.turns.map(turn=>renderTurn(turn,savedVersions)).join("")
-        : empty("어떤 투자 아이디어를 실험해 보고 싶으세요? 아직 종목이나 규칙을 정하지 않았다면, 기대하는 효과부터 이야기해 주세요.");
+        : empty("어떤 투자 아이디어를 실험해 보고 싶으세요? 티커를 입력하지 않아도 미국 상장주식 전체에서 자동 선정하는 전략을 만들 수 있습니다.");
       $("#researchMessage button").disabled = blocked || busy;
       $("#researchVersions").innerHTML = room.versions.length
         ? room.versions.map(version => renderVersion(version, room, selected, blocked || busy)).join("")
