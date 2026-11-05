@@ -85,17 +85,23 @@ _personal_quote_client = None
 def _personal_quote_execute(payload, configuration):
     """Runs only in the killable child, retaining OAuth between polls."""
     global _personal_quote_client
-    if _personal_quote_client is None:
-        if configuration["provider"] == "kis":
-            _personal_quote_client = KisQuoteProvider(KisCredentials(
-                api_key=configuration["key"], api_secret=configuration["secret"],
-                paper=configuration["environment"] == "paper"), source="kis_member")
-        else:
-            _personal_quote_client = TossQuoteProvider(TossCredentials(
-                client_id=configuration["key"], client_secret=configuration["secret"]), source="toss_member")
-    # The parent hard deadline also bounds slow response bodies and socket stalls.
-    return [{**value.__dict__, "observed_at": value.observed_at.isoformat()}
-            for value in _personal_quote_client.fetch(payload["tickers"])]
+    from .toss_quotes import TossOpenApiError, provider_error_text
+    try:
+        if _personal_quote_client is None:
+            if configuration["provider"] == "kis":
+                _personal_quote_client = KisQuoteProvider(KisCredentials(
+                    api_key=configuration["key"], api_secret=configuration["secret"],
+                    paper=configuration["environment"] == "paper"), source="kis_member")
+            else:
+                _personal_quote_client = TossQuoteProvider(TossCredentials(
+                    client_id=configuration["key"], client_secret=configuration["secret"]), source="toss_member")
+        # The parent hard deadline also bounds slow response bodies and socket stalls.
+        return [{**value.__dict__, "observed_at": value.observed_at.isoformat()}
+                for value in _personal_quote_client.fetch(payload["tickers"])]
+    except TossOpenApiError as exc:
+        from fastapi import HTTPException
+        raise HTTPException(503, "TOSS: " + provider_error_text(exc)) from None
+
 
 
 class PersonalQuoteProvider(QuoteProvider):
@@ -685,6 +691,7 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
     error_count = 0
     fetched_quotes: list[tuple[MemberFeedConfig, str, list]] = []
     failed_users: set[str] = set()
+    failure_details = {}
     last_progress = time.monotonic()
     with ThreadPoolExecutor(max_workers=min(_MEMBER_QUOTE_WORKERS, len(tasks))) as executor:
         futures = {
@@ -702,6 +709,9 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
             except Exception as exc:
                 error_count += 1
                 failed_users.add(user_id)
+                from .provider_process import ProviderOperationError
+                if isinstance(exc, ProviderOperationError) and isinstance(exc.detail, str) and exc.detail.startswith("TOSS: "):
+                    failure_details[user_id] = exc.detail[6:]
                 if getattr(settings, "personal_local_mode", False):
                     # Invalidate attempted symbols on failure. Unrequested
                     # symbols retain their explicitly age-bounded cached marks.
@@ -734,6 +744,12 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
         if getattr(settings, "personal_local_mode", False):
             session.execute(delete(MemberQuote).where(MemberQuote.user_id == user_id,
                 MemberQuote.ticker.in_(attempted_symbols[user_id])))
+        if getattr(settings, "personal_local_mode", False):
+            component = "member-feed:" + user_id
+            if user_id in failure_details:
+                heartbeat(session, component, failure_details[user_id])
+            elif user_id not in failed_users:
+                session.execute(delete(RuntimeHeartbeat).where(RuntimeHeartbeat.component == component))
         quote_count += store_member_quotes(session, user_id, values)
         # Hold the connection-row lock through this write/transaction so a
         # concurrent replace/delete purges these rows after we commit.

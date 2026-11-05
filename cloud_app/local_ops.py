@@ -111,6 +111,8 @@ def _create_backup_locked(runtime: Path, destination: Path) -> Path:
                 continue
             # Screening files are rebuildable, atomically replaced caches.
             # Research generations are immutable and published under refresh.lock.
+            if relative.parts[0] == "toss-auth":
+                continue  # Expiring encrypted OAuth cache does not belong in archives.
             if relative.parts[0] == "auto-market" and (len(relative.parts) < 2 or relative.parts[1] != "backtests"):
                 continue
             if path.is_symlink():

@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-06",
+  "scope": "Personal PC education branch Toss quote/history/display coordination; no broker orders or live AI calls",
+  "base_commit": "18ae4260c430319c85beae0415ef9c3ff41f755e",
+  "symptoms": [
+    "New US-wide strategy accounts remain waiting for data or cannot obtain execution quotes.",
+    "403 responses were indiscriminately reported as a server IP block."
+  ],
+  "findings": [
+    {
+      "problem": "Independent Toss clients issue mutually revoking OAuth tokens.",
+      "source": "https://openapi.tossinvest.com/openapi-docs/faq.md",
+      "evidence": "Official FAQ specifies one valid access token per client and immediate predecessor revocation. Separate quote, history and display clients previously issued independently.",
+      "resolution": "Personal local mode shares an encrypted token, serialized by a cross-process file lock. An in-flight rejected token adopts an already-published successor before issuing again."
+    },
+    {
+      "problem": "All HTTP 403 responses were classified as IP allowlist failures before parsing the error envelope.",
+      "source": "https://openapi.tossinvest.com/openapi-docs/latest/openapi.json",
+      "evidence": "OAuth access_denied indicates an IP denial, while edge-blocked and generic forbidden responses are distinct; invalid_client is authentication failure.",
+      "resolution": "Parse bounded JSON first; separate explicit IP, edge, permission and authentication errors. Show static safe reasons through isolated workers and the dashboard."
+    },
+    {
+      "problem": "History fallback could hide edge/permission failures.",
+      "resolution": "Propagate provider-wide denials to retry status without a Yahoo fan-out. Retain Yahoo fallback for symbol-specific missing or invalid history."
+    }
+  ],
+  "verification": {
+    "full_suite": {
+      "command": "APP_ENV=development python3.14 -m unittest discover -s tests -v",
+      "tests": 848,
+      "result": "OK",
+      "test_seconds": 53.157,
+      "environment": "Isolated temporary runtime and Python 3.14 venv; no user runtime or real credentials used"
+    },
+    "http_reproduction": {
+      "before": {
+        "token_issuances": 4,
+        "revoked_responses": 2
+      },
+      "after": {
+        "token_issuances": 1,
+        "revoked_responses": 0,
+        "successful_queries": 20
+      }
+    },
+    "cross_process": {
+      "start_method": "spawn",
+      "processes": 3,
+      "roles": [
+        "paper quotes",
+        "daily candle history",
+        "market display"
+      ],
+      "token_issuances": 1,
+      "revoked_responses": 0,
+      "successful_queries": 30
+    },
+    "focused_suite": {
+      "tests": 8,
+      "result": "OK",
+      "seconds": 5.079,
+      "coverage": [
+        "Automatic personal-mode shared cache selection",
+        "In-flight refresh adopts published token",
+        "Rotated secret cannot read old cache or overwrite new token after failed authentication",
+        "Distinct IP/edge/permission classifications",
+        "History and paper child preserve safe provider reason",
+        "No Yahoo fan-out on provider-wide denial",
+        "No plaintext client credentials or bearer in encrypted cache"
+      ]
+    },
+    "direct_review": {
+      "functionality": "One-client one-token coordination spans issuance and atomic publication; request retries are bounded to one; history progress and ledger behavior retained.",
+      "performance": "Cache reads and token lock are bounded; one issuance for 30 queries from three spawned roles. No repeated large catalog or full backup introduced by this change.",
+      "code_quality": "Existing platform file lock and bounded I/O helpers reused; read-only endpoint allowlist retained; git diff --check passed.",
+      "security": "AES-GCM cache key is derived from the client secret and context; private token directory/files; no plaintext credentials or tokens in archives, logs or status; runtime OAuth cache excluded from backups; cloud/production credential custody unchanged."
+    }
+  },
+  "operating_notes": [
+    "Stop the running native launcher, update the existing folder, and restart.",
+    "No strategy or paper-account recreation is required.",
+    "After client key reissue, save the latest Client ID and Client Secret together.",
+    "The shared cache coordinates a single installation. Other PCs, independent folders or external applications issuing tokens for the same Client ID can still revoke it.",
+    "A genuine allowlist mismatch still requires registering the executing PC's public IP in Toss WTS.",
+    "Full-market initial history preparation must complete before fresh selection. Quote freshness, corporate actions, strategy filters and trading-session gates still apply."
+  ],
+  "limitations": [
+    "No live Toss credentials were used; the reported remote installer account has not been directly observed.",
+    "The reproduction enforces the documented token rule on a local HTTP server; it is not a real brokerage endurance run.",
+    "This fixes evidenced common defects and improves diagnosis; it does not establish that every reported remote failure has the same cause."
+  ]
+}

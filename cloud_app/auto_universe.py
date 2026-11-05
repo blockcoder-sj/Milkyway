@@ -28,7 +28,9 @@ from .bounded_io import read_bounded_json, read_requests_bytes
 from .local_demo import _atomic_json
 from .personal_data import EASTERN, SYMBOL_PATTERN, DATASET_KIND, last_completed_session
 from .provider_process import ProviderProcess
-from .toss_quotes import TossQuoteClient, TossCredentials, TossRateLimitError, TossAuthenticationError, TossIpNotAllowedError
+from .toss_quotes import (TossQuoteClient, TossCredentials, TossRateLimitError,
+                         TossAuthenticationError, TossIpNotAllowedError,
+                         TossEdgeBlockedError, TossPermissionError)
 
 CATALOG_LIMIT = 30_000  # Admission bound, never a top-N stock selection.
 HISTORY_ROWS = 320
@@ -121,7 +123,8 @@ def _history(client, root, symbols, required, now):
                 fallback.append(symbol)
             else:
                 outcomes[symbol] = "ready"
-        except (TossRateLimitError, TossAuthenticationError, TossIpNotAllowedError):
+        except (TossRateLimitError, TossAuthenticationError, TossIpNotAllowedError,
+                TossEdgeBlockedError, TossPermissionError):
             raise  # Do not fan out a provider-wide denial into thousands of calls.
         except Exception:
             fallback.append(symbol)
@@ -253,6 +256,7 @@ def _screen(client, root, payload, now):
 
 
 def _execute(payload, configuration):
+    from .toss_quotes import TossOpenApiError, provider_error_text
     global _client
     root = Path(configuration["root"])
     now = dt.datetime.fromisoformat(payload["now"])
@@ -268,12 +272,18 @@ def _execute(payload, configuration):
         except TossRateLimitError as exc:
             from fastapi import HTTPException
             raise HTTPException(429, "retry_after="+str(min(3600, max(1, exc.retry_after)))) from None
+        except TossOpenApiError as exc:
+            from fastapi import HTTPException
+            raise HTTPException(503, "TOSS: "+provider_error_text(exc)) from None
     if payload["action"] == "screen":
         try:
             return _screen(_client, root, payload, now)
         except TossRateLimitError as exc:
             from fastapi import HTTPException
             raise HTTPException(429, "retry_after="+str(min(3600, max(1, exc.retry_after)))) from None
+        except TossOpenApiError as exc:
+            from fastapi import HTTPException
+            raise HTTPException(503, "TOSS: "+provider_error_text(exc)) from None
     raise ValueError("Unknown automatic screening action")
 
 
@@ -428,6 +438,8 @@ def refresh(settings, specs, configuration, now=None):
         code = exc.status_code if isinstance(exc, ProviderOperationError) else 503
         message = ("토스 요청 한도에 도달했습니다. 자동 재시도 대기" if code == 429 else
                    "전체 종목 데이터 수신·검증을 완료하지 못했습니다. 토스 인증·IP·네트워크 상태를 확인하세요. 기존 원장은 보존하며 자동 재시도합니다")
+        if isinstance(exc, ProviderOperationError) and isinstance(exc.detail, str) and exc.detail.startswith("TOSS: "):
+            message = exc.detail[6:] + " · 자동 재시도합니다"
         delay = 60
         if code == 429 and str(exc.detail).startswith("retry_after="):
             try:

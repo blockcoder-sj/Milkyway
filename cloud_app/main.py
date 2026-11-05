@@ -1962,6 +1962,10 @@ def _personal_dashboard(user: User, session: Session) -> dict:
     last_quote = max((row["observed_at"] for row in market), default=None)
     active = [row for row in accounts if row.status == "active"]
     open_now = regular_market_open()
+    feed_error = session.get(RuntimeHeartbeat, "member-feed:" + user.id)
+    if feed_error and (not connection or aware(feed_error.observed_at) < aware(connection.verified_at)
+                       or not dt.timedelta(0) <= now-aware(feed_error.observed_at) <= dt.timedelta(seconds=150)):
+        feed_error = None
     # Paper operation does not depend on the optional backtest queue worker.
     # Its actual heartbeat remains available separately in workers.backtest.
     if not worker["alive"] or not data_worker["alive"]:
@@ -1972,6 +1976,8 @@ def _personal_dashboard(user: User, session: Session) -> dict:
         state, message = "credentials_required", "프로필에서 본인의 증권사 시세 API를 연결해 주세요."
     elif not active:
         state, message = "account_required", "전략을 저장하고 페이퍼 계좌를 만들어 활성화해 주세요."
+    elif feed_error:
+        state, message = "quote_error", feed_error.detail
     elif not data.get("ready") or data.get("stale") or not data.get("action_ready", True):
         state, message = "waiting_data", "일봉 데이터를 준비 중입니다. 이전 기록은 유지되며 데이터가 준비되면 자동으로 재개합니다."
     elif not open_now:
