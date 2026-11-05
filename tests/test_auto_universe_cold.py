@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 from sqlalchemy import select,func
 from cloud_app import auto_universe as auto,personal_data,worker
-from cloud_app.database import PaperAccount,PaperFill
+from cloud_app.database import PaperAccount,PaperFill,RuntimeHeartbeat
 from cloud_app.local_demo import _atomic_json
 from cloud_app.provider_process import ProviderProcess
 from tests import test_personal_continuous as continuous
@@ -93,7 +93,26 @@ class ColdAutomaticPaperTests(unittest.TestCase):
         self.assertTrue(self.data_step())
         self.assertFalse(self.data_step())
         f.tick();self.assertEqual(self.fills(),2)
+
         f.http_status=503;f.monotonic+=61;f.now+=dt.timedelta(seconds=61)
         f.tick();self.assertEqual(self.fills(),2)
         f.http_status=200;f.monotonic+=61;f.now+=dt.timedelta(seconds=61)
         f.tick();self.assertEqual(self.fills(),2)
+
+    def test_selection_status_recovers_only_after_fresh_screen_without_new_buys(self):
+        f=self.fixture
+        self.data_step();self.data_step();f.tick()
+        self.assertEqual(self.fills(),2)
+        def status():
+            with f.sessions() as db:
+                return json.loads(db.get(RuntimeHeartbeat,'paper-account:'+f.account).detail)['status']
+        self.assertEqual(status(),'active')
+        # Held quotes recover before the complete-market scan. That alone must
+        # not clear the selection warning or cause another initial purchase.
+        f.now+=dt.timedelta(seconds=auto.DECISION_MAX_AGE+1)
+        f.tick();self.assertEqual(status(),'waiting_selection')
+        f.tick();self.assertEqual(status(),'waiting_selection')
+        self.assertEqual(self.fills(),2)
+        self.data_step()
+        f.tick();self.assertEqual(status(),'active')
+        self.assertEqual(self.fills(),2)

@@ -679,7 +679,14 @@ def mark_and_stop_accounts(session: Session) -> int:
                 not_due = account.last_rebalanced_on is not None and (
                     _market_context(now)[0].date() - account.last_rebalanced_on
                 ).days < spec.portfolio.rebalance_days
-                recovered = state is not None and json.loads(state.detail).get("status") in {"waiting_quotes", "waiting_history"} and not_due
+                previous_status = json.loads(state.detail).get("status") if state is not None else None
+                recovered = previous_status in {"waiting_quotes", "waiting_history"} and not_due
+                if previous_status == "waiting_selection" and not_due and spec.universe == "us_all":
+                    # Quote recovery can precede the complete-market scan. Clear
+                    # its warning only after that scan is current as well.
+                    from .auto_universe import decision_for
+                    decision_for(get_settings(), spec, now)
+                    recovered = True
             except (TypeError, ValueError):
                 recovered = False
             if recovered:
