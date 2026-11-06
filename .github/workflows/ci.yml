@@ -1,6 +1,7 @@
 name: Syntax & Shell Checks
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
