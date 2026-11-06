@@ -1,7 +1,7 @@
 /* Display-only market views. No API calls, strategy changes, or credential access. */
 (() => {
   const $ = (selector) => document.querySelector(selector);
-  const escape = (value) => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+  const escape = window.MilkywayFormat.escapeHtml;
   const finite = value => typeof value === "number" && Number.isFinite(value);
   const number = (value, digits = 2) => finite(value) ? new Intl.NumberFormat("ko-KR", {maximumFractionDigits:digits}).format(value) : "—";
   const change = value => finite(value) ? `${value > 0 ? "+" : ""}${number(value)}%` : "—";

@@ -177,3 +177,16 @@ python3 tests/run_postgres_checks.py --image milkyway:test
 
 - [지수·섹터·환율·선물 상세 화면과 출처](docs/MARKET_DETAILS.md)
 - [승인된 AI 대화 5회 평가 결과](docs/AI_CHAT_EVALUATION.md)
+
+
+### 코드 배치와 정리 기준
+
+- `cloud_app/`: 서버 API, 데이터 수집, 전략 실행과 페이퍼 원장. 계좌·시세 처리는 화면 코드와 분리한다.
+- `cloud_app/static/format.js`: 숫자·금액·시간·HTML 이스케이프의 공통 표시 함수. 화면 모듈은 이를 재사용한다.
+- `cloud_app/static/research/`: 전략 대화의 API·화면·설정 책임을 분리한 모듈.
+- `tests/`: 합성 시세와 장애 상황을 포함한 회귀 검사. 테스트 자료는 실제 거래 시세가 아니다.
+- `deploy/`, `compose*.yaml`: 실행·백업·운영 도구. 사용하는 실행 방식이 다르므로 다른 구성 파일을 미사용 파일로 간주하지 않는다.
+- `runtime/`, `backups/`: Git 제외 개인 데이터·검증 기록·보관 자료. 프로그램 정리 시 삭제하지 않는다.
+
+기본 실행과 명시적 데모 실행을 구분한다. `local_demo.py`와 테스트 fixture는 검증에 사용하므로 유지한다.
+사용하지 않는 파일은 코드·HTML·CSS·실행 구성의 참조를 확인한 뒤 삭제한다. 화면 공통 함수는 각 페이지에 복사하지 않는다.

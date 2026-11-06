@@ -1,6 +1,6 @@
 /* Formula text mirrors the actual display transformations; no market interpretation. */
 (() => {
-  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = window.MilkywayFormat.escapeHtml;
   const num=value=>Number.isFinite(value)?window.MilkywayFormat.number(value,20):'미수신';
   function help(id,paragraphs,label='계산 방법'){
     return `<details class="metric-method" data-method-id="${esc(id)}"><summary>${esc(label)}</summary>${paragraphs.map(p=>`<p>${esc(p)}</p>`).join('')}</details>`;
