@@ -48,7 +48,14 @@ def main() -> None:
                 })
                 if not hashes or any(len(bytes.fromhex(value)) != hashlib.sha256().digest_size for value in hashes):
                     raise RuntimeError("Missing wheel SHA256 metadata")
+                if name == "requirements" and package == "uvloop":
+                    line += ' ; sys_platform != "win32"'
                 pins.append(line + "".join(" \\\n    --hash=sha256:" + value for value in hashes))
+            if name == "requirements":
+                # Uvicorn's Windows-only console dependency is absent from the
+                # Linux resolver; preserve its reviewed, wheel-only pin.
+                pins.append('colorama==0.4.6 ; sys_platform == "win32" ' + chr(92)
+                            + '\n    --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6')
             (root / (name + ".lock")).write_text(
                 "# Python 3.11 / Linux. Transitive versions resolved with pip-tools 7.6.1.\n"
                 "# Wheel SHA256 values verified against official PyPI release metadata.\n"

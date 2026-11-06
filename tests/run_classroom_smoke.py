@@ -57,7 +57,10 @@ def main():
                 base = location.read_text(encoding='utf-8').strip().replace('localhost', '127.0.0.1')
             try:
                 if request('/health/ready')['status'] == 'ready':
-                    return
+                    with sqlite3.connect(ROOT / 'runtime/club.sqlite3') as db:
+                        names={r[0] for r in db.execute('SELECT component FROM runtime_heartbeats')}
+                    if {'paper-worker','backtest-worker','personal-data','universe-data'} <= names:
+                        return
             except OSError:
                 time.sleep(.5)
         raise RuntimeError('Readiness deadline exceeded')

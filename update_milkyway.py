@@ -99,7 +99,7 @@ def archive_sources(payload):
                 raise RuntimeError("업데이트 파일을 끝까지 읽지 못했습니다")
             files[str(relative)] = content
     required = {"run_milkyway.py", "update_milkyway.py", "requirements-native.txt",
-                "requirements-native.lock", "cloud_app/native_platform.py"}
+                "requirements.lock", "cloud_app/native_platform.py"}
     if not required.issubset(files):
         raise RuntimeError("실습 실행에 필요한 파일이 없는 업데이트입니다")
     return files

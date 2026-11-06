@@ -17,8 +17,8 @@ from cloud_app.native_platform import flock, LOCK_EX, LOCK_NB
 
 REVISION = "a" * 40
 BASE_FILES = {"run_milkyway.py": b"# updated launcher\n", "update_milkyway.py": b"# updater\n",
-              "requirements-native.txt": b"-r requirements-native.lock\n",
-              "requirements-native.lock": b"# lock\n", "cloud_app/native_platform.py": b"# platform\n"}
+              "requirements-native.txt": b"-r requirements.lock\n",
+              "requirements.lock": b"# lock\n", "cloud_app/native_platform.py": b"# platform\n"}
 
 
 def archive(extra=None):
