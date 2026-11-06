@@ -18,5 +18,17 @@
     if (!Number.isFinite(result)) throw new Error('유효한 숫자를 입력하세요');
     return result;
   }
-  window.MilkywayFormat = Object.freeze({number, parse});
+  const currency = new Intl.NumberFormat("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0});
+  const timestamp = new Intl.DateTimeFormat("ko-KR", {month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"});
+  function money(value) { return currency.format(value || 0); }
+  function pct(value) { return `${Number(value || 0) >= 0 ? "+" : ""}${number(Number(value || 0), 2, 2)}%`; }
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>'"]/g, character => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"}[character]));
+  }
+  function shortTime(value) {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "—" : timestamp.format(date);
+  }
+  window.MilkywayFormat = Object.freeze({number, parse, money, pct, escapeHtml, shortTime});
 })();

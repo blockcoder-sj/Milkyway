@@ -1,9 +1,9 @@
 const state = {config: {}, refreshPromise: null, lastRefresh: null, csrf: "", me: null, dashboard: null, aiConnection: null, marketDataConnection: null, strategies: [], backtests: [], backtestOffset: 0, backtestPage: [], marketCountry: "us", sectorCountry: "us", workspace: "market", stream: null, preferences: window.MilkywayProfile.loadPreferences()};
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-const money = (value) => new Intl.NumberFormat("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0}).format(value || 0);
+const money = (value) => window.MilkywayFormat.money(value);
 const number = (value) => window.MilkywayFormat.number(value);
-const pct = (value) => `${Number(value || 0) >= 0 ? "+" : ""}${window.MilkywayFormat.number(Number(value || 0), 2, 2)}%`;
+const pct = (value) => window.MilkywayFormat.pct(value);
 
 const MARKET_SELECTION = {
   us: {
@@ -30,16 +30,8 @@ const SECTOR_SELECTION = {
   },
 };
 
-function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>'"]/g, (character) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"}[character]));
-}
-
-function shortTime(value) {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("ko-KR", {month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}).format(date);
-}
+function escapeHtml(value) { return window.MilkywayFormat.escapeHtml(value); }
+function shortTime(value) { return window.MilkywayFormat.shortTime(value); }
 
 function toast(message, error = false) {
   const element = $("#toast");

@@ -9,6 +9,12 @@ class ListPresentationTests(unittest.TestCase):
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');const ctx=vm.createContext({window:{},Intl});
 for(const file of ['format.js','list-paging.js'])vm.runInContext(fs.readFileSync(process.argv[1]+'/'+file,'utf8'),ctx);
 const f=ctx.window.MilkywayFormat,p=ctx.window.MilkywayPaging;
+assert.equal(f.escapeHtml(`<a x="'">&`), '&lt;a x=&quot;&#39;&quot;&gt;&amp;');
+assert.equal(f.escapeHtml(null), '');assert.equal(f.money(1234.5), '$1,235');
+assert.equal(f.pct(-1.2), '-1.20%');assert.equal(f.pct(0), '+0.00%');
+assert.equal(f.shortTime(null), '—');assert.equal(f.shortTime('invalid'), '—');
+assert.notEqual(f.shortTime('2026-11-05T16:00:00Z'), '—');
+
 assert.equal(f.number(1234567.89), '1,234,567.89');assert.equal(f.parse(f.number(1234567.89)),1234567.89);
 assert.equal(f.parse('-1,234.5'),-1234.5);assert.equal(f.parse('.5'),.5);assert.equal(f.number(null),'—');
 for(const value of ['1,00','1,234,56','','NaN','Infinity','123<script>','1e999'])assert.throws(()=>f.parse(value));
