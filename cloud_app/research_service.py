@@ -277,7 +277,9 @@ class ResearchService:
         room = owned_session(self.db, self.user, session_id)
         with quota_allocation(self.db, "research", self.user.id):
             require_idle(self.db, room)
-            if strategy_id not in {row.strategy_id for row in versions(self.db, room)}:
+            if strategy_id not in {row.strategy_id for row in versions(self.db, room)} or self.db.scalar(
+                select(Strategy.id).where(Strategy.id == strategy_id, Strategy.user_id == self.user.id)
+            ) is None:
                 raise HTTPException(404, "이 연구의 전략 버전이 아닙니다")
             room.selected_strategy_id = strategy_id
             self.db.commit()

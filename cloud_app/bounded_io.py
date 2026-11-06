@@ -122,6 +122,18 @@ def read_bounded_file(
         minimum = 0 if allow_empty else 1
         if before.st_size < minimum or before.st_size > maximum_bytes:
             raise ValueError("input file size is outside the allowed range")
+        # macOS cloud placeholders may acquire a slightly different mtime when
+        # their contents are downloaded on the first read. Materialize through
+        # the same no-follow descriptor before capturing a stable generation.
+        dataless = getattr(stat, "SF_DATALESS", 0)
+        if before.st_size and getattr(before, "st_flags", 0) & dataless:
+            if budget is not None:
+                budget.reserve(1)
+            os.read(descriptor, 1)
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            before = os.fstat(descriptor)
+            if before.st_size < minimum or before.st_size > maximum_bytes:
+                raise ValueError("input file size is outside the allowed range")
         if budget is not None:
             budget.reserve(before.st_size)
         with os.fdopen(descriptor, "rb", buffering=0, closefd=False) as handle:

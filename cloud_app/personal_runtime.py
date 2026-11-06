@@ -34,7 +34,7 @@ def quote_budget(session, specifications):
     selected, reserved = set(), 0
     for spec, account_id in specifications:
         held = set(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account_id)).all()) if account_id else set()
-        if spec.universe == "us_market":
+        if spec.universe in {"us_market", "us_all"}:
             reserved += max(2*spec.portfolio.max_positions, len(held)+spec.portfolio.max_positions)
         else:
             selected.update(spec.symbols); selected.update(held)
@@ -130,8 +130,8 @@ def _probe_connection(session, settings, user_id, account_id):
     version = _member_feed_version(config_value)
     spec = StrategySpec.model_validate_json(row.strategy.spec_json)
     symbols = set(spec.symbols)
-    if spec.universe == "us_market":
-        from .us_universe import status
+    if spec.universe in {"us_market", "us_all"}:
+        from .universe_selection import status
         symbols.update(status(settings, user_id, spec).get("candidates", []))
     symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == row.id)).all())
     symbols = sorted(symbols)
@@ -203,9 +203,9 @@ def operation_status(session, settings, user_id, account_id=None, *, now=None):
     try:
         spec = StrategySpec.model_validate_json(selected.strategy.spec_json)
         symbols = set(spec.symbols)
-        if spec.universe == "us_market":
-            from .us_universe import status as universe_status
-            result["universe"] = universe_status(settings, user_id, spec)
+        if spec.universe in {"us_market", "us_all"}:
+            from .universe_selection import status as universe_status
+            result["universe"] = universe_status(settings, user_id, spec, now=now)
             if not result["universe"].get("ready"):
                 return state("waiting_universe", "미국 전체 종목 분석 중", "전체 거래 가능 종목의 일봉과 전략 점수를 준비하고 있습니다. 진행률을 확인해 주세요.")
             symbols.update(result["universe"].get("candidates", []))

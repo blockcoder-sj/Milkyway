@@ -12,6 +12,8 @@ from .toss_quotes import (
     TossCredentials,
     TossIpNotAllowedError,
     TossOpenApiError,
+    TossPermissionError,
+    TossEdgeBlockedError,
     TossQuoteClient,
     TossRateLimitError,
 )
@@ -143,11 +145,15 @@ def verify_connection(provider: str, environment: str, api_key: str, api_secret:
     if provider == "toss":
         client = TossQuoteClient(TossCredentials(client_id=api_key, client_secret=api_secret))
         try:
-            client.authenticate()
+            client.authenticate(force=True)
         except TossIpNotAllowedError as exc:
             raise MarketDataProviderError(
                 "토스증권이 서버 IP를 차단했습니다. WTS의 Open API 허용 IP에 이 서버의 고정 공인 IP를 등록해 주세요"
             ) from exc
+        except TossEdgeBlockedError as exc:
+            raise MarketDataProviderError("토스가 요청을 거부했습니다 (edge-blocked). IP 차단으로 확정할 수 없습니다. Client ID·Secret 입력값과 VPN·프록시·보안 프로그램을 확인해 주세요") from exc
+        except TossPermissionError as exc:
+            raise MarketDataProviderError("토스 Open API 접근 권한이 거부되었습니다 (403). IP 차단으로 확정할 수 없습니다. 키의 활성 상태·이용 권한을 확인해 주세요") from exc
         except TossAuthenticationError as exc:
             raise MarketDataProviderError(
                 "토스증권 인증에 실패했습니다. Client ID와 Client Secret을 확인해 주세요"

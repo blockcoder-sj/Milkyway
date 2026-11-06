@@ -22,13 +22,13 @@
       $("#researchTuningEmpty").hidden = Boolean(version);
       if (!version) return;
       const spec = version.spec, p = spec.portfolio, f = spec.filters;
-      $("#researchTuneSummary").textContent = `v${version.number} · ${spec.name} · ${spec.universe === "us_market" ? "미국 전체 자동 선별" : spec.symbols.join(", ")}`;
+      $("#researchTuneSummary").textContent = `v${version.number} · ${spec.name} · ${["us_all", "us_market"].includes(spec.universe) ? "미국 상장주식 전체 · 자동 선정" : spec.symbols.join(", ")}`;
       $("#researchTuneDescription").textContent = `현재 저장 규칙: 총 투자 ${(p.investment_fraction ?? 1)*100}%, 종목당 상한 ${(p.max_position_fraction ?? 1)*100}%, 최대 ${p.max_positions}종목, ${p.rebalance_days}달력일마다 재평가. 손절은 ${p.stop_loss_pct === null ? '사용 안 함' : '평균 매입단가 대비 '+Math.abs(p.stop_loss_pct*100)+'% 하락 기준'}입니다. 시세 공백·지연 시 손실이 더 커질 수 있습니다.`;
-      $("#researchTuningFields").innerHTML = `<div class="manual-grid">
+      $("#researchTuningFields").innerHTML = `<label>선정 범위<select name="universe"><option value="us_all" ${spec.universe === "us_all" ? "selected" : ""}>미국 상장주식 전체 · 자동 선정</option><option value="selected" ${spec.universe !== "us_all" ? "selected" : ""}>직접 지정 종목</option></select></label><label>직접 지정할 때만 종목 입력<input name="symbols" maxlength="240" value="${esc(spec.symbols.join(", "))}" placeholder="전체 자동 선정은 입력 불필요"></label><div class="manual-grid">
         ${field("initial_cash","시작 자금 (USD)",p.initial_cash,1000,10000000)}
         ${field("investment_pct","전체 투자 비중 (%)",(p.investment_fraction ?? 1)*100,5,100)}
         ${field("position_pct","종목당 비중 상한 (%)",(p.max_position_fraction ?? 1)*100,1,100)}
-        ${field("max_positions","최대 보유 종목",p.max_positions,1,20,1)}
+        ${field("max_positions","최대 보유 종목",p.max_positions,1,spec.universe === "us_all" ? 50 : 20,1)}
         ${field("rebalance_days","리밸런싱 간격 (달력일)",p.rebalance_days,1,30,1)}
         <label>리밸런싱 방식<select name="rebalance_weights"><option value="true" ${p.rebalance_weights ? "selected" : ""}>종목 교체 + 동일 비중 재조정</option><option value="false" ${!p.rebalance_weights ? "selected" : ""}>종목만 교체 · 기존 수량 유지</option></select></label>
         ${field("cost_pct","편도 거래 비용 (%)",p.cost_per_side*100,0,2)}
@@ -46,7 +46,9 @@
       const values = new FormData($("#researchTuningForm"));
       const number = name => { const value = window.MilkywayFormat.parse(values.get(name)); if (!Number.isFinite(value)) throw new Error("조정할 숫자를 확인하세요"); return value; };
       requestId ||= crypto.randomUUID();
-      return {id:version.id, body:{request_id:requestId,
+      const universe = values.get("universe") || version.spec.universe || "selected";
+      const symbols = universe === "us_all" ? [] : String(values.get("symbols") ?? version.spec.symbols.join(", ")).split(/[,\s]+/).filter(Boolean);
+      return {id:version.id, body:{request_id:requestId, universe, symbols,
         portfolio:{initial_cash:number("initial_cash"),investment_fraction:number("investment_pct")/100,
           max_position_fraction:number("position_pct")/100,max_positions:number("max_positions"),
           rebalance_days:number("rebalance_days"),rebalance_weights:values.get("rebalance_weights")==="true",

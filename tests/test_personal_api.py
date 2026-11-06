@@ -78,6 +78,30 @@ class PersonalApiTests(unittest.TestCase):
 
 
 
+    def test_automatic_strategy_creation_requires_no_ticker_or_credentials(self):
+        spec = StrategySpec(name="Whole US market", universe="us_all", symbols=[], factors=[{"kind":"momentum"}], portfolio={"max_positions":10})
+        result = main.create_strategy(main.StrategyBody(spec=spec), self.user, self.session)
+        self.assertEqual(result["spec"]["universe"], "us_all")
+        self.assertEqual(result["spec"]["symbols"], [])
+        with self.assertRaises(HTTPException) as error:
+            main._ensure_personal_quote_capacity(self.session, self.user.id, spec)
+        self.assertIn("토스", str(error.exception.detail))
+
+    def test_safe_quote_failure_is_visible_before_generic_history_wait(self):
+        from cloud_app.database import MarketDataConnection
+        self.session.add(MarketDataConnection(user_id=self.user.id,provider="toss",environment="live",encrypted_api_key="synthetic",encrypted_api_secret="synthetic",key_hint="test",secret_hint="test",verified_at=utcnow()-dt.timedelta(seconds=10)))
+        for component in ('paper-worker','personal-data'):
+            self.session.add(RuntimeHeartbeat(component=component,instance_id="fixture",observed_at=utcnow(),detail="running"))
+        self.session.add(RuntimeHeartbeat(component="member-feed:"+self.user.id,instance_id="fixture",observed_at=utcnow(),detail="토스 API 접근 권한이 거부되었습니다 (403)"))
+        self.session.commit()
+        result=main.dashboard(self.user,self.session)
+        self.assertEqual(result["operational"]["status"],"quote_error")
+        self.assertIn("접근 권한",result["operational"]["message"])
+        connection=self.session.get(MarketDataConnection,self.user.id)
+        connection.verified_at=utcnow()+dt.timedelta(seconds=1);self.session.commit()
+        result=main.dashboard(self.user,self.session)
+        self.assertNotEqual(result["operational"]["status"],"quote_error")
+
     def test_new_install_dashboard_works_before_history_or_keys(self):
         payload=main.dashboard(self.user,self.session)
         self.assertTrue(payload["personal_local_mode"])

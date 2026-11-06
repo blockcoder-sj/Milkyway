@@ -1,0 +1,55 @@
+{
+  "checks": [
+    "first fills, repeated-tick idempotency and OAuth/process reuse",
+    "one stop per holding despite repeated polls",
+    "429 backoff, cached-quote invalidation, no fabricated fills/equity and recovery",
+    "expired-token refresh without losing the provider process",
+    "stale, future and partial quotes cannot trigger stops or complete equity marks",
+    "date-limited session expiry retains balances without a fabricated closing sale",
+    "seven trading sessions, closed weekends, persistent restart and calendar-day rebalancing",
+    "1000 repeated HTTP/provider/SQLite ticks without duplicate fills or provider proliferation",
+    "quote I/O crossing the market close creates no late stop",
+    "backup and restore retain accounts, positions, fills, valuations and encrypted synthetic credentials"
+  ],
+  "replayed_trading_sessions": 7,
+  "repeated_ticks": 1000,
+  "quote_http_requests": 1019,
+  "authentication_http_requests": 4,
+  "final_fills": 10,
+  "parent_threads_before": 3,
+  "parent_threads_after": 3,
+  "parent_fds_before": 12,
+  "parent_fds_after": 12,
+  "seconds": 11.564,
+  "real_broker_credentials_used": false,
+  "real_external_provider_calls": 0,
+  "accelerated_time": true,
+  "date": "2026-11-05",
+  "scope": "trusted single-owner classroom paper trading",
+  "fixes": [
+    "Reject executions at/after the regular-session close, including quote I/O crossing the boundary",
+    "Unswallowable whole-tick deadline plus hard watchdog for stuck executor cleanup; uncommitted SQLite updates roll back",
+    "Close parent log descriptors on each worker start/restart"
+  ],
+  "full_suite": {
+    "tests": 811,
+    "seconds": 47.167,
+    "result": "passed"
+  },
+  "baseline_evidence": [
+    "Close-boundary regressions failed before the fix",
+    "Parent log handle regression failed before the fix",
+    "Stuck executor exceeded the graceful deadline before the hard watchdog; fixed subprocess exits 124 and rolls back"
+  ],
+  "review": {
+    "functionality": "direct source review and regressions",
+    "performance": "1000 HTTP/spawn/SQLite polls; stable threads and file descriptors",
+    "security": "bounded local synthetic endpoint only; no new user-controlled provider endpoint; existing credential isolation retained"
+  },
+  "unchanged_contract": "Rebalance intervals remain calendar days, matching UI, AI prompt and backtest engine",
+  "limits": [
+    "Accelerated synthetic verification is not seven real days of continuous Toss operation",
+    "No real broker credentials, external AI calls, brokerage orders or public deployment",
+    "No whole-repository security scan or OCI validation"
+  ]
+}

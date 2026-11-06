@@ -22,7 +22,7 @@
     const block = $("#marketDataConnectionSettings");
     block.querySelector("h4").textContent = "내 증권사 시세 연결";
     block.querySelector(".eyebrow").textContent = "PERSONAL QUOTE API";
-    block.querySelector(".settings-billing-note").textContent = "이 PC의 서버가 키를 암호화해 보관합니다. 현재가 조회에만 사용하며 증권사 주문은 보내지 않습니다. 과거 일봉은 Yahoo에서 별도로 받습니다. 키와 백업은 공유하지 마세요.";
+    block.querySelector(".settings-billing-note").textContent = "이 PC의 서버가 키를 암호화해 보관합니다. 시세·일봉 조회에 사용하며 증권사 주문은 보내지 않습니다. 전체 종목 탐색은 토스 일봉을 우선하고 Yahoo로 보완합니다. 키와 백업은 공유하지 마세요.";
     $("#marketDataConnectionSummary").textContent = connection.connected
       ? `${connection.provider?.toUpperCase()} · ${connection.environment} · 인증 확인됨. 장중 최신 시세 수신 여부는 운용 상태에서 따로 확인하세요.`
       : "증권사에서 발급받은 본인 키를 연결하세요. KIS 또는 토스증권의 미국 주식 시세를 사용합니다.";
@@ -139,6 +139,7 @@
       ["정규장", typeof operational.market_open === "boolean" ? operational.market_open ? "열림" : "장외 또는 휴장 · 신규 체결 대기" : "미국 동부시간 09:30~16:00, 거래일 기준"],
       ["최근 시세", operational.last_quote_at ? new Date(operational.last_quote_at).toLocaleString("ko-KR") : "수신 기록 없음"],
     ];
+    if (isPersonal() && dashboard.automatic_universe) facts.push(["전체 종목 탐색", dashboard.automatic_universe.message || "준비 중"]);
     if (isPersonal()) facts.push(["과거 일봉", data.message || data.status || "전략 저장 후 자동 준비"], ["수신 방식", `REST 주기 조회 · ${Number(hooks.getState().config?.quote_interval_seconds || 15)}초 주기 · 종목별 수신 간격·공급자 지연은 다를 수 있음`]);
     const backup = dashboard.workers?.backup;
     if (isPersonal() && backup) facts.push(["백업", `${backup.alive ? "프로세스 응답" : "프로세스 응답 없음 · 확인 필요"} · ${backup.detail || "시작 대기"}`]);

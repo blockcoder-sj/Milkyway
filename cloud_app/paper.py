@@ -208,13 +208,16 @@ def collect_watchlist_ordered(session: Session, user_id: str | None = None) -> t
         for account in accounts:
             try:
                 spec = _spec(account)
-                if spec.universe == "us_market":
+                if spec.universe == "us_all":
+                    from .auto_universe import decision_for
+                    append(decision_for(get_settings(), spec, utcnow())["targets"])
+                elif spec.universe == "us_market":
                     from .us_universe import status
                     append(status(get_settings(), account.user_id, spec).get("candidates", []))
                 else:
                     append(spec.symbols)
             except ValueError:
-                _execution_state(session, account, "invalid_strategy", "전략 설정을 확인하세요")
+                _execution_state(session, account, "waiting_selection", "전략 데이터·전체 종목 탐색 준비 중; 자동 재시도합니다")
         return tuple(tickers)
     et_now, _market_open, rebalance_window = _market_context()
     due_accounts = [
@@ -567,7 +570,8 @@ def _fill(
     reason: str,
     dedupe_key: str,
 ) -> bool:
-    if reason in {"rebalance", "stop_loss"} and not _session_allows_execution(session, account):
+    executed_at = utcnow()
+    if reason in {"rebalance", "stop_loss"} and not _session_allows_execution(session, account, executed_at):
         return False
     if not all(math.isfinite(float(value)) for value in (shares, price, fee_rate)):
         raise ValueError("Non-finite paper fill input")
@@ -626,6 +630,7 @@ def _fill(
             fee=fee,
             reason=reason,
             dedupe_key=dedupe_key,
+            executed_at=executed_at,
         )
     )
     # Subsequent fills, stops and equity queries share this transaction while
@@ -641,11 +646,12 @@ def _account_positions(session: Session, account_id: str) -> dict[str, PaperPosi
     return {row.ticker: row for row in rows}
 
 
-def _session_allows_execution(session, account):
+def _session_allows_execution(session, account, now=None):
     if not getattr(get_settings(), "personal_local_mode", False):
         return True
     from .paper_sessions import session_allows_execution
-    return session_allows_execution(session, account, utcnow())
+    now = now or utcnow()
+    return session_allows_execution(session, account, now) and regular_market_open(now)
 
 
 def mark_and_stop_accounts(session: Session) -> int:
@@ -676,7 +682,14 @@ def mark_and_stop_accounts(session: Session) -> int:
                 not_due = account.last_rebalanced_on is not None and (
                     _market_context(now)[0].date() - account.last_rebalanced_on
                 ).days < spec.portfolio.rebalance_days
-                recovered = state is not None and json.loads(state.detail).get("status") in {"waiting_quotes", "waiting_history"} and not_due
+                previous_status = json.loads(state.detail).get("status") if state is not None else None
+                recovered = previous_status in {"waiting_quotes", "waiting_history"} and not_due
+                if previous_status == "waiting_selection" and not_due and spec.universe == "us_all":
+                    # Quote recovery can precede the complete-market scan. Clear
+                    # its warning only after that scan is current as well.
+                    from .auto_universe import decision_for
+                    decision_for(get_settings(), spec, now)
+                    recovered = True
             except (TypeError, ValueError):
                 recovered = False
             if recovered:
@@ -733,7 +746,7 @@ def _market_context(now: dt.datetime | None = None) -> tuple[dt.datetime, bool, 
         return et_now, False, False
     open_at = et_now.replace(hour=hours[0], minute=hours[1], second=0, microsecond=0)
     close_at = et_now.replace(hour=hours[2], minute=hours[3], second=0, microsecond=0)
-    market_open = open_at <= et_now <= close_at
+    market_open = open_at <= et_now < close_at
     rebalance_window = open_at + dt.timedelta(minutes=5) <= et_now <= close_at - dt.timedelta(minutes=15)
     return et_now, market_open, rebalance_window
 
@@ -748,19 +761,17 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
     if not force and not rebalance_window:
         return 0
     personal = getattr(get_settings(), "personal_local_mode", False)
+    bundle = None
     try:
         bundle = get_dataset_bundle()
     except (ValueError, FileNotFoundError, RuntimeError):
         if not personal:
             raise
-        for account in session.scalars(select(PaperAccount).where(PaperAccount.status == "active")).all():
-            _execution_state(session, account, "waiting_history", "전략 일봉 데이터 준비 중; 자동 재시도합니다")
-        return 0
     if not personal and not bundle.forward_data_gate_ready:
         logger.error("paper rebalance blocked: latest forward data quality gate failed")
         return 0
     required_session = prev_trading_day(et_now.date())
-    dataset_session = bundle.index.max().date()
+    dataset_session = bundle.index.max().date() if bundle is not None else required_session
     if not personal and dataset_session < required_session:
         logger.error(
             "paper rebalance blocked: dataset last session=%s required=%s",
@@ -783,15 +794,23 @@ def rebalance_due_accounts(session: Session, force: bool = False) -> int:
             if age < spec.portfolio.rebalance_days:
                 continue
         try:
-            if personal and spec.universe == "us_market":
+            if personal and spec.universe == "us_all":
+                from .auto_universe import decision_for
+                targets = decision_for(get_settings(), spec, et_now)["targets"]
+                held = set(_account_positions(session, account.id))
+                if not _personal_actions_current(get_settings(), set(targets) | held, et_now):
+                    raise ValueError("기업행사 확인 대기")
+            elif personal and spec.universe == "us_market":
                 from .us_universe import candidates
                 targets = candidates(get_settings(), account.user_id, spec)
             else:
+                if bundle is None:
+                    raise ValueError("전략 일봉 준비 대기")
                 targets = latest_candidates(spec, bundle, now=et_now) if personal else latest_candidates(spec, bundle)
         except (ValueError, FileNotFoundError, RuntimeError):
             if not personal:
                 raise
-            _execution_state(session, account, "waiting_history", "선택 종목 일봉 데이터가 최신이 아닙니다; 자동 재시도합니다")
+            _execution_state(session, account, "waiting_history", "전체 종목 탐색·최신 일봉·기업행사 확인 대기; 자동 재시도합니다" if spec.universe == "us_all" else "선택 종목 일봉 데이터가 최신이 아닙니다; 자동 재시도합니다")
             continue
         if not targets:
             _execution_state(session, account, "no_candidates", "전략 조건을 통과한 종목이 없습니다")
@@ -858,7 +877,23 @@ def account_snapshot(session: Session, account: PaperAccount) -> dict:
         execution = {"status": "session_finished", "detail": "지정 거래일 종료 · 추가 체결 중지. 잔고와 마지막 확인 평가액은 보존하며 공식 종가와 다를 수 있습니다."}
         if run.get("mode") == "period":
             execution["detail"] = "설정한 운용 기간 종료 · 추가 체결 중지. 잔고와 마지막 확인 평가액을 보존합니다."
+    selection = None
+    if getattr(get_settings(), "personal_local_mode", False):
+        try:
+            from .auto_universe import decision_for
+            spec = _spec(account)
+            if spec.universe == "us_all":
+                selection = decision_for(get_settings(), spec, utcnow(), require_fresh=False)
+                selection = {**selection, "fresh":False}
+                try:
+                    decision_for(get_settings(), spec, utcnow())
+                    selection["fresh"] = True
+                except ValueError:
+                    pass
+        except (ValueError, OSError):
+            pass
     return {
+        "automatic_selection": selection,
         "paper_session": run,
         "execution_status": execution.get("status", "waiting_session"),
         "execution_detail": execution.get("detail", "미국 정규장 또는 데이터 준비 대기 중입니다"),

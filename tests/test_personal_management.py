@@ -18,6 +18,9 @@ from cloud_app.strategies import StrategySpec
 
 
 class PersonalManagementTests(unittest.TestCase):
+    def remove(self, path, **kwargs):
+        return self.client.request("DELETE", path, json={"confirm": True}, **kwargs)
+
     def setUp(self):
         self.directory=tempfile.TemporaryDirectory()
         self.engine=create_engine("sqlite:///"+self.directory.name+"/db")
@@ -58,8 +61,8 @@ class PersonalManagementTests(unittest.TestCase):
             PaperFill(account_id=row.id,ticker="AAPL",side="BUY",shares=1,price=100,fee=0,reason="test",dedupe_key="kept"),
             EquityPoint(account_id=row.id,equity=100001,cash=99900)])
         self.db.commit()
-        self.assertEqual(self.client.delete("/api/accounts/"+row.id).status_code,403)
-        self.assertEqual(self.client.delete("/api/accounts/"+row.id,headers=self.headers).status_code,200)
+        self.assertEqual(self.remove("/api/accounts/"+row.id).status_code,403)
+        self.assertEqual(self.remove("/api/accounts/"+row.id,headers=self.headers).status_code,204)
         self.db.expire_all()
         self.assertIsNone(self.db.get(PaperAccount,identity))
         self.assertIsNotNone(self.db.get(PaperAccount,other_id))
@@ -72,24 +75,24 @@ class PersonalManagementTests(unittest.TestCase):
         row=PaperAccount(user_id=other.id,strategy_id=strategy.id,name="Other paper",initial_cash=1,cash=1)
         self.db.add(row);self.db.commit()
         for kind,identity in (("accounts",row.id),("strategies",strategy.id)):
-            self.assertEqual(self.client.delete("/api/"+kind+"/"+identity,headers=self.headers).status_code,404)
+            self.assertEqual(self.remove("/api/"+kind+"/"+identity,headers=self.headers).status_code,404)
 
     def test_strategy_delete_is_blocked_until_dependent_accounts_are_removed(self):
         row=self.account()
-        self.assertEqual(self.client.delete("/api/strategies/"+self.strategy.id,headers=self.headers).status_code,409)
-        self.client.delete("/api/accounts/"+row.id,headers=self.headers)
+        self.assertEqual(self.remove("/api/strategies/"+self.strategy.id,headers=self.headers).status_code,409)
+        self.remove("/api/accounts/"+row.id,headers=self.headers)
         room=ResearchSession(user_id=self.owner.id,title="Research",selected_strategy_id=self.strategy.id)
         self.db.add(room);self.db.flush()
         self.db.add(ResearchVersion(session_id=room.id,strategy_id=self.strategy.id,number=1))
         self.db.commit()
-        self.assertEqual(self.client.delete("/api/strategies/"+self.strategy.id).status_code,403)
-        self.assertEqual(self.client.delete("/api/strategies/"+self.strategy.id,headers=self.headers).status_code,200)
+        self.assertEqual(self.remove("/api/strategies/"+self.strategy.id).status_code,403)
+        self.assertEqual(self.remove("/api/strategies/"+self.strategy.id,headers=self.headers).status_code,204)
         self.db.expire_all();self.assertIsNone(self.db.get(ResearchSession,room.id).selected_strategy_id)
 
     def test_running_backtest_prevents_strategy_delete(self):
         self.db.add(BacktestJob(user_id=self.owner.id,strategy_id=self.strategy.id,status="running",start_date=dt.date(2026,1,1),end_date=dt.date(2026,2,1)))
         self.db.commit()
-        self.assertEqual(self.client.delete("/api/strategies/"+self.strategy.id,headers=self.headers).status_code,409)
+        self.assertEqual(self.remove("/api/strategies/"+self.strategy.id,headers=self.headers).status_code,409)
 
     def test_one_week_run_survives_sessions_and_expires_without_liquidating(self):
         response=self.client.post("/api/accounts",json={"strategy_id":self.strategy.id,"name":"One week","run_days":7},headers=self.headers)

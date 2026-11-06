@@ -40,6 +40,7 @@ from .ai_credentials import (
     validate_api_key,
     validate_provider_model,
 )
+from .personal_resources import DeleteBody
 from .config import get_settings, member_ai_credentials_enabled
 from .credential_store import credential_ciphertext_prefix
 from .credential_broker_client import (
@@ -1319,6 +1320,22 @@ def _strategy_payload(row: Strategy) -> dict:
     }
 
 
+@app.delete("/api/strategies/{strategy_id}", status_code=204)
+def delete_strategy(strategy_id: str, body: "DeleteBody", user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+    from . import personal_resources
+    personal_resources.require_local(settings)
+    personal_resources.delete_strategy(session, user.id, strategy_id)
+    return Response(status_code=204)
+
+
+@app.delete("/api/accounts/{account_id}", status_code=204)
+def delete_account(account_id: str, body: "DeleteBody", user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
+    from . import personal_resources
+    personal_resources.require_local(settings)
+    personal_resources.delete_account(session, user.id, account_id)
+    return Response(status_code=204)
+
+
 @app.get("/api/strategies")
 def list_strategies(user: User = Depends(current_user), session: Session = Depends(get_db)):
     rows = session.scalars(
@@ -1327,28 +1344,11 @@ def list_strategies(user: User = Depends(current_user), session: Session = Depen
     return [_strategy_payload(row) for row in rows]
 
 
-@app.delete("/api/strategies/{strategy_id}")
-def delete_strategy(strategy_id: str, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
-    from .personal_runtime import require_personal
-    from .research_models import ResearchSession
-    require_personal(settings)
-    with quota_allocation(session, "accounts", "global"):
-        with quota_allocation(session, "accounts", user.id):
-            row = _owned_strategy(session, user, strategy_id)
-            if session.scalar(select(PaperAccount.id).where(PaperAccount.strategy_id == row.id, PaperAccount.user_id == user.id).limit(1)):
-                raise HTTPException(409, "이 전략으로 만든 페이퍼 계좌를 먼저 삭제해 주세요. 운용 기록은 계좌에서 CSV로 저장할 수 있습니다.")
-            if session.scalar(select(BacktestJob.id).where(BacktestJob.strategy_id == row.id, BacktestJob.status == "running").limit(1)):
-                raise HTTPException(409, "실행 중인 백테스트가 끝난 뒤 전략을 삭제해 주세요.")
-            from sqlalchemy import update
-            session.execute(update(ResearchSession).where(ResearchSession.user_id == user.id, ResearchSession.selected_strategy_id == row.id).values(selected_strategy_id=None))
-            session.delete(row)
-            session.commit()
-    return {"deleted": strategy_id}
 
 
 @contextmanager
 def _strategy_creation(session: Session, user: User, spec: StrategySpec, prompt: str):
-    if spec.universe == "us_market" and (not settings.personal_local_mode or settings.production):
+    if spec.universe in {"us_market", "us_all"} and (not settings.personal_local_mode or settings.production):
         raise HTTPException(422, "미국 전체 자동 선별은 개인 로컬 운용에서만 지원합니다")
     if spec.symbols and not settings.personal_local_mode:
         raise HTTPException(status_code=422, detail="직접 종목 지정은 개인 로컬 모드에서만 지원합니다")
@@ -1487,7 +1487,12 @@ def create_backtest(body: BacktestBody, user: User = Depends(csrf_guard), sessio
     if settings.personal_local_mode and body.bias_mode != "exploratory":
         raise HTTPException(status_code=422, detail="개인 선택 종목 백테스트는 탐색용(exploratory)으로 실행해 주세요")
     try:
-        summary = get_dataset_summary(settings)
+        dataset_settings = settings
+        if settings.personal_local_mode and StrategySpec.model_validate_json(strategy.spec_json).universe == "us_all":
+            from .auto_universe import backtest_settings, prepare_backtest_generation
+            prepare_backtest_generation(settings)
+            dataset_settings = backtest_settings(settings)
+        summary = get_dataset_summary(dataset_settings)
     except (ValueError, FileNotFoundError, OSError):
         raise HTTPException(status_code=409, detail="전략 가격 이력을 준비 중입니다. 데이터 상태를 확인하고 잠시 후 다시 실행해 주세요")
     first_execution = dt.date.fromisoformat(summary.first_certified_execution_date)
@@ -1619,6 +1624,9 @@ def _ensure_personal_quote_capacity(session: Session, user_id: str, spec: Strate
     if not settings.personal_local_mode:
         return
     from .personal_runtime import quote_budget, quote_limit
+    connection = session.get(MarketDataConnection, user_id)
+    if spec.universe in {"us_market", "us_all"} and (connection is None or connection.provider != "toss"):
+        raise HTTPException(409, "미국 전체 자동 운용에는 본인 토스 시세 연결이 필요합니다")
     active = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user_id, PaperAccount.status == "active")).all()
     specifications = [(StrategySpec.model_validate_json(row.strategy.spec_json), row.id) for row in active if row.id != account_id]
     specifications.append((spec, account_id))
@@ -1695,19 +1703,6 @@ def list_accounts(user: User = Depends(current_user), session: Session = Depends
     return [account_snapshot(session, row) for row in rows]
 
 
-@app.delete("/api/accounts/{account_id}")
-def delete_account(account_id: str, user: User = Depends(csrf_guard), session: Session = Depends(get_db)):
-    from .personal_runtime import require_personal
-    require_personal(settings)
-    with quota_allocation(session, "accounts", "global"):
-        with quota_allocation(session, "accounts", user.id):
-            row = session.scalar(select(PaperAccount).where(PaperAccount.id == account_id, PaperAccount.user_id == user.id).with_for_update())
-            if row is None:
-                raise HTTPException(404, "계좌를 찾을 수 없습니다")
-            session.delete(row)
-            session.execute(delete(RuntimeHeartbeat).where(RuntimeHeartbeat.component == "paper-account:" + account_id))
-            session.commit()
-    return {"deleted": account_id}
 
 
 @app.get("/api/personal/operation")
@@ -1920,6 +1915,8 @@ def _personal_dashboard(user: User, session: Session) -> dict:
     accounts = session.scalars(select(PaperAccount).where(PaperAccount.user_id == user.id).order_by(PaperAccount.created_at)).all()
     required_symbols = set()
     universe_preparing = False
+    automatic_specs = []
+    selection_current = True
     for account in accounts:
         if account.status == "active":
             spec = StrategySpec.model_validate_json(account.strategy.spec_json)
@@ -1929,8 +1926,19 @@ def _personal_dashboard(user: User, session: Session) -> dict:
                 preparation = universe_status(settings, user.id, spec)
                 universe_preparing = universe_preparing or not preparation.get("ready")
                 required_symbols.update(preparation.get("candidates", []))
+            if spec.universe == "us_all":
+                automatic_specs.append(spec)
+                from .auto_universe import decision_for
+                try:
+                    required_symbols.update(decision_for(settings, spec, utcnow())["targets"])
+                except (ValueError, OSError):
+                    selection_current = False
             required_symbols.update(session.scalars(select(PaperPosition.ticker).where(PaperPosition.account_id == account.id)).all())
     data = personal_data_status(settings, symbols=sorted(required_symbols) if required_symbols else None)
+    from .auto_universe import status as auto_status
+    screening = auto_status(settings)
+    if automatic_specs and not selection_current:
+        data = {**data, "ready":False, "error":screening.get("message")}
     snapshots = [account_snapshot(session, row) for row in accounts]
     connection = session.get(MarketDataConnection, user.id)
     worker = _worker_payload(session, "paper-worker")
@@ -1947,6 +1955,10 @@ def _personal_dashboard(user: User, session: Session) -> dict:
     last_quote = max((row["observed_at"] for row in market), default=None)
     active = [row for row in accounts if row.status == "active"]
     open_now = regular_market_open()
+    feed_error = session.get(RuntimeHeartbeat, "member-feed:" + user.id)
+    if feed_error and (not connection or aware(feed_error.observed_at) < aware(connection.verified_at)
+                       or not dt.timedelta(0) <= now-aware(feed_error.observed_at) <= dt.timedelta(seconds=150)):
+        feed_error = None
     # Paper operation does not depend on the optional backtest queue worker.
     # Its actual heartbeat remains available separately in workers.backtest.
     if not worker["alive"] or not data_worker["alive"]:
@@ -1959,6 +1971,8 @@ def _personal_dashboard(user: User, session: Session) -> dict:
         state, message = "account_required", "전략을 저장하고 페이퍼 계좌를 만들어 활성화해 주세요."
     elif universe_preparing:
         state, message = "waiting_universe", "미국 전체 종목의 일봉과 전략 점수를 준비 중입니다. 완료되면 자동으로 운용합니다."
+    elif feed_error:
+        state, message = "quote_error", feed_error.detail
     elif not data.get("ready") or data.get("stale") or not data.get("action_ready", True):
         state, message = "waiting_data", "일봉 데이터를 준비 중입니다. 이전 기록은 유지되며 데이터가 준비되면 자동으로 재개합니다."
     elif not open_now:
@@ -1980,6 +1994,7 @@ def _personal_dashboard(user: User, session: Session) -> dict:
     return {
         "personal_local_mode": True, "local_demo_data": False,
         "operational": {"status": state, "message": message, "market_open": open_now, "last_quote_at": last_quote},
+        "automatic_universe": screening,
         "personal_data": {**data, "status": "ready" if data.get("ready") and not data.get("stale") else "waiting_data",
                           "message": data.get("error") or "선택 종목 일봉 자동 갱신", "last_completed_session": last,
                           "symbol_count": len(data.get("symbols", []))},

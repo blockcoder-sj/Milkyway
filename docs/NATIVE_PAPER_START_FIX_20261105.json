@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-05",
+  "branch": "codex/week10-python",
+  "baseline_commit": "1a353bb173fbf07a4a58eb1870f3489b83a5a249",
+  "trigger": "Yahoo daily response has completed history but an empty current-day Close; all selected symbols remain action-unverified.",
+  "fix": "For affected symbols only, confirm same-session action fields from regular-hours Yahoo five-minute bars at or before the request time. Preserve completed-only signal history and broker-only fill prices.",
+  "reproduction": {
+    "replayed_market_time_utc": "2026-11-04T16:04:00+00:00",
+    "yahoo_history": "Actual public Yahoo downloads through the real spawned history provider",
+    "baseline": {
+      "completed_history_symbols": 20,
+      "action_unverified_symbols": 20,
+      "selection": "blocked"
+    },
+    "fixed": {
+      "completed_history_symbols": 20,
+      "action_unverified_symbols": 0,
+      "selected_symbols": 8,
+      "paper_buy_fills": 8,
+      "member_quotes": 20,
+      "member_quote_errors": 0,
+      "remaining_cash_usd": 20000.0
+    },
+    "broker_quote_source": "Synthetic test fixture; not real Toss authentication or live member quotes.",
+    "real_broker_orders_sent": 0
+  },
+  "focused_tests": {
+    "run": 55,
+    "result": "passed"
+  },
+  "review": {
+    "scope": "Direct source review of this correctness fix; no CodeRabbit or security scan.",
+    "regular_session_and_timezone_checks": true,
+    "future_or_ambiguous_timestamps_rejected": true,
+    "conflicting_actions_remain_blocked": true,
+    "fallback_outage_preserves_completed_history": true,
+    "same_existing_history_process_deadline_seconds": 75,
+    "user_runtime_and_backups_modified": false,
+    "regular_session_bars_only": true
+  },
+  "limitations": [
+    "Replayed market time with public Yahoo data is not a live market-session operation test.",
+    "No real Toss credentials were used.",
+    "Native Windows execution was not repeated for this change."
+  ],
+  "full_unit_suite": {
+    "run": 805,
+    "result": "passed",
+    "seconds": 48.909
+  },
+  "regression_negative_control": {
+    "original_download_function": "fails the new current-daily-close recovery test as expected",
+    "patched_download_function": "passes"
+  },
+  "source_sha256": {
+    "cloud_app/personal_data.py": "dea3f181de6169e324233f5e1d17048f184a502f0d121a88ba2783b8cfbfd108",
+    "tests/test_personal_data.py": "83cd485a38ff5891a9fc55ed064f6cba6b5aa394faee1a611b48cebf9ce2d2d1"
+  }
+}

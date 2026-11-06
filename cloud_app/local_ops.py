@@ -6,7 +6,7 @@ from contextlib import contextmanager
 import datetime as dt
 import hashlib
 import getpass
-import fcntl
+from . import native_platform as fcntl
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -32,12 +32,8 @@ def _database(path, *, timeout=10):
         connection.close()
 
 
-def _sync_directory(path: Path) -> None:
-    descriptor = os.open(path, os.O_RDONLY)
-    try:
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
+def _sync_directory(path):
+    fcntl.sync_directory(path)
 
 
 def _integrity(path: Path) -> None:
@@ -112,6 +108,12 @@ def _create_backup_locked(runtime: Path, destination: Path) -> Path:
         for path in sorted(runtime.rglob("*")):
             relative = path.relative_to(runtime)
             if any(part.startswith(".restore-") for part in relative.parts) or relative.name == "RESTORE_IN_PROGRESS":
+                continue
+            # Screening files are rebuildable, atomically replaced caches.
+            # Research generations are immutable and published under refresh.lock.
+            if relative.parts[0] == "toss-auth":
+                continue  # Expiring encrypted OAuth cache does not belong in archives.
+            if relative.parts[0] == "auto-market" and (len(relative.parts) < 2 or relative.parts[1] != "backtests"):
                 continue
             if path.is_symlink():
                 raise RuntimeError("Runtime backup refuses symbolic links")
@@ -201,7 +203,7 @@ def restore_backup(archive: Path, runtime: Path, destination: Path, *, replace: 
         _sync_directory(runtime)
         # Older backups may predate all history/keys. Do not keep a newer
         # install's mutable pointers or signing/encryption roots in that case.
-        for name in ("personal-data/current.json", "personal-data/refresh-status.json", ".session_secret", ".market_credential_secret", ".ai_credential_secret"):
+        for name in ("personal-data/current.json", "personal-data/refresh-status.json", "auto-market/catalog.json", "auto-market/progress.json", "auto-market/decisions.json", "auto-market/status.json", "auto-market/backtests/current.json", ".session_secret", ".market_credential_secret", ".ai_credential_secret"):
             if name not in manifest["files"]:
                 (runtime / name).unlink(missing_ok=True)
         # The DB is replaced last. A failed restore is recoverable from `safety`.

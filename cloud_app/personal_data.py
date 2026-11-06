@@ -8,7 +8,7 @@ The current generation is immutable so a refresh cannot corrupt an active reader
 from __future__ import annotations
 
 import datetime as dt
-import fcntl
+from . import native_platform as fcntl
 import gzip
 import hashlib
 import json
@@ -25,7 +25,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 
-from market_calendar import get_market_close_time, is_trading_day
+from market_calendar import get_market_close_time, get_market_hours, is_trading_day
 from price_data_pipeline import (
     _atomic_price_frame, _extract_download, load_manifest_snapshot,
     price_file_path, read_price_frame, sha256_file, validate_price_frame,
@@ -37,7 +37,7 @@ from .local_demo import _atomic_json
 from .provider_process import ProviderProcess
 
 SYMBOL_PATTERN = re.compile(r"^(?=.{1,20}$)[A-Z][A-Z0-9]*(?:[.-][A-Z0-9]+)?$")
-MAX_PERSONAL_SYMBOLS = 100
+MAX_PERSONAL_SYMBOLS = 1000
 MAX_HISTORY_ROWS = 850
 MAX_PERSONAL_PRICE_BYTES = 512 * 1024
 HISTORY_DEADLINE_SECONDS = 75
@@ -196,6 +196,85 @@ def _raw_symbol_frame(raw, symbol, count):
     return raw if count == 1 else None
 
 
+def _merge_action_rows(existing, frame, action_day):
+    """Merge corroborating event values; conflicting provider data stays blocked."""
+    merged = {event["date"]: dict(event) for event in existing}
+    for timestamp, row in frame.iterrows():
+        stamp = pd.Timestamp(timestamp)
+        day = stamp.tz_convert(EASTERN).date() if stamp.tzinfo else stamp.date()
+        if day > action_day:
+            continue
+        try:
+            values = {"split_ratio": float(row["Stock Splits"]), "dividend": float(row["Dividends"])}
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if any(not np.isfinite(value) or value < 0 for value in values.values()):
+            return None
+        if not any(values.values()):
+            continue
+        event = merged.setdefault(day.isoformat(), {"date": day.isoformat(), "split_ratio": 0., "dividend": 0.})
+        for key, value in values.items():
+            if value and event[key] and not np.isclose(value, event[key], rtol=1e-8, atol=1e-10):
+                return None
+            if value:
+                event[key] = value
+    return [merged[key] for key in sorted(merged)]
+
+
+def _confirm_intraday_actions(yf, symbols, aliases, metadata, actions, action_day, as_of):
+    """A missing daily Close must not hide available same-session action data.
+
+    Intraday prices only attest to the session of the Yahoo action response.
+    They never enter signal history, brokerage quotes, or the fill ledger.
+    """
+    if not symbols or not as_of:
+        return
+    try:
+        observed = dt.datetime.fromisoformat(as_of)
+    except (TypeError, ValueError):
+        return
+    if observed.tzinfo is None:
+        return
+    eastern = observed.astimezone(EASTERN)
+    hours = get_market_hours(action_day)
+    if not hours or eastern.date() != action_day or eastern.time() < dt.time(hours[0], hours[1]):
+        return
+    opens = pd.Timestamp(dt.datetime.combine(action_day, dt.time(hours[0], hours[1]), EASTERN))
+    closes = pd.Timestamp(dt.datetime.combine(action_day, dt.time(hours[2], hours[3]), EASTERN))
+    try:
+        raw = yf.download(
+            [aliases[symbol] for symbol in symbols], start=action_day.isoformat(),
+            end=(action_day + dt.timedelta(days=1)).isoformat(), interval="5m",
+            auto_adjust=False, actions=True, progress=False, threads=4,
+            group_by="ticker", timeout=10, keepna=True, ignore_tz=False,
+        )
+    except Exception:
+        return  # Keep the existing daily generation and retry on the next refresh.
+    if raw is None or raw.empty:
+        return
+    for symbol in symbols:
+        frame = _raw_symbol_frame(raw, aliases[symbol], len(symbols))
+        if frame is None or not {"Close", "Dividends", "Stock Splits"}.issubset(frame.columns):
+            continue
+        try:
+            index = pd.DatetimeIndex(frame.index)
+        except (TypeError, ValueError):
+            continue
+        if index.tz is None:
+            continue  # Do not guess the trading day of an ambiguous timestamp.
+        eligible = (index >= opens) & (index < closes) & (index <= pd.Timestamp(observed))
+        today = frame.loc[eligible]
+        close = pd.to_numeric(today["Close"], errors="coerce")
+        if not ((close > 0) & np.isfinite(close)).any():
+            continue
+        events = _merge_action_rows(actions[symbol], today, action_day)
+        if events is None:
+            continue
+        actions[symbol] = events
+        metadata[symbol]["action_checked_on"] = action_day.isoformat()
+        metadata[symbol]["action_check_source"] = "yahoo_intraday_5m"
+
+
 def _download_history(payload, configuration):
     """Run entirely in ProviderProcess, which kills hangs at the wall deadline."""
     import yfinance as yf
@@ -250,6 +329,8 @@ def _download_history(payload, configuration):
             if split > 0 or dividend > 0:
                 events.append({"date": day.isoformat(), "split_ratio": split, "dividend": dividend})
         actions[symbol] = events
+    missing_actions = [symbol for symbol in metadata if metadata[symbol]["action_checked_on"] is None]
+    _confirm_intraday_actions(yf, missing_actions, aliases, metadata, actions, action_day, payload.get("as_of"))
     return {"prices": metadata, "corporate_actions": actions}
 
 
@@ -257,11 +338,7 @@ _history_process = ProviderProcess(_download_history)
 
 
 def _sync_directory(path):
-    descriptor = os.open(path, os.O_RDONLY)
-    try:
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
+    fcntl.sync_directory(path)
 
 
 def _csv_content_digest(path):
@@ -279,7 +356,7 @@ def _content_inventory(metadata):
             for symbol, item in metadata.items()}
 
 
-def refresh_personal_data(symbols, settings, now=None) -> dict:
+def refresh_personal_data(symbols, settings, now=None, *, retain_cached=True) -> dict:
     """Refresh selected history once per completed session and retain good data.
 
     Validation/provider failures are visible status, not deletion. A lock spans
@@ -303,8 +380,10 @@ def refresh_personal_data(symbols, settings, now=None) -> dict:
         except (OSError, ValueError):
             pass
         # Keep cached symbols for backtests and paused strategies when an active
-        # account worker asks for a subset. The global admission cap remains 100.
-        requested = normalize_symbols(sorted(set(requested) | set(old_manifest.get("prices", {}))))
+        # account worker asks for a subset. Automatic rotation can instead retain
+        # only the explicitly requested execution/action-monitoring universe.
+        if retain_cached:
+            requested = normalize_symbols(sorted(set(requested) | set(old_manifest.get("prices", {}))))
         status = personal_data_status(settings, symbols=requested, now=now)
         eastern_now = (now or dt.datetime.now(dt.timezone.utc)).astimezone(EASTERN)
         action_day = eastern_now.date().isoformat()
@@ -324,7 +403,8 @@ def refresh_personal_data(symbols, settings, now=None) -> dict:
                       if symbol not in status["fresh_symbols"] or symbol in status["missing_action_symbols"]]
             try:
                 outcome = _history_process.run(
-                    {"symbols": needed, "required_session": status["required_session"], "action_day": action_day},
+                    {"symbols": needed, "required_session": status["required_session"], "action_day": action_day,
+                     "as_of": eastern_now.isoformat()},
                     {"target": str(staging)}, deadline=time.monotonic() + HISTORY_DEADLINE_SECONDS,
                 )
             except (OSError, ValueError, TypeError, RuntimeError, TimeoutError):
@@ -335,6 +415,8 @@ def refresh_personal_data(symbols, settings, now=None) -> dict:
             metadata = outcome["prices"]
             actions = outcome.get("corporate_actions", {})
             for symbol, previous in old_manifest.get("prices", {}).items():
+                if symbol not in requested:
+                    continue
                 if symbol in metadata and metadata[symbol]["last_date"] >= previous["last_date"]:
                     continue
                 if symbol in status["invalid_symbols"]:

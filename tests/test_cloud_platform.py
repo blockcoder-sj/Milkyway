@@ -2016,7 +2016,7 @@ class TossQuoteClientTests(unittest.TestCase):
     def test_unregistered_server_ip_is_a_distinct_error(self):
         self.client.session.get.return_value = self.response(
             403,
-            {"error": {"code": "edge-blocked"}},
+            {"error": {"code": "ip-not-allowed"}},
         )
         with self.assertRaises(TossIpNotAllowedError):
             self.client.get_prices(["AAPL"])

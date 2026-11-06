@@ -213,23 +213,49 @@ function accountCards(rows) {
     const control = finished ? '<span class="status-pill">종료</span>' : ["review_required", "configuration_required"].includes(account.status)
       ? '<span class="status-pill warn">REVIEW</span>'
       : `<button class="ghost compact account-toggle" data-id="${escapeHtml(account.id)}" data-status="${account.status === "active" ? "paused" : "active"}">${account.status === "active" ? "정지" : "재개"}</button>`;
+    const selection = account.automatic_selection;
+    const coverage = selection ? `<p class="fineprint">전체 ${Number(selection.universe_count).toLocaleString()}종목 · 평가 가능 ${Number(selection.evaluated_count).toLocaleString()} · 제외 ${Object.values(selection.excluded || {}).reduce((a,b)=>a+Number(b),0).toLocaleString()} · ${selection.fresh ? "최신 탐색" : "탐색 갱신 대기"} ${shortTime(selection.created_at)} · 목표 ${Object.entries(selection.weights || {}).map(([ticker,weight])=>`${escapeHtml(ticker)} ${pct(weight * 100)}`).join(", ")}</p>` : "";
+    const deletion = typeof window !== "undefined" && window.MilkywayPersonal?.isPersonal()
+      ? `<button type="button" class="ghost compact account-delete" data-id="${escapeHtml(account.id)}">계좌 삭제</button>` : "";
     const positions = account.positions.map((position) => `<span class="chip">${escapeHtml(position.ticker)} ${pct(position.pnl_pct)}</span>`).join("") || `<span class="chip">${finished ? "보유 종목 없음" : "첫 리밸런싱 대기"}</span>`;
     const schedule = run ? `<p class="fineprint">${run.mode === "period" ? `${run.duration_days}일 운용` : `미국 거래일 ${escapeHtml(run.session_date)}`} · 자동 중지 ${escapeHtml(new Date(run.closes_at).toLocaleString("ko-KR"))}${run.summary ? `<br>체결 ${number(run.summary.fill_count, 0)}건 · 종료 시 마지막 확인 평가액 ${money(run.summary.last_known_equity)} (공식 종가 미확인)` : ""}</p>` : "";
-    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div><div class="account-actions">${control}<button class="ghost compact account-delete" data-id="${escapeHtml(account.id)}">계좌 삭제</button></div></div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div>${schedule}<p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button></div>`;
+    return `<div class="account"><div class="account-top"><div><h4>${escapeHtml(account.name)}</h4><span class="muted">${label}</span></div>${control}</div><div class="metric">${money(account.equity)}</div><div class="${account.return_pct >= 0 ? "positive-text" : "negative-text"}">${pct(account.return_pct)}</div><div class="positions">${positions}</div>${coverage}${schedule}<p class="fineprint">현금 ${money(account.cash)} · 최근 리밸런싱 ${escapeHtml(account.last_rebalanced_on || "대기")}<br>${escapeHtml(account.execution_detail || "평가액은 마지막 수신 가격 기준입니다.")}</p><button class="ghost compact account-history-open" data-id="${escapeHtml(account.id)}">체결·자산 기록 보기</button>${deletion}</div>`;
   }).join("");
   $$('.account-toggle').forEach((button) => button.addEventListener("click", () => toggleAccount(button.dataset.id, button.dataset.status)));
-  $$('.account-delete').forEach(button => button.addEventListener('click', () => deleteItem('accounts', button.dataset.id)));
   $$('.account-history-open').forEach((button) => button.addEventListener("click", () => openAccountHistory(button.dataset.id)));
+  $$('.account-delete').forEach((button) => button.addEventListener("click", () => deleteResource("account", button.dataset.id, button)));
 }
 
-async function deleteItem(kind, id) {
-  const account = kind === "accounts";
-  const row = state.dashboard?.[account ? "accounts" : "strategies"]?.find(item => item.id === id);
-  const detail = account ? "계좌 운용을 멈추고 잔고·보유 종목·체결·자산 기록을 삭제합니다. 필요한 기록은 먼저 CSV로 저장하세요." : "전략과 연결된 백테스트 기록을 삭제합니다. 이 전략의 페이퍼 계좌가 있으면 먼저 삭제해야 합니다.";
-  if (!window.confirm(`${row?.name || "선택한 항목"}\n${detail}\n삭제 후 되돌릴 수 없습니다. 삭제할까요?`)) return;
-  try { await api(`/api/${kind}/${encodeURIComponent(id)}`, {method:"DELETE"}); toast(account ? "페이퍼 계좌를 삭제했습니다" : "전략을 삭제했습니다"); await refresh(); }
-  catch (error) { toast(error.message, true); }
+async function deleteResource(kind, id, button) {
+  if (!window.MilkywayPersonal.isPersonal() || !["account", "strategy"].includes(kind)) return;
+  const account = kind === "account";
+  const resource = (account ? state.dashboard?.accounts : state.strategies)?.find(row => row.id === id);
+  if (!resource || button.disabled) return;
+  const message = account
+    ? `페이퍼 계좌 “${resource.name}”를 삭제할까요?\n보유·체결·자산 기록도 함께 영구 삭제됩니다. 실제 증권사 주문이나 계좌에는 영향을 주지 않습니다.`
+    : `전략 “${resource.name}”를 삭제할까요?\n전략과 연결된 백테스트 기록이 영구 삭제됩니다. 연구 대화는 유지됩니다. 연결된 페이퍼 계좌가 있으면 먼저 삭제해야 합니다.`;
+  if (!window.confirm(message)) return;
+  button.disabled = true;
+  let removed = false;
+  try {
+    await api(`/api/${account ? "accounts" : "strategies"}/${encodeURIComponent(id)}`, {method:"DELETE", body:JSON.stringify({confirm:true})});
+    removed = true;
+    // Finish any GET already in flight, then fetch a new post-delete snapshot.
+    // Otherwise refresh() could reuse an old snapshot and show the deleted row.
+    if (state.refreshPromise) { try { await state.refreshPromise; } catch {} }
+    if (account) {
+      const history = $("#accountHistoryDialog");
+      if (history.open && history.dataset.accountId === id) history.close();
+    }
+    state.backtestOffset = 0;
+    state.backtestPage = [];
+    await refresh();
+    toast(account ? "페이퍼 계좌와 기록을 삭제했습니다" : "전략과 연결된 백테스트 기록을 삭제했습니다");
+  } catch (error) {
+    toast(removed ? `삭제는 완료됐습니다. 목록을 새로고침해 주세요. ${error.message}` : error.message, true);
+  } finally { button.disabled = false; }
 }
+
 
 async function toggleAccount(id, status) {
   try {
@@ -242,6 +268,7 @@ async function toggleAccount(id, status) {
 async function openAccountHistory(id) {
   const account = state.dashboard.accounts.find((row) => row.id === id);
   const dialog = $("#accountHistoryDialog");
+  dialog.dataset.accountId = id;
   $("#accountHistoryTitle").textContent = `${account?.name || "계좌"} · 체결·자산 기록`;
   $("#accountHistoryBody").textContent = "최근 기록을 불러오고 있습니다…";
   if (!dialog.open) dialog.showModal();
@@ -261,7 +288,7 @@ async function openAccountHistory(id) {
 function dataFacts(data) {
   if (window.MilkywayPersonal.isPersonal()) {
     const personal = state.dashboard.personal_data || {};
-    const wholeMarket = state.strategies.some(row => row.spec?.universe === "us_market");
+    const wholeMarket = state.strategies.some(row => ["us_market", "us_all"].includes(row.spec?.universe));
     $("#dataFacts").innerHTML = `<dt>선정 범위</dt><dd>${wholeMarket ? "전략별 미국 전체 자동 선별 또는 선택 종목" : "내 전략에 입력한 종목"}</dd><dt>일봉 출처</dt><dd>${wholeMarket ? "전체 시장: 토스 · 기업행사 확인: Yahoo" : "Yahoo · 자동 준비·갱신"}</dd><dt>준비 상태</dt><dd>${escapeHtml(personal.message || personal.status || "전략 저장 후 준비")}</dd><dt>완료 세션</dt><dd>${escapeHtml(personal.last_completed_session || data.last_completed_session || "준비 중")}</dd><dt>성과 판정</dt><dd>탐색용 · 생존편향 있음</dd>`;
     return;
   }
@@ -288,13 +315,13 @@ function renderStrategies() {
   element.innerHTML = state.strategies.map((strategy) => `
     <div class="strategy">
       <div class="strategy-head"><div><h4>${escapeHtml(strategy.name)}</h4><p>${escapeHtml(strategy.description)}</p></div></div>
-      <p>${escapeHtml((strategy.spec.symbols || []).join(", "))}</p><div class="factor-row">${strategy.spec.factors.map((factor) => `<span class="badge">${escapeHtml(factor.kind)} ${Number(factor.lookback)}d × ${Number(factor.weight)}</span>`).join("")}<span class="badge amber">${Number(strategy.spec.portfolio.max_positions)}종목 · ${Number(strategy.spec.portfolio.rebalance_days)}일</span></div>
+      <p>${strategy.spec.universe === "us_all" ? "미국 상장주식 전체 · 최신 시세로 자동 선정·배분" : escapeHtml((strategy.spec.symbols || []).join(", "))}</p><div class="factor-row">${strategy.spec.factors.map((factor) => `<span class="badge">${escapeHtml(factor.kind)} ${Number(factor.lookback)}d × ${Number(factor.weight)}</span>`).join("")}<span class="badge amber">${Number(strategy.spec.portfolio.max_positions)}종목 · ${Number(strategy.spec.portfolio.rebalance_days)}일</span></div>
       <details class="code-preview"><summary>저장된 전략 규격 보기</summary><pre>${escapeHtml(strategy.code_preview)}</pre></details>
-      <div class="strategy-actions"><button class="ghost run-backtest" data-id="${escapeHtml(strategy.id)}">백테스트</button><button class="ghost new-account" data-id="${escapeHtml(strategy.id)}">페이퍼 계좌</button><button class="ghost strategy-delete" data-id="${escapeHtml(strategy.id)}">전략 삭제</button></div>
+      <div class="strategy-actions"><button class="ghost run-backtest" data-id="${escapeHtml(strategy.id)}">백테스트</button><button class="ghost new-account" data-id="${escapeHtml(strategy.id)}">페이퍼 계좌</button>${window.MilkywayPersonal.isPersonal() ? `<button type="button" class="ghost strategy-delete" data-id="${escapeHtml(strategy.id)}">전략 삭제</button>` : ""}</div>
     </div>`).join("");
   $$('.run-backtest').forEach((button) => button.addEventListener("click", () => openBacktest(button.dataset.id)));
-  $$('.strategy-delete').forEach(button => button.addEventListener('click', () => deleteItem('strategies', button.dataset.id)));
   $$('.new-account').forEach((button) => button.addEventListener("click", () => openAccount(button.dataset.id)));
+  $$('.strategy-delete').forEach((button) => button.addEventListener("click", () => deleteResource("strategy", button.dataset.id, button)));
 }
 
 function chartGeometry(points, width = 620, height = 200) {

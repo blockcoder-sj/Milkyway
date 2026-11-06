@@ -115,17 +115,7 @@ class TossDisplay:
         self.indices = {}
 
     def request(self, path, params):
-        with self.auth_lock:
-            headers = self.client._headers()
-        response = self.client.session.get(self.client.base_url + path, params=params,
-            headers=headers, stream=True, timeout=(3, 5))
-        try:
-            self.client._raise_for_status(response)
-            result = read_requests_json(response, maximum_bytes=64 * 1024)
-            self.client._raise_for_status(response, result)
-            return result
-        finally:
-            response.close()
+        return self.client.get_json(path, params, maximum_bytes=64 * 1024)
 
     def snapshot(self):
         rows = dict(self.indices)

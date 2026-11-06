@@ -36,6 +36,9 @@ def adjust_version(services, db, user, session_id, strategy_id, body):
         values.update(portfolio=body.portfolio.model_dump(mode="json"),
                       filters=body.filters.model_dump(mode="json"),
                       factors=[factor.model_dump(mode="json") for factor in body.factors])
+        if body.universe is not None:
+            values["universe"] = body.universe
+            values["symbols"] = [] if body.universe in {"us_market", "us_all"} else (body.symbols if body.symbols is not None else original.symbols)
         try:
             spec = StrategySpec.model_validate(values)
         except ValueError:
@@ -47,7 +50,7 @@ def adjust_version(services, db, user, session_id, strategy_id, body):
         p = spec.portfolio
         stop = "손절 미사용" if p.stop_loss_pct is None else f"평균 매입단가 대비 {abs(p.stop_loss_pct)*100:g}% 손절"
         spec.description = (
-            f"직접 조정한 전략: {', '.join(spec.symbols[:6])}{' 등' if len(spec.symbols)>6 else ''} 중 최대 {p.max_positions}종목. "
+            f"직접 조정한 전략: {'미국 상장주식 전체' if spec.universe in {'us_market', 'us_all'} else ', '.join(spec.symbols[:6])}{' 등' if len(spec.symbols)>6 else ''} 중 최대 {p.max_positions}종목. "
             f"총 투자 {p.investment_fraction*100:g}%, 종목당 상한 {p.max_position_fraction*100:g}%, "
             f"{p.rebalance_days}달력일마다 재평가. {stop}, 편도 비용 {p.cost_per_side*100:g}%. "
             "신호·필터와 세부 규칙은 저장 규격을 확인하세요. 성과는 별도 검증이 필요합니다."

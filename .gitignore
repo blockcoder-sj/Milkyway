@@ -28,3 +28,6 @@ __pycache__/
 .vscode/
 .codex/
 .claude/
+
+# Native classroom installer lock
+.setup.lock

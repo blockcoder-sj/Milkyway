@@ -94,6 +94,64 @@ class PersonalPaperTests(unittest.TestCase):
         with patch('cloud_app.paper.get_dataset_bundle', side_effect=AssertionError('no fallback')):
             self.assertEqual(paper.make_quote_provider(self.settings).fetch(['AAA']), [])
 
+    def test_rebalance_interval_preserves_calendar_days_across_weekends_and_holidays(self):
+        self.spec.portfolio.rebalance_days = 3
+        for previous, before, due in [
+            (dt.date(2026, 11, 5), dt.date(2026, 11, 6), dt.date(2026, 11, 9)),
+            (dt.date(2026, 11, 25), dt.date(2026, 11, 27), dt.date(2026, 11, 30)),
+        ]:
+            with self.subTest(previous=previous), self.sessions() as session:
+                session.get(Strategy, self.strategy).spec_json = self.spec.model_dump_json()
+                account = session.get(PaperAccount, self.account)
+                account.last_rebalanced_on = previous
+                session.commit()
+                self.clock = dt.datetime.combine(before, dt.time(15), dt.timezone.utc)
+                self.quotes(session); session.commit()
+                with patch('cloud_app.paper.get_dataset_bundle', side_effect=self.bundle), \
+                     patch('cloud_app.paper.latest_candidates', return_value=['AAA']):
+                    paper.rebalance_due_accounts(session)
+                    self.assertEqual(account.last_rebalanced_on, previous)
+                    self.clock = dt.datetime.combine(due, dt.time(15), dt.timezone.utc)
+                    self.quotes(session); session.commit()
+                    paper.rebalance_due_accounts(session)
+                    self.assertEqual(account.last_rebalanced_on, due)
+
+    def test_quote_io_crossing_market_close_cannot_trigger_a_stop(self):
+        self.spec.portfolio.stop_loss_pct = -.05
+        with self.sessions() as session:
+            session.get(Strategy, self.strategy).spec_json = self.spec.model_dump_json()
+            account = session.get(PaperAccount, self.account)
+            paper._fill(session, account, 'AAA', 'BUY', 10, 100, 0, 'rebalance', 'before-close')
+            account.last_rebalanced_on = self.clock.date()
+            session.commit()
+        self.clock = dt.datetime(2026, 11, 2, 20, 59, 59, tzinfo=dt.timezone.utc)
+
+        def collect(session, settings):
+            count = self.quotes(session, names=('AAA',), offset=-20)
+            self.clock += dt.timedelta(seconds=2)
+            return count, 0
+
+        with patch('cloud_app.worker.collect_member_quotes', side_effect=collect), \
+             patch('cloud_app.worker.apply_personal_corporate_actions', return_value=0), \
+             patch('cloud_app.worker.apply_terminal_events', return_value={'settled': 0, 'review_accounts': 0}):
+            worker.run_paper_tick(paper.MemberOnlyQuoteProvider(), self.settings)
+        with self.sessions() as session:
+            self.assertEqual(len(session.scalars(select(PaperFill)).all()), 1)
+            self.assertEqual(session.scalar(select(PaperPosition)).shares, 10)
+
+    def test_continuous_account_fill_guard_rejects_exact_market_close(self):
+        with self.sessions() as session:
+            account = session.get(PaperAccount, self.account)
+            self.assertTrue(paper._fill(session, account, 'AAA', 'BUY', 10, 100, 0, 'rebalance', 'open-fill'))
+            self.assertEqual(paper._as_utc(session.scalar(select(PaperFill)).executed_at), self.clock)
+            for day, hour in [(dt.date(2026, 10, 2), 20), (dt.date(2026, 11, 2), 21),
+                              (dt.date(2026, 11, 27), 18)]:
+                self.clock = dt.datetime.combine(day, dt.time(hour), dt.timezone.utc)
+                self.assertTrue(paper.regular_market_open(self.clock - dt.timedelta(seconds=1)))
+                self.assertFalse(paper._fill(session, account, 'AAA', 'SELL', 10, 80, 0,
+                                             'stop_loss', 'closed-fill:' + str(day)))
+                self.assertEqual(len(session.scalars(select(PaperFill)).all()), 1)
+
     def test_quote_validation_rejects_nonfinite_future_and_stale(self):
         with self.sessions() as session:
             invalid = [paper.QuoteValue('BAD', value,0,0,1,'kis_member',self.clock) for value in [math.nan,math.inf,-1]]

@@ -17,7 +17,7 @@ from sqlalchemy import func, select
 from .bounded_io import read_bounded_file
 from .database import BacktestJob, EquityPoint, PaperAccount, PaperFill, Strategy, quota_allocation, utcnow
 from .research_models import ResearchDeployment, ResearchExperiment, ResearchRun
-from .strategies import StrategySpec, get_dataset_bundle, run_strategy_backtest
+from .strategies import StrategySpec, get_dataset_bundle, run_strategy_backtest, validate_auto_backtest_history
 
 
 class ExperimentBody(BaseModel):
@@ -50,6 +50,12 @@ def experiment_payload(db, experiment):
             "job_id": job.id, "status": state, "metrics": result.get("metrics") if consistent else None,
             "error": job.error if consistent else "비교 데이터 지문이 달라 결과를 사용할 수 없습니다"}
     status = "failed" if "failed" in states else "completed" if states and all(s == "completed" for s in states) else "running"
+    missing_strategy = db.scalar(select(ResearchRun.job_id).where(
+        ResearchRun.experiment_id == experiment.id,
+        ~ResearchRun.strategy_id.in_(select(Strategy.id)),
+    ).limit(1))
+    if missing_strategy:
+        status = "invalidated"
     ranked = []
     if status == "completed":
         for candidate in candidates.values():
@@ -61,7 +67,7 @@ def experiment_payload(db, experiment):
             "start_date": str(experiment.start_date), "split_date": str(experiment.split_date), "end_date": str(experiment.end_date),
             "dataset_fingerprint": experiment.fingerprint, "candidates": list(candidates.values()),
             "development_leader": max(ranked)[1] if ranked else None,
-            "caveat": "개발 구간 기준 후보 순위입니다. 검증 구간은 별도 초기자금으로 실행합니다. 반복해서 본 검증 결과는 최종 미사용 데이터가 아닙니다."}
+            "caveat": "삭제된 전략이 포함되어 이 비교를 사용할 수 없습니다. 남은 버전으로 새 비교를 실행하세요." if missing_strategy else "개발 구간 기준 후보 순위입니다. 검증 구간은 별도 초기자금으로 실행합니다. 반복해서 본 검증 결과는 최종 미사용 데이터가 아닙니다."}
 
 
 def enqueue_experiment(db, user, room, body, settings, allowed_ids):
@@ -100,9 +106,14 @@ def enqueue_experiment(db, user, room, body, settings, allowed_ids):
             if specs[0].universe == "us_market":
                 from .us_universe import dataset_settings
                 bundle = get_dataset_bundle(dataset_settings(settings, user.id))
+            elif specs[0].universe == "us_all":
+                from .auto_universe import backtest_settings, prepare_backtest_generation
+                prepare_backtest_generation(settings)
+                bundle = get_dataset_bundle(backtest_settings(settings))
             else:
                 bundle = get_dataset_bundle(settings)
             for spec in specs:
+                validate_auto_backtest_history(spec, bundle, body.start_date.isoformat())
                 needed = max(spec.filters.history_days, *(factor.lookback + 1 for factor in spec.factors))
                 for symbol in spec.symbols:
                     frame = bundle.data.get(symbol)
@@ -138,6 +149,9 @@ def run_pinned_backtest(spec, arguments, experiment, settings):
     # Generation names are server-produced; never accept arbitrary paths from a request.
     if not re.fullmatch(r"[0-9a-f]{32}", experiment.generation):
         raise ValueError("invalid research generation")
+    if spec.universe == "us_all":
+        from .auto_universe import backtest_settings
+        settings = backtest_settings(settings)
     root = settings.dataset_dir / "generations"
     generation = root / experiment.generation
     if generation.is_symlink() or generation.resolve().parent != root.resolve():

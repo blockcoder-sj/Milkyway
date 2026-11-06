@@ -85,9 +85,8 @@ _personal_quote_client = None
 def _personal_quote_execute(payload, configuration):
     """Runs only in the killable child, retaining OAuth between polls."""
     global _personal_quote_client
-    from fastapi import HTTPException
     import requests
-    from .toss_quotes import TossAuthenticationError, TossIpNotAllowedError, TossRateLimitError
+    from .toss_quotes import TossOpenApiError, provider_error_text, TossIpNotAllowedError, TossAuthenticationError, TossRateLimitError
     try:
         if _personal_quote_client is None:
             if configuration["provider"] == "kis":
@@ -100,14 +99,16 @@ def _personal_quote_execute(payload, configuration):
         # The parent hard deadline also bounds slow response bodies and socket stalls.
         return [{**value.__dict__, "observed_at": value.observed_at.isoformat()}
                 for value in _personal_quote_client.fetch(payload["tickers"])]
-    except TossIpNotAllowedError as exc:
-        raise HTTPException(403, "quote_ip_not_allowed") from exc
-    except TossAuthenticationError as exc:
-        raise HTTPException(401, "quote_authentication_failed") from exc
-    except TossRateLimitError as exc:
-        raise HTTPException(429, "quote_rate_limited") from exc
-    except requests.RequestException as exc:
-        raise HTTPException(503, "quote_network_unavailable") from exc
+    except TossOpenApiError as exc:
+        from fastapi import HTTPException
+        if isinstance(exc, TossIpNotAllowedError): raise HTTPException(403, "quote_ip_not_allowed") from None
+        if isinstance(exc, TossAuthenticationError): raise HTTPException(401, "quote_authentication_failed") from None
+        if isinstance(exc, TossRateLimitError): raise HTTPException(429, "quote_rate_limited") from None
+        raise HTTPException(503, "TOSS: " + provider_error_text(exc)) from None
+    except requests.RequestException:
+        from fastapi import HTTPException
+        raise HTTPException(503, "quote_network_unavailable") from None
+
 
 
 class PersonalQuoteProvider(QuoteProvider):
@@ -138,26 +139,45 @@ def _discard_member_provider(user_id):
 
 
 
-class PaperTickDeadlineExceeded(RuntimeError):
-    """The complete quote and ledger tick exceeded its liveness budget."""
+class PaperTickDeadlineExceeded(BaseException):
+    """Abort the tick even through libraries' ordinary Exception recovery paths."""
 
 
 @contextmanager
 def _paper_tick_deadline(seconds: float):
     """Hard-bound the whole production paper tick on the Unix worker."""
 
+    if os.name == "nt" and get_settings().personal_local_mode:
+        from .native_platform import windows_deadline
+        with windows_deadline(seconds):
+            yield
+        return
     if not hasattr(signal, "setitimer") or threading.current_thread() is not threading.main_thread():
         raise RuntimeError("paper tick deadlines require the main Unix worker thread")
     previous_handler = signal.getsignal(signal.SIGALRM)
+
+    def force_exit():
+        # A stuck executor's __exit__ can wait before our exception handler is
+        # reached. The supervisor replaces this process; SQLite rolls back its
+        # uncommitted transaction on exit, including when graceful unwind hangs.
+        try:
+            os.write(2, b"Paper tick watchdog exceeded; supervisor will restart.\n")
+        finally:
+            os._exit(124)
+
+    watchdog = threading.Timer(max(0.001, float(seconds)) + 1.0, force_exit)
+    watchdog.daemon = True
 
     def expired(_signum, _frame):
         raise PaperTickDeadlineExceeded("paper tick deadline was exceeded")
 
     signal.signal(signal.SIGALRM, expired)
-    signal.setitimer(signal.ITIMER_REAL, max(0.001, float(seconds)))
     try:
+        watchdog.start()
+        signal.setitimer(signal.ITIMER_REAL, max(0.001, float(seconds)))
         yield
     finally:
+        watchdog.cancel()
         signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, previous_handler)
 
@@ -385,6 +405,11 @@ def _prune_backtest_results(session, user_id: str, settings) -> None:
 def _backtest_deadline(seconds: int):
     """Interrupt CPU-bound work in the worker main thread on POSIX."""
 
+    if os.name == "nt" and get_settings().personal_local_mode:
+        from .native_platform import windows_deadline
+        with windows_deadline(seconds):
+            yield
+        return
     if threading.current_thread() is not threading.main_thread() or not hasattr(
         signal, "setitimer"
     ):
@@ -479,7 +504,11 @@ def process_one_backtest() -> bool:
             else:
                 if getattr(runtime_settings, "personal_local_mode", False):
                     from .personal_data import refresh_personal_data
-                    refresh_personal_data(spec.symbols, runtime_settings)
+                    if spec.universe == "us_all":
+                        from .auto_universe import prepare_backtest_generation
+                        prepare_backtest_generation(runtime_settings)
+                    else:
+                        refresh_personal_data(spec.symbols, runtime_settings)
                 result = run_strategy_backtest(spec, **arguments)
         encoded_result = json.dumps(
             result, ensure_ascii=False, default=str, separators=(",", ":")
@@ -670,6 +699,7 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
     fetched_quotes: list[tuple[MemberFeedConfig, str, list]] = []
     failed_users: set[str] = set()
     failure_reasons: dict[str, str] = {}
+    failure_details = {}
     last_progress = time.monotonic()
     with ThreadPoolExecutor(max_workers=min(_MEMBER_QUOTE_WORKERS, len(tasks))) as executor:
         futures = {
@@ -689,7 +719,11 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
                 failed_users.add(user_id)
                 known = {"quote_ip_not_allowed", "quote_authentication_failed", "quote_rate_limited", "quote_network_unavailable"}
                 detail = getattr(exc, "detail", "")
-                failure_reasons[user_id] = detail if isinstance(detail, str) and detail in known else "quote_timeout" if isinstance(exc, TimeoutError) else "quote_provider_unavailable"
+                mapped = {403:"quote_ip_not_allowed",401:"quote_authentication_failed",429:"quote_rate_limited"}
+                failure_reasons[user_id] = detail if isinstance(detail, str) and detail in known else mapped.get(getattr(exc, "status_code", None), "quote_timeout" if isinstance(exc, TimeoutError) else "quote_provider_unavailable")
+                from .provider_process import ProviderOperationError
+                if isinstance(exc, ProviderOperationError) and isinstance(exc.detail, str) and exc.detail.startswith("TOSS: "):
+                    failure_details[user_id] = exc.detail[6:]
                 if getattr(settings, "personal_local_mode", False):
                     # Invalidate attempted symbols on failure. Unrequested
                     # symbols retain their explicitly age-bounded cached marks.
@@ -726,6 +760,12 @@ def collect_member_quotes(session, settings) -> tuple[int, int]:
                 "state": failure_reasons.get(user_id, "connected" if values else "no_quotes"),
                 "received": len(values), "requested": len(attempted_symbols[user_id]),
             }, ensure_ascii=False))
+        if getattr(settings, "personal_local_mode", False):
+            component = "member-feed:" + user_id
+            if user_id in failure_details:
+                heartbeat(session, component, failure_details[user_id])
+            elif user_id not in failed_users:
+                session.execute(delete(RuntimeHeartbeat).where(RuntimeHeartbeat.component == component))
         quote_count += store_member_quotes(session, user_id, values)
         # Hold the connection-row lock through this write/transaction so a
         # concurrent replace/delete purges these rows after we commit.
@@ -787,9 +827,12 @@ def run_paper_tick(provider, settings=None) -> None:
                 session.flush()
                 # Keep the next-open contract aligned with backtest_core: rebalance
                 # first, then apply the intraday stop to post-rebalance holdings.
-                guard_personal_price_discontinuities(session, settings)
-                rebalance_count = rebalance_due_accounts(session)
-                stop_count = mark_and_stop_accounts(session)
+                # Provider I/O can cross the close. Preserve collected quotes,
+                # but evaluate no trading orders after the regular session ends.
+                if regular_market_open():
+                    guard_personal_price_discontinuities(session, settings)
+                    rebalance_count = rebalance_due_accounts(session)
+                    stop_count = mark_and_stop_accounts(session)
             heartbeat(
                 session,
                 "paper-worker",
@@ -880,7 +923,7 @@ def _apply_authorized_paper_work(settings, work):
         _finish_authorized_paper_work(settings, work)
 
 
-def refresh_personal_history(settings) -> None:
+def refresh_personal_history(settings) -> bool | None:
     """History networking is isolated from the quote/stop worker and DB locks."""
     from .personal_data import refresh_personal_data
     session = SessionLocal()
@@ -889,6 +932,7 @@ def refresh_personal_history(settings) -> None:
             session.rollback()
             return
         symbols = set()
+        automatic = []
         invalid = 0
         for strategy in session.scalars(select(Strategy)).all():
             try:
@@ -896,6 +940,8 @@ def refresh_personal_history(settings) -> None:
                 if spec.universe == "us_market":
                     from .us_universe import status as universe_status
                     symbols.update(universe_status(settings, strategy.user_id, spec).get("candidates", []))
+                elif spec.universe == "us_all":
+                    automatic.append(spec)
                 else:
                     symbols.update(spec.symbols)
             except ValueError:
@@ -904,15 +950,35 @@ def refresh_personal_history(settings) -> None:
         symbols.update(collect_holding_watchlist_ordered(session))
         heartbeat(session, "personal-data", "refreshing {} symbols".format(len(symbols)))
         session.commit()
+        busy = False
+        if automatic:
+            from . import auto_universe
+            connection = session.scalar(select(MarketDataConnection).where(MarketDataConnection.provider == "toss"))
+            configuration = None
+            if connection:
+                provider = _member_provider(_member_feed_config(connection), settings)
+                configuration = dict(provider.configuration)
+            session.commit()
+            if configuration:
+                busy, selected = auto_universe.refresh(settings, automatic, configuration)
+                symbols.update(selected)
+                heartbeat(session, "personal-data", auto_universe.status(settings).get("message", "전체 종목 탐색 중"))
+                session.commit()
+            else:
+                auto_universe._atomic_json(auto_universe.root_for(settings) / "status.json",
+                    {"status":"connection_required", "message":"전체 미국 자동 탐색을 위해 토스 시세를 연결하세요"})
         if symbols:
-            status = refresh_personal_data(sorted(symbols), settings)
+            status = refresh_personal_data(sorted(symbols), settings, retain_cached=not automatic)
             detail = "ready={} latest={} missing={} stale={} invalid_strategies={}".format(
                 status.get("ready", False), status.get("latest_session", ""),
                 len(status.get("missing_symbols", [])), len(status.get("stale_symbols", [])), invalid)
         else:
             detail = "waiting for a saved strategy"
+        if automatic:
+            detail = auto_universe.status(settings).get("message", detail)
         heartbeat(session, "personal-data", detail)
         session.commit()
+        return busy
     except Exception as exc:
         session.rollback()
         logger.exception("personal history refresh failed")
@@ -944,8 +1010,8 @@ def main() -> int:
         broker_preflight(settings, "paper" if role == "all" else role)
     if role == "personal-data":
         while True:
-            refresh_personal_history(settings)
-            time.sleep(60.0)
+            busy = refresh_personal_history(settings)
+            time.sleep(1.0 if busy else 60.0)
     provider = None
     if role in {"all", "paper"}:
         provider = (

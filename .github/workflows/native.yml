@@ -1,0 +1,43 @@
+name: Native Milkyway
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: '1'
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.14'
+      - name: Install and verify native startup, restart and backup
+        shell: bash
+        run: |
+          python -m compileall -q run_milkyway.py cloud_app tests/run_classroom_smoke.py
+          python tests/run_classroom_smoke.py
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            qlab_python=.venv/Scripts/python.exe
+          else
+            qlab_python=.venv/bin/python
+          fi
+          APP_ENV=development "$qlab_python" -m unittest tests.test_research_env tests.test_native_update
+          APP_ENV=development "$qlab_python" -m unittest tests.test_toss_coordination tests.test_personal_continuous tests.test_personal_resources tests.test_auto_universe tests.test_auto_universe_cold tests.test_personal_frontend tests.test_personal_runtime_frontend tests.test_research tests.test_research_boundaries
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            APP_ENV=development "$qlab_python" -m unittest tests.test_personal_data tests.test_personal_paper tests.test_personal_api tests.test_paper_sessions tests.test_local_ops tests.test_personal_runtime tests.test_personal_management tests.test_starter_distribution tests.test_us_universe tests.test_toss_token_cache tests.test_provider_process
+          fi

@@ -141,3 +141,6 @@ dialog{width:min(470px,calc(100% - 32px));border:1px solid var(--line-strong);bo
 
 .personal-mode .futures-strip .market-card[data-market-card]{align-items:stretch}.personal-mode .futures-strip .market-card[data-market-card] .market-card-top{justify-content:space-between;display:flex}.personal-mode .futures-strip .market-card[data-market-card] .market-price-line{justify-content:space-between}
 .company-list-tools select{width:min(320px,100%);min-width:0}.company-list-tools input,.company-list-tools select{margin:0;min-height:44px}.company-list-tools span{margin-left:auto}
+
+/* Personal strategy creation lives in the approved research conversation. */
+.personal-mode #strategyBuilder{display:none}.personal-mode #strategyLab{grid-template-columns:1fr}

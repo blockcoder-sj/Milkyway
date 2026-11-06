@@ -1,0 +1,100 @@
+{
+  "date": "2026-11-05",
+  "branch": "codex/week10-python",
+  "request": "Select stocks and portfolio weights at decision time from all US-listed equities without preselecting tickers",
+  "implementation": [
+    "New default US-wide automatic mode in manual builder and approved AI output; legacy stored lists remain explicit",
+    "Existing research versions can convert to the full market through direct adjustment without an AI call",
+    "Daily official Nasdaq directory; common equities/ADRs/REITs, class shares supported; no top-20/top-500 screening shortlist",
+    "Correct word-boundary filtering so United/Unity names and ordinary ADRs are not mistaken for units or preferred depositary shares",
+    "Adjusted Toss daily candles first, bounded inclusive pagination with duplicate/conflict/cursor checks; Yahoo history fallback",
+    "Persistent 20-symbol preparation batches; one complete directory pass before a decision; visible history/quote/filter exclusions",
+    "Live price factors and price filter use fresh Toss prices; volume factors use completed-session volume; equal target allocation follows exposure and per-position cap",
+    "One streaming history pass for all saved strategies in a killable process; independent execution/stop worker fetches only holdings and selected targets",
+    "Reject stale/future prices, stale or differently scoped decisions, and incomplete sweeps; persistent cooldown honors bounded Retry-After",
+    "Corporate-action guards retained; actual fill prices re-fetched from the personal brokerage feed",
+    "Immutable full-universe exploratory backtest generations and research pins; no selected-today-only historical proxy; warmup validation",
+    "Rebuildable screening caches excluded from backups; research inputs preserved under the existing publication lock; stale decisions not restored",
+    "Frontend asset versions updated to load the new controls after an update"
+  ],
+  "verification": {
+    "full_suite": {
+      "tests": 829,
+      "seconds": 46.796,
+      "result": "passed"
+    },
+    "continuous_soak": {
+      "checks": [
+        "first fills, repeated-tick idempotency and OAuth/process reuse",
+        "one stop per holding despite repeated polls",
+        "429 backoff, cached-quote invalidation, no fabricated fills/equity and recovery",
+        "expired-token refresh without losing the provider process",
+        "stale, future and partial quotes cannot trigger stops or complete equity marks",
+        "date-limited session expiry retains balances without a fabricated closing sale",
+        "seven trading sessions, closed weekends, persistent restart and calendar-day rebalancing",
+        "1000 repeated HTTP/provider/SQLite ticks without duplicate fills or provider proliferation",
+        "quote I/O crossing the market close creates no late stop",
+        "backup and restore retain accounts, positions, fills, valuations and encrypted synthetic credentials"
+      ],
+      "replayed_trading_sessions": 7,
+      "repeated_ticks": 1000,
+      "quote_http_requests": 1019,
+      "authentication_http_requests": 4,
+      "final_fills": 10,
+      "parent_threads_before": 3,
+      "parent_threads_after": 3,
+      "parent_fds_before": 12,
+      "parent_fds_after": 12,
+      "seconds": 10.873,
+      "real_broker_credentials_used": false,
+      "real_external_provider_calls": 0,
+      "accelerated_time": true
+    },
+    "selection_performance": {
+      "symbols": 6500,
+      "strategies": 10,
+      "factors_per_strategy": 5,
+      "history_rows_per_symbol": 320,
+      "seconds": 18.782,
+      "peak_rss_bytes": 135020544,
+      "selected_per_strategy": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "external_calls": 0
+    },
+    "integration": "Real local HTTP server, actual spawned Toss adapters, actual data-worker orchestration, SQLite ledger, selection changes without a rule edit, scheduled expiry, stale decisions, cash/weight cap, backup and restore; external data and credentials synthetic",
+    "ai": "HTTP MockTransport and approved-research route fixtures only; zero real AI calls",
+    "ui": "Executable Node form submission, approval flow, conversion/adjustment rules and escaping; no live browser claim",
+    "public_source": "Official Nasdaq directory HTTP retrieval and class-share presence verified; not broker authentication",
+    "review": {
+      "functionality": "Direct source review, full regression suite, full-market selector and actual worker/ledger integration",
+      "performance": "6500 securities x 10 strategies x 5 factors x 320 history rows; streaming calculation 18.782s and peak RSS 135020544 bytes in the isolated process; excludes external HTTP and disk-history I/O",
+      "code_quality": "Validated declarative strategy JSON, legacy defaults retained, bounded child networking, deterministic ticker ties, no generated code execution; git diff --check passed",
+      "security": "Changed local-workstation paths reviewed directly; fixed public/provider URLs, bounded files/HTTP/IPC, no arbitrary endpoint input, no actual credential/AI/order use; not a whole-repository security scan"
+    }
+  },
+  "limits": [
+    "No real Toss credentials were present; real broker authentication, production candle session labeling, live full-market coverage and days of uninterrupted live operation are not verified",
+    "Accelerated sessions and synthetic full-market performance are not real-time multi-day brokerage evidence",
+    "Supported strategies use the six implemented price/volume factors; news, financial statements and arbitrary intraday strategies are not implemented",
+    "New rebalances use the existing open+5 minute to close-15 minute window and calendar-day intervals",
+    "Freshness bound is 180 seconds; missing or unsupported securities are visibly excluded and retried; primary directory must be available",
+    "Selected/held corporate-action verification still depends on Yahoo; it is not optional in every execution path",
+    "Historical cache is 320 recent sessions; current-listing exploratory tests have survivorship bias and use prior-close/next-open execution",
+    "All-market initial preparation takes provider-dependent time; app and PC must remain running",
+    "Shared/public deployment, actual brokerage orders and OCI validation are outside this local exercise"
+  ],
+  "primary_references": [
+    "https://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs",
+    "https://openapi.tossinvest.com/openapi-docs/latest/openapi.json"
+  ]
+}

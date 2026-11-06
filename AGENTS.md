@@ -85,3 +85,10 @@
   browser tab and run expensive verification jobs one at a time. Remove disposable
   verification containers after preserving their evidence; preserve personal
   runtime and backup volumes and the user's other apps/tabs.
+
+## One canonical distribution
+
+- The user requested one original Milkyway distribution on 2026-11-06. Use
+  `main` for code, downloads and updates. Do not create or maintain separate
+  classroom/education branches. Preserve historical account specifications;
+  compatibility adapters do not represent separate product editions.
